@@ -24,6 +24,7 @@ import {
 } from "./widget-buttons";
 import { processMarkdownFeatures, setupInternalLinkHandlers } from "./widget-markdown";
 import { openCardAnchorInNote } from "../core/open-card-anchor";
+import { processClozeForMath, textContainsMath, convertInlineDisplayMath, forceSingleLineDisplayMathInline } from "../core/shared-utils";
 import { MarkdownView } from "obsidian";
 
 /** Returns true if the text contains a markdown table (pipe-delimited with a separator row). */
@@ -134,6 +135,9 @@ export function renderWidgetSession(view: WidgetViewLike, root: HTMLElement): vo
   if (card.type === "reversed-child") {
     cardTitle = cardTitle.replace(/\s*•\s*[AQ]\u2192[AQ]\s*$/, "").trim();
   }
+  // Hide title if it is just the card-type label (not a real user-provided title)
+  const TYPE_LABELS = new Set(["basic", "basic (reversed)", "cloze", "multiple choice", "image occlusion", "ordered question", "flashcard"]);
+  if (TYPE_LABELS.has(cardTitle.toLowerCase())) cardTitle = "";
 
   const titleEl = el("div", "bc font-semibold sprout-widget-text");
   if (!cardTitle) titleEl.hidden = true;
@@ -198,11 +202,11 @@ function renderBasicCard(
   const isBackDirection = card.type === "reversed-child" && (card as unknown as Record<string, unknown>).reversedDirection === "back";
   const isOldReversed = card.type === "reversed";
   const qText = (isBackDirection || isOldReversed) ? (card.a || "") : (card.q || "");
-  if (qText.includes("$") || qText.includes("[[") || hasMarkdownTable(qText)) {
+  if (qText.includes("$") || qText.includes("[[") || qText.includes("\\(") || qText.includes("\\[") || hasMarkdownTable(qText)) {
     const qContainer = document.createElement("div");
     qContainer.className = "bc whitespace-pre-wrap break-words";
     const sourcePath = String(card.sourceNotePath || view.activeFile?.path || "");
-    void view.renderMarkdownInto(qContainer, qText, sourcePath);
+    void view.renderMarkdownInto(qContainer, convertInlineDisplayMath(qText), sourcePath);
     qEl.appendChild(qContainer);
   } else {
     const qP = document.createElement("p");
@@ -218,11 +222,11 @@ function renderBasicCard(
     body.appendChild(makeDivider());
     const aEl = el("div", "bc");
     const aText = (isBackDirection || isOldReversed) ? (card.q || "") : (card.a || "");
-    if (aText.includes("$") || aText.includes("[[") || hasMarkdownTable(aText)) {
+    if (aText.includes("$") || aText.includes("[[") || aText.includes("\\(") || aText.includes("\\[") || hasMarkdownTable(aText)) {
       const aContainer = document.createElement("div");
       aContainer.className = "bc whitespace-pre-wrap break-words";
       const sourcePath = String(card.sourceNotePath || view.activeFile?.path || "");
-      void view.renderMarkdownInto(aContainer, aText, sourcePath);
+      void view.renderMarkdownInto(aContainer, convertInlineDisplayMath(aText), sourcePath);
       aEl.appendChild(aContainer);
     } else {
       const aP = document.createElement("p");
@@ -253,25 +257,12 @@ function renderClozeCard(
   const reveal = view.showAnswer || !!graded;
   const targetIndex = card.type === "cloze-child" ? Number(card.clozeIndex) : undefined;
 
-  if (text.includes("$") || text.includes("[[") || hasMarkdownTable(text)) {
+  if (text.includes("$") || text.includes("\\(") || text.includes("\\[") || text.includes("[[") || hasMarkdownTable(text)) {
     const clozeEl = el("div", "bc sprout-widget-cloze sprout-widget-text w-full");
     applySectionStyles(clozeEl);
 
     const sourcePath = String(card.sourceNotePath || view.activeFile?.path || "");
-    let processedText = text;
-    if (reveal) {
-      processedText = text.replace(/\{\{c(\d+)::([^}]+)\}\}/g, (_match: string, num: string, content: string) => {
-        const idx = Number(num);
-        const isTarget = typeof targetIndex === "number" ? idx === targetIndex : true;
-        return isTarget ? `**${content}**` : content;
-      });
-    } else {
-      processedText = text.replace(/\{\{c(\d+)::([^}]+)\}\}/g, (_match: string, num: string, _content: string) => {
-        const idx = Number(num);
-        const isTarget = typeof targetIndex === "number" ? idx === targetIndex : true;
-        return isTarget ? `______` : _content;
-      });
-    }
+    const processedText = processClozeForMath(text, reveal, targetIndex);
 
     void view.renderMarkdownInto(clozeEl, processedText, sourcePath);
     body.appendChild(clozeEl);
@@ -279,9 +270,10 @@ function renderClozeCard(
     const clozeMode = view.plugin.settings.cards?.clozeMode ?? "standard";
     const clozeBgColor = view.plugin.settings.cards?.clozeBgColor ?? "";
     const clozeTextColor = view.plugin.settings.cards?.clozeTextColor ?? "";
+    const hasMath = textContainsMath(text);
 
     const clozeEl = renderClozeFront(text, reveal, targetIndex, {
-      mode: clozeMode,
+      mode: hasMath ? "standard" : clozeMode,
       clozeBgColor,
       clozeTextColor,
       typedAnswers: view._typedClozeAnswers,
@@ -315,8 +307,14 @@ function renderMcqCard(
   applySectionStyles: (e: HTMLElement) => void,
   makeDivider: () => HTMLElement,
 ) {
+  const stemText = card.stem || "";
+  const sourcePath = String(card.sourceNotePath || view.activeFile?.path || "");
   const stemEl = el("div", "bc sprout-widget-text");
-  replaceChildrenWithHTML(stemEl, processMarkdownFeatures(card.stem || ""));
+  if (stemText.includes("$") || stemText.includes("\\(") || stemText.includes("\\[") || stemText.includes("[[")) {
+    void view.renderMarkdownInto(stemEl, convertInlineDisplayMath(stemText), sourcePath);
+  } else {
+    replaceChildrenWithHTML(stemEl, processMarkdownFeatures(stemText));
+  }
   applySectionStyles(stemEl);
   body.appendChild(stemEl);
 
@@ -359,7 +357,9 @@ function renderMcqCard(
     left.appendChild(key);
 
     const textEl = el("span", "bc min-w-0 whitespace-pre-wrap break-words sprout-widget-mcq-text");
-    if (text && text.includes("\n")) {
+    if (text && (text.includes("$") || text.includes("\\(") || text.includes("\\[") || text.includes("[["))) {
+      void view.renderMarkdownInto(textEl, forceSingleLineDisplayMathInline(text), sourcePath);
+    } else if (text && text.includes("\n")) {
       text.split(/\n+/).forEach((line: string) => {
         const p = document.createElement("div");
         replaceChildrenWithHTML(p, processMarkdownFeatures(line));
@@ -392,13 +392,13 @@ function renderMcqCard(
         // Smart highlighting for multi-answer
         const isCorrect = correctSet.has(origIdx);
         const wasChosen = chosenMulti.has(origIdx);
-        if (isCorrect && wasChosen) d.classList.add("border-green-600", "bg-green-50");
+        if (isCorrect && wasChosen) d.classList.add("sprout-mcq-correct-highlight");
         else if (isCorrect && !wasChosen) d.classList.add("sprout-mcq-missed-correct");
-        else if (!isCorrect && wasChosen) d.classList.add("border-red-600", "bg-red-50");
+        else if (!isCorrect && wasChosen) d.classList.add("sprout-mcq-wrong-highlight");
       } else {
-        if (origIdx === card.correctIndex) d.classList.add("border-green-600", "bg-green-50");
+        if (origIdx === card.correctIndex) d.classList.add("sprout-mcq-correct-highlight");
         if (typeof chosen === "number" && chosen === origIdx && origIdx !== card.correctIndex)
-          d.classList.add("border-red-600", "bg-red-50");
+          d.classList.add("sprout-mcq-wrong-highlight");
       }
     }
     optsContainer.appendChild(d);
@@ -526,15 +526,15 @@ function renderOqCard(
   const reveal = view.showAnswer || !!graded;
   const oqMeta = (graded?.meta || {}) as Record<string, unknown>;
   const userOrder: number[] = Array.isArray(oqMeta.oqUserOrder) ? oqMeta.oqUserOrder as number[] : [];
+  const sourcePath = String(card.sourceNotePath || view.activeFile?.path || "");
 
   // Question text
   const qEl = el("div", "bc sprout-widget-text");
   const qText = card.q || "";
-  if (qText.includes("$") || qText.includes("[[") || hasMarkdownTable(qText)) {
+  if (qText.includes("$") || qText.includes("\\(") || qText.includes("\\[") || qText.includes("[[") || hasMarkdownTable(qText)) {
     const qContainer = document.createElement("div");
     qContainer.className = "bc whitespace-pre-wrap break-words";
-    const sourcePath = String(card.sourceNotePath || view.activeFile?.path || "");
-    void view.renderMarkdownInto(qContainer, qText, sourcePath);
+    void view.renderMarkdownInto(qContainer, convertInlineDisplayMath(qText), sourcePath);
     qEl.appendChild(qContainer);
   } else {
     const qP = document.createElement("p");
@@ -578,7 +578,11 @@ function renderOqCard(
         // Step text
         const textEl = document.createElement("span");
         textEl.className = "bc min-w-0 whitespace-pre-wrap break-words flex-1 sprout-oq-step-text sprout-widget-text";
-        replaceChildrenWithHTML(textEl, processMarkdownFeatures(stepText));
+        if (stepText.includes("$") || stepText.includes("\\(") || stepText.includes("\\[") || stepText.includes("[[")) {
+          void view.renderMarkdownInto(textEl, forceSingleLineDisplayMathInline(stepText), sourcePath);
+        } else {
+          replaceChildrenWithHTML(textEl, processMarkdownFeatures(stepText));
+        }
         row.appendChild(textEl);
 
         // ── Drag and drop ──
@@ -735,7 +739,11 @@ function renderOqCard(
 
       const textEl = document.createElement("span");
       textEl.className = "bc min-w-0 whitespace-pre-wrap break-words flex-1 sprout-widget-text sprout-oq-step-text";
-      replaceChildrenWithHTML(textEl, processMarkdownFeatures(stepText));
+      if (stepText.includes("$") || stepText.includes("\\(") || stepText.includes("\\[") || stepText.includes("[[")) {
+        void view.renderMarkdownInto(textEl, forceSingleLineDisplayMathInline(stepText), sourcePath);
+      } else {
+        replaceChildrenWithHTML(textEl, processMarkdownFeatures(stepText));
+      }
       row.appendChild(textEl);
 
       answerList.appendChild(row);

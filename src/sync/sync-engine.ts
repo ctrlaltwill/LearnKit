@@ -698,7 +698,7 @@ function syncReversedChildren(plugin: SproutPlugin, parent: CardRecord, now: num
   const keepChildIds = new Set<string>();
   const existingChildren = collectExistingChildren(plugin, parentId, "reversed-child");
 
-  const titleBase = parent?.title ? String(parent.title) : "Basic (Reversed)";
+  const titleBase = String(parent?.title ?? "").trim();
 
   for (const dir of directions) {
     const childId = stableReversedChildId(parentId, dir);
@@ -706,10 +706,11 @@ function syncReversedChildren(plugin: SproutPlugin, parent: CardRecord, now: num
 
     const prev = plugin.store.data.cards?.[childId];
     const dirLabel = dir === "forward" ? "Q→A" : "A→Q";
+    const childTitle = titleBase ? `${titleBase} • ${dirLabel}` : null;
     const rec: CardRecord = {
       id: childId,
       type: "reversed-child",
-      title: `${titleBase} • ${dirLabel}`,
+      title: childTitle,
       parentId,
       reversedDirection: dir,
       q: parent?.q ?? null,
@@ -844,17 +845,18 @@ function syncClozeChildren(plugin: SproutPlugin, parent: CardRecord, now: number
   const keepChildIds = new Set<string>();
   const existingChildren = collectExistingChildren(plugin, parentId, "cloze-child");
 
-  const titleBase = parent?.title ? String(parent.title) : "Cloze";
+  const titleBase = String(parent?.title ?? "").trim();
 
   for (const idx of clozeIndices) {
     const childId = stableClozeChildId(parentId, idx);
     keepChildIds.add(childId);
 
     const prev = plugin.store.data.cards?.[childId];
+    const childTitle = titleBase ? `${titleBase} • c${idx}` : null;
     const rec: CardRecord = {
       id: childId,
       type: "cloze-child",
-      title: `${titleBase} • c${idx}`,
+      title: childTitle,
       parentId,
       clozeIndex: idx,
       clozeText: parent?.clozeText ?? null,
@@ -943,7 +945,7 @@ function syncIoChildren(plugin: SproutPlugin, parent: CardRecord, now: number, s
   const existingChildren = collectExistingChildren(plugin, parentId, "io-child");
 
   const keepChildIds = new Set<string>();
-  const titleBase = parent?.title ? String(parent.title) : "Image occlusion";
+  const titleBase = String(parent?.title ?? "").trim();
   const legacy = parent as unknown as Record<string, unknown>;
 
   for (const [groupKey, rectIds] of groupToRectIds.entries()) {
@@ -954,7 +956,7 @@ function syncIoChildren(plugin: SproutPlugin, parent: CardRecord, now: number, s
     const rec: CardRecord = {
       id: childId,
       type: "io-child",
-      title: titleBase,
+      title: titleBase || null,
       parentId,
       groupKey,
       rectIds: rectIds.slice(),

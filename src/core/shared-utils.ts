@@ -136,3 +136,191 @@ export function groupsToInput(groups: unknown): string {
     .filter(Boolean)
     .join(", ");
 }
+
+// ────────────────────────────────────────────
+// Math-aware cloze helpers
+// ────────────────────────────────────────────
+
+/**
+ * Regex that matches all math delimiter blocks in a string.
+ * Used to determine whether a character position is inside a math block.
+ */
+const MATH_DELIM_RE = /\$\$[\s\S]+?\$\$|\\\([\s\S]+?\\\)|\\\[[\s\S]+?\\\]/g;
+
+interface ClozeTokenMatch {
+  index: number;
+  fullMatch: string;
+  clozeIndex: number;
+  content: string;
+}
+
+/**
+ * Build a set of character-position ranges that are inside math blocks.
+ * Returns a function that checks whether a given position is inside math.
+ */
+function buildMathRangeChecker(text: string): (pos: number) => boolean {
+  const ranges: Array<[number, number]> = [];
+  MATH_DELIM_RE.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = MATH_DELIM_RE.exec(text)) !== null) {
+    ranges.push([m.index, m.index + m[0].length]);
+  }
+  if (!ranges.length) return () => false;
+  return (pos: number) => ranges.some(([s, e]) => pos >= s && pos < e);
+}
+
+/**
+ * Match cloze tokens while respecting nested braces inside content.
+ *
+ * This avoids prematurely closing on `}}` that belong to LaTeX constructs
+ * (for example `\frac{a}{b}`) inside `{{cN::...}}`.
+ */
+function matchClozeTokensBraceAware(source: string): ClozeTokenMatch[] {
+  const out: ClozeTokenMatch[] = [];
+  const opener = /\{\{c(\d+)::/g;
+  let m: RegExpExecArray | null;
+
+  while ((m = opener.exec(source)) !== null) {
+    const tokenStart = m.index;
+    const clozeIndex = Number(m[1]);
+    const contentStart = tokenStart + m[0].length;
+    let depth = 0;
+    let i = contentStart;
+    let foundClose = false;
+
+    while (i < source.length) {
+      if (source[i] === '{') {
+        depth++;
+      } else if (source[i] === '}') {
+        if (depth > 0) {
+          depth--;
+        } else if (i + 1 < source.length && source[i + 1] === '}') {
+          const content = source.slice(contentStart, i);
+          const fullMatch = source.slice(tokenStart, i + 2);
+          out.push({ index: tokenStart, fullMatch, clozeIndex, content });
+          opener.lastIndex = i + 2;
+          foundClose = true;
+          break;
+        }
+      }
+      i++;
+    }
+
+    if (!foundClose) {
+      continue;
+    }
+  }
+
+  return out;
+}
+
+/**
+ * Process cloze tokens in text that may contain math delimiters.
+ *
+ * When a cloze token `{{c1::answer}}` sits inside a math block (`$$...$$`, `\(...\)`, `\[...\]`),
+ * replaces it with LaTeX-safe placeholders that visually match non-typed clozes:
+ *   - Front (unrevealed): `\underline{\phantom{answer}}`
+ *   - Back (revealed):    `answer` (unboxed math content)
+ *
+ * When outside math, uses class-based cloze markup:
+ *   - Front: `<span class="... sprout-cloze-blank hidden-cloze"></span>`
+ *   - Back:  `**answer**` (bold)
+ *
+ * @param text        The full cloze text with `{{cN::answer}}` tokens
+ * @param reveal      true = back (show answers), false = front (show blanks)
+ * @param targetIndex If set, only this cloze index is blanked/revealed; others show plain content
+ * @param options     Optional rendering overrides (e.g., blank class name per surface)
+ * @returns The processed text ready for `renderMarkdownInto`
+ */
+export function processClozeForMath(
+  text: string,
+  reveal: boolean,
+  targetIndex: number | null | undefined,
+  options?: {
+    blankClassName?: string;
+  },
+): string {
+  const isInsideMath = buildMathRangeChecker(text);
+  const clozeMatches = matchClozeTokensBraceAware(text);
+  const blankClassName = (options?.blankClassName || "bc sprout-cloze-blank hidden-cloze").trim();
+
+  const buildBlankHtml = (content: string): string => {
+    const w = Math.max(4, Math.min(40, (content || "").trim().length || 6));
+    const widthPx = Math.max(30, (w * 8) - 20);
+    return `<span class="${blankClassName}" style="--sprout-cloze-width:${widthPx}px"></span>`;
+  };
+
+  let result = '';
+  let lastIdx = 0;
+
+  for (const match of clozeMatches) {
+    result += text.slice(lastIdx, match.index);
+    const idx = match.clozeIndex;
+    const content = match.content;
+    const isTarget = targetIndex != null ? idx === Number(targetIndex) : true;
+
+    if (!isTarget) {
+      result += content;
+    } else {
+      const inMath = isInsideMath(match.index);
+      if (reveal) {
+        result += inMath ? `${content}` : `**${content}**`;
+      } else {
+        const placeholderSeed = (content || '').trim() || 'x';
+        result += inMath ? `\\underline{\\phantom{${placeholderSeed}}}` : buildBlankHtml(content);
+      }
+    }
+
+    lastIdx = match.index + match.fullMatch.length;
+  }
+
+  result += text.slice(lastIdx);
+  return convertInlineDisplayMath(result);
+}
+
+/**
+ * Check whether cloze text contains any math delimiters.
+ */
+export function textContainsMath(text: string): boolean {
+  return /\$|\\\(|\\\[/.test(text);
+}
+
+/**
+ * Convert inline-usage `$$...$$` to `$...$` so Obsidian's MarkdownRenderer
+ * renders them as inline math instead of display (block) math.
+ *
+ * A `$$...$$` is treated as inline when it appears on a line alongside
+ * other text (i.e., it's NOT the only content on the line after trimming).
+ * Multi-line `$$...$$` blocks are preserved as display math.
+ */
+export function convertInlineDisplayMath(text: string): string {
+  // Process each line independently
+  return text.split('\n').map(line => {
+    const trimmed = line.trim();
+    // If the entire line is just a $$...$$ block, keep as display math
+    if (/^\$\$[^$]+\$\$$/.test(trimmed) && trimmed.indexOf('$$', 2) === trimmed.length - 2) {
+      return line;
+    }
+    // Replace $$...$$ on lines that have surrounding text with $...$
+    // Only single-line math (no newlines inside)
+    return line.replace(/\$\$([^$\n]+?)\$\$/g, (match, inner) => {
+      // Check if there's text around this match on the line
+      const beforeAfter = line.replace(match, '').trim();
+      if (beforeAfter.length > 0) {
+        return `$${inner}$`;
+      }
+      return match;
+    });
+  }).join('\n');
+}
+
+/**
+ * Force single-line display math ($$...$$) to inline math ($...$).
+ *
+ * Intended for compact UI contexts like MCQ options / OQ steps where
+ * display-math line breaks are undesirable.
+ */
+export function forceSingleLineDisplayMathInline(text: string): string {
+  const base = convertInlineDisplayMath(text);
+  return base.replace(/\$\$([^$\n]+?)\$\$/g, (_match, inner: string) => `$${inner}$`);
+}

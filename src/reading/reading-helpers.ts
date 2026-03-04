@@ -37,6 +37,7 @@
 
 import { log } from "../core/logger";
 import { queryFirst } from "../core/ui";
+import { convertInlineDisplayMath } from "../core/shared-utils";
 import {
   FIELD_START_READING_RE,
   unescapeDelimiterText,
@@ -144,7 +145,24 @@ export function escapeHtml(text: unknown): string {
  */
 export function processMarkdownFeatures(text: string): string {
   if (!text) return '';
-  let result = String(text);
+  const source = convertInlineDisplayMath(String(text));
+
+  // ── Extract math blocks before applying markdown formatting ──
+  // LaTeX delimiters contain characters like _ * ^ that conflict with
+  // markdown formatting rules. We replace math blocks with placeholders,
+  // apply markdown formatting to non-math text, then restore the math.
+  const mathPlaceholders: string[] = [];
+  const MATH_PH = '\x00MATH';
+
+  // Match math blocks: $$...$$, $...$, \(...\), \[...\]
+  const mathBlockRe = /\$\$[\s\S]+?\$\$|(?<!\$)\$(?!\$)[^\s$](?:[^$]*[^\s$])?\$(?!\$)|\\\([\s\S]+?\\\)|\\\[[\s\S]+?\\\]/g;
+  const withPlaceholders = source.replace(mathBlockRe, (match) => {
+    const idx = mathPlaceholders.length;
+    mathPlaceholders.push(match);
+    return `${MATH_PH}${idx}\x00`;
+  });
+
+  let result = withPlaceholders;
 
   // Convert image embeds ![[image.ext]] or ![[path/image.ext|alt]] to placeholder <img> tags
   // Must come BEFORE [[link]] handling to avoid partial matches
@@ -180,8 +198,13 @@ export function processMarkdownFeatures(text: string): string {
   // Convert highlight ==text== to <mark>text</mark>
   result = result.replace(/==(.+?)==/g, '<mark>$1</mark>');
 
-  // Preserve LaTeX by escaping the content but keeping delimiters
-  // This allows MathJax or similar to process it later
+  // ── Restore math blocks ──
+  if (mathPlaceholders.length) {
+    result = result.replace(/\x00MATH(\d+)\x00/g, (_m, idx) => {
+      return mathPlaceholders[Number(idx)] ?? _m;
+    });
+  }
+
   return result;
 }
 
@@ -517,6 +540,57 @@ export function renderMathInElement(el: HTMLElement) {
   }
 }
 
+/* -----------------------
+   Brace-aware cloze matching
+   ----------------------- */
+
+interface ClozeMatchResult {
+  index: number;
+  fullMatch: string;
+  content: string;
+}
+
+/**
+ * Brace-aware cloze token matcher.
+ * Unlike `/\{\{c\d+::([\s\S]*?)\}\}/g`, this correctly handles LaTeX
+ * with nested braces (e.g. `\frac{a}{b}`) by tracking brace depth.
+ */
+function matchClozeTokensBraceAware(source: string): ClozeMatchResult[] {
+  const results: ClozeMatchResult[] = [];
+  const opener = /\{\{c\d+::/g;
+  let m: RegExpExecArray | null;
+
+  while ((m = opener.exec(source)) !== null) {
+    const startIdx = m.index;
+    const contentStart = startIdx + m[0].length;
+    let depth = 0;
+    let i = contentStart;
+    let found = false;
+
+    while (i < source.length) {
+      if (source[i] === '{') {
+        depth++;
+      } else if (source[i] === '}') {
+        if (depth > 0) {
+          depth--;
+        } else if (i + 1 < source.length && source[i + 1] === '}') {
+          const content = source.slice(contentStart, i);
+          const fullMatch = source.slice(startIdx, i + 2);
+          results.push({ index: startIdx, fullMatch, content });
+          opener.lastIndex = i + 2;
+          found = true;
+          break;
+        }
+      }
+      i++;
+    }
+
+    if (!found) { /* malformed cloze — skip */ }
+  }
+
+  return results;
+}
+
 export function buildCardContentHTML(card: SproutCard): string {
   let contentHTML = '';
   if (card.type === "cloze" && card.fields.CQ) {
@@ -563,20 +637,19 @@ export function buildCardContentHTML(card: SproutCard): string {
 export function buildClozeSectionHTML(clozeContent: string): string {
   let lastIndex = 0;
   let processedHtml = '';
-  const clozeRegex = /\{\{c\d+::([\s\S]*?)\}\}/g;
-  let match;
-  while ((match = clozeRegex.exec(clozeContent)) !== null) {
-    if (match.index > lastIndex) {
-      const nonCloze = clozeContent.slice(lastIndex, match.index) || '';
+  const clozeMatches = matchClozeTokensBraceAware(clozeContent);
+  for (const cm of clozeMatches) {
+    if (cm.index > lastIndex) {
+      const nonCloze = clozeContent.slice(lastIndex, cm.index) || '';
       processedHtml += `<span class="sprout-text-muted">${processMarkdownFeatures(nonCloze)}</span>`;
     }
-    const answer = match[1];
+    const answer = cm.content;
     if (answer && answer.trim().length > 0) {
       processedHtml += `<span class="sprout-reading-view-cloze"><span class="sprout-cloze-text">${processMarkdownFeatures(answer)}</span></span>`;
     } else {
       processedHtml += `<span class="sprout-cloze-blank"></span>`;
     }
-    lastIndex = match.index + match[0].length;
+    lastIndex = cm.index + cm.fullMatch.length;
   }
   if (lastIndex < clozeContent.length) {
     const nonCloze = clozeContent.slice(lastIndex) || '';

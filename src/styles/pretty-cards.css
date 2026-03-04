@@ -102,6 +102,23 @@ mjx-container[jax="CHTML"][display="true"] {
   margin: 0.5em 1em;
 }
 
+/* Normalise display-math margins inside flashcard bodies, MCQ option
+   lists, and OQ sequence lists so that pure-LaTeX items match the
+   height of text+inline-LaTeX items. */
+.sprout-pretty-card.sprout-macro-flashcards .sprout-flashcard-body mjx-container[jax="CHTML"][display="true"] {
+  display: inline-block;
+  margin: 0;
+  text-align: center;
+}
+
+.sprout-pretty-card.sprout-macro-flashcards .sprout-flashcard-options-list li mjx-container[jax="CHTML"][display="true"],
+.sprout-pretty-card.sprout-macro-flashcards .sprout-flashcard-sequence-list li mjx-container[jax="CHTML"][display="true"],
+.sprout-pretty-card.sprout-macro-flashcards .sprout-flashcard-answer-list li mjx-container[jax="CHTML"][display="true"] {
+  display: inline-block;
+  margin: 0;
+  vertical-align: middle;
+}
+
 /* ---- FOUC prevention: hide unprocessed card elements ---- */
 
 /*
@@ -1074,6 +1091,13 @@ mjx-container[jax="CHTML"][display="true"] {
 
 .sprout-pretty-card.sprout-macro-flashcards .sprout-flashcard-answer strong {
   font-weight: 700;
+}
+
+/* Make LaTeX (mjx-container) inside <strong> visually bold via
+   a slightly thicker stroke, matching the surrounding bold text. */
+.sprout-pretty-card.sprout-macro-flashcards .sprout-flashcard-answer strong mjx-container {
+  -webkit-text-stroke: 0.4px currentColor;
+  text-stroke: 0.4px currentColor;
 }
 
 .sprout-pretty-card.sprout-macro-flashcards .sprout-flashcard-question[hidden],

@@ -468,14 +468,17 @@
 }
 
 /* Use .sprout .btn-outline.<class> to beat .sprout .btn-outline specificity (0-3-0 > 0-2-0) */
-.sprout .btn-outline.sprout-mcq-correct-highlight {
+/* Also apply to plain elements (widget/gatekeeper use <div> not <button.btn-outline>) */
+.sprout .btn-outline.sprout-mcq-correct-highlight,
+.sprout .sprout-mcq-correct-highlight {
   border-color: rgb(34, 197, 94) !important;
   background-color: rgb(220, 252, 231) !important;
   border-width: 2px !important;
   border-style: solid !important;
 }
 
-.sprout .btn-outline.sprout-mcq-wrong-highlight {
+.sprout .btn-outline.sprout-mcq-wrong-highlight,
+.sprout .sprout-mcq-wrong-highlight {
   border-color: rgb(239, 68, 68) !important;
   background-color: rgb(254, 226, 226) !important;
   border-width: 2px !important;
@@ -483,11 +486,13 @@
 }
 
 /* Dark mode: softer MCQ highlight backgrounds */
-.theme-dark .sprout .btn-outline.sprout-mcq-correct-highlight {
+.theme-dark .sprout .btn-outline.sprout-mcq-correct-highlight,
+.theme-dark .sprout .sprout-mcq-correct-highlight {
   background-color: rgba(34, 197, 94, 0.15) !important;
 }
 
-.theme-dark .sprout .btn-outline.sprout-mcq-wrong-highlight {
+.theme-dark .sprout .btn-outline.sprout-mcq-wrong-highlight,
+.theme-dark .sprout .sprout-mcq-wrong-highlight {
   background-color: rgba(239, 68, 68, 0.15) !important;
 }
 

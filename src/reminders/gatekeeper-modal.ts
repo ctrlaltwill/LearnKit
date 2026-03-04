@@ -11,6 +11,7 @@ import type { ReviewRating } from "../types/scheduler";
 import { logFsrsIfNeeded } from "../reviewer/fsrs-log";
 import { log } from "../core/logger";
 import { processMarkdownFeatures, setupInternalLinkHandlers } from "../widget/widget-markdown";
+import { processClozeForMath, textContainsMath, convertInlineDisplayMath, forceSingleLineDisplayMathInline } from "../core/shared-utils";
 import { getCorrectIndices, isMultiAnswerMcq, normalizeCardOptions } from "../types/card";
 import { renderImageOcclusionReviewInto } from "../imageocclusion/image-occlusion-review-render";
 import * as IO from "../imageocclusion/image-occlusion-index";
@@ -33,6 +34,8 @@ export class GatekeeperModal extends Modal {
   private completed = false;
   private _md: SproutMarkdownHelper | null = null;
   private _oqOrderMap: Record<string, number[]> = {};
+  private _mcqSingleSelection = new Map<string, number>();
+  private _mcqMultiSelection = new Map<string, Set<number>>();
   private _cardStartedAt = Date.now();
   private _grading = false;
   private _keyHandler: ((ev: KeyboardEvent) => void) | null = null;
@@ -80,16 +83,17 @@ export class GatekeeperModal extends Modal {
     }
 
     this._keyHandler = (ev: KeyboardEvent) => {
-      if (ev.defaultPrevented) return;
       if (!this.modalEl.isConnected) return;
+      if (!this.isFromGatekeeperContext(ev)) return;
       if (this.isEditableTarget(ev.target)) return;
 
-      const key = String(ev.key || "").toLowerCase();
+      const key = this.getNormalizedHotkey(ev);
       const card = this.cards[this.index];
       if (!card) return;
 
-      if (!this.reveal && (key === "enter" || key === "return")) {
+      if (!this.reveal && key === "enter") {
         ev.preventDefault();
+        ev.stopPropagation();
         this.reveal = true;
         this.render();
         return;
@@ -107,6 +111,7 @@ export class GatekeeperModal extends Modal {
 
       if (!rating) return;
       ev.preventDefault();
+      ev.stopPropagation();
       void this.gradeCurrentCard(rating);
     };
 
@@ -125,6 +130,29 @@ export class GatekeeperModal extends Modal {
     if (!(target instanceof HTMLElement)) return false;
     if (target.closest("input, textarea, select")) return true;
     return !!target.closest("[contenteditable='true']");
+  }
+
+  private isFromGatekeeperContext(ev: KeyboardEvent): boolean {
+    const target = ev.target instanceof Node ? ev.target : null;
+    if (target && (this.modalEl.contains(target) || this.containerEl.contains(target))) {
+      return true;
+    }
+
+    const active = this.modalEl.ownerDocument?.activeElement;
+    return !!(active && (this.modalEl.contains(active) || this.containerEl.contains(active)));
+  }
+
+  private getNormalizedHotkey(ev: KeyboardEvent): string {
+    const code = String(ev.code || "");
+    if (code === "Enter" || code === "NumpadEnter") return "enter";
+    if (code === "Digit1" || code === "Numpad1") return "1";
+    if (code === "Digit2" || code === "Numpad2") return "2";
+    if (code === "Digit3" || code === "Numpad3") return "3";
+    if (code === "Digit4" || code === "Numpad4") return "4";
+
+    const key = String(ev.key || "").toLowerCase();
+    if (key === "return") return "enter";
+    return key;
   }
 
   private setupTopRow() {
@@ -287,10 +315,10 @@ export class GatekeeperModal extends Modal {
 
   private renderBypassWarning(contentEl: HTMLElement) {
     const wrap = contentEl.createDiv({ cls: "bc sprout-gatekeeper-warning-wrap" });
-    wrap.createDiv({ cls: "bc sprout-gatekeeper-warning-text", text: "You are cheating..." });
+    wrap.createDiv({ cls: "bc sprout-gatekeeper-warning-text", text: "Bypass this round?" });
     wrap.createDiv({
       cls: "bc text-muted-foreground text-sm sprout-gatekeeper-warning-subtext",
-      text: "Bypassing means this gatekeeper round is not completed.",
+      text: "You've got cards due today — continuing may weaken your long-term retention!",
     });
 
     const actions = wrap.createDiv({ cls: "bc flex items-center justify-center gap-2" });
@@ -483,32 +511,57 @@ export class GatekeeperModal extends Modal {
   private renderClozeCard(body: HTMLElement, card: CardRecord) {
     const text = card.clozeText || "";
     const targetIndex = card.type === "cloze-child" ? Number(card.clozeIndex) : undefined;
-    const clozeMode = this.plugin.settings.cards?.clozeMode ?? "standard";
-    const clozeBgColor = this.plugin.settings.cards?.clozeBgColor ?? "";
-    const clozeTextColor = this.plugin.settings.cards?.clozeTextColor ?? "";
 
-    const clozeEl = renderClozeFront(text, this.reveal, targetIndex, {
-      mode: clozeMode,
-      clozeBgColor,
-      clozeTextColor,
-    });
-    clozeEl.className = "bc sprout-widget-cloze sprout-widget-text w-full";
-    body.appendChild(clozeEl);
+    if (text.includes("$") || text.includes("\\(") || text.includes("\\[") || text.includes("[[")) {
+      const clozeEl = document.createElement("div");
+      clozeEl.className = "bc sprout-widget-cloze sprout-widget-text w-full whitespace-pre-wrap break-words";
+      const sourcePath = String(card.sourceNotePath || "");
+      const processedText = processClozeForMath(text, this.reveal, targetIndex);
+      void this.renderMarkdownInto(clozeEl, processedText, sourcePath);
+      body.appendChild(clozeEl);
+    } else {
+      const clozeMode = this.plugin.settings.cards?.clozeMode ?? "standard";
+      const clozeBgColor = this.plugin.settings.cards?.clozeBgColor ?? "";
+      const clozeTextColor = this.plugin.settings.cards?.clozeTextColor ?? "";
+
+      const hasMath = textContainsMath(text);
+
+      const clozeEl = renderClozeFront(text, this.reveal, targetIndex, {
+        mode: hasMath ? "standard" : clozeMode,
+        clozeBgColor,
+        clozeTextColor,
+      });
+      clozeEl.className = "bc sprout-widget-cloze sprout-widget-text w-full";
+      body.appendChild(clozeEl);
+    }
   }
 
   private renderMcqCard(body: HTMLElement, card: CardRecord) {
+    const stemText = card.stem || "";
+    const sourcePath = String(card.sourceNotePath || "");
+    const cardId = String(card.id || "");
     const stemEl = body.createDiv({ cls: "whitespace-pre-wrap break-words sprout-gatekeeper-question-block" });
-    replaceChildrenWithHTML(stemEl, processMarkdownFeatures(card.stem || ""));
+    if (stemText.includes("$") || stemText.includes("\\(") || stemText.includes("\\[") || stemText.includes("[[")) {
+      void this.renderMarkdownInto(stemEl, convertInlineDisplayMath(stemText), sourcePath);
+    } else {
+      replaceChildrenWithHTML(stemEl, processMarkdownFeatures(stemText));
+    }
 
     const options = normalizeCardOptions(card.options);
     const isMulti = isMultiAnswerMcq(card);
     const correctSet = new Set(getCorrectIndices(card));
+    const chosenSingle = this._mcqSingleSelection.get(cardId);
+    if (!this._mcqMultiSelection.has(cardId)) {
+      this._mcqMultiSelection.set(cardId, new Set<number>());
+    }
+    const chosenMulti = this._mcqMultiSelection.get(cardId) as Set<number>;
 
-    const optsContainer = body.createDiv({ cls: "flex flex-col gap-2 sprout-widget-section" });
+    const optsContainer = body.createDiv({ cls: "bc flex flex-col gap-2 sprout-widget-section" });
 
     options.forEach((opt: string, idx: number) => {
       const d = body.ownerDocument.createElement("div");
-      d.className = "bc px-3 py-2 rounded border border-border sprout-widget-text sprout-widget-mcq-option";
+      d.className = "bc px-3 py-2 rounded border border-border hover:bg-secondary sprout-widget-text sprout-widget-mcq-option";
+      if (!this.reveal) d.classList.add("cursor-pointer");
 
       const left = body.ownerDocument.createElement("span");
       left.className = "bc inline-flex items-center gap-2 min-w-0";
@@ -520,13 +573,45 @@ export class GatekeeperModal extends Modal {
 
       const textEl = body.ownerDocument.createElement("span");
       textEl.className = "bc min-w-0 whitespace-pre-wrap break-words sprout-widget-mcq-text";
-      replaceChildrenWithHTML(textEl, processMarkdownFeatures(typeof opt === "string" ? opt : ""));
+      const optText = typeof opt === "string" ? opt : "";
+      if (optText.includes("$") || optText.includes("\\(") || optText.includes("\\[") || optText.includes("[[")) {
+        void this.renderMarkdownInto(textEl, forceSingleLineDisplayMathInline(optText), sourcePath);
+      } else {
+        replaceChildrenWithHTML(textEl, processMarkdownFeatures(optText));
+      }
       left.appendChild(textEl);
       d.appendChild(left);
 
-      if (this.reveal) {
-        const isCorrect = correctSet.has(idx);
-        if (isCorrect) d.classList.add("border-green-600", "bg-green-50");
+      if (!this.reveal) {
+        if (isMulti) {
+          if (chosenMulti.has(idx)) d.classList.add("sprout-mcq-selected");
+          d.addEventListener("click", () => {
+            const current = this._mcqMultiSelection.get(cardId) ?? new Set<number>();
+            if (current.has(idx)) current.delete(idx);
+            else current.add(idx);
+            this._mcqMultiSelection.set(cardId, current);
+            this.render();
+          });
+        } else {
+          if (chosenSingle === idx) d.classList.add("sprout-mcq-selected");
+          d.addEventListener("click", () => {
+            this._mcqSingleSelection.set(cardId, idx);
+            this.render();
+          });
+        }
+      } else {
+        if (isMulti) {
+          const isCorrect = correctSet.has(idx);
+          const wasChosen = chosenMulti.has(idx);
+          if (isCorrect && wasChosen) d.classList.add("sprout-mcq-correct-highlight");
+          else if (isCorrect && !wasChosen) d.classList.add("sprout-mcq-missed-correct");
+          else if (!isCorrect && wasChosen) d.classList.add("sprout-mcq-wrong-highlight");
+        } else {
+          if (idx === card.correctIndex) d.classList.add("sprout-mcq-correct-highlight");
+          if (typeof chosenSingle === "number" && chosenSingle === idx && idx !== card.correctIndex) {
+            d.classList.add("sprout-mcq-wrong-highlight");
+          }
+        }
       }
 
       optsContainer.appendChild(d);
@@ -547,6 +632,7 @@ export class GatekeeperModal extends Modal {
 
     const steps = Array.isArray(card.oqSteps) ? card.oqSteps : [];
     const cardId = String(card.id || "");
+    const sourcePath = String(card.sourceNotePath || "");
     const shouldShuffle = this.plugin.settings.study?.randomizeOqOrder ?? true;
 
     if (!this._oqOrderMap[cardId]) {
@@ -585,7 +671,11 @@ export class GatekeeperModal extends Modal {
 
           const textEl = body.ownerDocument.createElement("span");
           textEl.className = "bc min-w-0 whitespace-pre-wrap break-words flex-1 sprout-oq-step-text sprout-widget-text";
-          replaceChildrenWithHTML(textEl, processMarkdownFeatures(stepText));
+          if (stepText.includes("$") || stepText.includes("\\(") || stepText.includes("\\[") || stepText.includes("[[")) {
+            void this.renderMarkdownInto(textEl, forceSingleLineDisplayMathInline(stepText), sourcePath);
+          } else {
+            replaceChildrenWithHTML(textEl, processMarkdownFeatures(stepText));
+          }
           row.appendChild(textEl);
 
           row.addEventListener("dragstart", (e) => {
@@ -644,7 +734,11 @@ export class GatekeeperModal extends Modal {
 
       const textEl = body.ownerDocument.createElement("span");
       textEl.className = "bc min-w-0 whitespace-pre-wrap break-words flex-1 sprout-widget-text sprout-oq-step-text";
-      replaceChildrenWithHTML(textEl, processMarkdownFeatures(stepText));
+      if (stepText.includes("$") || stepText.includes("\\(") || stepText.includes("\\[") || stepText.includes("[[")) {
+        void this.renderMarkdownInto(textEl, forceSingleLineDisplayMathInline(stepText), sourcePath);
+      } else {
+        replaceChildrenWithHTML(textEl, processMarkdownFeatures(stepText));
+      }
       row.appendChild(textEl);
 
       answerList.appendChild(row);
@@ -669,9 +763,9 @@ export class GatekeeperModal extends Modal {
   }
 
   private renderTextBlock(el: HTMLElement, text: string, card: CardRecord) {
-    if (this.hasMarkdownTable(text) || text.includes("[[") || text.includes("$")) {
+    if (this.hasMarkdownTable(text) || text.includes("[[") || text.includes("$") || text.includes("\\(") || text.includes("\\[")) {
       const sourcePath = String(card.sourceNotePath || "");
-      void this.renderMarkdownInto(el, text, sourcePath);
+      void this.renderMarkdownInto(el, convertInlineDisplayMath(text), sourcePath);
       return;
     }
 

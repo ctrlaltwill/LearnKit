@@ -312,7 +312,7 @@ export class ImageOcclusionCreatorModal extends Modal {
       const cardsMap = (this.plugin.store?.data?.cards || {});
       const parent = cardsMap[String(this.editParentId)];
       if (parent && String(parent.type) === "io") {
-        if (this.titleInput) this.titleInput.value = String(parent.title || "Image Occlusion");
+        if (this.titleInput) this.titleInput.value = String(parent.title || "");
         if (this.infoInput) this.infoInput.value = String(parent.info || "");
 
         const ioMap = this.plugin.store?.data?.io || {};

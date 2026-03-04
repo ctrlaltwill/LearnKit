@@ -162,7 +162,7 @@ export async function saveIoCard(params: IoSaveParams, maskMode: "all" | "solo")
       ...parent,
       id: parentId,
       type: "io",
-      title: titleVal || parent.title || "Image occlusion",
+      title: titleVal || parent.title || null,
       prompt: parent.prompt ?? null,
       info: infoVal || null,
       groups: groupsArr && groupsArr.length ? groupsArr : null,
@@ -201,7 +201,7 @@ export async function saveIoCard(params: IoSaveParams, maskMode: "all" | "solo")
 
     const cards = (plugin.store.data.cards || {});
     const keepChildIds = new Set<string>();
-    const titleBase = parentRec.title || "Image occlusion";
+    const titleBase = String(parentRec.title ?? "").trim();
 
     for (const [groupKey, rectIds] of groupToRectIds.entries()) {
       const childId = stableIoChildId(parentId, groupKey);
@@ -210,7 +210,7 @@ export async function saveIoCard(params: IoSaveParams, maskMode: "all" | "solo")
       const rec: CardRecord = {
         id: childId,
         type: "io-child",
-        title: titleBase,
+        title: titleBase || null,
         parentId,
         groupKey,
         rectIds: rectIds.slice(),
@@ -332,7 +332,7 @@ export async function saveIoCard(params: IoSaveParams, maskMode: "all" | "solo")
   const parentRec: CardRecord = {
     id,
     type: "io",
-    title: titleVal || "Image occlusion",
+    title: titleVal || null,
     prompt: null,
     info: infoVal || null,
     groups: groupsArr && groupsArr.length ? groupsArr : null,
@@ -378,7 +378,7 @@ export async function saveIoCard(params: IoSaveParams, maskMode: "all" | "solo")
 
   const cards = (plugin.store.data.cards || {});
   const keepChildIds = new Set<string>();
-  const titleBase = parentRec.title || "Image occlusion";
+  const titleBase = String(parentRec.title ?? "").trim();
 
   for (const [groupKey, rectIds] of groupToRectIds.entries()) {
     const childId = stableIoChildId(id, groupKey);
@@ -387,7 +387,7 @@ export async function saveIoCard(params: IoSaveParams, maskMode: "all" | "solo")
     const rec: CardRecord = {
       id: childId,
       type: "io-child",
-      title: titleBase,
+      title: titleBase || null,
       parentId: id,
       groupKey,
       rectIds: rectIds.slice(),

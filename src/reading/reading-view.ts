@@ -7,7 +7,7 @@
  */
 
 import type { App, Plugin, MarkdownPostProcessorContext } from "obsidian";
-import { Component, MarkdownRenderer, Notice, setIcon, TFile } from "obsidian";
+import { Component, MarkdownRenderer, Notice, setIcon, TFile, renderMath, finishRenderMath } from "obsidian";
 import { log } from "../core/logger";
 import { escapeDelimiterRe } from "../core/delimiter";
 import { openBulkEditModalForCards } from "../modals/bulk-edit";
@@ -30,10 +30,10 @@ import {
   normalizeMathSignature,
   processMarkdownFeatures,
   buildCardContentHTML,
-  renderMathInElement,
   type SproutCard,
 } from "./reading-helpers";
 import { getTtsService } from "../tts/tts-service";
+import { processClozeForMath } from "../core/shared-utils";
 
 /* -----------------------
    Module-level mutable state
@@ -664,13 +664,13 @@ export function registerReadingViewPrettyCards(plugin: Plugin) {
   // Expose manual trigger and event hook
   setupManualTrigger();
 
-  const handleViewportChange = () => {
-    const stylesEnabled = !!getSproutPlugin()?.settings?.general?.enableReadingStyles;
-    if (!stylesEnabled) return;
-    scheduleViewportReflow();
-  };
-  addTrackedWindowListener('resize', handleViewportChange, { passive: true });
-  addTrackedWindowListener('scroll', handleViewportChange, { passive: true, capture: true });
+  // NOTE: Scroll and resize listeners for scheduleViewportReflow() were removed
+  // to fix issue #56 — the masonry column layout flickered (1-col → 2-col) because
+  // Obsidian's lazy section rendering caused scroll-triggered reflows to unwrap and
+  // re-wrap card runs. CSS `column-width` handles responsive column count natively.
+  // The MutationObserver now detects re-added sections from Obsidian's virtualiser
+  // and applies layout to them. Layout also recalculates on mode-switch (edit →
+  // reading) via the sprout:prettify-cards-refresh event / scheduleViewportReflow.
 
   // Listen for prettify-cards-refresh event on each markdown view's containerEl
   function attachRefreshListenerToMarkdownViews() {
@@ -808,12 +808,27 @@ function setupDebouncedMutationObserver() {
   mutationObserver = new MutationObserver((mutations) => {
     // Collect specific containers that have new unprocessed .el-p elements
     const dirtyContainers = new Set<HTMLElement>();
+    // Sections re-entering the DOM (Obsidian's virtualiser) with
+    // already-processed cards that need their card-run wrappers restored.
+    const sectionsNeedingLayout = new Set<HTMLElement>();
+
     for (const m of mutations) {
       // Only watch for added nodes (new content), ignore removals and repositioning
       if (m.type === 'childList' && m.addedNodes.length > 0) {
+        // Skip mutations inside the editor
+        if (m.target instanceof Element && m.target.closest('.cm-content')) continue;
+        // Skip mutations inside our own card-run wrappers (from wrapping/unwrapping)
+        if (m.target instanceof Element && m.target.closest('.sprout-reading-card-run')) continue;
+        // Skip mutations outside reading view contexts
+        if (m.target instanceof Element && !m.target.closest('.markdown-reading-view, .markdown-preview-view, .markdown-rendered')) continue;
+
         for (const n of Array.from(m.addedNodes)) {
           if (n.nodeType === Node.ELEMENT_NODE) {
             const el = n as Element;
+
+            // Skip our own wrapper nodes being added
+            if (el instanceof HTMLElement && el.classList.contains('sprout-reading-card-run')) continue;
+
             // Only trigger if we see actual NEW .el-p or sprout cards
             // Skip if the added node is just being moved (check if it already has sprout-processed)
             if (el.matches && el.matches('.el-p') && !el.hasAttribute('data-sprout-processed')) {
@@ -824,8 +839,43 @@ function setupDebouncedMutationObserver() {
             } else if (queryFirst(el as ParentNode, '.el-p:not([data-sprout-processed])')) {
               dirtyContainers.add(el as HTMLElement);
             }
+
+            // Detect sections re-entering the DOM with already-processed
+            // cards that aren't wrapped in .sprout-reading-card-run yet.
+            // This handles Obsidian's virtualised scroll (#56) — sections
+            // removed from the DOM and re-added lose their card-run wrappers.
+            if (el instanceof HTMLElement) {
+              const isSection = el.classList.contains('markdown-preview-section');
+              if (isSection && el.querySelector('.sprout-pretty-card') && !el.querySelector('.sprout-reading-card-run')) {
+                sectionsNeedingLayout.add(el);
+              } else if (el.classList.contains('sprout-pretty-card') && !el.closest('.sprout-reading-card-run')) {
+                // A processed card was added outside a card-run wrapper
+                // (e.g. post-processor ran while element was detached).
+                const section = el.closest<HTMLElement>('.markdown-preview-section');
+                if (section) sectionsNeedingLayout.add(section);
+              } else if (!isSection) {
+                // The added node might contain sections (e.g. a container node)
+                el.querySelectorAll?.('.markdown-preview-section')?.forEach((sec) => {
+                  if (sec instanceof HTMLElement && sec.querySelector('.sprout-pretty-card') && !sec.querySelector('.sprout-reading-card-run')) {
+                    sectionsNeedingLayout.add(sec);
+                  }
+                });
+              }
+            }
           }
         }
+      }
+    }
+
+    // Apply layout to sections that re-entered the DOM immediately
+    // (no debounce needed — wrapContiguousCardRuns fast-path prevents
+    // flicker when cards are already wrapped, and these sections have
+    // unwrapped cards that need wrapping exactly once).
+    if (sectionsNeedingLayout.size > 0) {
+      const stylesEnabled = !!getSproutPlugin()?.settings?.general?.enableReadingStyles;
+      if (stylesEnabled) {
+        const rvSettings = getSproutPlugin()?.settings?.readingView;
+        applyLayoutToSections(sectionsNeedingLayout, rvSettings);
       }
     }
 
@@ -957,6 +1007,12 @@ async function processCardElements(container: HTMLElement, _ctx?: MarkdownPostPr
 
   // ── Apply reading view layout settings to sections containing cards ──
   applyLayoutForContainer();
+
+  // Schedule a deferred global reflow as a safety net.
+  // Individual post-processor calls may race or run before elements
+  // are attached to the DOM; this final pass ensures card-run wrappers
+  // are created after all pending rendering settles.
+  scheduleViewportReflow();
 
   await Promise.resolve();
 
@@ -1162,9 +1218,25 @@ function unwrapCardRuns(section: HTMLElement) {
     }
     wrapper.remove();
   }
+  // Flush queued MutationObserver records from unwrapping
+  if (mutationObserver) {
+    mutationObserver.takeRecords();
+  }
 }
 
 function wrapContiguousCardRuns(section: HTMLElement) {
+  // Fast-path: skip destructive teardown + rebuild when every visible
+  // card is already inside a .sprout-reading-card-run wrapper.
+  // This prevents the column→single-column→column flicker (#56)
+  // that occurs when scroll / resize debounce triggers a full reflow.
+  const hasUnwrappedVisibleCards = Array.from(section.children).some(child => {
+    if (!(child instanceof HTMLElement)) return false;
+    return child.classList.contains('sprout-pretty-card') &&
+           !child.classList.contains('sprout-hidden-important') &&
+           child.getAttribute('data-sprout-hidden') !== 'true';
+  });
+  if (!hasUnwrappedVisibleCards) return;
+
   unwrapCardRuns(section);
 
   const children = Array.from(section.children) as HTMLElement[];
@@ -1184,7 +1256,22 @@ function wrapContiguousCardRuns(section: HTMLElement) {
       continue;
     }
 
+    // Hidden elements (duplicate siblings from multi-line card blocks)
+    // should stay inside the current card-run so they don't break the
+    // masonry column layout between consecutive visible cards.
+    // CSS already hides them via display:none inside the card-run.
+    if (isHidden && currentRun) {
+      currentRun.appendChild(child);
+      continue;
+    }
+
     currentRun = null;
+  }
+
+  // Flush any queued MutationObserver records caused by wrapping so the
+  // observer doesn't re-process our own DOM rearrangement.
+  if (mutationObserver) {
+    mutationObserver.takeRecords();
   }
 }
 
@@ -1231,8 +1318,16 @@ function applyLayoutToSections(sections: Iterable<HTMLElement>, rvSettings: Read
 function collectSectionsWithPrettyCards(scope: ParentNode): Set<HTMLElement> {
   const sections = new Set<HTMLElement>();
 
-  if (scope instanceof HTMLElement && scope.classList.contains('markdown-preview-section') && scope.querySelector('.sprout-pretty-card')) {
-    sections.add(scope);
+  if (scope instanceof HTMLElement) {
+    // If scope itself is a .markdown-preview-section containing cards
+    if (scope.classList.contains('markdown-preview-section') && scope.querySelector('.sprout-pretty-card')) {
+      sections.add(scope);
+    }
+    // If scope itself is (or has become) a pretty card, find its parent section
+    if (scope.classList.contains('sprout-pretty-card')) {
+      const section = scope.closest<HTMLElement>('.markdown-preview-section');
+      if (section) sections.add(section);
+    }
   }
 
   scope.querySelectorAll<HTMLElement>('.sprout-pretty-card').forEach((card) => {
@@ -1496,25 +1591,231 @@ function resolveCleanMarkdownClozeStyle(plugin: SproutPluginLike | null): CleanM
   return { bgColor: bg, textColor: text };
 }
 
+/* =========================
+   Brace-aware cloze token matching
+   ========================= */
+
+interface ClozeMatch {
+  /** Start index of `{{cN::` in the source string */
+  index: number;
+  /** Full matched string `{{cN::...}}` */
+  fullMatch: string;
+  /** Content between `{{cN::` and `}}` */
+  content: string;
+}
+
+/**
+ * Brace-aware cloze token matcher.
+ *
+ * Unlike the simple regex `/\{\{c\d+::([\s\S]*?)\}\}/g`, this correctly
+ * handles LaTeX content with nested braces (e.g. `\frac{a}{b}`) by
+ * tracking brace depth. The cloze `}}` closer is only matched when the
+ * brace depth returns to zero.
+ *
+ * Example:
+ *   `{{c1::\( x = \frac{-b}{2a} \)}}`
+ *                     ^depth 1  ^depth 0 → these }} are LaTeX, not cloze
+ *                                          actual cloze close is the final }}
+ */
+function matchClozeTokensBraceAware(source: string): ClozeMatch[] {
+  const results: ClozeMatch[] = [];
+  const opener = /\{\{c\d+::/g;
+  let m: RegExpExecArray | null;
+
+  while ((m = opener.exec(source)) !== null) {
+    const startIdx = m.index;
+    const contentStart = startIdx + m[0].length;
+    let depth = 0;
+    let i = contentStart;
+    let found = false;
+
+    while (i < source.length) {
+      if (source[i] === '{') {
+        depth++;
+      } else if (source[i] === '}') {
+        if (depth > 0) {
+          depth--;
+        } else {
+          // depth === 0, check for closing }}
+          if (i + 1 < source.length && source[i + 1] === '}') {
+            const content = source.slice(contentStart, i);
+            const fullMatch = source.slice(startIdx, i + 2);
+            results.push({ index: startIdx, fullMatch, content });
+            opener.lastIndex = i + 2;
+            found = true;
+            break;
+          }
+          // Single } at depth 0 — skip (shouldn't happen in valid cloze)
+        }
+      }
+      i++;
+    }
+
+    if (!found) {
+      // Malformed cloze — no balanced closing }} found, skip
+    }
+  }
+
+  return results;
+}
+
+/* =========================
+   LaTeX rendering via Obsidian API
+   ========================= */
+
+/**
+ * Regex matching LaTeX delimiters in text.
+ *   \( ... \)   — inline math
+ *   \[ ... \]   — display math
+ *   $$ ... $$   — display math
+ *   $ ... $     — inline math (no leading/trailing space)
+ */
+const LATEX_INLINE_RE = /\\\((.+?)\\\)/g;
+const LATEX_DISPLAY_PARENS_RE = /\\\[([\s\S]+?)\\\]/g;
+const LATEX_DISPLAY_DOLLAR_RE = /\$\$([\s\S]+?)\$\$/g;
+const LATEX_INLINE_DOLLAR_RE = /(?<!\$)\$(?!\$)([^\s$](?:[^$]*[^\s$])?)\$(?!\$)/g;
+const LATEX_MATH_BLOCK_RE = /\$\$[\s\S]+?\$\$|\\\([\s\S]+?\\\)|\\\[[\s\S]+?\\\]/g;
+
+function buildLatexMathRangeChecker(text: string): (pos: number) => boolean {
+  const ranges: Array<[number, number]> = [];
+  LATEX_MATH_BLOCK_RE.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = LATEX_MATH_BLOCK_RE.exec(text)) !== null) {
+    ranges.push([m.index, m.index + m[0].length]);
+  }
+  if (!ranges.length) return () => false;
+  return (pos: number) => ranges.some(([start, end]) => pos >= start && pos < end);
+}
+
+/**
+ * Walk descendant text nodes of `container` and replace LaTeX delimiters
+ * with rendered math elements using Obsidian's `renderMath` API.
+ *
+ * This is more reliable than MathJax.typesetPromise because it uses the
+ * same rendering pipeline Obsidian's MarkdownRenderer uses internally.
+ */
+function renderLatexInContainer(container: HTMLElement): void {
+  // Collect text nodes containing LaTeX
+  const textNodes: Text[] = [];
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+  let node: Node | null;
+  while ((node = walker.nextNode()) !== null) {
+    const text = node.textContent || '';
+    if (/\\\(|\\\[|\$\$|\$/.test(text)) {
+      // Skip text nodes inside the hidden original content store
+      if ((node.parentNode as Element)?.closest?.('.sprout-original-content')) continue;
+      textNodes.push(node as Text);
+    }
+  }
+
+  if (textNodes.length === 0) return;
+
+  let rendered = false;
+
+  for (const textNode of textNodes) {
+    const text = textNode.textContent || '';
+    const parent = textNode.parentNode;
+    if (!parent) continue;
+
+    // Skip nodes inside elements that already have rendered math
+    if ((parent as Element).closest?.('.MathJax, mjx-container, .math')) continue;
+
+    // Build a list of math segments with their positions
+    const segments: Array<{ start: number; end: number; source: string; display: boolean }> = [];
+
+    const collectMatches = (re: RegExp, display: boolean) => {
+      re.lastIndex = 0;
+      let match: RegExpExecArray | null;
+      while ((match = re.exec(text)) !== null) {
+        segments.push({
+          start: match.index,
+          end: match.index + match[0].length,
+          source: match[1],
+          display,
+        });
+      }
+    };
+
+    // Collect in order of priority (display before inline, $$ before $)
+    collectMatches(LATEX_DISPLAY_DOLLAR_RE, true);
+    collectMatches(LATEX_DISPLAY_PARENS_RE, true);
+    collectMatches(LATEX_INLINE_RE, false);
+    collectMatches(LATEX_INLINE_DOLLAR_RE, false);
+
+    if (segments.length === 0) continue;
+
+    // Sort by position and remove overlapping matches (first match wins)
+    segments.sort((a, b) => a.start - b.start);
+    const filtered: typeof segments = [];
+    let lastEnd = 0;
+    for (const seg of segments) {
+      if (seg.start >= lastEnd) {
+        filtered.push(seg);
+        lastEnd = seg.end;
+      }
+    }
+
+    if (filtered.length === 0) continue;
+
+    // Build a document fragment with text + math interleaved
+    const frag = document.createDocumentFragment();
+    let cursor = 0;
+
+    for (const seg of filtered) {
+      // Text before this math segment
+      if (seg.start > cursor) {
+        frag.appendChild(document.createTextNode(text.slice(cursor, seg.start)));
+      }
+
+      try {
+        const mathEl = renderMath(seg.source, seg.display);
+        frag.appendChild(mathEl);
+        rendered = true;
+      } catch {
+        // Fallback: keep original text
+        frag.appendChild(document.createTextNode(text.slice(seg.start, seg.end)));
+      }
+
+      cursor = seg.end;
+    }
+
+    // Remaining text after last math segment
+    if (cursor < text.length) {
+      frag.appendChild(document.createTextNode(text.slice(cursor)));
+    }
+
+    parent.replaceChild(frag, textNode);
+  }
+
+  // Finalize MathJax rendering for all newly created math elements
+  if (rendered) {
+    void finishRenderMath();
+  }
+}
+
 function renderMarkdownLineWithClozeSpans(value: string, style?: CleanMarkdownClozeStyle): string {
   const source = String(value ?? '');
   if (!source) return '';
 
-  const clozeRegex = /\{\{c\d+::([\s\S]*?)\}\}/g;
+  const clozeMatches = matchClozeTokensBraceAware(source);
+  const isInsideMath = buildLatexMathRangeChecker(source);
   const spanStyle = buildCleanMarkdownClozeSpanStyle(style);
   let last = 0;
   let out = '';
-  let match: RegExpExecArray | null;
 
-  while ((match = clozeRegex.exec(source)) !== null) {
-    if (match.index > last) {
-      out += processMarkdownFeatures(source.slice(last, match.index));
+  for (const cm of clozeMatches) {
+    if (cm.index > last) {
+      out += processMarkdownFeatures(source.slice(last, cm.index));
     }
-    const answer = String(match[1] ?? '').trim();
+    const answer = cm.content.trim();
     if (answer) {
-      out += `<span class="sprout-cloze-revealed sprout-clean-markdown-cloze"${spanStyle}>${processMarkdownFeatures(answer)}</span>`;
+      if (isInsideMath(cm.index)) {
+        out += `\\boxed{${answer}}`;
+      } else {
+        out += `<span class="sprout-cloze-revealed sprout-clean-markdown-cloze"${spanStyle}>${processMarkdownFeatures(answer)}</span>`;
+      }
     }
-    last = match.index + match[0].length;
+    last = cm.index + cm.fullMatch.length;
   }
 
   if (last < source.length) {
@@ -1624,16 +1925,30 @@ function normalizeGroupsForDisplay(groupsField: string | string[] | undefined): 
 
 function buildFlashcardCloze(text: string, mode: 'front' | 'back'): string {
   const source = String(text || '');
-  const regex = /\{\{c\d+::([\s\S]*?)\}\}/g;
+  if (source.includes('$') || source.includes('\\(') || source.includes('\\[')) {
+    const reveal = mode === 'back';
+    return processMarkdownFeatures(
+      processClozeForMath(source, reveal, null, { blankClassName: 'sprout-flashcard-blank' }),
+    );
+  }
+
+  const clozeMatches = matchClozeTokensBraceAware(source);
+  const isInsideMath = buildLatexMathRangeChecker(source);
   let out = '';
   let last = 0;
-  let match: RegExpExecArray | null;
-  while ((match = regex.exec(source)) !== null) {
-    if (match.index > last) out += renderMarkdownLineWithClozeSpans(source.slice(last, match.index));
-    const ans = String(match[1] || '').trim();
-    if (mode === 'front') out += `<span class="sprout-flashcard-blank">&nbsp;</span>`;
-    else out += `<span class="sprout-reading-view-cloze"><span class="sprout-cloze-text">${renderMarkdownLineWithClozeSpans(ans)}</span></span>`;
-    last = match.index + match[0].length;
+  for (const cm of clozeMatches) {
+    if (cm.index > last) out += renderMarkdownLineWithClozeSpans(source.slice(last, cm.index));
+    const ans = cm.content.trim();
+    const inMath = isInsideMath(cm.index);
+    if (mode === 'front') {
+      const placeholderSeed = ans || 'x';
+      out += inMath ? `\\boxed{\\phantom{${placeholderSeed}}}` : `<span class="sprout-flashcard-blank">&nbsp;</span>`;
+    } else {
+      out += inMath
+        ? `\\boxed{${ans}}`
+        : `<span class="sprout-reading-view-cloze"><span class="sprout-cloze-text">${renderMarkdownLineWithClozeSpans(ans)}</span></span>`;
+    }
+    last = cm.index + cm.fullMatch.length;
   }
   if (last < source.length) out += renderMarkdownLineWithClozeSpans(source.slice(last));
   return out;
@@ -1689,6 +2004,9 @@ function buildFlashcardContentHTML(card: SproutCard, options: { includeSpeakerBu
       ? card.fields.O
       : toTextField(card.fields.O).split('\n').map((s) => s.trim()).filter(Boolean);
 
+    // Build a lowercase set of correct answers for fast lookup
+    const answersLower = new Set(answers.map((a) => a.toLowerCase()));
+
     const seen = new Set<string>();
     const allOptions = [...answers, ...wrongOptions]
       .map((s) => String(s).trim())
@@ -1705,15 +2023,34 @@ function buildFlashcardContentHTML(card: SproutCard, options: { includeSpeakerBu
       [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]];
     }
 
-    front = `<div class="sprout-flashcard-question-text">${renderMarkdownLineWithClozeSpans(q)}</div>${allOptions.length ? `<ul class="sprout-flashcard-options sprout-flashcard-options-list">${allOptions.map((opt) => `<li>${renderMarkdownLineWithClozeSpans(String(opt))}</li>`).join('')}</ul>` : ''}`;
-    back = answers.length > 1
-      ? `<ul class="sprout-flashcard-answer-list">${answers.map((ans) => `<li><strong>${renderMarkdownLineWithClozeSpans(ans)}</strong></li>`).join('')}</ul>`
-      : `<div><strong>${renderMarkdownLineWithClozeSpans(answers[0] || '')}</strong></div>`;
+    const questionHtml = `<div class="sprout-flashcard-question-text">${renderMarkdownLineWithClozeSpans(q)}</div>`;
+    const optionsListHtml = allOptions.length
+      ? `<ul class="sprout-flashcard-options sprout-flashcard-options-list">${allOptions.map((opt) => `<li>${renderMarkdownLineWithClozeSpans(String(opt))}</li>`).join('')}</ul>`
+      : '';
+    // Back: same question + same randomised list with correct answer(s) bolded.
+    // Wrap the entire <li> content (including any LaTeX) in <strong> for correct answers.
+    const backOptionsListHtml = allOptions.length
+      ? `<ul class="sprout-flashcard-options sprout-flashcard-options-list">${allOptions.map((opt) => {
+          const rendered = renderMarkdownLineWithClozeSpans(String(opt));
+          const isCorrect = answersLower.has(opt.toLowerCase());
+          return isCorrect ? `<li><strong>${rendered}</strong></li>` : `<li>${rendered}</li>`;
+        }).join('')}</ul>`
+      : '';
+
+    front = `${questionHtml}${optionsListHtml}`;
+    back = `${questionHtml}${backOptionsListHtml}`;
   } else if (card.type === 'oq') {
     const q = toTextField(card.fields.OQ);
     const steps = getOqSteps();
-    front = `<div>${renderMarkdownLineWithClozeSpans(q)}</div>`;
-    back = `<ol class="sprout-flashcard-sequence-list">${steps.map((s) => `<li>${renderMarkdownLineWithClozeSpans(s)}</li>`).join('')}</ol>`;
+    // Front: question + shuffled unordered list of steps (no order hints)
+    const shuffledSteps = [...steps];
+    for (let i = shuffledSteps.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffledSteps[i], shuffledSteps[j]] = [shuffledSteps[j], shuffledSteps[i]];
+    }
+    const oqQuestionHtml = `<div class="sprout-flashcard-question-text">${renderMarkdownLineWithClozeSpans(q)}</div>`;
+    front = `${oqQuestionHtml}${shuffledSteps.length ? `<ul class="sprout-flashcard-options sprout-flashcard-options-list">${shuffledSteps.map((s) => `<li>${renderMarkdownLineWithClozeSpans(s)}</li>`).join('')}</ul>` : ''}`;
+    back = `${oqQuestionHtml}<ol class="sprout-flashcard-sequence-list">${steps.map((s) => `<li>${renderMarkdownLineWithClozeSpans(s)}</li>`).join('')}</ol>`;
   } else {
     const q = card.type === 'reversed' ? toTextField(card.fields.RQ) : toTextField(card.fields.Q);
     const a = toTextField(card.fields.A);
@@ -2318,7 +2655,16 @@ function enhanceCardElement(
     });
   });
 
-  // Render MathJax if present
+  // Render LaTeX synchronously so math displays immediately.
+  // The async renderMdInElements may bail early if the plugin/app
+  // reference is not yet available, so this serves as a reliable
+  // primary path for flashcard-mode cards whose Q/A fields don't
+  // go through MarkdownRenderer.render().
+  renderLatexInContainer(el);
+
+  // Async rendering for MarkdownRenderer-based fields (basic Q/A, Info)
+  // and image embed resolution. Also re-runs renderLatexInContainer
+  // for any LaTeX produced by MarkdownRenderer.render().
   void renderMdInElements(el, card);
 }
 
@@ -2418,8 +2764,8 @@ async function renderMdInElements(el: HTMLElement, card: SproutCard) {
   // These appear in cloze, MCQ, and title fields as <img data-embed-path="...">
   resolveEmbeddedImages(el, app, sourcePath);
   
-  // Render MathJax after markdown is processed
-  renderMathInElement(el);
+  // Render LaTeX using Obsidian's native renderMath API
+  renderLatexInContainer(el);
 }
 
 /**

@@ -507,7 +507,9 @@ input[type="checkbox"]:checked:hover::after {
 /* ---- MathJax: remove block margins inside Sprout cards/widgets ---- */
 
 .sprout .sprout-session-card mjx-container[jax="CHTML"][display="true"],
-.sprout .sprout-widget mjx-container[jax="CHTML"][display="true"] {
+.sprout.sprout-widget mjx-container[jax="CHTML"][display="true"],
+.sprout .sprout-widget mjx-container[jax="CHTML"][display="true"],
+.sprout-widget-card-body mjx-container[jax="CHTML"][display="true"] {
   margin: 0 !important;
 }
 
@@ -519,6 +521,63 @@ input[type="checkbox"]:checked:hover::after {
   margin: 0 !important;
   margin-block-start: 0 !important;
   margin-block-end: 0 !important;
+}
+
+/* ---- Override theme math-block styling inside Sprout card views ---- */
+/* Themes like the user's may set background, padding, border-radius on
+   .math.math-block.is-loaded which clashes with card/widget/gatekeeper layout.
+   Reset those properties so Sprout cards look consistent regardless of theme. */
+
+.sprout .sprout-session-card .math.math-block.is-loaded,
+.sprout.sprout-widget .math.math-block.is-loaded,
+.sprout .sprout-widget .math.math-block.is-loaded,
+.sprout-widget-card-body .math.math-block.is-loaded,
+.sprout .sprout-gatekeeper-modal .math.math-block.is-loaded,
+.sprout .sprout-pretty-card .math.math-block.is-loaded {
+  background-color: transparent !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  width: auto !important;
+}
+
+/* ---- Inline math: slight left margin so LaTeX doesn't touch preceding text ---- */
+.sprout .sprout-session-card .math.is-loaded,
+.sprout.sprout-widget .math.is-loaded,
+.sprout .sprout-widget .math.is-loaded,
+.sprout-widget-card-body .math.is-loaded,
+.sprout .sprout-gatekeeper-modal .math.is-loaded,
+.sprout .sprout-pretty-card .math.is-loaded {
+  margin-left: 0.15em !important;
+}
+
+/* Also reset the inner MathJax container inside math blocks */
+.sprout .sprout-session-card .math.math-block.is-loaded mjx-container,
+.sprout.sprout-widget .math.math-block.is-loaded mjx-container,
+.sprout .sprout-widget .math.math-block.is-loaded mjx-container,
+.sprout-widget-card-body .math.math-block.is-loaded mjx-container,
+.sprout .sprout-gatekeeper-modal .math.math-block.is-loaded mjx-container,
+.sprout .sprout-pretty-card .math.math-block.is-loaded mjx-container {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Inline math: remove any theme-added background/padding */
+.sprout .sprout-session-card .math.math-inline.is-loaded,
+.sprout.sprout-widget .math.math-inline.is-loaded,
+.sprout .sprout-widget .math.math-inline.is-loaded,
+.sprout-widget-card-body .math.math-inline.is-loaded,
+.sprout .sprout-gatekeeper-modal .math.math-inline.is-loaded,
+.sprout .sprout-pretty-card .math.math-inline.is-loaded {
+  background-color: transparent !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 /* ---- Background helper ---- */

@@ -55,6 +55,31 @@ const PLACEHOLDER_INFO = "Optional: Add extra context or explanation shown on th
 
 type ClozeShortcut = "new" | "same";
 
+const DEV_CLOZE_FLAG_KEY = "__SPROUT_DEV_SHOW_CLOZE_BUTTONS__";
+const DEV_CLOZE_HELPER_KEY = "sproutDevClozeButtons";
+
+function installDevClozeConsoleHelper() {
+  const globalObj = globalThis as unknown as Record<string, unknown>;
+  if (typeof globalObj[DEV_CLOZE_HELPER_KEY] === "function") return;
+
+  const helper = (enabled?: boolean) => {
+    const next = enabled ?? true;
+    globalObj[DEV_CLOZE_FLAG_KEY] = Boolean(next);
+    return globalObj[DEV_CLOZE_FLAG_KEY];
+  };
+
+  globalObj[DEV_CLOZE_HELPER_KEY] = helper;
+}
+
+installDevClozeConsoleHelper();
+
+export function shouldShowMobileClozeButtons(): boolean {
+  installDevClozeConsoleHelper();
+  const globalObj = globalThis as unknown as Record<string, unknown>;
+  const devForced = globalObj[DEV_CLOZE_FLAG_KEY] === true;
+  return Platform.isMobileApp || devForced;
+}
+
 function isMacLike(): boolean {
   return Platform.isMacOS;
 }
@@ -67,7 +92,7 @@ function getClozeShortcut(ev: KeyboardEvent): ClozeShortcut | null {
   return ev.altKey ? "same" : "new";
 }
 
-function getClozeIndices(text: string): number[] {
+export function getClozeIndices(text: string): number[] {
   const out: number[] = [];
   const re = /\{\{c(\d+)::/gi;
   let match: RegExpExecArray | null = null;
@@ -78,7 +103,7 @@ function getClozeIndices(text: string): number[] {
   return out;
 }
 
-function applyClozeShortcut(textarea: HTMLTextAreaElement, mode: ClozeShortcut) {
+export function applyClozeShortcut(textarea: HTMLTextAreaElement, mode: ClozeShortcut) {
   const value = String(textarea.value ?? "");
   const start = Number.isFinite(textarea.selectionStart) ? (textarea.selectionStart) : value.length;
   const end = Number.isFinite(textarea.selectionEnd) ? (textarea.selectionEnd) : value.length;
@@ -106,7 +131,7 @@ function applyClozeShortcut(textarea: HTMLTextAreaElement, mode: ClozeShortcut) 
   textarea.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-function attachClozeShortcuts(textarea: HTMLTextAreaElement) {
+export function attachClozeShortcuts(textarea: HTMLTextAreaElement) {
   textarea.addEventListener("keydown", (ev: KeyboardEvent) => {
     const shortcut = getClozeShortcut(ev);
     if (!shortcut) return;
@@ -114,6 +139,47 @@ function attachClozeShortcuts(textarea: HTMLTextAreaElement) {
     ev.stopPropagation();
     applyClozeShortcut(textarea, shortcut);
   });
+}
+
+export function createMobileClozeButtons(textarea: HTMLTextAreaElement): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.className = "bc sprout-cloze-mobile-actions";
+
+  const repeatBtn = document.createElement("button");
+  repeatBtn.type = "button";
+  repeatBtn.className = "bc btn-outline h-7 px-2 text-sm inline-flex items-center justify-center sprout-cloze-mobile-btn sprout-is-hidden";
+  repeatBtn.textContent = "Repeat cloze";
+
+  const addBtn = document.createElement("button");
+  addBtn.type = "button";
+  addBtn.className = "bc btn-outline h-7 px-2 text-sm inline-flex items-center justify-center sprout-cloze-mobile-btn";
+  addBtn.textContent = "Add cloze";
+
+  const refreshState = () => {
+    const hasCloze = getClozeIndices(String(textarea.value ?? "")).length > 0;
+    repeatBtn.classList.toggle("sprout-is-hidden", !hasCloze);
+  };
+
+  addBtn.addEventListener("click", (ev) => {
+    ev.preventDefault();
+    applyClozeShortcut(textarea, "new");
+    textarea.focus();
+    refreshState();
+  });
+
+  repeatBtn.addEventListener("click", (ev) => {
+    ev.preventDefault();
+    applyClozeShortcut(textarea, "same");
+    textarea.focus();
+    refreshState();
+  });
+
+  textarea.addEventListener("input", refreshState);
+  refreshState();
+
+  wrap.appendChild(repeatBtn);
+  wrap.appendChild(addBtn);
+  return wrap;
 }
 
 // ── Inline formatting shortcuts ────────────────────────────────────────────
@@ -366,6 +432,9 @@ export function createCardEditor(config: CardEditorConfig): CardEditorResult {
       attachFormatShortcuts(input);
       if (field.key === "question" && isClozeOnly) {
         attachClozeShortcuts(input);
+        if (shouldShowMobileClozeButtons()) {
+          wrapper.appendChild(createMobileClozeButtons(input));
+        }
       }
     }
     root.appendChild(wrapper);

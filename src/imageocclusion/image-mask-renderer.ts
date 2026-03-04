@@ -163,7 +163,7 @@ export class ImageOcclusionEditorModal extends Modal {
     this.initialMaskMode = maskMode;
 
     try {
-      this.titleEl?.setText?.("Image occlusion");
+      if (this.titleEl) this.titleEl.hidden = true;
     } catch {
       // ignore
     }
@@ -367,7 +367,7 @@ export class ImageOcclusionEditorModal extends Modal {
     this.stageEl = this.viewportEl.createDiv({ cls: "bc sprout-io-stage" });
 
     this.imgEl = this.stageEl.createEl("img", { cls: "bc sprout-io-img" });
-    this.imgEl.alt = "Image occlusion";
+    this.imgEl.alt = "Card image";
     this.imgEl.draggable = false;
 
     this.overlayEl = this.stageEl.createDiv({ cls: "bc sprout-io-overlay" });
@@ -983,7 +983,7 @@ export class ImageOcclusionEditorModal extends Modal {
       const childId = stableIoChildId(this.parentId, groupKey);
       keepChildIds.add(childId);
 
-      const titleBase = parent?.title ? String(parent.title) : "Image occlusion";
+      const titleBase = parent?.title ? String(parent.title) : null;
       const childTitle = titleBase;
 
       const rec = {

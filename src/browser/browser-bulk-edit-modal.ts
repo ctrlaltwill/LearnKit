@@ -14,9 +14,14 @@
  *   - openBulkEditModal — convenience wrapper that creates and opens BulkEditModal
  */
 
-import { Modal, Notice, Platform, setIcon, type App } from "obsidian";
+import { Modal, Notice, setIcon, type App } from "obsidian";
 import type { CardRecord } from "../core/store";
 import { normalizeCardOptions, getCorrectIndices } from "../core/store";
+import {
+  attachClozeShortcuts,
+  createMobileClozeButtons,
+  shouldShowMobileClozeButtons,
+} from "../card-editor/card-editor";
 
 import { buildAnswerOrOptionsFor, escapePipes } from "../reviewer/fields";
 import { getDelimiter } from "../core/delimiter";
@@ -93,62 +98,6 @@ export class BulkEditModal extends Modal {
   const hasMcq = normalizedTypes.some((type) => type === "mcq");
   const answerLabel = hasMcq ? "Answer / Options" : "Answer";
   const isClozeOnly = normalizedTypes.length > 0 && normalizedTypes.every((type) => type === "cloze");
-
-  const isMacLike = () => Platform.isMacOS;
-  type ClozeShortcut = "new" | "same";
-  const getClozeShortcut = (ev: KeyboardEvent): ClozeShortcut | null => {
-    const key = String(ev.key || "").toLowerCase();
-    if (key !== "c" && ev.code !== "KeyC") return null;
-    const primary = isMacLike() ? ev.metaKey : ev.ctrlKey;
-    if (!primary || !ev.shiftKey) return null;
-    return ev.altKey ? "same" : "new";
-  };
-  const getClozeIndices = (text: string): number[] => {
-    const out: number[] = [];
-    const re = /\{\{c(\d+)::/gi;
-    let match: RegExpExecArray | null = null;
-    while ((match = re.exec(text))) {
-      const idx = Number(match[1]);
-      if (Number.isFinite(idx)) out.push(idx);
-    }
-    return out;
-  };
-  const applyClozeShortcut = (textarea: HTMLTextAreaElement, mode: ClozeShortcut) => {
-    const value = String(textarea.value ?? "");
-    const start = Number.isFinite(textarea.selectionStart) ? (textarea.selectionStart) : value.length;
-    const end = Number.isFinite(textarea.selectionEnd) ? (textarea.selectionEnd) : value.length;
-    const indices = getClozeIndices(value);
-    const maxIdx = indices.length ? Math.max(...indices) : 0;
-    const lastIdx = indices.length ? indices[indices.length - 1] : maxIdx;
-    const clozeIdx = mode === "same" ? (lastIdx || 1) : maxIdx + 1;
-
-    const before = value.slice(0, start);
-    const after = value.slice(end);
-    const selected = value.slice(start, end);
-
-    if (selected.length > 0) {
-      const wrapped = `{{c${clozeIdx}::${selected}}}`;
-      textarea.value = before + wrapped + after;
-      const pos = before.length + wrapped.length;
-      textarea.setSelectionRange(pos, pos);
-    } else {
-      const token = `{{c${clozeIdx}::}}`;
-      textarea.value = before + token + after;
-      const pos = before.length + `{{c${clozeIdx}::`.length;
-      textarea.setSelectionRange(pos, pos);
-    }
-
-    textarea.dispatchEvent(new Event("input", { bubbles: true }));
-  };
-  const attachClozeShortcuts = (textarea: HTMLTextAreaElement) => {
-    textarea.addEventListener("keydown", (ev: KeyboardEvent) => {
-      const shortcut = getClozeShortcut(ev);
-      if (!shortcut) return;
-      ev.preventDefault();
-      ev.stopPropagation();
-      applyClozeShortcut(textarea, shortcut);
-    });
-  };
 
   let fields: Array<{ key: ColKey; label: string; editable: boolean }> = [
     { key: "id", label: "ID", editable: false },
@@ -547,6 +496,9 @@ export class BulkEditModal extends Modal {
     inputEls[field.key] = input;
     if (field.key === "question" && input instanceof HTMLTextAreaElement && isClozeOnly) {
       attachClozeShortcuts(input);
+      if (shouldShowMobileClozeButtons()) {
+        wrapper.appendChild(createMobileClozeButtons(input));
+      }
     }
     return wrapper;
   };

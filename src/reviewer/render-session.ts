@@ -18,6 +18,7 @@ import { normalizeCardOptions } from "../core/store";
 import { getCorrectIndices, isMultiAnswerMcq } from "../types/card";
 import type { ClozeRenderOptions } from "./question-cloze";
 import { openCardAnchorInNote } from "../core/open-card-anchor";
+import { processClozeForMath, textContainsMath, convertInlineDisplayMath, forceSingleLineDisplayMathInline } from "../core/shared-utils";
 
 declare global {
   interface Window {
@@ -537,7 +538,7 @@ function makeHeaderMenu(opts: {
 function renderMcqContent(ctx: CardRenderCtx): void {
   const { section, labelRow, renderMdBlock, setupLinkHandlers, args, card, graded, sourcePath } = ctx;
   section.appendChild(labelRow("Question"));
-  section.appendChild(renderMdBlock("bc-q", card.stem || ""));
+  section.appendChild(renderMdBlock("bc-q", convertInlineDisplayMath(card.stem || "")));
   const reveal = !!graded || !!args.showAnswer;
   const multiAnswer = isMultiAnswerMcq(card);
   const correctSet = new Set(getCorrectIndices(card));
@@ -628,8 +629,8 @@ function renderMcqContent(ctx: CardRenderCtx): void {
     textEl.className = "bc min-w-0 whitespace-pre-wrap break-words sprout-mcq-option-text";
 
     // Use markdown rendering if text contains wiki links or LaTeX
-    if (text && (text.includes('[[') || text.includes('$'))) {
-      void args.renderMarkdownInto(textEl, text, sourcePath).then(() => setupLinkHandlers(textEl, sourcePath));
+    if (text && (text.includes('[[') || text.includes('$') || text.includes('\\(') || text.includes('\\['))) {
+      void args.renderMarkdownInto(textEl, forceSingleLineDisplayMathInline(text), sourcePath).then(() => setupLinkHandlers(textEl, sourcePath));
     } else if (text && text.includes("\n")) {
       text.split(/\n+/).forEach((line: string) => {
         const p = document.createElement("div");
@@ -739,7 +740,7 @@ function renderOqContent(ctx: CardRenderCtx): void {
   const { section, labelRow, renderMdBlock, setupLinkHandlers, args, card, graded, sourcePath } = ctx;
   // ── Ordering Question ──────────────────────────────────────────────
   section.appendChild(labelRow("Question"));
-  section.appendChild(renderMdBlock("bc-q", card.q || ""));
+  section.appendChild(renderMdBlock("bc-q", convertInlineDisplayMath(card.q || "")));
 
   const steps = Array.isArray(card.oqSteps) ? card.oqSteps : [];
   const reveal = !!graded || !!args.showAnswer;
@@ -782,8 +783,8 @@ function renderOqContent(ctx: CardRenderCtx): void {
         // Step text
         const textEl = document.createElement("span");
         textEl.className = "bc min-w-0 whitespace-pre-wrap break-words flex-1 sprout-oq-step-text";
-        if (stepText.includes("[[") || stepText.includes("$")) {
-          void args.renderMarkdownInto(textEl, stepText, sourcePath).then(() => setupLinkHandlers(textEl, sourcePath));
+        if (stepText.includes("[[") || stepText.includes("$") || stepText.includes("\\(") || stepText.includes("\\[")) {
+          void args.renderMarkdownInto(textEl, forceSingleLineDisplayMathInline(stepText), sourcePath).then(() => setupLinkHandlers(textEl, sourcePath));
         } else {
           applyInlineMarkdown(textEl, stepText);
         }
@@ -978,8 +979,8 @@ function renderOqContent(ctx: CardRenderCtx): void {
 
       const textEl = document.createElement("span");
       textEl.className = "bc min-w-0 whitespace-pre-wrap break-words flex-1 sprout-oq-step-text";
-      if (stepText.includes("[[") || stepText.includes("$")) {
-        void args.renderMarkdownInto(textEl, stepText, sourcePath).then(() => setupLinkHandlers(textEl, sourcePath));
+      if (stepText.includes("[[") || stepText.includes("$") || stepText.includes("\\(") || stepText.includes("\\[")) {
+        void args.renderMarkdownInto(textEl, forceSingleLineDisplayMathInline(stepText), sourcePath).then(() => setupLinkHandlers(textEl, sourcePath));
       } else {
         applyInlineMarkdown(textEl, stepText);
       }
@@ -1221,6 +1222,9 @@ export function renderSessionMode(args: Args) {
   if (card.type === "reversed-child") {
     displayTitle = displayTitle.replace(/\s*•\s*[AQ]\u2192[AQ]\s*$/, "");
   }
+  // Hide title if it is just the card-type label (not a real user-provided title)
+  const TYPE_LABELS = new Set(["basic", "basic (reversed)", "cloze", "multiple choice", "image occlusion", "ordered question", "flashcard"]);
+  if (TYPE_LABELS.has(displayTitle.toLowerCase())) displayTitle = "";
 
   const titleText =
     displayTitle || "";
@@ -1328,11 +1332,11 @@ export function renderSessionMode(args: Args) {
     const replayBack = card.type === "basic" ? args.ttsReplayBack : undefined;
 
     section.appendChild(labelRow("Question", replayFront));
-    section.appendChild(renderMdBlock("bc-q", frontContent));
+    section.appendChild(renderMdBlock("bc-q", convertInlineDisplayMath(frontContent)));
 
     if (args.showAnswer || graded) {
       section.appendChild(labelRow("Answer", replayBack));
-      section.appendChild(renderMdBlock("bc-a", backContent));
+      section.appendChild(renderMdBlock("bc-a", convertInlineDisplayMath(backContent)));
     }
   } else if (card.type === "cloze" || card.type === "cloze-child") {
     const text = String(card.clozeText || "");
@@ -1342,14 +1346,19 @@ export function renderSessionMode(args: Args) {
     section.appendChild(labelRow(reveal ? "Answer" : "Question", reveal ? args.ttsReplayBack : args.ttsReplayFront));
     const clozContainer = document.createElement("div");
     clozContainer.className = "bc bc-cloze whitespace-pre-wrap break-words sprout-md-block";
-    const clozeContent = args.renderClozeFront(text, reveal, targetIndex, undefined);
-    if (reveal) {
-      const span = document.createElement("span");
-      span.className = "bc whitespace-pre-wrap break-words";
-      span.appendChild(clozeContent);
-      clozContainer.appendChild(span);
+    if (text.includes("$") || text.includes("\\(") || text.includes("\\[") || text.includes("[[")) {
+      const processedText = processClozeForMath(text, reveal, targetIndex);
+      void args.renderMarkdownInto(clozContainer, processedText, sourcePath).then(() => setupLinkHandlers(clozContainer, sourcePath));
     } else {
-      clozContainer.appendChild(clozeContent);
+      const clozeContent = args.renderClozeFront(text, reveal, targetIndex, undefined);
+      if (reveal) {
+        const span = document.createElement("span");
+        span.className = "bc whitespace-pre-wrap break-words";
+        span.appendChild(clozeContent);
+        clozContainer.appendChild(span);
+      } else {
+        clozContainer.appendChild(clozeContent);
+      }
     }
     section.appendChild(clozContainer);
   } else if (card.type === "mcq") {
@@ -1462,11 +1471,10 @@ export function renderSessionMode(args: Args) {
       if (practiceMode) {
         const continueBtn = makeTextButton({
           label: "Continue",
-          className: isPhoneMobile ? "btn-outline" : "btn",
+          className: "btn-outline",
           onClick: goNext,
           kbd: isPhoneMobile ? undefined : "↵",
         });
-        if (!isPhoneMobile) continueBtn.classList.add("sprout-btn-easy");
         mainRow.appendChild(continueBtn);
         hasMainRowContent = true;
       } else {
@@ -1555,7 +1563,7 @@ export function renderSessionMode(args: Args) {
     mainRow.appendChild(
       makeTextButton({
         label: "Next",
-        className: "btn",
+        className: "btn-outline",
         onClick: () => void args.nextCard(true),
         kbd: "↵",
       }),

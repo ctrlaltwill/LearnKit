@@ -49,7 +49,23 @@ export function escapeHtml(s: unknown): string {
  */
 export function processMarkdownFeatures(text: string): string {
   if (!text) return "";
-  let result = String(text);
+  const source = String(text);
+
+  // ── Extract math blocks before applying markdown formatting ──
+  // LaTeX delimiters contain characters like _ * ^ that conflict with
+  // markdown formatting rules. We replace math blocks with placeholders,
+  // apply markdown formatting to non-math text, then restore the math.
+  const mathPlaceholders: string[] = [];
+  const MATH_PH = '\x00MATH';
+
+  const mathBlockRe = /\$\$[\s\S]+?\$\$|(?<!\$)\$(?!\$)[^\s$](?:[^$]*[^\s$])?\$(?!\$)|\\\([\s\S]+?\\\)|\\\[[\s\S]+?\\\]/g;
+  const withPlaceholders = source.replace(mathBlockRe, (match) => {
+    const idx = mathPlaceholders.length;
+    mathPlaceholders.push(match);
+    return `${MATH_PH}${idx}\x00`;
+  });
+
+  let result = withPlaceholders;
 
   // Convert wiki links [[Page]] or [[Page|Display]] to HTML links
   result = result.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_match: string, target: string, display?: string) => {
@@ -75,7 +91,13 @@ export function processMarkdownFeatures(text: string): string {
   // Highlight: ==text== → <mark>text</mark>
   result = result.replace(/==(.+?)==/g, '<mark>$1</mark>');
 
-  // Preserve LaTeX for MathJax
+  // ── Restore math blocks ──
+  if (mathPlaceholders.length) {
+    result = result.replace(/\x00MATH(\d+)\x00/g, (_m, idx) => {
+      return mathPlaceholders[Number(idx)] ?? _m;
+    });
+  }
+
   return result;
 }
 
