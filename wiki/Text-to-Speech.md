@@ -52,7 +52,7 @@ In **Settings → Audio → Flag-aware routing**:
 	- Adds a spoken language prefix before each flag-switched segment.
 	- English variants use the label **English** while keeping regional accent (for example UK/US voice choice).
 
-See [[Flags]] for token syntax and supported formats.
+See [[Flags]] for token syntax and supported formats, and [[Flag-Codes|Flag Codes]] for available language/region codes.
 
 ## During a session
 

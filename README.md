@@ -5,7 +5,7 @@
 [![GitHub issues](https://img.shields.io/github/issues/ctrlaltwill/Sprout)](https://github.com/ctrlaltwill/Sprout/issues)
 ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/ctrlaltwill/sprout/total)
 [![CI](https://github.com/ctrlaltwill/Sprout/actions/workflows/ci.yml/badge.svg)](https://github.com/ctrlaltwill/Sprout/actions/workflows/ci.yml)
-[![Wiki - 32 pages](https://img.shields.io/badge/wiki-32%20pages-blue)](https://github.com/ctrlaltwill/Sprout/wiki)
+[![Wiki - 34 pages](https://img.shields.io/badge/wiki-34%20pages-blue)](https://github.com/ctrlaltwill/Sprout/wiki)
 
 ![Sprout Banner One - Welcome](branding/Banner%20One%20-%20Welcome.png)
 

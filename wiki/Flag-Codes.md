@@ -8,60 +8,286 @@ These tables are generated from the Circle Flags gallery format used by Sprout t
 
 ## 1) Country and territory codes
 
-| Group | Codes |
+| Code | Country/territory |
 |---|---|
-| A | <code>ad</code> Andorra<br><code>ae</code> United Arab Emirates<br><code>af</code> Afghanistan<br><code>ag</code> Antigua and Barbuda<br><code>ai</code> Anguilla<br><code>al</code> Albania<br><code>am</code> Armenia<br><code>an</code> Netherlands Antilles<br><code>ao</code> Angola<br><code>aq</code> Antarctica<br><code>ar</code> Argentina<br><code>as</code> American Samoa<br><code>at</code> Austria<br><code>au</code> Australia<br><code>aw</code> Aruba<br><code>ax</code> Åland Islands<br><code>az</code> Azerbaijan |
-| B | <code>ba</code> Bosnia and Herzegovina<br><code>bb</code> Barbados<br><code>bd</code> Bangladesh<br><code>be</code> Belgium<br><code>bf</code> Burkina Faso<br><code>bg</code> Bulgaria<br><code>bh</code> Bahrain<br><code>bi</code> Burundi<br><code>bj</code> Benin<br><code>bl</code> Saint Barthélemy<br><code>bm</code> Bermuda<br><code>bn</code> Brunei<br><code>bo</code> Bolivia<br><code>br</code> Brazil<br><code>bs</code> Bahamas<br><code>bt</code> Bhutan<br><code>bv</code> Bouvet Island<br><code>bw</code> Botswana<br><code>by</code> Belarus<br><code>bz</code> Belize |
-| C | <code>ca</code> Canada<br><code>cc</code> Cocos (Keeling) Islands<br><code>cd</code> Congo, Democratic Republic of the<br><code>cf</code> Central African Republic<br><code>cg</code> Congo<br><code>ch</code> Switzerland<br><code>ci</code> Ivory Coast<br><code>ck</code> Cook Islands<br><code>cl</code> Chile<br><code>cm</code> Cameroon<br><code>cn</code> China<br><code>co</code> Colombia<br><code>cq</code> Sark<br><code>cr</code> Costa Rica<br><code>cu</code> Cuba<br><code>cv</code> Cabo Verde<br><code>cw</code> Curaçao<br><code>cx</code> Christmas Island<br><code>cy</code> Cyprus<br><code>cz</code> Czechia |
-| D | <code>de</code> Germany<br><code>dj</code> Djibouti<br><code>dk</code> Denmark<br><code>dm</code> Dominica<br><code>do</code> Dominican Republic<br><code>dz</code> Algeria |
-| E | <code>ec</code> Ecuador<br><code>ee</code> Estonia<br><code>eg</code> Egypt<br><code>eh</code> Western Sahara<br><code>er</code> Eritrea<br><code>es</code> Spain<br><code>et</code> Ethiopia<br><code>eu</code> European Union |
-| F | <code>fi</code> Finland<br><code>fj</code> Fiji<br><code>fk</code> Falkland Islands (Malvinas)<br><code>fm</code> Micronesia<br><code>fo</code> Faroe Islands<br><code>fr</code> France |
-| G | <code>ga</code> Gabon<br><code>gb</code> United Kingdom<br><code>gd</code> Grenada<br><code>ge</code> Georgia<br><code>gf</code> French Guiana<br><code>gg</code> Guernsey<br><code>gh</code> Ghana<br><code>gi</code> Gibraltar<br><code>gl</code> Greenland<br><code>gm</code> Gambia<br><code>gn</code> Guinea<br><code>gp</code> Guadeloupe<br><code>gq</code> Equatorial Guinea<br><code>gr</code> Greece<br><code>gs</code> South Georgia and the South Sandwich Islands<br><code>gt</code> Guatemala<br><code>gu</code> Guam<br><code>gw</code> Guinea-Bissau<br><code>gy</code> Guyana |
-| H | <code>hk</code> Hong Kong<br><code>hm</code> Heard Island and McDonald Islands<br><code>hn</code> Honduras<br><code>hr</code> Croatia<br><code>ht</code> Haiti<br><code>hu</code> Hungary |
-| I | <code>id</code> Indonesia<br><code>ie</code> Ireland<br><code>il</code> Israel<br><code>im</code> Isle of Man<br><code>in</code> India<br><code>io</code> British Indian Ocean Territory<br><code>iq</code> Iraq<br><code>ir</code> Iran<br><code>is</code> Iceland<br><code>it</code> Italy |
-| J | <code>je</code> Jersey<br><code>jm</code> Jamaica<br><code>jo</code> Jordan<br><code>jp</code> Japan |
-| K | <code>ke</code> Kenya<br><code>kg</code> Kyrgyzstan<br><code>kh</code> Cambodia<br><code>ki</code> Kiribati<br><code>km</code> Comoros<br><code>kn</code> Saint Kitts and Nevis<br><code>kp</code> North Korea<br><code>kr</code> South Korea<br><code>kw</code> Kuwait<br><code>ky</code> Cayman Islands<br><code>kz</code> Kazakhstan |
-| L | <code>la</code> Laos<br><code>lb</code> Lebanon<br><code>lc</code> Saint Lucia<br><code>li</code> Liechtenstein<br><code>lk</code> Sri Lanka<br><code>lr</code> Liberia<br><code>ls</code> Lesotho<br><code>lt</code> Lithuania<br><code>lu</code> Luxembourg<br><code>lv</code> Latvia<br><code>ly</code> Libya |
-| M | <code>ma</code> Morocco<br><code>mc</code> Monaco<br><code>md</code> Moldova<br><code>me</code> Montenegro<br><code>mf</code> Saint-Martin<br><code>mg</code> Madagascar<br><code>mh</code> Marshall Islands<br><code>mk</code> North Macedonia<br><code>ml</code> Mali<br><code>mm</code> Myanmar<br><code>mn</code> Mongolia<br><code>mo</code> Macao<br><code>mp</code> Northern Mariana Islands<br><code>mq</code> Martinique<br><code>mr</code> Mauritania<br><code>ms</code> Montserrat<br><code>mt</code> Malta<br><code>mu</code> Mauritius<br><code>mv</code> Maldives<br><code>mw</code> Malawi<br><code>mx</code> Mexico<br><code>my</code> Malaysia<br><code>mz</code> Mozambique |
-| N | <code>na</code> Namibia<br><code>nc</code> New Caledonia<br><code>ne</code> Niger<br><code>nf</code> Norfolk Island<br><code>ng</code> Nigeria<br><code>ni</code> Nicaragua<br><code>nl</code> Netherlands<br><code>no</code> Norway<br><code>np</code> Nepal<br><code>nr</code> Nauru<br><code>nu</code> Niue<br><code>nz</code> New Zealand |
-| O | <code>om</code> Oman |
-| P | <code>pa</code> Panama<br><code>pe</code> Peru<br><code>pf</code> French Polynesia<br><code>pg</code> Papua New Guinea<br><code>ph</code> Philippines<br><code>pk</code> Pakistan<br><code>pl</code> Poland<br><code>pm</code> Saint Pierre and Miquelon<br><code>pn</code> Pitcairn Islands<br><code>pr</code> Puerto Rico<br><code>ps</code> Palestine<br><code>pt</code> Portugal<br><code>pw</code> Palau<br><code>py</code> Paraguay |
-| Q | <code>qa</code> Qatar |
-| R | <code>re</code> Réunion<br><code>ro</code> Romania<br><code>rs</code> Serbia<br><code>ru</code> Russia<br><code>rw</code> Rwanda |
-| S | <code>sa</code> Saudi Arabia<br><code>sb</code> Solomon Islands<br><code>sc</code> Seychelles<br><code>sd</code> Sudan<br><code>se</code> Sweden<br><code>sg</code> Singapore<br><code>si</code> Slovenia<br><code>sj</code> Svalbard and Jan Mayen<br><code>sk</code> Slovakia<br><code>sl</code> Sierra Leone<br><code>sm</code> San Marino<br><code>sn</code> Senegal<br><code>so</code> Somalia<br><code>sr</code> Suriname<br><code>ss</code> South Sudan<br><code>st</code> São Tomé and Príncipe<br><code>su</code> Soviet Union<br><code>sv</code> El Salvador<br><code>sx</code> Sint Maarten<br><code>sy</code> Syria<br><code>sz</code> Eswatini |
-| T | <code>tc</code> Turks and Caicos Islands<br><code>td</code> Chad<br><code>tf</code> French Southern Territories<br><code>tg</code> Togo<br><code>th</code> Thailand<br><code>tj</code> Tajikistan<br><code>tk</code> Tokelau<br><code>tl</code> Timor-Leste<br><code>tm</code> Turkmenistan<br><code>tn</code> Tunisia<br><code>to</code> Tonga<br><code>tr</code> Turkey<br><code>tt</code> Trinidad and Tobago<br><code>tv</code> Tuvalu<br><code>tw</code> Taiwan<br><code>tz</code> Tanzania |
-| U | <code>ua</code> Ukraine<br><code>ug</code> Uganda<br><code>um</code> United States Minor Outlying Islands<br><code>us</code> United States of America<br><code>uy</code> Uruguay<br><code>uz</code> Uzbekistan |
-| V | <code>va</code> Holy See (Vatican)<br><code>vc</code> Saint Vincent and the Grenadines<br><code>ve</code> Venezuela<br><code>vg</code> Virgin Islands (British)<br><code>vi</code> Virgin Islands (U.S.)<br><code>vn</code> Vietnam<br><code>vu</code> Vanuatu |
-| W | <code>wf</code> Wallis and Futuna<br><code>ws</code> Samoa |
-| X | <code>xk</code> Kosovo<br><code>xx</code> <Placeholder> |
-| Y | <code>ye</code> Yemen<br><code>yt</code> Mayotte<br><code>yu</code> Yugoslavia |
-| Z | <code>za</code> South Africa<br><code>zm</code> Zambia<br><code>zw</code> Zimbabwe |
-
+| <code>ad</code> | Andorra |
+| <code>ae</code> | United Arab Emirates |
+| <code>af</code> | Afghanistan |
+| <code>ag</code> | Antigua and Barbuda |
+| <code>ai</code> | Anguilla |
+| <code>al</code> | Albania |
+| <code>am</code> | Armenia |
+| <code>an</code> | Netherlands Antilles |
+| <code>ao</code> | Angola |
+| <code>aq</code> | Antarctica |
+| <code>ar</code> | Argentina |
+| <code>as</code> | American Samoa |
+| <code>at</code> | Austria |
+| <code>au</code> | Australia |
+| <code>aw</code> | Aruba |
+| <code>ax</code> | Åland Islands |
+| <code>az</code> | Azerbaijan |
+| <code>ba</code> | Bosnia and Herzegovina |
+| <code>bb</code> | Barbados |
+| <code>bd</code> | Bangladesh |
+| <code>be</code> | Belgium |
+| <code>bf</code> | Burkina Faso |
+| <code>bg</code> | Bulgaria |
+| <code>bh</code> | Bahrain |
+| <code>bi</code> | Burundi |
+| <code>bj</code> | Benin |
+| <code>bl</code> | Saint Barthélemy |
+| <code>bm</code> | Bermuda |
+| <code>bn</code> | Brunei |
+| <code>bo</code> | Bolivia |
+| <code>br</code> | Brazil |
+| <code>bs</code> | Bahamas |
+| <code>bt</code> | Bhutan |
+| <code>bv</code> | Bouvet Island |
+| <code>bw</code> | Botswana |
+| <code>by</code> | Belarus |
+| <code>bz</code> | Belize |
+| <code>ca</code> | Canada |
+| <code>cc</code> | Cocos (Keeling) Islands |
+| <code>cd</code> | Congo, Democratic Republic of the |
+| <code>cf</code> | Central African Republic |
+| <code>cg</code> | Congo |
+| <code>ch</code> | Switzerland |
+| <code>ci</code> | Ivory Coast |
+| <code>ck</code> | Cook Islands |
+| <code>cl</code> | Chile |
+| <code>cm</code> | Cameroon |
+| <code>cn</code> | China |
+| <code>co</code> | Colombia |
+| <code>cq</code> | Sark |
+| <code>cr</code> | Costa Rica |
+| <code>cu</code> | Cuba |
+| <code>cv</code> | Cabo Verde |
+| <code>cw</code> | Curaçao |
+| <code>cx</code> | Christmas Island |
+| <code>cy</code> | Cyprus |
+| <code>cz</code> | Czechia |
+| <code>de</code> | Germany |
+| <code>dj</code> | Djibouti |
+| <code>dk</code> | Denmark |
+| <code>dm</code> | Dominica |
+| <code>do</code> | Dominican Republic |
+| <code>dz</code> | Algeria |
+| <code>ec</code> | Ecuador |
+| <code>ee</code> | Estonia |
+| <code>eg</code> | Egypt |
+| <code>eh</code> | Western Sahara |
+| <code>er</code> | Eritrea |
+| <code>es</code> | Spain |
+| <code>et</code> | Ethiopia |
+| <code>eu</code> | European Union |
+| <code>fi</code> | Finland |
+| <code>fj</code> | Fiji |
+| <code>fk</code> | Falkland Islands (Malvinas) |
+| <code>fm</code> | Micronesia |
+| <code>fo</code> | Faroe Islands |
+| <code>fr</code> | France |
+| <code>ga</code> | Gabon |
+| <code>gb</code> | United Kingdom |
+| <code>gd</code> | Grenada |
+| <code>ge</code> | Georgia |
+| <code>gf</code> | French Guiana |
+| <code>gg</code> | Guernsey |
+| <code>gh</code> | Ghana |
+| <code>gi</code> | Gibraltar |
+| <code>gl</code> | Greenland |
+| <code>gm</code> | Gambia |
+| <code>gn</code> | Guinea |
+| <code>gp</code> | Guadeloupe |
+| <code>gq</code> | Equatorial Guinea |
+| <code>gr</code> | Greece |
+| <code>gs</code> | South Georgia and the South Sandwich Islands |
+| <code>gt</code> | Guatemala |
+| <code>gu</code> | Guam |
+| <code>gw</code> | Guinea-Bissau |
+| <code>gy</code> | Guyana |
+| <code>hk</code> | Hong Kong |
+| <code>hm</code> | Heard Island and McDonald Islands |
+| <code>hn</code> | Honduras |
+| <code>hr</code> | Croatia |
+| <code>ht</code> | Haiti |
+| <code>hu</code> | Hungary |
+| <code>id</code> | Indonesia |
+| <code>ie</code> | Ireland |
+| <code>il</code> | Israel |
+| <code>im</code> | Isle of Man |
+| <code>in</code> | India |
+| <code>io</code> | British Indian Ocean Territory |
+| <code>iq</code> | Iraq |
+| <code>ir</code> | Iran |
+| <code>is</code> | Iceland |
+| <code>it</code> | Italy |
+| <code>je</code> | Jersey |
+| <code>jm</code> | Jamaica |
+| <code>jo</code> | Jordan |
+| <code>jp</code> | Japan |
+| <code>ke</code> | Kenya |
+| <code>kg</code> | Kyrgyzstan |
+| <code>kh</code> | Cambodia |
+| <code>ki</code> | Kiribati |
+| <code>km</code> | Comoros |
+| <code>kn</code> | Saint Kitts and Nevis |
+| <code>kp</code> | North Korea |
+| <code>kr</code> | South Korea |
+| <code>kw</code> | Kuwait |
+| <code>ky</code> | Cayman Islands |
+| <code>kz</code> | Kazakhstan |
+| <code>la</code> | Laos |
+| <code>lb</code> | Lebanon |
+| <code>lc</code> | Saint Lucia |
+| <code>li</code> | Liechtenstein |
+| <code>lk</code> | Sri Lanka |
+| <code>lr</code> | Liberia |
+| <code>ls</code> | Lesotho |
+| <code>lt</code> | Lithuania |
+| <code>lu</code> | Luxembourg |
+| <code>lv</code> | Latvia |
+| <code>ly</code> | Libya |
+| <code>ma</code> | Morocco |
+| <code>mc</code> | Monaco |
+| <code>md</code> | Moldova |
+| <code>me</code> | Montenegro |
+| <code>mf</code> | Saint-Martin |
+| <code>mg</code> | Madagascar |
+| <code>mh</code> | Marshall Islands |
+| <code>mk</code> | North Macedonia |
+| <code>ml</code> | Mali |
+| <code>mm</code> | Myanmar |
+| <code>mn</code> | Mongolia |
+| <code>mo</code> | Macao |
+| <code>mp</code> | Northern Mariana Islands |
+| <code>mq</code> | Martinique |
+| <code>mr</code> | Mauritania |
+| <code>ms</code> | Montserrat |
+| <code>mt</code> | Malta |
+| <code>mu</code> | Mauritius |
+| <code>mv</code> | Maldives |
+| <code>mw</code> | Malawi |
+| <code>mx</code> | Mexico |
+| <code>my</code> | Malaysia |
+| <code>mz</code> | Mozambique |
+| <code>na</code> | Namibia |
+| <code>nc</code> | New Caledonia |
+| <code>ne</code> | Niger |
+| <code>nf</code> | Norfolk Island |
+| <code>ng</code> | Nigeria |
+| <code>ni</code> | Nicaragua |
+| <code>nl</code> | Netherlands |
+| <code>no</code> | Norway |
+| <code>np</code> | Nepal |
+| <code>nr</code> | Nauru |
+| <code>nu</code> | Niue |
+| <code>nz</code> | New Zealand |
+| <code>om</code> | Oman |
+| <code>pa</code> | Panama |
+| <code>pe</code> | Peru |
+| <code>pf</code> | French Polynesia |
+| <code>pg</code> | Papua New Guinea |
+| <code>ph</code> | Philippines |
+| <code>pk</code> | Pakistan |
+| <code>pl</code> | Poland |
+| <code>pm</code> | Saint Pierre and Miquelon |
+| <code>pn</code> | Pitcairn Islands |
+| <code>pr</code> | Puerto Rico |
+| <code>ps</code> | Palestine |
+| <code>pt</code> | Portugal |
+| <code>pw</code> | Palau |
+| <code>py</code> | Paraguay |
+| <code>qa</code> | Qatar |
+| <code>re</code> | Réunion |
+| <code>ro</code> | Romania |
+| <code>rs</code> | Serbia |
+| <code>ru</code> | Russia |
+| <code>rw</code> | Rwanda |
+| <code>sa</code> | Saudi Arabia |
+| <code>sb</code> | Solomon Islands |
+| <code>sc</code> | Seychelles |
+| <code>sd</code> | Sudan |
+| <code>se</code> | Sweden |
+| <code>sg</code> | Singapore |
+| <code>si</code> | Slovenia |
+| <code>sj</code> | Svalbard and Jan Mayen |
+| <code>sk</code> | Slovakia |
+| <code>sl</code> | Sierra Leone |
+| <code>sm</code> | San Marino |
+| <code>sn</code> | Senegal |
+| <code>so</code> | Somalia |
+| <code>sr</code> | Suriname |
+| <code>ss</code> | South Sudan |
+| <code>st</code> | São Tomé and Príncipe |
+| <code>su</code> | Soviet Union |
+| <code>sv</code> | El Salvador |
+| <code>sx</code> | Sint Maarten |
+| <code>sy</code> | Syria |
+| <code>sz</code> | Eswatini |
+| <code>tc</code> | Turks and Caicos Islands |
+| <code>td</code> | Chad |
+| <code>tf</code> | French Southern Territories |
+| <code>tg</code> | Togo |
+| <code>th</code> | Thailand |
+| <code>tj</code> | Tajikistan |
+| <code>tk</code> | Tokelau |
+| <code>tl</code> | Timor-Leste |
+| <code>tm</code> | Turkmenistan |
+| <code>tn</code> | Tunisia |
+| <code>to</code> | Tonga |
+| <code>tr</code> | Turkey |
+| <code>tt</code> | Trinidad and Tobago |
+| <code>tv</code> | Tuvalu |
+| <code>tw</code> | Taiwan |
+| <code>tz</code> | Tanzania |
+| <code>ua</code> | Ukraine |
+| <code>ug</code> | Uganda |
+| <code>um</code> | United States Minor Outlying Islands |
+| <code>us</code> | United States of America |
+| <code>uy</code> | Uruguay |
+| <code>uz</code> | Uzbekistan |
+| <code>va</code> | Holy See (Vatican) |
+| <code>vc</code> | Saint Vincent and the Grenadines |
+| <code>ve</code> | Venezuela |
+| <code>vg</code> | Virgin Islands (British) |
+| <code>vi</code> | Virgin Islands (U.S.) |
+| <code>vn</code> | Vietnam |
+| <code>vu</code> | Vanuatu |
+| <code>wf</code> | Wallis and Futuna |
+| <code>ws</code> | Samoa |
+| <code>xk</code> | Kosovo |
+| <code>ye</code> | Yemen |
+| <code>yt</code> | Mayotte |
+| <code>yu</code> | Yugoslavia |
+| <code>za</code> | South Africa |
+| <code>zm</code> | Zambia |
+| <code>zw</code> | Zimbabwe |
 ## 2) State and region codes (first column = country)
 
-| Country | Country code | State/region codes |
-|---|---|---|
-| Australia | <code>au</code> | <code>au-act</code> Australian Capital Territory<br><code>au-nsw</code> New South Wales<br><code>au-nt</code> Northern Territory<br><code>au-qld</code> Queensland<br><code>au-sa</code> South Australia<br><code>au-tas</code> Tasmania<br><code>au-vic</code> Victoria<br><code>au-wa</code> Western Australia |
-| BQ | <code>bq</code> | <code>bq-bo</code> Bonaire<br><code>bq-sa</code> Saba<br><code>bq-se</code> Sint Eustatius |
-| Canada | <code>ca</code> | <code>ca-bc</code> British Columbia<br><code>ca-qc</code> Quebec |
-| Switzerland | <code>ch</code> | <code>ch-gr</code> Grisons |
-| China | <code>cn</code> | <code>cn-xj</code> Xinjiang<br><code>cn-xz</code> Tibet |
-| Spain | <code>es</code> | <code>es-ar</code> Aragon<br><code>es-ce</code> Ceuta<br><code>es-cn</code> Canary Islands<br><code>es-ct</code> Catalonia<br><code>es-ga</code> Galicia<br><code>es-ib</code> Balearic Islands<br><code>es-ml</code> Melilla<br><code>es-pv</code> Basque Country<br><code>es-vc</code> Valencia |
-| Ethiopia | <code>et</code> | <code>et-af</code> Afar<br><code>et-am</code> Amhara<br><code>et-be</code> Benishangul-Gumuz<br><code>et-ga</code> Gambela<br><code>et-ha</code> Harari<br><code>et-or</code> Oromia<br><code>et-si</code> Sidama<br><code>et-sn</code> Southern Nations, Nationalities, and Peoples' Region<br><code>et-so</code> Somali<br><code>et-sw</code> South West Region<br><code>et-ti</code> Tigray |
-| France | <code>fr</code> | <code>fr-20r</code> Corsica<br><code>fr-bre</code> Brittany<br><code>fr-cp</code> Clipperton Island |
-| United Kingdom | <code>gb</code> | <code>gb-con</code> Cornwall<br><code>gb-eng</code> England<br><code>gb-nir</code> Northern Ireland<br><code>gb-ork</code> Orkney<br><code>gb-sct</code> Scotland<br><code>gb-wls</code> Wales |
-| Georgia | <code>ge</code> | <code>ge-ab</code> Abkhazia |
-| Indonesia | <code>id</code> | <code>id-jb</code> West Java<br><code>id-jt</code> Central Java |
-| India | <code>in</code> | <code>in-as</code> Assam<br><code>in-gj</code> Gujarat<br><code>in-ka</code> Karnataka<br><code>in-mn</code> Manipur<br><code>in-mz</code> Mizoram<br><code>in-or</code> Odisha<br><code>in-tg</code> Telangana<br><code>in-tn</code> Tamil Nadu |
-| Iraq | <code>iq</code> | <code>iq-kr</code> Kurdistan |
-| Italy | <code>it</code> | <code>it-21</code> Piedmont<br><code>it-23</code> Aosta Valley<br><code>it-25</code> Lombardy<br><code>it-32</code> Trentino-Alto Adige<br><code>it-34</code> Veneto<br><code>it-36</code> Friuli Venezia Giulia<br><code>it-42</code> Liguria<br><code>it-45</code> Emilia-Romagna<br><code>it-52</code> Tuscany<br><code>it-55</code> Umbria<br><code>it-57</code> Marche<br><code>it-62</code> Lazio<br><code>it-65</code> Abruzzo<br><code>it-67</code> Molise<br><code>it-72</code> Campania<br><code>it-75</code> Apulia<br><code>it-77</code> Basilicata<br><code>it-78</code> Calabria<br><code>it-82</code> Sicily<br><code>it-88</code> Sardinia |
-| Netherlands | <code>nl</code> | <code>nl-fr</code> Friesland |
-| Pakistan | <code>pk</code> | <code>pk-jk</code> Azad Kashmir<br><code>pk-sd</code> Sindh |
-| Portugal | <code>pt</code> | <code>pt-20</code> Azores<br><code>pt-30</code> Madeira |
-| Russia | <code>ru</code> | <code>ru-ba</code> Bashkortostan<br><code>ru-ce</code> Chechnya<br><code>ru-cu</code> Chuvashia<br><code>ru-da</code> Dagestan<br><code>ru-dpr</code> Donetsk People's Republic<br><code>ru-ko</code> Komi Republic<br><code>ru-lpr</code> Luhansk People's Republic<br><code>ru-ta</code> Tatarstan<br><code>ru-ud</code> Udmurtia |
-| SH | <code>sh</code> | <code>sh-ac</code> Ascension Island<br><code>sh-hl</code> Saint Helena<br><code>sh-ta</code> Tristan da Cunha |
-| Ukraine | <code>ua</code> | <code>ua-bpr</code> Belgorod People's Republic<br><code>ua-kpr</code> Kursk People's Republic |
-| United States of America | <code>us</code> | <code>us-ak</code> Alaska<br><code>us-al</code> Alabama<br><code>us-ar</code> Arkansas<br><code>us-az</code> Arizona<br><code>us-ca</code> California<br><code>us-co</code> Colorado<br><code>us-dc</code> District of Columbia<br><code>us-fl</code> Florida<br><code>us-ga</code> Georgia<br><code>us-hi</code> Hawaii<br><code>us-in</code> Indiana<br><code>us-md</code> Maryland<br><code>us-mn</code> Minnesota<br><code>us-mo</code> Missouri<br><code>us-ms</code> Mississippi<br><code>us-nc</code> North Carolina<br><code>us-nm</code> New Mexico<br><code>us-or</code> Oregon<br><code>us-ri</code> Rhode Island<br><code>us-sc</code> South Carolina<br><code>us-tn</code> Tennessee<br><code>us-tx</code> Texas<br><code>us-wa</code> Washington<br><code>us-wi</code> Wisconsin<br><code>us-wy</code> Wyoming |
+| Country | State/region codes |
+|---|---|
+| Australia | <code>au-act</code> Australian Capital Territory<br><code>au-nsw</code> New South Wales<br><code>au-nt</code> Northern Territory<br><code>au-qld</code> Queensland<br><code>au-sa</code> South Australia<br><code>au-tas</code> Tasmania<br><code>au-vic</code> Victoria<br><code>au-wa</code> Western Australia |
+| BQ | <code>bq-bo</code> Bonaire<br><code>bq-sa</code> Saba<br><code>bq-se</code> Sint Eustatius |
+| Canada | <code>ca-bc</code> British Columbia<br><code>ca-qc</code> Quebec |
+| Switzerland | <code>ch-gr</code> Grisons |
+| China | <code>cn-xj</code> Xinjiang<br><code>cn-xz</code> Tibet |
+| Spain | <code>es-ar</code> Aragon<br><code>es-ce</code> Ceuta<br><code>es-cn</code> Canary Islands<br><code>es-ct</code> Catalonia<br><code>es-ga</code> Galicia<br><code>es-ib</code> Balearic Islands<br><code>es-ml</code> Melilla<br><code>es-pv</code> Basque Country<br><code>es-vc</code> Valencia |
+| Ethiopia | <code>et-af</code> Afar<br><code>et-am</code> Amhara<br><code>et-be</code> Benishangul-Gumuz<br><code>et-ga</code> Gambela<br><code>et-ha</code> Harari<br><code>et-or</code> Oromia<br><code>et-si</code> Sidama<br><code>et-sn</code> Southern Nations, Nationalities, and Peoples' Region<br><code>et-so</code> Somali<br><code>et-sw</code> South West Region<br><code>et-ti</code> Tigray |
+| France | <code>fr-20r</code> Corsica<br><code>fr-bre</code> Brittany<br><code>fr-cp</code> Clipperton Island |
+| United Kingdom | <code>gb-con</code> Cornwall<br><code>gb-eng</code> England<br><code>gb-nir</code> Northern Ireland<br><code>gb-ork</code> Orkney<br><code>gb-sct</code> Scotland<br><code>gb-wls</code> Wales |
+| Georgia | <code>ge-ab</code> Abkhazia |
+| Indonesia | <code>id-jb</code> West Java<br><code>id-jt</code> Central Java |
+| India | <code>in-as</code> Assam<br><code>in-gj</code> Gujarat<br><code>in-ka</code> Karnataka<br><code>in-mn</code> Manipur<br><code>in-mz</code> Mizoram<br><code>in-or</code> Odisha<br><code>in-tg</code> Telangana<br><code>in-tn</code> Tamil Nadu |
+| Iraq | <code>iq-kr</code> Kurdistan |
+| Italy | <code>it-21</code> Piedmont<br><code>it-23</code> Aosta Valley<br><code>it-25</code> Lombardy<br><code>it-32</code> Trentino-Alto Adige<br><code>it-34</code> Veneto<br><code>it-36</code> Friuli Venezia Giulia<br><code>it-42</code> Liguria<br><code>it-45</code> Emilia-Romagna<br><code>it-52</code> Tuscany<br><code>it-55</code> Umbria<br><code>it-57</code> Marche<br><code>it-62</code> Lazio<br><code>it-65</code> Abruzzo<br><code>it-67</code> Molise<br><code>it-72</code> Campania<br><code>it-75</code> Apulia<br><code>it-77</code> Basilicata<br><code>it-78</code> Calabria<br><code>it-82</code> Sicily<br><code>it-88</code> Sardinia |
+| Netherlands | <code>nl-fr</code> Friesland |
+| Pakistan | <code>pk-jk</code> Azad Kashmir<br><code>pk-sd</code> Sindh |
+| Portugal | <code>pt-20</code> Azores<br><code>pt-30</code> Madeira |
+| Russia | <code>ru-ba</code> Bashkortostan<br><code>ru-ce</code> Chechnya<br><code>ru-cu</code> Chuvashia<br><code>ru-da</code> Dagestan<br><code>ru-dpr</code> Donetsk People's Republic<br><code>ru-ko</code> Komi Republic<br><code>ru-lpr</code> Luhansk People's Republic<br><code>ru-ta</code> Tatarstan<br><code>ru-ud</code> Udmurtia |
+| SH | <code>sh-ac</code> Ascension Island<br><code>sh-hl</code> Saint Helena<br><code>sh-ta</code> Tristan da Cunha |
+| Ukraine | <code>ua-bpr</code> Belgorod People's Republic<br><code>ua-kpr</code> Kursk People's Republic |
+| United States of America | <code>us-ak</code> Alaska<br><code>us-al</code> Alabama<br><code>us-ar</code> Arkansas<br><code>us-az</code> Arizona<br><code>us-ca</code> California<br><code>us-co</code> Colorado<br><code>us-dc</code> District of Columbia<br><code>us-fl</code> Florida<br><code>us-ga</code> Georgia<br><code>us-hi</code> Hawaii<br><code>us-in</code> Indiana<br><code>us-md</code> Maryland<br><code>us-mn</code> Minnesota<br><code>us-mo</code> Missouri<br><code>us-ms</code> Mississippi<br><code>us-nc</code> North Carolina<br><code>us-nm</code> New Mexico<br><code>us-or</code> Oregon<br><code>us-ri</code> Rhode Island<br><code>us-sc</code> South Carolina<br><code>us-tn</code> Tennessee<br><code>us-tx</code> Texas<br><code>us-wa</code> Washington<br><code>us-wi</code> Wisconsin<br><code>us-wy</code> Wyoming |
 
 ## 3) Language codes
 

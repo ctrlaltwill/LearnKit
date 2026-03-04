@@ -62,11 +62,11 @@ Q | {{es}} Hola |
 A | {{gb}} Hello |
 ```
 
-Regional example:
+State card example:
 
 ```
-Q | {{es-mx}} ¿Qué onda? |
-A | {{gb}} What's up? |
+Q | {{us-ca}} California |
+A | {{gb}} West Coast, United States |
 ```
 
 ## Syntax and compatibility notes

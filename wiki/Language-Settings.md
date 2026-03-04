@@ -24,6 +24,8 @@ How it works:
 - Sprout cannot distinguish languages that share the same script. Example: a Latin-script word shared by English and Italian uses your Latin-script voice, not language-specific detection.
 - Your configured default voice is used as a fallback when no script-specific voice is set.
 
+For flag-based language and accent routing, see [[Flags]] and [[Flag-Codes|Flag Codes]].
+
 ## Adding voices
 
 ### macOS

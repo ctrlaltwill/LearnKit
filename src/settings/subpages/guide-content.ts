@@ -4,8 +4,11 @@ import type { GuideCategory, GuidePage } from "./types";
 const PREFERRED_GUIDE_FILES = [
   "Home.md",
   "Installation.md",
+  "Syncing.md",
   "Creating-Cards.md",
   "Cards.md",
+  "Flag-Codes.md",
+  "Flags.md",
   "Basic-&-Reversed-Cards.md",
   "Cloze-Cards.md",
   "Image-Occlusion.md",
@@ -32,7 +35,6 @@ const PREFERRED_GUIDE_FILES = [
   "Custom-Delimiters.md",
   "Anki-Export-&-Import.md",
   "Backups.md",
-  "Syncing.md",
   "Support-Sprout.md",
 ];
 
@@ -43,19 +45,6 @@ export const GUIDE_CATEGORIES: GuideCategory[] = [
     label: "Getting Started",
     icon: "play-circle",
     sections: [{ pageKeys: ["Installation", "Syncing"] }],
-  },
-  {
-    key: "cards",
-    label: "Cards",
-    icon: "square-stack",
-    sections: [
-      { pageKeys: ["Cards", "Card-Browser", "Creating-Cards"] },
-      { title: "Reading view", pageKeys: ["Reading-View", "Reading-View-Styles", "Custom-Reading-Styles"] },
-      {
-        title: "Card Types",
-        pageKeys: ["Basic-&-Reversed-Cards", "Cloze-Cards", "Image-Occlusion", "Multiple-Choice-Questions", "Ordered-Questions"],
-      },
-    ],
   },
   {
     key: "analytics",
@@ -70,13 +59,17 @@ export const GUIDE_CATEGORIES: GuideCategory[] = [
     sections: [{ pageKeys: ["Text-to-Speech", "Language-Settings"] }],
   },
   {
-    key: "study",
-    label: "Study",
-    icon: "graduation-cap",
+    key: "cards",
+    label: "Cards",
+    icon: "square-stack",
     sections: [
-      { title: "Review Flow", pageKeys: ["Study-Sessions", "Grading", "Scheduling"] },
-      { title: "Card State", pageKeys: ["Burying-Cards", "Suspending-Cards"] },
-      { title: "Scope", pageKeys: ["Widget"] },
+      { pageKeys: ["Cards", "Card-Browser", "Creating-Cards"] },
+      { title: "Reading view", pageKeys: ["Reading-View", "Reading-View-Styles", "Custom-Reading-Styles"] },
+      { title: "Custom Cards", pageKeys: ["Flags", "Flag-Codes"] },
+      {
+        title: "Card Types",
+        pageKeys: ["Basic-&-Reversed-Cards", "Cloze-Cards", "Image-Occlusion", "Multiple-Choice-Questions", "Ordered-Questions"],
+      },
     ],
   },
   {
@@ -85,6 +78,16 @@ export const GUIDE_CATEGORIES: GuideCategory[] = [
     icon: "shield-check",
     sections: [
       { pageKeys: ["Anki-Export-&-Import", "Backups", "Custom-Delimiters", "Keyboard-Shortcuts", "Settings", "Reminders", "Gatekeeper"] },
+    ],
+  },
+  {
+    key: "study",
+    label: "Study",
+    icon: "graduation-cap",
+    sections: [
+      { title: "Review Flow", pageKeys: ["Study-Sessions", "Grading", "Scheduling"] },
+      { title: "Card State", pageKeys: ["Burying-Cards", "Suspending-Cards"] },
+      { title: "Scope", pageKeys: ["Widget"] },
     ],
   },
 ];
@@ -98,6 +101,7 @@ const GUIDE_LABEL_MAP: Record<string, string> = {
   "Custom-Reading-Styles": "Custom Reading Styles",
   Reminders: "Reminders",
   Gatekeeper: "Gatekeeper",
+  "Flag-Codes": "Flag Codes",
 };
 
 const GUIDE_ICON_MAP: Record<string, string> = {
@@ -133,6 +137,8 @@ const GUIDE_ICON_MAP: Record<string, string> = {
   Syncing: "refresh-cw",
   Backups: "database-backup",
   "Support-Sprout": "sprout-brand",
+  Flags: "flag",
+  "Flag-Codes": "list",
 };
 
 export async function loadGuidePages(app: App, pluginDir?: string): Promise<GuidePage[]> {
