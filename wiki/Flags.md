@@ -9,7 +9,6 @@ Sprout supports inline circle flags inside card text fields using token syntax.
 Supported token formats:
 
 - `{{es}}`
-- `{{es-mx}}`
 
 These render as small circular flag icons with diameter matching the current text size.
 
@@ -89,7 +88,7 @@ This keeps plugin size small while still supporting offline use after first load
 
 When **Settings → Audio → Flag-aware routing → Use flags for language and accent** is enabled:
 
-- `{{es}}` and `{{es-mx}}` route speech to Spanish voices/accent variants.
+- `{{es}}` routes speech to Spanish voices.
 - A single flag can apply to the full spoken text (not position-dependent).
 - Multiple flags in one field use segmented inline voice switching.
 
