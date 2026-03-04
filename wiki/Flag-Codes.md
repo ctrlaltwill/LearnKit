@@ -291,205 +291,170 @@ These tables are generated from the Circle Flags gallery format used by Sprout t
 
 ## 3) Language codes
 
-Note: Circle Flags is country/region-based, so language rows use representative flags for common locales where direct language-code flags are unavailable.
+Only language flags that differ from their country equivalent are listed below (based on the Circle Flags language gallery).
 
 | Flag | Code | Language |
 |---|---|---|
-| <img src="https://hatscripts.github.io/circle-flags/flags/aa.svg" alt="aa" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>aa</code> | Afar |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ab.svg" alt="ab" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ab</code> | Abkhazian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/af.svg" alt="af" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>af</code> | Afrikaans |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ak.svg" alt="ak" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ak</code> | Akan |
-| <img src="https://hatscripts.github.io/circle-flags/flags/am.svg" alt="am" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>am</code> | Amharic |
-| <img src="https://hatscripts.github.io/circle-flags/flags/an.svg" alt="an" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>an</code> | Aragonese |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ar.svg" alt="ar" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ar</code> | Arabic |
-| <img src="https://hatscripts.github.io/circle-flags/flags/as.svg" alt="as" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>as</code> | Assamese |
-| <img src="https://hatscripts.github.io/circle-flags/flags/av.svg" alt="av" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>av</code> | Avaric |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ay.svg" alt="ay" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ay</code> | Aymara |
-| <img src="https://hatscripts.github.io/circle-flags/flags/az.svg" alt="az" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>az</code> | Azerbaijani |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ba.svg" alt="ba" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ba</code> | Bashkir |
-| <img src="https://hatscripts.github.io/circle-flags/flags/be.svg" alt="be" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>be</code> | Belarusian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/bg.svg" alt="bg" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>bg</code> | Bulgarian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/bi.svg" alt="bi" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>bi</code> | Bislama |
-| <img src="https://hatscripts.github.io/circle-flags/flags/bm.svg" alt="bm" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>bm</code> | Bambara |
-| <img src="https://hatscripts.github.io/circle-flags/flags/bn.svg" alt="bn" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>bn</code> | Bengali |
-| <img src="https://hatscripts.github.io/circle-flags/flags/bo.svg" alt="bo" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>bo</code> | Tibetan |
-| <img src="https://hatscripts.github.io/circle-flags/flags/fr-bre.svg" alt="br" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>br</code> | Breton |
-| <img src="https://hatscripts.github.io/circle-flags/flags/bs.svg" alt="bs" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>bs</code> | Bosnian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/es-ct.svg" alt="ca" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ca</code> | Catalan |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ce.svg" alt="ce" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ce</code> | Chechen |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ceb.svg" alt="ceb" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ceb</code> | Cebuano |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ch.svg" alt="ch" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ch</code> | Chamorro |
-| <img src="https://hatscripts.github.io/circle-flags/flags/chm.svg" alt="chm" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>chm</code> | Mari |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ckb.svg" alt="ckb" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ckb</code> | Sorani Kurdish |
-| <img src="https://hatscripts.github.io/circle-flags/flags/co.svg" alt="co" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>co</code> | Corsican |
-| <img src="https://hatscripts.github.io/circle-flags/flags/cs.svg" alt="cs" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>cs</code> | Czech |
-| <img src="https://hatscripts.github.io/circle-flags/flags/cv.svg" alt="cv" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>cv</code> | Chuvash |
-| <img src="https://hatscripts.github.io/circle-flags/flags/gb-wls.svg" alt="cy" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>cy</code> | Welsh |
-| <img src="https://hatscripts.github.io/circle-flags/flags/da.svg" alt="da" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>da</code> | Danish |
-| <img src="https://hatscripts.github.io/circle-flags/flags/de.svg" alt="de" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>de</code> | German |
-| <img src="https://hatscripts.github.io/circle-flags/flags/dv.svg" alt="dv" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>dv</code> | Dhivehi |
-| <img src="https://hatscripts.github.io/circle-flags/flags/dz.svg" alt="dz" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>dz</code> | Dzongkha |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ee.svg" alt="ee" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ee</code> | Ewe |
-| <img src="https://hatscripts.github.io/circle-flags/flags/gr.svg" alt="el" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>el</code> | Greek |
-| <img src="https://hatscripts.github.io/circle-flags/flags/gb.svg" alt="en" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en</code> | English |
-| <img src="https://hatscripts.github.io/circle-flags/flags/au.svg" alt="en-au" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-au</code> | English (Australia) |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ca.svg" alt="en-ca" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-ca</code> | English (Canada) |
-| <img src="https://hatscripts.github.io/circle-flags/flags/gh.svg" alt="en-gh" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-gh</code> | English (Ghana) |
-| <img src="https://hatscripts.github.io/circle-flags/flags/hk.svg" alt="en-hk" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-hk</code> | English (Hong Kong) |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ie.svg" alt="en-ie" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-ie</code> | English (Ireland) |
-| <img src="https://hatscripts.github.io/circle-flags/flags/in.svg" alt="en-in" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-in</code> | English (India) |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ke.svg" alt="en-ke" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-ke</code> | English (Kenya) |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ng.svg" alt="en-ng" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-ng</code> | English (Nigeria) |
-| <img src="https://hatscripts.github.io/circle-flags/flags/nz.svg" alt="en-nz" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-nz</code> | English (New Zealand) |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ph.svg" alt="en-ph" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-ph</code> | English (Philippines) |
-| <img src="https://hatscripts.github.io/circle-flags/flags/sg.svg" alt="en-sg" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-sg</code> | English (Singapore) |
-| <img src="https://hatscripts.github.io/circle-flags/flags/tz.svg" alt="en-tz" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-tz</code> | English (Tanzania) |
-| <img src="https://hatscripts.github.io/circle-flags/flags/us.svg" alt="en-us" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-us</code> | English (United States) |
-| <img src="https://hatscripts.github.io/circle-flags/flags/za.svg" alt="en-za" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-za</code> | English (South Africa) |
-| <img src="https://hatscripts.github.io/circle-flags/flags/eu.svg" alt="eo" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>eo</code> | Esperanto |
-| <img src="https://hatscripts.github.io/circle-flags/flags/es.svg" alt="es" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>es</code> | Spanish |
-| <img src="https://hatscripts.github.io/circle-flags/flags/es-mx.svg" alt="es-mx" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>es-mx</code> | Spanish (Mexico) |
-| <img src="https://hatscripts.github.io/circle-flags/flags/et.svg" alt="et" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>et</code> | Estonian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/es-pv.svg" alt="eu" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>eu</code> | Basque |
-| <img src="https://hatscripts.github.io/circle-flags/flags/fa.svg" alt="fa" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>fa</code> | Persian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/fi.svg" alt="fi" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>fi</code> | Finnish |
-| <img src="https://hatscripts.github.io/circle-flags/flags/fil.svg" alt="fil" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>fil</code> | Filipino |
-| <img src="https://hatscripts.github.io/circle-flags/flags/fj.svg" alt="fj" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>fj</code> | Fijian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/fo.svg" alt="fo" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>fo</code> | Faroese |
-| <img src="https://hatscripts.github.io/circle-flags/flags/fr.svg" alt="fr" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>fr</code> | French |
-| <img src="https://hatscripts.github.io/circle-flags/flags/fy.svg" alt="fy" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>fy</code> | Western Frisian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ie.svg" alt="ga" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ga</code> | Irish |
-| <img src="https://hatscripts.github.io/circle-flags/flags/gd.svg" alt="gd" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>gd</code> | Scottish Gaelic |
-| <img src="https://hatscripts.github.io/circle-flags/flags/gl.svg" alt="gl" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>gl</code> | Galician |
-| <img src="https://hatscripts.github.io/circle-flags/flags/gn.svg" alt="gn" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>gn</code> | Guarani |
-| <img src="https://hatscripts.github.io/circle-flags/flags/gu.svg" alt="gu" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>gu</code> | Gujarati |
-| <img src="https://hatscripts.github.io/circle-flags/flags/gv.svg" alt="gv" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>gv</code> | Manx |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ha.svg" alt="ha" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ha</code> | Hausa |
-| <img src="https://hatscripts.github.io/circle-flags/flags/haw.svg" alt="haw" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>haw</code> | Hawaiian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/he.svg" alt="he" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>he</code> | Hebrew |
-| <img src="https://hatscripts.github.io/circle-flags/flags/hi.svg" alt="hi" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>hi</code> | Hindi |
-| <img src="https://hatscripts.github.io/circle-flags/flags/hmn.svg" alt="hmn" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>hmn</code> | Hmong |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ho.svg" alt="ho" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ho</code> | Hiri Motu |
-| <img src="https://hatscripts.github.io/circle-flags/flags/hr.svg" alt="hr" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>hr</code> | Croatian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ht.svg" alt="ht" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ht</code> | Haitian Creole |
-| <img src="https://hatscripts.github.io/circle-flags/flags/hu.svg" alt="hu" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>hu</code> | Hungarian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/hy.svg" alt="hy" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>hy</code> | Armenian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ia.svg" alt="ia" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ia</code> | Interlingua |
-| <img src="https://hatscripts.github.io/circle-flags/flags/id.svg" alt="id" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>id</code> | Indonesian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ie.svg" alt="ie" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ie</code> | Interlingue |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ig.svg" alt="ig" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ig</code> | Igbo |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ilo.svg" alt="ilo" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ilo</code> | Ilocano |
-| <img src="https://hatscripts.github.io/circle-flags/flags/io.svg" alt="io" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>io</code> | Ido |
-| <img src="https://hatscripts.github.io/circle-flags/flags/is.svg" alt="is" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>is</code> | Icelandic |
-| <img src="https://hatscripts.github.io/circle-flags/flags/it.svg" alt="it" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>it</code> | Italian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ja.svg" alt="ja" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ja</code> | Japanese |
-| <img src="https://hatscripts.github.io/circle-flags/flags/jv.svg" alt="jv" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>jv</code> | Javanese |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ka.svg" alt="ka" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ka</code> | Georgian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/kg.svg" alt="kg" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>kg</code> | Kongo |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ki.svg" alt="ki" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ki</code> | Kikuyu |
-| <img src="https://hatscripts.github.io/circle-flags/flags/kk.svg" alt="kk" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>kk</code> | Kazakh |
-| <img src="https://hatscripts.github.io/circle-flags/flags/kl.svg" alt="kl" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>kl</code> | Greenlandic |
-| <img src="https://hatscripts.github.io/circle-flags/flags/km.svg" alt="km" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>km</code> | Khmer |
-| <img src="https://hatscripts.github.io/circle-flags/flags/kn.svg" alt="kn" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>kn</code> | Kannada |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ko.svg" alt="ko" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ko</code> | Korean |
-| <img src="https://hatscripts.github.io/circle-flags/flags/kr.svg" alt="kr" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>kr</code> | Kanuri |
-| <img src="https://hatscripts.github.io/circle-flags/flags/kri.svg" alt="kri" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>kri</code> | Krio |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ks.svg" alt="ks" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ks</code> | Kashmiri |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ku.svg" alt="ku" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ku</code> | Kurdish |
-| <img src="https://hatscripts.github.io/circle-flags/flags/kv.svg" alt="kv" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>kv</code> | Komi |
-| <img src="https://hatscripts.github.io/circle-flags/flags/kw.svg" alt="kw" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>kw</code> | Cornish |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ky.svg" alt="ky" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ky</code> | Kyrgyz |
-| <img src="https://hatscripts.github.io/circle-flags/flags/la.svg" alt="la" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>la</code> | Latin |
-| <img src="https://hatscripts.github.io/circle-flags/flags/lb.svg" alt="lb" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>lb</code> | Luxembourgish |
-| <img src="https://hatscripts.github.io/circle-flags/flags/lg.svg" alt="lg" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>lg</code> | Ganda |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ln.svg" alt="ln" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ln</code> | Lingala |
-| <img src="https://hatscripts.github.io/circle-flags/flags/lo.svg" alt="lo" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>lo</code> | Lao |
-| <img src="https://hatscripts.github.io/circle-flags/flags/lt.svg" alt="lt" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>lt</code> | Lithuanian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/lu.svg" alt="lu" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>lu</code> | Luba-Katanga |
-| <img src="https://hatscripts.github.io/circle-flags/flags/lus.svg" alt="lus" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>lus</code> | Mizo |
-| <img src="https://hatscripts.github.io/circle-flags/flags/lv.svg" alt="lv" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>lv</code> | Latvian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/mg.svg" alt="mg" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>mg</code> | Malagasy |
-| <img src="https://hatscripts.github.io/circle-flags/flags/mh.svg" alt="mh" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>mh</code> | Marshallese |
-| <img src="https://hatscripts.github.io/circle-flags/flags/mi.svg" alt="mi" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>mi</code> | Māori |
-| <img src="https://hatscripts.github.io/circle-flags/flags/mk.svg" alt="mk" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>mk</code> | Macedonian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ml.svg" alt="ml" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ml</code> | Malayalam |
-| <img src="https://hatscripts.github.io/circle-flags/flags/mn.svg" alt="mn" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>mn</code> | Mongolian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/mni.svg" alt="mni" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>mni</code> | Meitei |
-| <img src="https://hatscripts.github.io/circle-flags/flags/mr.svg" alt="mr" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>mr</code> | Marathi |
-| <img src="https://hatscripts.github.io/circle-flags/flags/mrj.svg" alt="mrj" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>mrj</code> | Western Mari |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ms.svg" alt="ms" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ms</code> | Malay |
-| <img src="https://hatscripts.github.io/circle-flags/flags/mt.svg" alt="mt" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>mt</code> | Maltese |
-| <img src="https://hatscripts.github.io/circle-flags/flags/my.svg" alt="my" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>my</code> | Burmese |
-| <img src="https://hatscripts.github.io/circle-flags/flags/na.svg" alt="na" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>na</code> | Nauru |
-| <img src="https://hatscripts.github.io/circle-flags/flags/nb.svg" alt="nb" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>nb</code> | Norwegian Bokmål |
-| <img src="https://hatscripts.github.io/circle-flags/flags/nd.svg" alt="nd" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>nd</code> | Northern Ndebele |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ne.svg" alt="ne" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ne</code> | Nepali |
-| <img src="https://hatscripts.github.io/circle-flags/flags/nl.svg" alt="nl" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>nl</code> | Dutch |
-| <img src="https://hatscripts.github.io/circle-flags/flags/nn.svg" alt="nn" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>nn</code> | Norwegian Nynorsk |
-| <img src="https://hatscripts.github.io/circle-flags/flags/no.svg" alt="no" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>no</code> | Norwegian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/non.svg" alt="non" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>non</code> | Old Norse |
-| <img src="https://hatscripts.github.io/circle-flags/flags/nr.svg" alt="nr" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>nr</code> | Southern Ndebele |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ny.svg" alt="ny" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ny</code> | Chichewa |
-| <img src="https://hatscripts.github.io/circle-flags/flags/oc.svg" alt="oc" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>oc</code> | Occitan |
-| <img src="https://hatscripts.github.io/circle-flags/flags/om.svg" alt="om" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>om</code> | Oromo |
-| <img src="https://hatscripts.github.io/circle-flags/flags/or.svg" alt="or" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>or</code> | Odia |
-| <img src="https://hatscripts.github.io/circle-flags/flags/os.svg" alt="os" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>os</code> | Ossetian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/oto.svg" alt="oto" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>oto</code> | Otomi |
-| <img src="https://hatscripts.github.io/circle-flags/flags/pa.svg" alt="pa" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>pa</code> | Punjabi |
-| <img src="https://hatscripts.github.io/circle-flags/flags/pap.svg" alt="pap" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>pap</code> | Papiamento |
-| <img src="https://hatscripts.github.io/circle-flags/flags/pl.svg" alt="pl" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>pl</code> | Polish |
-| <img src="https://hatscripts.github.io/circle-flags/flags/pms.svg" alt="pms" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>pms</code> | Piedmontese |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ps.svg" alt="ps" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ps</code> | Pashto |
-| <img src="https://hatscripts.github.io/circle-flags/flags/pt.svg" alt="pt" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>pt</code> | Portuguese |
-| <img src="https://hatscripts.github.io/circle-flags/flags/pt-br.svg" alt="pt-br" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>pt-br</code> | Portuguese (Brazil) |
-| <img src="https://hatscripts.github.io/circle-flags/flags/qu.svg" alt="qu" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>qu</code> | Quechua |
-| <img src="https://hatscripts.github.io/circle-flags/flags/rm.svg" alt="rm" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>rm</code> | Romansh |
-| <img src="https://hatscripts.github.io/circle-flags/flags/rn.svg" alt="rn" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>rn</code> | Rundi |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ro.svg" alt="ro" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ro</code> | Romanian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ru.svg" alt="ru" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ru</code> | Russian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/rw.svg" alt="rw" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>rw</code> | Kinyarwanda |
-| <img src="https://hatscripts.github.io/circle-flags/flags/sc.svg" alt="sc" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>sc</code> | Sardinian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/sd.svg" alt="sd" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>sd</code> | Sindhi |
-| <img src="https://hatscripts.github.io/circle-flags/flags/se.svg" alt="se" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>se</code> | Northern Sami |
-| <img src="https://hatscripts.github.io/circle-flags/flags/sg.svg" alt="sg" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>sg</code> | Sango |
-| <img src="https://hatscripts.github.io/circle-flags/flags/si.svg" alt="si" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>si</code> | Sinhala |
-| <img src="https://hatscripts.github.io/circle-flags/flags/sk.svg" alt="sk" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>sk</code> | Slovak |
-| <img src="https://hatscripts.github.io/circle-flags/flags/sl.svg" alt="sl" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>sl</code> | Slovenian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/sm.svg" alt="sm" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>sm</code> | Samoan |
-| <img src="https://hatscripts.github.io/circle-flags/flags/sn.svg" alt="sn" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>sn</code> | Shona |
-| <img src="https://hatscripts.github.io/circle-flags/flags/so.svg" alt="so" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>so</code> | Somali |
-| <img src="https://hatscripts.github.io/circle-flags/flags/sq.svg" alt="sq" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>sq</code> | Albanian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/sr.svg" alt="sr" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>sr</code> | Serbian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ss.svg" alt="ss" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ss</code> | Swazi |
-| <img src="https://hatscripts.github.io/circle-flags/flags/st.svg" alt="st" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>st</code> | Southern Sotho |
-| <img src="https://hatscripts.github.io/circle-flags/flags/su.svg" alt="su" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>su</code> | Sundanese |
-| <img src="https://hatscripts.github.io/circle-flags/flags/sv.svg" alt="sv" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>sv</code> | Swedish |
-| <img src="https://hatscripts.github.io/circle-flags/flags/sw.svg" alt="sw" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>sw</code> | Swahili |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ta.svg" alt="ta" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ta</code> | Tamil |
-| <img src="https://hatscripts.github.io/circle-flags/flags/te.svg" alt="te" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>te</code> | Telugu |
-| <img src="https://hatscripts.github.io/circle-flags/flags/tg.svg" alt="tg" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>tg</code> | Tajik |
-| <img src="https://hatscripts.github.io/circle-flags/flags/th.svg" alt="th" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>th</code> | Thai |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ti.svg" alt="ti" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ti</code> | Tigrinya |
-| <img src="https://hatscripts.github.io/circle-flags/flags/tk.svg" alt="tk" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>tk</code> | Turkmen |
-| <img src="https://hatscripts.github.io/circle-flags/flags/tl.svg" alt="tl" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>tl</code> | Tagalog |
-| <img src="https://hatscripts.github.io/circle-flags/flags/tn.svg" alt="tn" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>tn</code> | Tswana |
-| <img src="https://hatscripts.github.io/circle-flags/flags/to.svg" alt="to" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>to</code> | Tongan |
-| <img src="https://hatscripts.github.io/circle-flags/flags/tr.svg" alt="tr" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>tr</code> | Turkish |
-| <img src="https://hatscripts.github.io/circle-flags/flags/tt.svg" alt="tt" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>tt</code> | Tatar |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ty.svg" alt="ty" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ty</code> | Tahitian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/udm.svg" alt="udm" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>udm</code> | Udmurt |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ug.svg" alt="ug" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ug</code> | Uyghur |
-| <img src="https://hatscripts.github.io/circle-flags/flags/uk.svg" alt="uk" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>uk</code> | Ukrainian |
-| <img src="https://hatscripts.github.io/circle-flags/flags/ur.svg" alt="ur" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ur</code> | Urdu |
-| <img src="https://hatscripts.github.io/circle-flags/flags/uz.svg" alt="uz" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>uz</code> | Uzbek |
-| <img src="https://hatscripts.github.io/circle-flags/flags/vi.svg" alt="vi" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>vi</code> | Vietnamese |
-| <img src="https://hatscripts.github.io/circle-flags/flags/vo.svg" alt="vo" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>vo</code> | Volapük |
-| <img src="https://hatscripts.github.io/circle-flags/flags/xh.svg" alt="xh" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>xh</code> | Xhosa |
-| <img src="https://hatscripts.github.io/circle-flags/flags/xx.svg" alt="xx" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>xx</code> | <Placeholder> |
-| <img src="https://hatscripts.github.io/circle-flags/flags/yi.svg" alt="yi" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>yi</code> | Yiddish |
-| <img src="https://hatscripts.github.io/circle-flags/flags/yo.svg" alt="yo" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>yo</code> | Yoruba |
-| <img src="https://hatscripts.github.io/circle-flags/flags/yua.svg" alt="yua" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>yua</code> | Yucatec Maya |
-| <img src="https://hatscripts.github.io/circle-flags/flags/zh.svg" alt="zh" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>zh</code> | Chinese |
-| <img src="https://hatscripts.github.io/circle-flags/flags/zu.svg" alt="zu" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>zu</code> | Zulu |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/aa.svg" alt="aa" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>aa</code> | Afar |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ab.svg" alt="ab" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ab</code> | Abkhazian |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/af.svg" alt="af" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>af</code> | Afrikaans |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ak.svg" alt="ak" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ak</code> | Akan |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/am.svg" alt="am" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>am</code> | Amharic |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/an.svg" alt="an" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>an</code> | Aragonese |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ar.svg" alt="ar" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ar</code> | Arabic |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/as.svg" alt="as" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>as</code> | Assamese |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/av.svg" alt="av" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>av</code> | Avaric |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ay.svg" alt="ay" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ay</code> | Aymara |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ba.svg" alt="ba" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ba</code> | Bashkir |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/be.svg" alt="be" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>be</code> | Belarusian |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/bi.svg" alt="bi" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>bi</code> | Bislama |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/bm.svg" alt="bm" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>bm</code> | Bambara |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/bn.svg" alt="bn" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>bn</code> | Bengali |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/bo.svg" alt="bo" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>bo</code> | Tibetan |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/br.svg" alt="br" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>br</code> | Breton |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/bs.svg" alt="bs" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>bs</code> | Bosnian |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ca.svg" alt="ca" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ca</code> | Catalan |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ce.svg" alt="ce" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ce</code> | Chechen |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ceb.svg" alt="ceb" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ceb</code> | Cebuano |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ch.svg" alt="ch" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ch</code> | Chamorro |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/chm.svg" alt="chm" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>chm</code> | Mari |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ckb.svg" alt="ckb" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ckb</code> | Sorani Kurdish |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/co.svg" alt="co" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>co</code> | Corsican |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/cs.svg" alt="cs" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>cs</code> | Czech |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/cv.svg" alt="cv" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>cv</code> | Chuvash |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/cy.svg" alt="cy" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>cy</code> | Welsh |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/da.svg" alt="da" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>da</code> | Danish |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/dv.svg" alt="dv" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>dv</code> | Dhivehi |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/dz.svg" alt="dz" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>dz</code> | Dzongkha |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ee.svg" alt="ee" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ee</code> | Ewe |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/el.svg" alt="el" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>el</code> | Greek |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/en.svg" alt="en" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en</code> | English |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/en-au.svg" alt="en-au" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-au</code> | English (Australia) |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/en-ca.svg" alt="en-ca" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-ca</code> | English (Canada) |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/en-gh.svg" alt="en-gh" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-gh</code> | English (Ghana) |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/en-hk.svg" alt="en-hk" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-hk</code> | English (Hong Kong) |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/en-ie.svg" alt="en-ie" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-ie</code> | English (Ireland) |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/en-in.svg" alt="en-in" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-in</code> | English (India) |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/en-ke.svg" alt="en-ke" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-ke</code> | English (Kenya) |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/en-ng.svg" alt="en-ng" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-ng</code> | English (Nigeria) |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/en-nz.svg" alt="en-nz" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-nz</code> | English (New Zealand) |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/en-ph.svg" alt="en-ph" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-ph</code> | English (Philippines) |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/en-sg.svg" alt="en-sg" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-sg</code> | English (Singapore) |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/en-tz.svg" alt="en-tz" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-tz</code> | English (Tanzania) |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/en-us.svg" alt="en-us" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-us</code> | English (United States) |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/en-za.svg" alt="en-za" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>en-za</code> | English (South Africa) |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/eo.svg" alt="eo" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>eo</code> | Esperanto |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/es-mx.svg" alt="es-mx" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>es-mx</code> | Spanish (Mexico) |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/et.svg" alt="et" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>et</code> | Estonian |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/eu.svg" alt="eu" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>eu</code> | Basque |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/fa.svg" alt="fa" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>fa</code> | Persian |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/fil.svg" alt="fil" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>fil</code> | Filipino |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/fy.svg" alt="fy" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>fy</code> | Western Frisian |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ga.svg" alt="ga" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ga</code> | Irish |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/gd.svg" alt="gd" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>gd</code> | Scottish Gaelic |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/gl.svg" alt="gl" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>gl</code> | Galician |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/gn.svg" alt="gn" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>gn</code> | Guarani |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/gu.svg" alt="gu" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>gu</code> | Gujarati |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/gv.svg" alt="gv" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>gv</code> | Manx |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ha.svg" alt="ha" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ha</code> | Hausa |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/haw.svg" alt="haw" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>haw</code> | Hawaiian |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/he.svg" alt="he" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>he</code> | Hebrew |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/hi.svg" alt="hi" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>hi</code> | Hindi |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/hmn.svg" alt="hmn" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>hmn</code> | Hmong |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ho.svg" alt="ho" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ho</code> | Hiri Motu |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/hy.svg" alt="hy" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>hy</code> | Armenian |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ia.svg" alt="ia" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ia</code> | Interlingua |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ie.svg" alt="ie" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ie</code> | Interlingue |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ig.svg" alt="ig" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ig</code> | Igbo |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ilo.svg" alt="ilo" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ilo</code> | Ilocano |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/io.svg" alt="io" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>io</code> | Ido |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ja.svg" alt="ja" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ja</code> | Japanese |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/jv.svg" alt="jv" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>jv</code> | Javanese |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ka.svg" alt="ka" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ka</code> | Georgian |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/kg.svg" alt="kg" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>kg</code> | Kongo |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ki.svg" alt="ki" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ki</code> | Kikuyu |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/kk.svg" alt="kk" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>kk</code> | Kazakh |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/kl.svg" alt="kl" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>kl</code> | Greenlandic |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/km.svg" alt="km" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>km</code> | Khmer |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/kn.svg" alt="kn" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>kn</code> | Kannada |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ko.svg" alt="ko" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ko</code> | Korean |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/kr.svg" alt="kr" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>kr</code> | Kanuri |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/kri.svg" alt="kri" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>kri</code> | Krio |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ks.svg" alt="ks" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ks</code> | Kashmiri |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ku.svg" alt="ku" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ku</code> | Kurdish |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/kv.svg" alt="kv" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>kv</code> | Komi |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/kw.svg" alt="kw" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>kw</code> | Cornish |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ky.svg" alt="ky" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ky</code> | Kyrgyz |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/la.svg" alt="la" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>la</code> | Latin |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/lb.svg" alt="lb" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>lb</code> | Luxembourgish |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/lg.svg" alt="lg" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>lg</code> | Ganda |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ln.svg" alt="ln" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ln</code> | Lingala |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/lo.svg" alt="lo" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>lo</code> | Lao |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/lu.svg" alt="lu" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>lu</code> | Luba-Katanga |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/lus.svg" alt="lus" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>lus</code> | Mizo |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/mi.svg" alt="mi" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>mi</code> | Māori |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ml.svg" alt="ml" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ml</code> | Malayalam |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/mni.svg" alt="mni" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>mni</code> | Meitei |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/mr.svg" alt="mr" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>mr</code> | Marathi |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/mrj.svg" alt="mrj" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>mrj</code> | Western Mari |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ms.svg" alt="ms" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ms</code> | Malay |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/my.svg" alt="my" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>my</code> | Burmese |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/na.svg" alt="na" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>na</code> | Nauru |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/nb.svg" alt="nb" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>nb</code> | Norwegian Bokmål |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/nd.svg" alt="nd" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>nd</code> | Northern Ndebele |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ne.svg" alt="ne" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ne</code> | Nepali |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/nn.svg" alt="nn" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>nn</code> | Norwegian Nynorsk |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/non.svg" alt="non" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>non</code> | Old Norse |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/nr.svg" alt="nr" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>nr</code> | Southern Ndebele |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ny.svg" alt="ny" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ny</code> | Chichewa |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/oc.svg" alt="oc" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>oc</code> | Occitan |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/om.svg" alt="om" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>om</code> | Oromo |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/or.svg" alt="or" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>or</code> | Odia |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/os.svg" alt="os" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>os</code> | Ossetian |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/oto.svg" alt="oto" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>oto</code> | Otomi |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/pa.svg" alt="pa" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>pa</code> | Punjabi |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/pap.svg" alt="pap" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>pap</code> | Papiamento |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/pms.svg" alt="pms" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>pms</code> | Piedmontese |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ps.svg" alt="ps" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ps</code> | Pashto |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/pt-br.svg" alt="pt-br" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>pt-br</code> | Portuguese (Brazil) |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/qu.svg" alt="qu" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>qu</code> | Quechua |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/rm.svg" alt="rm" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>rm</code> | Romansh |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/rn.svg" alt="rn" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>rn</code> | Rundi |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/sc.svg" alt="sc" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>sc</code> | Sardinian |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/sd.svg" alt="sd" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>sd</code> | Sindhi |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/se.svg" alt="se" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>se</code> | Northern Sami |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/sg.svg" alt="sg" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>sg</code> | Sango |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/si.svg" alt="si" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>si</code> | Sinhala |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/sl.svg" alt="sl" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>sl</code> | Slovenian |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/sm.svg" alt="sm" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>sm</code> | Samoan |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/sn.svg" alt="sn" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>sn</code> | Shona |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/sq.svg" alt="sq" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>sq</code> | Albanian |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/sr.svg" alt="sr" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>sr</code> | Serbian |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ss.svg" alt="ss" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ss</code> | Swazi |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/st.svg" alt="st" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>st</code> | Southern Sotho |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/su.svg" alt="su" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>su</code> | Sundanese |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/sv.svg" alt="sv" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>sv</code> | Swedish |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/sw.svg" alt="sw" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>sw</code> | Swahili |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ta.svg" alt="ta" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ta</code> | Tamil |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/te.svg" alt="te" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>te</code> | Telugu |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/tg.svg" alt="tg" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>tg</code> | Tajik |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ti.svg" alt="ti" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ti</code> | Tigrinya |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/tk.svg" alt="tk" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>tk</code> | Turkmen |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/tl.svg" alt="tl" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>tl</code> | Tagalog |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/tn.svg" alt="tn" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>tn</code> | Tswana |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/tt.svg" alt="tt" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>tt</code> | Tatar |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ty.svg" alt="ty" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ty</code> | Tahitian |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/udm.svg" alt="udm" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>udm</code> | Udmurt |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ug.svg" alt="ug" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ug</code> | Uyghur |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/uk.svg" alt="uk" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>uk</code> | Ukrainian |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/ur.svg" alt="ur" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>ur</code> | Urdu |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/vi.svg" alt="vi" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>vi</code> | Vietnamese |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/vo.svg" alt="vo" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>vo</code> | Volapük |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/xh.svg" alt="xh" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>xh</code> | Xhosa |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/yi.svg" alt="yi" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>yi</code> | Yiddish |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/yo.svg" alt="yo" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>yo</code> | Yoruba |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/yua.svg" alt="yua" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>yua</code> | Yucatec Maya |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/zh.svg" alt="zh" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>zh</code> | Chinese |
+| <img src="https://hatscripts.github.io/circle-flags/flags/language/zu.svg" alt="zu" style="height: 22px; width: 22px; margin: 0 5px; vertical-align: middle;" /> | <code>zu</code> | Zulu |
 
 > Note: Sprout currently validates <code>{{xx}}</code> and <code>{{xx-yyy}}</code> token shapes. Some upstream language entries include longer suffixes; those may not parse in Sprout until token validation is expanded.
