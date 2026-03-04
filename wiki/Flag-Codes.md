@@ -2,29 +2,9 @@
 
 Last modified: 04/03/2026
 
+Source: [HatScripts/circle-flags gallery](https://hatscripts.github.io/circle-flags/gallery)
+
 These codes can be used inside {{...}} tokens to control audio voices (see the Text-to-Speech page for details), or simply as visual cues.
-
-<style>
-/* Obsidian rendering tweaks */
-table:nth-of-type(1) .image-captions-caption,
-table:nth-of-type(3) .image-captions-caption {
-	display: none !important;
-}
-
-table:nth-of-type(1) .image-captions-figure,
-table:nth-of-type(3) .image-captions-figure {
-	margin: 0 !important;
-}
-
-table:nth-of-type(2) td:last-child span[style*="white-space: nowrap"] {
-	display: inline-flex !important;
-	align-items: center;
-	vertical-align: middle;
-	gap: 2px;
-	margin-bottom: 4px;
-	line-height: 26px;
-}
-</style>
 
 
 ## 1) Country and territory codes
@@ -474,12 +454,3 @@ table:nth-of-type(2) td:last-child span[style*="white-space: nowrap"] {
 | <img src="https://hatscripts.github.io/circle-flags/flags/language/yua.svg" alt="yua" height="24" width="24" hspace="5" /> | <code>yua</code> | Yucatec Maya |
 | <img src="https://hatscripts.github.io/circle-flags/flags/language/zh.svg" alt="zh" height="24" width="24" hspace="5" /> | <code>zh</code> | Chinese |
 | <img src="https://hatscripts.github.io/circle-flags/flags/language/zu.svg" alt="zu" height="24" width="24" hspace="5" /> | <code>zu</code> | Zulu |
-
-> Note: Sprout currently validates <code>{{xx}}</code> and <code>{{xx-yyy}}</code> token shapes. Some upstream language entries include longer suffixes; those may not parse in Sprout until token validation is expanded.
-
-## Source
-
-Thanks to the Circle Flags project for the icon set and code references used on this page.
-
-- Gallery: [HatScripts/circle-flags gallery](https://hatscripts.github.io/circle-flags/gallery)
-- Repository: [HatScripts/circle-flags](https://github.com/HatScripts/circle-flags)

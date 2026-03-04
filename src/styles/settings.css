@@ -407,6 +407,28 @@
   animation: sprout-loading-bar 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
+.sprout-guide-content-inner.is-loading-inline {
+  position: relative;
+  overflow: hidden;
+}
+
+.sprout-guide-content-inner.is-loading-inline::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40%;
+  height: 2.5px;
+  background: var(--interactive-accent);
+  border-radius: 0 2px 2px 0;
+  z-index: 10;
+  animation: sprout-loading-bar 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.sprout-guide-content-inner.is-loading-inline > * {
+  visibility: hidden;
+}
+
 @keyframes sprout-loading-bar {
   0% {
     left: -40%;
@@ -800,6 +822,26 @@ body.is-mobile .sprout-guide-dots-rail,
 .sprout-guide-body tbody tr:hover td:last-child {
   border-top-right-radius: var(--radius-m, 8px);
   border-bottom-right-radius: var(--radius-m, 8px);
+}
+
+/* Flag Codes guide page — Obsidian rendering tweaks moved from markdown */
+.sprout-guide-body.sprout-guide-page-flag-codes table:nth-of-type(1) .image-captions-caption,
+.sprout-guide-body.sprout-guide-page-flag-codes table:nth-of-type(3) .image-captions-caption {
+  display: none !important;
+}
+
+.sprout-guide-body.sprout-guide-page-flag-codes table:nth-of-type(1) .image-captions-figure,
+.sprout-guide-body.sprout-guide-page-flag-codes table:nth-of-type(3) .image-captions-figure {
+  margin: 0 !important;
+}
+
+.sprout-guide-body.sprout-guide-page-flag-codes table:nth-of-type(2) td:last-child span[style*="white-space: nowrap"] {
+  display: inline-flex !important;
+  align-items: center;
+  vertical-align: middle;
+  gap: 2px;
+  margin-bottom: 4px;
+  line-height: 26px;
 }
 
 /* Code blocks */

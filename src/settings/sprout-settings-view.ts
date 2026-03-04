@@ -613,7 +613,12 @@ export class SproutSettingsView extends ItemView {
       .replace(/^-|-$/g, "");
   }
 
-  private _wireGuideContentLinks(body: HTMLElement, pages: GuidePage[], sourcePath: string) {
+  private _wireGuideContentLinks(
+    body: HTMLElement,
+    pages: GuidePage[],
+    sourcePath: string,
+    onNavigate?: (pageKey: string) => void,
+  ) {
     const keyByNormalized = new Map<string, string>();
 
     const addAlias = (alias: string, pageKey: string) => {
@@ -648,8 +653,12 @@ export class SproutSettingsView extends ItemView {
       if (matchedKey) {
         ev.preventDefault();
         ev.stopPropagation();
-        this._activeGuidePage = matchedKey;
-        this._renderActiveTabContent();
+        if (onNavigate) {
+          onNavigate(matchedKey);
+        } else {
+          this._activeGuidePage = matchedKey;
+          this._renderActiveTabContent();
+        }
         return;
       }
 
@@ -745,7 +754,7 @@ export class SproutSettingsView extends ItemView {
     content.className = "sprout-guide-content";
     layout.appendChild(content);
 
-    const inner = document.createElement("div");
+    let inner = document.createElement("div");
     inner.className = "sprout-guide-content-inner sprout-guide-content-inner--snap";
     content.appendChild(inner);
 
@@ -775,15 +784,13 @@ export class SproutSettingsView extends ItemView {
         }
         content.appendChild(dotsRail);
 
-        const body = document.createElement("div");
-        body.className = "sprout-guide-body markdown-rendered";
-        inner.appendChild(body);
-
         const footer = document.createElement("div");
         footer.className = "sprout-guide-footer";
         layout.appendChild(footer);
         const pageByKey = new Map(pages.map((page) => [page.key, page]));
         const categories = this._getGuideCategories();
+        const navCategoryBtns: Array<{ btn: HTMLButtonElement; pageKeys: Set<string> }> = [];
+        const navPageItems: Array<{ item: HTMLButtonElement; pageKey: string }> = [];
 
         for (const category of categories) {
           const categoryPages = category.sections
@@ -799,6 +806,7 @@ export class SproutSettingsView extends ItemView {
         btn.className = "sprout-guide-nav-btn";
         const isCategoryActive = categoryPages.some((p) => p.key === this._activeGuidePage);
         btn.classList.toggle("is-active", isCategoryActive);
+        navCategoryBtns.push({ btn, pageKeys: new Set(categoryPages.map((p) => p.key)) });
 
         const span = document.createElement("span");
         span.textContent = category.label;
@@ -808,10 +816,7 @@ export class SproutSettingsView extends ItemView {
           const single = categoryPages[0];
           btn.setAttribute("data-tooltip", `Open ${this._getGuideTooltipLabel(single.key).toLowerCase()} page`);
           btn.setAttribute("data-tooltip-position", "bottom");
-          btn.addEventListener("click", () => {
-            this._activeGuidePage = single.key;
-            this._renderActiveTabContent();
-          });
+          navPageItems.push({ item: btn, pageKey: single.key });
         } else {
           const chevron = document.createElement("span");
           chevron.className = "sprout-guide-nav-chevron";
@@ -858,11 +863,7 @@ export class SproutSettingsView extends ItemView {
               const label = document.createElement("span");
               label.textContent = this._getGuidePageDisplayLabel(page.key);
               item.appendChild(label);
-
-              item.addEventListener("click", () => {
-                this._activeGuidePage = page.key;
-                this._renderActiveTabContent();
-              });
+              navPageItems.push({ item, pageKey: page.key });
 
               menu.appendChild(item);
             }
@@ -911,209 +912,259 @@ export class SproutSettingsView extends ItemView {
           nav.appendChild(group);
         }
 
-        const selected = pages.find((p) => p.key === this._activeGuidePage) ?? pages[0];
-        await MarkdownRenderer.render(
-          this.app,
-          selected.markdown,
-          body,
-          selected.sourcePath,
-          this._ensureReleaseComponent(),
-        );
+        const setActiveGuideNav = () => {
+          for (const { btn, pageKeys } of navCategoryBtns) {
+            btn.classList.toggle("is-active", pageKeys.has(this._activeGuidePage));
+          }
+          for (const { item, pageKey } of navPageItems) {
+            item.classList.toggle("is-active", pageKey === this._activeGuidePage);
+          }
+        };
 
-        this._wireGuideContentLinks(body, pages, selected.sourcePath);
+        let activeRenderToken = 0;
 
-        /* Enhance About page when shown in the Guide tab */
-        if (selected.key === "Support-Sprout") {
-          this._enhanceAboutPage(body);
-        }
+        const renderSelectedPage = async (showInlineLoading: boolean) => {
+          activeRenderToken += 1;
+          const token = activeRenderToken;
 
-        const headingEls = Array.from(body.querySelectorAll<HTMLElement>("h1, h2"));
-        headingEls.forEach((heading) => heading.classList.add("sprout-guide-snap-heading"));
-        this._attachSmartHeaderSnap(inner, headingEls);
+          this._clearWindowListeners();
+          setActiveGuideNav();
 
-        dotsRail.empty();
-        dotsRail.hidden = headingEls.length < 2;
+          const nextInner = document.createElement("div");
+          nextInner.className = "sprout-guide-content-inner sprout-guide-content-inner--snap";
+          if (showInlineLoading) nextInner.classList.add("is-loading-inline");
+          inner.replaceWith(nextInner);
+          inner = nextInner;
 
-        if (headingEls.length >= 2) {
-          const headingTopOffset = 16;
-          const edgeEpsilon = 1;
+          const body = document.createElement("div");
+          body.className = "sprout-guide-body markdown-rendered";
+          inner.appendChild(body);
 
-          const getMaxScrollTop = () => Math.max(0, inner.scrollHeight - inner.clientHeight);
+          const selected = pages.find((p) => p.key === this._activeGuidePage) ?? pages[0];
+          const guidePageClass = `sprout-guide-page-${selected.key.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+          body.classList.add(guidePageClass);
+          await MarkdownRenderer.render(
+            this.app,
+            selected.markdown,
+            body,
+            selected.sourcePath,
+            this._ensureReleaseComponent(),
+          );
 
-          const getTargetScrollTop = (heading: HTMLElement) => {
-            const maxScrollTop = getMaxScrollTop();
-            return Math.min(maxScrollTop, Math.max(0, heading.offsetTop - headingTopOffset));
-          };
+          if (token !== activeRenderToken) return;
 
-          const dotBtns = headingEls.map((heading, index) => {
-            const dot = document.createElement("span");
-            dot.className = "sprout-guide-dot";
-            dot.setAttribute("role", "button");
-            dot.tabIndex = 0;
-
-            const jumpToHeading = () => {
-              const top = getTargetScrollTop(heading);
-              inner.scrollTo({ top, behavior: "smooth" });
-            };
-
-            dot.addEventListener("click", jumpToHeading);
-            dot.addEventListener("keydown", (ev) => {
-              if (ev.key !== "Enter" && ev.key !== " ") return;
-              ev.preventDefault();
-              jumpToHeading();
-            });
-
-            dotsRail.appendChild(dot);
-            return dot;
+          this._wireGuideContentLinks(body, pages, selected.sourcePath, (matchedKey) => {
+            if (matchedKey === this._activeGuidePage) return;
+            this._activeGuidePage = matchedKey;
+            void renderSelectedPage(true);
           });
 
-          let renderedActiveIdx = -1;
-          let pendingActiveIdx = 0;
-          let stepTimer: number | null = null;
+          if (selected.key === "Support-Sprout") {
+            this._enhanceAboutPage(body);
+          }
 
-          const setRenderedActiveIdx = (idx: number) => {
-            renderedActiveIdx = idx;
-            dotBtns.forEach((dot, dotIdx) => dot.classList.toggle("is-active", dotIdx === idx));
-          };
+          const headingEls = Array.from(body.querySelectorAll<HTMLElement>("h1, h2"));
+          headingEls.forEach((heading) => heading.classList.add("sprout-guide-snap-heading"));
+          this._attachSmartHeaderSnap(inner, headingEls);
 
-          const clearStepTimer = () => {
-            if (stepTimer !== null) {
-              window.clearTimeout(stepTimer);
-              stepTimer = null;
-            }
-          };
+          dotsRail.empty();
+          dotsRail.hidden = headingEls.length < 2;
 
-          const setActiveDotWithSteps = (nextIdx: number) => {
-            pendingActiveIdx = nextIdx;
+          if (headingEls.length >= 2) {
+            const headingTopOffset = 16;
+            const edgeEpsilon = 1;
 
-            if (renderedActiveIdx < 0) {
-              setRenderedActiveIdx(nextIdx);
-              return;
-            }
+            const getMaxScrollTop = () => Math.max(0, inner.scrollHeight - inner.clientHeight);
 
-            const distance = Math.abs(pendingActiveIdx - renderedActiveIdx);
-            if (distance <= 1) {
-              clearStepTimer();
-              setRenderedActiveIdx(pendingActiveIdx);
-              return;
-            }
+            const getTargetScrollTop = (heading: HTMLElement) => {
+              const maxScrollTop = getMaxScrollTop();
+              return Math.min(maxScrollTop, Math.max(0, heading.offsetTop - headingTopOffset));
+            };
 
-            if (stepTimer !== null) return;
+            const dotBtns = headingEls.map((heading) => {
+              const dot = document.createElement("span");
+              dot.className = "sprout-guide-dot";
+              dot.setAttribute("role", "button");
+              dot.tabIndex = 0;
 
-            const stepOnce = () => {
-              if (renderedActiveIdx === pendingActiveIdx) {
+              const jumpToHeading = () => {
+                const top = getTargetScrollTop(heading);
+                inner.scrollTo({ top, behavior: "smooth" });
+              };
+
+              dot.addEventListener("click", jumpToHeading);
+              dot.addEventListener("keydown", (ev) => {
+                if (ev.key !== "Enter" && ev.key !== " ") return;
+                ev.preventDefault();
+                jumpToHeading();
+              });
+
+              dotsRail.appendChild(dot);
+              return dot;
+            });
+
+            let renderedActiveIdx = -1;
+            let pendingActiveIdx = 0;
+            let stepTimer: number | null = null;
+
+            const setRenderedActiveIdx = (idx: number) => {
+              renderedActiveIdx = idx;
+              dotBtns.forEach((dot, dotIdx) => dot.classList.toggle("is-active", dotIdx === idx));
+            };
+
+            const clearStepTimer = () => {
+              if (stepTimer !== null) {
+                window.clearTimeout(stepTimer);
                 stepTimer = null;
+              }
+            };
+
+            const setActiveDotWithSteps = (nextIdx: number) => {
+              pendingActiveIdx = nextIdx;
+
+              if (renderedActiveIdx < 0) {
+                setRenderedActiveIdx(nextIdx);
                 return;
               }
 
-              const step = pendingActiveIdx > renderedActiveIdx ? 1 : -1;
-              setRenderedActiveIdx(renderedActiveIdx + step);
-
-              if (renderedActiveIdx === pendingActiveIdx) {
-                stepTimer = null;
+              const distance = Math.abs(pendingActiveIdx - renderedActiveIdx);
+              if (distance <= 1) {
+                clearStepTimer();
+                setRenderedActiveIdx(pendingActiveIdx);
                 return;
               }
+
+              if (stepTimer !== null) return;
+
+              const stepOnce = () => {
+                if (renderedActiveIdx === pendingActiveIdx) {
+                  stepTimer = null;
+                  return;
+                }
+
+                const step = pendingActiveIdx > renderedActiveIdx ? 1 : -1;
+                setRenderedActiveIdx(renderedActiveIdx + step);
+
+                if (renderedActiveIdx === pendingActiveIdx) {
+                  stepTimer = null;
+                  return;
+                }
+
+                stepTimer = window.setTimeout(stepOnce, 55);
+              };
 
               stepTimer = window.setTimeout(stepOnce, 55);
             };
 
-            stepTimer = window.setTimeout(stepOnce, 55);
-          };
+            const updateActiveDot = () => {
+              const max = getMaxScrollTop();
+              dotsRail.hidden = max <= 0;
+              const scrollTop = inner.scrollTop;
+              let activeIdx = 0;
+              const bottomBlendWindow = Math.max(140, headingTopOffset * 2);
 
-          const updateActiveDot = () => {
-            const max = getMaxScrollTop();
-            dotsRail.hidden = max <= 0;
-            const scrollTop = inner.scrollTop;
-            let activeIdx = 0;
-            const bottomBlendWindow = Math.max(140, headingTopOffset * 2);
+              if (scrollTop <= edgeEpsilon) {
+                activeIdx = 0;
+              } else {
+                const markerTop = scrollTop + headingTopOffset;
+                const markerBottom = scrollTop + inner.clientHeight - headingTopOffset;
+                const distanceFromBottom = max - scrollTop;
+                const bottomBlend =
+                  max > 0
+                    ? Math.max(0, Math.min(1, (bottomBlendWindow - distanceFromBottom) / bottomBlendWindow))
+                    : 0;
+                const marker = markerTop + (markerBottom - markerTop) * bottomBlend;
 
-            if (scrollTop <= edgeEpsilon) {
-              activeIdx = 0;
-            } else {
-              const markerTop = scrollTop + headingTopOffset;
-              const markerBottom = scrollTop + inner.clientHeight - headingTopOffset;
-              const distanceFromBottom = max - scrollTop;
-              const bottomBlend =
-                max > 0
-                  ? Math.max(0, Math.min(1, (bottomBlendWindow - distanceFromBottom) / bottomBlendWindow))
-                  : 0;
-              const marker = markerTop + (markerBottom - markerTop) * bottomBlend;
-
-              for (let i = 0; i < headingEls.length; i++) {
-                const headingTop = headingEls[i].offsetTop;
-                if (headingTop <= marker) activeIdx = i;
-                else break;
+                for (let i = 0; i < headingEls.length; i++) {
+                  const headingTop = headingEls[i].offsetTop;
+                  if (headingTop <= marker) activeIdx = i;
+                  else break;
+                }
               }
+
+              setActiveDotWithSteps(activeIdx);
+
+              const progress = max > 0 ? inner.scrollTop / max : 0;
+              setCssProps(content, "--sprout-guide-scroll-progress", progress.toFixed(4));
+            };
+
+            inner.addEventListener("scroll", updateActiveDot, { passive: true });
+            const onResize = () => updateActiveDot();
+            this._trackWindowListener("resize", onResize, { passive: true });
+            window.requestAnimationFrame(updateActiveDot);
+          }
+
+          footer.empty();
+          const idx = pages.findIndex((p) => p.key === selected.key);
+          const prevPage = idx > 0 ? pages[idx - 1] : null;
+          const nextPage = idx >= 0 && idx < pages.length - 1 ? pages[idx + 1] : null;
+
+          if (prevPage || nextPage) {
+            const navBar = document.createElement("div");
+            navBar.className = "sprout-guide-prev-next";
+            footer.appendChild(navBar);
+
+            if (prevPage) {
+              const prevBtn = document.createElement("div");
+              prevBtn.className = "sprout-guide-prev-next-btn sprout-guide-prev-btn";
+              const label = document.createElement("div");
+              label.className = "sprout-guide-prev-next-label";
+              label.textContent = "Previous";
+              prevBtn.appendChild(label);
+              const link = document.createElement("a");
+              link.className = "sprout-guide-prev-next-link";
+              link.textContent = `← ${prevPage.label}`;
+              link.addEventListener("click", (ev) => {
+                ev.preventDefault();
+                this._activeGuidePage = prevPage.key;
+                void renderSelectedPage(true);
+              });
+              prevBtn.appendChild(link);
+              navBar.appendChild(prevBtn);
+            } else {
+              const spacer = document.createElement("div");
+              spacer.className = "sprout-guide-prev-next-spacer";
+              navBar.appendChild(spacer);
             }
 
-            setActiveDotWithSteps(activeIdx);
+            if (nextPage) {
+              const nextBtn = document.createElement("div");
+              nextBtn.className = "sprout-guide-prev-next-btn sprout-guide-next-btn";
+              const label = document.createElement("div");
+              label.className = "sprout-guide-prev-next-label";
+              label.textContent = "Next";
+              nextBtn.appendChild(label);
+              const link = document.createElement("a");
+              link.className = "sprout-guide-prev-next-link";
+              link.textContent = `${nextPage.label} →`;
+              link.addEventListener("click", (ev) => {
+                ev.preventDefault();
+                this._activeGuidePage = nextPage.key;
+                void renderSelectedPage(true);
+              });
+              nextBtn.appendChild(link);
+              navBar.appendChild(nextBtn);
+            } else {
+              const spacer = document.createElement("div");
+              spacer.className = "sprout-guide-prev-next-spacer";
+              navBar.appendChild(spacer);
+            }
+          }
 
-            const progress = max > 0 ? inner.scrollTop / max : 0;
-            setCssProps(content, "--sprout-guide-scroll-progress", progress.toFixed(4));
-          };
+          if (showInlineLoading) {
+            inner.classList.remove("is-loading-inline");
+          }
+        };
 
-          inner.addEventListener("scroll", updateActiveDot, { passive: true });
-          const onResize = () => updateActiveDot();
-          this._trackWindowListener("resize", onResize, { passive: true });
-          window.requestAnimationFrame(updateActiveDot);
-        }
-
-        footer.empty();
-        const idx = pages.findIndex((p) => p.key === selected.key);
-        const prevPage = idx > 0 ? pages[idx - 1] : null;
-        const nextPage = idx >= 0 && idx < pages.length - 1 ? pages[idx + 1] : null;
-
-        if (prevPage || nextPage) {
-          const navBar = document.createElement("div");
-          navBar.className = "sprout-guide-prev-next";
-          footer.appendChild(navBar);
-
-        if (prevPage) {
-          const prevBtn = document.createElement("div");
-          prevBtn.className = "sprout-guide-prev-next-btn sprout-guide-prev-btn";
-          const label = document.createElement("div");
-          label.className = "sprout-guide-prev-next-label";
-          label.textContent = "Previous";
-          prevBtn.appendChild(label);
-          const link = document.createElement("a");
-          link.className = "sprout-guide-prev-next-link";
-          link.textContent = `← ${prevPage.label}`;
-          link.addEventListener("click", (ev) => {
-            ev.preventDefault();
-            this._activeGuidePage = prevPage.key;
-            this._renderActiveTabContent();
+        for (const { item, pageKey } of navPageItems) {
+          item.addEventListener("click", () => {
+            if (pageKey === this._activeGuidePage) return;
+            this._activeGuidePage = pageKey;
+            void renderSelectedPage(true);
           });
-          prevBtn.appendChild(link);
-          navBar.appendChild(prevBtn);
-        } else {
-          const spacer = document.createElement("div");
-          spacer.className = "sprout-guide-prev-next-spacer";
-          navBar.appendChild(spacer);
         }
 
-        if (nextPage) {
-          const nextBtn = document.createElement("div");
-          nextBtn.className = "sprout-guide-prev-next-btn sprout-guide-next-btn";
-          const label = document.createElement("div");
-          label.className = "sprout-guide-prev-next-label";
-          label.textContent = "Next";
-          nextBtn.appendChild(label);
-          const link = document.createElement("a");
-          link.className = "sprout-guide-prev-next-link";
-          link.textContent = `${nextPage.label} →`;
-          link.addEventListener("click", (ev) => {
-            ev.preventDefault();
-            this._activeGuidePage = nextPage.key;
-            this._renderActiveTabContent();
-          });
-          nextBtn.appendChild(link);
-          navBar.appendChild(nextBtn);
-        } else {
-          const spacer = document.createElement("div");
-          spacer.className = "sprout-guide-prev-next-spacer";
-          navBar.appendChild(spacer);
-        }
-      }
+        await renderSelectedPage(false);
 
         layout.classList.remove("is-loading");
       } catch {
