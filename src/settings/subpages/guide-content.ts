@@ -142,26 +142,27 @@ const GUIDE_ICON_MAP: Record<string, string> = {
 };
 
 export async function loadGuidePages(app: App, pluginDir?: string): Promise<GuidePage[]> {
-  const pagesFromPluginDir: GuidePage[] = [];
-  if (pluginDir) {
-    for (const fileName of PREFERRED_GUIDE_FILES) {
-      const relPath = `wiki/${fileName}`;
-      try {
-        const markdown = await app.vault.adapter.read(`${pluginDir}/${relPath}`);
-        const key = fileName.replace(/\.md$/i, "");
-        pagesFromPluginDir.push({
-          key,
-          label: key.replace(/-/g, " "),
-          markdown,
-          sourcePath: `${pluginDir}/${relPath}`,
-        });
-      } catch {
-        // File might not exist in this build; ignore and continue.
-      }
+  const pagesFromGithubWikiRaw: GuidePage[] = [];
+  for (const fileName of PREFERRED_GUIDE_FILES) {
+    try {
+      const res = await requestUrl({
+        url: `https://raw.githubusercontent.com/wiki/ctrlaltwill/Sprout/${encodeURIComponent(fileName)}`,
+        method: "GET",
+      });
+      if (res.status !== 200 || !res.text) continue;
+      const key = fileName.replace(/\.md$/i, "");
+      pagesFromGithubWikiRaw.push({
+        key,
+        label: key.replace(/-/g, " "),
+        markdown: res.text,
+        sourcePath: "",
+      });
+    } catch {
+      // Ignore and continue to next fallback source
     }
   }
 
-  if (pagesFromPluginDir.length) return pagesFromPluginDir;
+  if (pagesFromGithubWikiRaw.length) return pagesFromGithubWikiRaw;
 
   const pagesFromRepoRaw: GuidePage[] = [];
   for (const fileName of PREFERRED_GUIDE_FILES) {
@@ -184,6 +185,27 @@ export async function loadGuidePages(app: App, pluginDir?: string): Promise<Guid
   }
 
   if (pagesFromRepoRaw.length) return pagesFromRepoRaw;
+
+  const pagesFromPluginDir: GuidePage[] = [];
+  if (pluginDir) {
+    for (const fileName of PREFERRED_GUIDE_FILES) {
+      const relPath = `wiki/${fileName}`;
+      try {
+        const markdown = await app.vault.adapter.read(`${pluginDir}/${relPath}`);
+        const key = fileName.replace(/\.md$/i, "");
+        pagesFromPluginDir.push({
+          key,
+          label: key.replace(/-/g, " "),
+          markdown,
+          sourcePath: `${pluginDir}/${relPath}`,
+        });
+      } catch {
+        // File might not exist in this build; ignore and continue.
+      }
+    }
+  }
+
+  if (pagesFromPluginDir.length) return pagesFromPluginDir;
 
   const files = app.vault.getMarkdownFiles().filter((f) => f.path.startsWith("wiki/"));
   if (!files.length) {
