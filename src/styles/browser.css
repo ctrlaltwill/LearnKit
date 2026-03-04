@@ -193,6 +193,83 @@
   opacity: 0.8 !important;
 }
 
+.sprout .sprout-inline-flag {
+  width: 1em !important;
+  height: 1em !important;
+  min-width: 1em !important;
+  min-height: 1em !important;
+  border-radius: 999px !important;
+  object-fit: cover !important;
+  vertical-align: text-bottom !important;
+  display: inline-block !important;
+  margin: 0 5px !important;
+}
+
+.sprout .sprout-browser-flag-editor-wrap {
+  position: relative !important;
+  width: 100% !important;
+}
+
+.sprout .sprout-browser-flag-editor-wrap--multiline {
+  height: var(--sprout-editor-height, auto) !important;
+  min-height: var(--sprout-editor-height, auto) !important;
+  max-height: var(--sprout-editor-height, auto) !important;
+}
+
+.sprout .sprout-browser-flag-input {
+  position: relative !important;
+  z-index: 0 !important;
+}
+
+.sprout .sprout-browser-flag-overlay {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  padding: 6px 8px !important;
+  box-sizing: border-box !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
+  border-radius: var(--input-radius) !important;
+  background: var(--background-modifier-form-field) !important;
+  color: var(--text-normal) !important;
+  cursor: text !important;
+  z-index: 1 !important;
+}
+
+.sprout .sprout-browser-flag-overlay--multiline {
+  overflow: auto !important;
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  font-size: var(--font-ui-small) !important;
+  line-height: 1.4 !important;
+}
+
+.sprout .sprout-browser-flag-textarea {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  opacity: 0 !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+}
+
+.sprout .sprout-browser-flag-editor--focused .sprout-browser-flag-input,
+.sprout .sprout-browser-flag-editor--focused .sprout-browser-flag-textarea {
+  opacity: 1 !important;
+  z-index: 2 !important;
+  pointer-events: auto !important;
+}
+
+.sprout .sprout-browser-flag-editor--focused .sprout-browser-flag-overlay {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+
 /* ── Image-editor: textarea + overlay toggle ── */
 .sprout .sprout-browser-img-editor-wrap {
   position: relative !important;

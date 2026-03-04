@@ -424,7 +424,7 @@
 
 .sprout-guide-content-inner--snap {
   scroll-behavior: smooth;
-  scroll-snap-type: y proximity;
+  scroll-snap-type: none;
 }
 
 .sprout-guide-snap-heading {

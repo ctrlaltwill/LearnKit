@@ -301,6 +301,59 @@
   pointer-events: auto;
 }
 
+.sprout .sprout-inline-flag {
+  width: 1em;
+  height: 1em;
+  min-width: 1em;
+  min-height: 1em;
+  border-radius: 999px;
+  object-fit: cover;
+  vertical-align: text-bottom;
+  display: inline-block;
+  margin: 0 5px;
+}
+
+.sprout .sprout-flag-editor-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.sprout .sprout-flag-editor-control {
+  position: relative;
+  z-index: 0;
+}
+
+.sprout .sprout-flag-editor-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--input-radius);
+  border: var(--sprout-border-width) solid var(--sprout-border-color);
+  background: var(--background-modifier-form-field);
+  color: var(--text-normal);
+  padding: 6px 8px;
+  box-sizing: border-box;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: text;
+  z-index: 1;
+}
+
+.sprout .sprout-flag-editor-overlay--multiline {
+  white-space: pre-wrap;
+  overflow: auto;
+}
+
+.sprout .sprout-flag-editor--focused .sprout-flag-editor-control {
+  z-index: 2;
+}
+
+.sprout .sprout-flag-editor--focused .sprout-flag-editor-overlay {
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
 /* List unbounded (no max-height/overflow) */
 .sprout-list-unbounded {
   max-height: none;

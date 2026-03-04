@@ -44,6 +44,7 @@ See [[Study Sessions]], [[Scheduling]], and [[Grading]].
 - [[Analytics]] and [[Charts]] for progress tracking
 - [[Text to Speech|Text to Speech]] for spoken cards
 - [[Reading View]] for reviewing extracted content
+- [[Flags]] for inline circle-flag tokens in card text
 
 ## Important notes
 

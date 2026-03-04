@@ -12,6 +12,7 @@
 
 import createDOMPurify from "dompurify";
 import { setIcon } from "obsidian";
+import { hydrateCircleFlagsInElement } from "../flags/flag-tokens";
 
 export type CssPropValue = string | number | null | undefined;
 
@@ -298,6 +299,7 @@ export function createFragmentFromHTML(html: string): DocumentFragment {
 export function replaceChildrenWithHTML(el: HTMLElement, html: string): void {
   const frag = createFragmentFromHTML(html);
   el.replaceChildren(frag);
+  hydrateCircleFlagsInElement(el);
 }
 
 export function queryFirst<T extends Element = Element>(root: ParentNode, selector: string): T | null {

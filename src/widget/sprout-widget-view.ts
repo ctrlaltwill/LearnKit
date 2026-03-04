@@ -12,6 +12,7 @@ import { VIEW_TYPE_REVIEWER, VIEW_TYPE_WIDGET } from "../core/constants";
 import { SproutMarkdownHelper } from "../reviewer/markdown-render";
 import { openSproutImageZoom } from "../reviewer/zoom";
 import { buildSession as buildReviewerSession } from "../reviewer/session";
+import { processCircleFlagsInMarkdown, hydrateCircleFlagsInElement } from "../flags/flag-tokens";
 import type { Scope } from "../reviewer/types";
 import * as IO from "../imageocclusion/image-occlusion-index";
 import { renderImageOcclusionReviewInto } from "../imageocclusion/image-occlusion-review-render";
@@ -63,6 +64,7 @@ export class SproutWidgetView extends ItemView {
   /** Tracks multi-answer MCQ selections. */
   _mcqMultiSelected = new Set<number>();
   _mcqMultiCardId = "";
+  _lastTtsKey = "";
 
   private _keysBound = false;
 
@@ -140,7 +142,9 @@ export class SproutWidgetView extends ItemView {
   async renderMarkdownInto(containerEl: HTMLElement, md: string, sourcePath: string) {
     this.ensureMarkdownHelper();
     if (!this._mdHelper) return;
-    await this._mdHelper.renderInto(containerEl, md ?? "", sourcePath ?? "");
+    const withFlags = processCircleFlagsInMarkdown(md ?? "");
+    await this._mdHelper.renderInto(containerEl, withFlags, sourcePath ?? "");
+    hydrateCircleFlagsInElement(containerEl);
   }
 
   /** Render an image-occlusion card into a container. */
@@ -322,6 +326,7 @@ export class SproutWidgetView extends ItemView {
     this.mode = "session";
     this.showAnswer = false;
     this._undo = null;
+    this._lastTtsKey = "";
     this._sessionStamp = Date.now();
     this.render();
   }
@@ -332,6 +337,7 @@ export class SproutWidgetView extends ItemView {
     this.mode = "session";
     this.showAnswer = false;
     this._undo = null;
+    this._lastTtsKey = "";
     this._sessionStamp = Date.now();
     this.render();
   }
@@ -342,6 +348,7 @@ export class SproutWidgetView extends ItemView {
     this.session = null;
     this.showAnswer = false;
     this._undo = null;
+    this._lastTtsKey = "";
     this._moreMenuToggle = null;
     this.render();
   }

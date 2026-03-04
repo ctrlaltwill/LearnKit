@@ -26,6 +26,8 @@ import { processMarkdownFeatures, setupInternalLinkHandlers } from "./widget-mar
 import { openCardAnchorInNote } from "../core/open-card-anchor";
 import { processClozeForMath, textContainsMath, convertInlineDisplayMath, forceSingleLineDisplayMathInline } from "../core/shared-utils";
 import { MarkdownView } from "obsidian";
+import { getTtsService } from "../tts/tts-service";
+import { shouldSkipBackAutoplay } from "../tts/autoplay-policy";
 
 /** Returns true if the text contains a markdown table (pipe-delimited with a separator row). */
 function hasMarkdownTable(text: string): boolean {
@@ -174,13 +176,14 @@ export function renderWidgetSession(view: WidgetViewLike, root: HTMLElement): vo
   }
 
   // Edit and More menu buttons row
-  renderActionRow(view, footer, graded);
+  renderActionRow(view, footer, card, graded);
   wrap.appendChild(footer);
 
   // ---- Progress bar --------------------------------------------------
   renderProgressBar(view, wrap);
 
   root.appendChild(wrap);
+  maybeAutoSpeakWidgetCard(view, card, graded);
   view.armTimer();
 }
 
@@ -197,6 +200,11 @@ function renderBasicCard(
   applySectionStyles: (e: HTMLElement) => void,
   makeDivider: () => HTMLElement,
 ) {
+  const qHeading = el("div", "bc flex items-center justify-between gap-2");
+  qHeading.appendChild(el("h3", "bc text-sm font-medium sprout-gatekeeper-section-label", "Question"));
+  appendWidgetTtsReplayButton(view, qHeading, card, graded, false);
+  body.appendChild(qHeading);
+
   const qEl = el("div", "bc");
   // For reversed-child cards, use reversedDirection to swap content
   const isBackDirection = card.type === "reversed-child" && (card as unknown as Record<string, unknown>).reversedDirection === "back";
@@ -220,6 +228,11 @@ function renderBasicCard(
 
   if (view.showAnswer || graded) {
     body.appendChild(makeDivider());
+    const aHeading = el("div", "bc flex items-center justify-between gap-2");
+    aHeading.appendChild(el("h3", "bc text-sm font-medium sprout-gatekeeper-section-label", "Answer"));
+    appendWidgetTtsReplayButton(view, aHeading, card, graded, true);
+    body.appendChild(aHeading);
+
     const aEl = el("div", "bc");
     const aText = (isBackDirection || isOldReversed) ? (card.q || "") : (card.a || "");
     if (aText.includes("$") || aText.includes("[[") || aText.includes("\\(") || aText.includes("\\[") || hasMarkdownTable(aText)) {
@@ -242,6 +255,36 @@ function renderBasicCard(
       renderInfoBlock(body, infoText, applySectionStyles, view, card);
     }
   }
+}
+
+function isWidgetTtsEnabled(view: WidgetViewLike): boolean {
+  const audio = view.plugin.settings.audio;
+  if (!audio?.enabled) return false;
+  if ((audio as Record<string, unknown>).widgetReplay === false) return false;
+  return getTtsService().isSupported;
+}
+
+function appendWidgetTtsReplayButton(
+  view: WidgetViewLike,
+  parent: HTMLElement,
+  card: CardRecord,
+  graded: { rating: ReviewRating; at: number; meta: ReviewMeta | null } | null,
+  answerSide: boolean,
+): void {
+  if (!isWidgetTtsEnabled(view)) return;
+
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "bc btn-icon sprout-tts-replay-btn";
+  btn.setAttribute("data-tooltip", answerSide ? "Read answer aloud" : "Read question aloud");
+  btn.setAttribute("data-tooltip-position", "top");
+  setIcon(btn, "volume-2");
+  btn.addEventListener("click", (ev) => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    speakWidgetCard(view, card, graded, answerSide);
+  });
+  parent.appendChild(btn);
 }
 
 function renderClozeCard(
@@ -930,7 +973,73 @@ function renderScheduledFooter(view: WidgetViewLike, footer: HTMLElement, card: 
   }
 }
 
-function renderActionRow(view: WidgetViewLike, footer: HTMLElement, graded: { rating: ReviewRating; at: number; meta: ReviewMeta | null } | null) {
+function speakWidgetCard(
+  view: WidgetViewLike,
+  card: CardRecord,
+  graded: { rating: ReviewRating; at: number; meta: ReviewMeta | null } | null,
+  forceAnswerSide?: boolean,
+): void {
+  const tts = getTtsService();
+  const audio = view.plugin.settings.audio;
+  if (!audio?.enabled || (audio as Record<string, unknown>).widgetReplay === false || !tts.isSupported) return;
+
+  const reveal = typeof forceAnswerSide === "boolean" ? forceAnswerSide : (view.showAnswer || !!graded);
+  const isBackDirection = card.type === "reversed-child" && (card as unknown as Record<string, unknown>).reversedDirection === "back";
+  const isOldReversed = card.type === "reversed";
+
+  if (card.type === "basic" || card.type === "reversed" || card.type === "reversed-child") {
+    const qText = (isBackDirection || isOldReversed) ? (card.a || "") : (card.q || "");
+    const aText = (isBackDirection || isOldReversed) ? (card.q || "") : (card.a || "");
+    const text = reveal ? aText : qText;
+    tts.speakBasicCard(text, audio);
+    return;
+  }
+
+  if (isClozeLike(card)) {
+    const targetIndex = card.type === "cloze-child" ? Number(card.clozeIndex) : null;
+    tts.speakClozeCard(card.clozeText || "", reveal, targetIndex, audio);
+    return;
+  }
+
+  if (card.type === "mcq") {
+    const parts = [card.stem || "", ...normalizeCardOptions(card.options)];
+    tts.speakBasicCard(parts.filter(Boolean).join(". "), audio);
+    return;
+  }
+
+  if (card.type === "oq") {
+    const steps = Array.isArray(card.oqSteps) ? card.oqSteps : [];
+    const text = [card.q || "", ...steps].filter(Boolean).join(". ");
+    tts.speakBasicCard(text, audio);
+    return;
+  }
+
+  if (card.type === "io" || card.type === "io-child") {
+    const qText = card.q || "";
+    const aText = card.a || "";
+    tts.speakBasicCard(reveal ? aText : qText, audio);
+  }
+}
+
+function maybeAutoSpeakWidgetCard(view: WidgetViewLike, card: CardRecord, graded: { rating: ReviewRating; at: number; meta: ReviewMeta | null } | null): void {
+  const audio = view.plugin.settings.audio;
+  if (!audio?.enabled) return;
+  if ((audio as Record<string, unknown>).widgetReplay === false) return;
+  if (audio.autoplay === false) return;
+
+  const isBack = view.showAnswer || !!graded;
+  if (isBack && shouldSkipBackAutoplay(card)) return;
+
+  const sideKey = isBack ? "back" : "front";
+  const cardId = String(card.id ?? "");
+  const nextKey = `${cardId}:${sideKey}`;
+  if (view._lastTtsKey === nextKey) return;
+
+  view._lastTtsKey = nextKey;
+  speakWidgetCard(view, card, graded);
+}
+
+function renderActionRow(view: WidgetViewLike, footer: HTMLElement, card: CardRecord, graded: { rating: ReviewRating; at: number; meta: ReviewMeta | null } | null) {
   const actionRow = el("div", "bc flex gap-2");
 
   const editBtn = makeTextButton({

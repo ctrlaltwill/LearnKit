@@ -14,6 +14,7 @@ import { detectLanguage, getBlankWord } from "./language-detect";
 import { Platform } from "obsidian";
 import { log } from "../core/logger";
 import type { SproutSettings } from "../types/settings";
+import { getCircleFlagTokenMatches, stripCircleFlagTokens } from "../flags/flag-tokens";
 
 // ── TTS debug mode ─────────────────────────────────────────────
 // Type  sproutTtsDebug()       in the dev console to enable.
@@ -454,6 +455,129 @@ function resolveDetectedLanguage(
   return detected;
 }
 
+const FLAG_CODE_TO_LOCALE: Record<string, string> = {
+  us: "en-US",
+  gb: "en-GB",
+  uk: "en-GB",
+  au: "en-AU",
+  mx: "es-MX",
+  es: "es-ES",
+  br: "pt-BR",
+  pt: "pt-PT",
+  cn: "zh-CN",
+  tw: "zh-TW",
+  jp: "ja-JP",
+  kr: "ko-KR",
+  ru: "ru-RU",
+  sa: "ar-SA",
+  in: "hi-IN",
+};
+
+const PRIMARY_LANG_DEFAULT_LOCALE: Record<string, string> = {
+  en: "en-US",
+  es: "es-ES",
+  fr: "fr-FR",
+  de: "de-DE",
+  it: "it-IT",
+  pt: "pt-BR",
+  nl: "nl-NL",
+  pl: "pl-PL",
+  cs: "cs-CZ",
+  vi: "vi-VN",
+  tr: "tr-TR",
+  sv: "sv-SE",
+  da: "da-DK",
+  nb: "nb-NO",
+  fi: "fi-FI",
+  hu: "hu-HU",
+  ro: "ro-RO",
+  id: "id-ID",
+  ms: "ms-MY",
+  zh: "zh-CN",
+  ja: "ja-JP",
+  ko: "ko-KR",
+  ru: "ru-RU",
+  ar: "ar-SA",
+  hi: "hi-IN",
+  ur: "ur-PK",
+  fa: "fa-IR",
+  uk: "uk-UA",
+  bg: "bg-BG",
+  sr: "sr-RS",
+  mr: "mr-IN",
+  ne: "ne-NP",
+};
+
+const SPOKEN_LANGUAGE_LABELS: Record<string, string> = {
+  en: "English",
+  es: "Spanish",
+  fr: "French",
+  de: "German",
+  it: "Italian",
+  pt: "Portuguese",
+  nl: "Dutch",
+  pl: "Polish",
+  cs: "Czech",
+  vi: "Vietnamese",
+  tr: "Turkish",
+  sv: "Swedish",
+  da: "Danish",
+  nb: "Norwegian",
+  fi: "Finnish",
+  hu: "Hungarian",
+  ro: "Romanian",
+  id: "Indonesian",
+  ms: "Malay",
+  zh: "Chinese",
+  ja: "Japanese",
+  ko: "Korean",
+  ru: "Russian",
+  ar: "Arabic",
+  hi: "Hindi",
+  ur: "Urdu",
+  fa: "Persian",
+  uk: "Ukrainian",
+  bg: "Bulgarian",
+  sr: "Serbian",
+  mr: "Marathi",
+  ne: "Nepali",
+};
+
+function normaliseLocaleTag(tag: string): string {
+  const raw = String(tag ?? "").trim();
+  if (!raw) return "";
+  const [primary, region] = raw.split("-");
+  if (!primary) return "";
+  const p = primary.toLowerCase();
+  if (!region) return p;
+  return `${p}-${region.toUpperCase()}`;
+}
+
+function languageFromFlagCode(flagCode: string, fallbackLanguage: string): string | null {
+  const code = String(flagCode ?? "").trim().toLowerCase();
+  if (!code) return null;
+
+  if (FLAG_CODE_TO_LOCALE[code]) return FLAG_CODE_TO_LOCALE[code];
+
+  if (code.includes("-")) {
+    const [primary, region] = code.split("-");
+    if (!primary || !region) return null;
+    return `${primary.toLowerCase()}-${region.toUpperCase()}`;
+  }
+
+  const [fallbackPrimary] = normaliseLocaleTag(fallbackLanguage).split("-");
+  if (fallbackPrimary && fallbackPrimary === code) {
+    return normaliseLocaleTag(fallbackLanguage);
+  }
+
+  return PRIMARY_LANG_DEFAULT_LOCALE[code] ?? null;
+}
+
+function spokenLanguageLabel(lang: string): string {
+  const primary = normaliseLocaleTag(lang).split("-")[0] || "";
+  return SPOKEN_LANGUAGE_LABELS[primary] ?? lang;
+}
+
 /**
  * Score a voice for quality, factoring in the **target language**.
  * Higher = better.
@@ -883,6 +1007,83 @@ function stripToPlainText(md: string): string {
     .trim();
 }
 
+type FlagSpeechSegment = {
+  text: string;
+  lang: string;
+  fromFlag: boolean;
+};
+
+function buildFlagSpeechSegments(
+  rawText: string,
+  fallbackLang: string,
+  settings: SproutSettings["audio"],
+  autoDetect: boolean,
+): FlagSpeechSegment[] {
+  const flagEnabled = (settings as Record<string, unknown>)["useFlagsForVoiceSelection"];
+  if (flagEnabled === false) return [];
+
+  const sourceText = String(rawText ?? "");
+  const matches = getCircleFlagTokenMatches(sourceText);
+  if (!matches.length) return [];
+
+  const firstLang = languageFromFlagCode(matches[0]?.code ?? "", fallbackLang);
+  const cleanedAll = stripToPlainText(stripCircleFlagTokens(sourceText));
+
+  if (matches.length === 1 && firstLang && cleanedAll) {
+    return [{ text: cleanedAll, lang: firstLang, fromFlag: true }];
+  }
+
+  const segments: FlagSpeechSegment[] = [];
+  let cursor = 0;
+  let activeFlagLang: string | null = null;
+
+  for (const match of matches) {
+    const rawChunk = sourceText.slice(cursor, match.index);
+    const chunk = stripToPlainText(rawChunk);
+
+    if (chunk) {
+      let lang = fallbackLang;
+      let fromFlag = false;
+
+      if (activeFlagLang) {
+        lang = activeFlagLang;
+        fromFlag = true;
+      } else if (autoDetect) {
+        const detected = detectLanguage(rawChunk);
+        if (detected) {
+          lang = resolveDetectedLanguage(detected, settings.scriptLanguages);
+        }
+      }
+
+      segments.push({ text: chunk, lang, fromFlag });
+    }
+
+    activeFlagLang = languageFromFlagCode(match.code, fallbackLang);
+    cursor = match.index + match.length;
+  }
+
+  const tailRaw = sourceText.slice(cursor);
+  const tailText = stripToPlainText(tailRaw);
+  if (tailText) {
+    let lang = fallbackLang;
+    let fromFlag = false;
+
+    if (activeFlagLang) {
+      lang = activeFlagLang;
+      fromFlag = true;
+    } else if (autoDetect) {
+      const detected = detectLanguage(tailRaw);
+      if (detected) {
+        lang = resolveDetectedLanguage(detected, settings.scriptLanguages);
+      }
+    }
+
+    segments.push({ text: tailText, lang, fromFlag });
+  }
+
+  return segments;
+}
+
 /**
  * Prepare cloze text for TTS.
  * - On the **front** (reveal=false): replaces the target cloze(s) with the "blank" word
@@ -949,6 +1150,7 @@ export function extractClozeAnswerForTts(
 
 export class TtsService {
   private _speaking = false;
+  private _speakSession = 0;
 
   /** Whether the browser supports the Web Speech API. */
   get isSupported(): boolean {
@@ -963,6 +1165,7 @@ export class TtsService {
   /** Cancel any ongoing speech. */
   stop(): void {
     if (!this.isSupported) return;
+    this._speakSession += 1;
     window.speechSynthesis.cancel();
     this._speaking = false;
   }
@@ -1000,89 +1203,138 @@ export class TtsService {
     // Cancel any ongoing utterance
     this.stop();
 
-    const plainText = stripToPlainText(text);
-    if (!plainText) return;
+    const defaultLang = normaliseLocaleTag(lang || settings.defaultLanguage || "en-US") || "en-US";
+    const includeLanguageLabel = Boolean((settings as Record<string, unknown>)["speakFlagLanguageLabel"]);
 
-    // Determine language
-    let effectiveLang = lang || settings.defaultLanguage || "en-US";
-    if (autoDetect) {
-      const detected = detectLanguage(text);
-      if (detected) {
-        const resolved = resolveDetectedLanguage(detected, settings.scriptLanguages);
-        ttsLog(`Auto-detected language: "${detected}" → resolved to "${resolved}" (was "${effectiveLang}")`);
-        effectiveLang = resolved;
-      }
-    }
+    const flagSegments = buildFlagSpeechSegments(text, defaultLang, settings, autoDetect);
 
-    ttsLog(`speak() — lang="${effectiveLang}", rate=${settings.rate}, pitch=${settings.pitch}, text="${plainText.slice(0, 80)}…"`);
-
-    const utterance = new SpeechSynthesisUtterance(plainText);
-    utterance.lang = effectiveLang;
-    utterance.rate = Math.max(0.5, Math.min(2.0, settings.rate ?? 1.0));
-    utterance.pitch = Math.max(0.5, Math.min(2.0, settings.pitch ?? 1.0));
-
-    // Try to pick a matching voice
-    const voice = pickVoice(effectiveLang, settings.preferredVoiceURI || undefined);
-    if (voice) {
-      utterance.voice = voice;
-      ttsLog(`Using voice: "${voice.name}" (${voice.lang}, local=${voice.localService})`);
+    let segments: FlagSpeechSegment[];
+    if (flagSegments.length) {
+      segments = flagSegments;
     } else {
-      ttsLog("No voice matched — using speechSynthesis default.");
+      const plainText = stripToPlainText(text);
+      if (!plainText) return;
+
+      let effectiveLang = defaultLang;
+      if (autoDetect) {
+        const detected = detectLanguage(text);
+        if (detected) {
+          const resolved = resolveDetectedLanguage(detected, settings.scriptLanguages);
+          ttsLog(`Auto-detected language: "${detected}" → resolved to "${resolved}" (was "${effectiveLang}")`);
+          effectiveLang = resolved;
+        }
+      }
+
+      segments = [{ text: plainText, lang: normaliseLocaleTag(effectiveLang) || defaultLang, fromFlag: false }];
     }
 
-    // Chromium resume workaround: poke speechSynthesis every 10 s to prevent freeze
-    let resumeInterval: ReturnType<typeof setInterval> | null = null;
+    if (!segments.length) return;
 
-    utterance.onstart = () => {
-      this._speaking = true;
-      // Start the Chromium anti-pause timer
-      resumeInterval = setInterval(() => {
-        if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
-          window.speechSynthesis.pause();
-          window.speechSynthesis.resume();
+    const rate = Math.max(0.5, Math.min(2.0, settings.rate ?? 1.0));
+    const pitch = Math.max(0.5, Math.min(2.0, settings.pitch ?? 1.0));
+    const preferredVoiceURI = settings.preferredVoiceURI || undefined;
+    const session = this._speakSession;
+
+    const speakSegmentAt = (index: number) => {
+      if (session !== this._speakSession) return;
+      if (index >= segments.length) {
+        this._speaking = false;
+        ttsLog("⏹ Speaking ended.");
+        return;
+      }
+
+      const segment = segments[index];
+      const segmentLang = normaliseLocaleTag(segment.lang) || defaultLang;
+      const spokenText = includeLanguageLabel && segment.fromFlag
+        ? `${spokenLanguageLabel(segmentLang)}. ${segment.text}`
+        : segment.text;
+      if (!spokenText.trim()) {
+        speakSegmentAt(index + 1);
+        return;
+      }
+
+      const utterance = new SpeechSynthesisUtterance(spokenText);
+      utterance.lang = segmentLang;
+      utterance.rate = rate;
+      utterance.pitch = pitch;
+
+      const preferredForThisSegment =
+        !segment.fromFlag && preferredVoiceURI && segmentLang.toLowerCase() === defaultLang.toLowerCase()
+          ? preferredVoiceURI
+          : undefined;
+
+      const voice = pickVoice(segmentLang, preferredForThisSegment);
+      if (voice) {
+        utterance.voice = voice;
+        ttsLog(`Using voice: "${voice.name}" (${voice.lang}, local=${voice.localService})`);
+      } else {
+        ttsLog("No voice matched — using speechSynthesis default.");
+      }
+
+      let resumeInterval: ReturnType<typeof setInterval> | null = null;
+
+      utterance.onstart = () => {
+        this._speaking = true;
+        resumeInterval = setInterval(() => {
+          if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+            window.speechSynthesis.pause();
+            window.speechSynthesis.resume();
+          }
+        }, 10_000);
+        if (_ttsDebug) {
+          const actualVoice = utterance.voice;
+          log.debug("[TTS] Speaking started", {
+            assignedVoice: actualVoice ? `${actualVoice.name} (${actualVoice.lang})` : "<browser default>",
+            voiceURI: actualVoice?.voiceURI ?? "n/a",
+            lang: utterance.lang,
+            rate: utterance.rate,
+            pitch: utterance.pitch,
+            textLength: utterance.text.length,
+            segmentIndex: index,
+            segmentCount: segments.length,
+            fromFlag: segment.fromFlag,
+          });
         }
-      }, 10_000);
-      if (_ttsDebug) {
-        const actualVoice = utterance.voice;
-        log.debug("[TTS] Speaking started", {
-          assignedVoice: actualVoice ? `${actualVoice.name} (${actualVoice.lang})` : "<browser default>",
-          voiceURI: actualVoice?.voiceURI ?? "n/a",
-          lang: utterance.lang,
-          rate: utterance.rate,
-          pitch: utterance.pitch,
-          textLength: utterance.text.length,
-        });
-      }
+      };
+
+      const cleanupInterval = () => {
+        if (resumeInterval) {
+          clearInterval(resumeInterval);
+          resumeInterval = null;
+        }
+      };
+
+      utterance.onend = () => {
+        cleanupInterval();
+        speakSegmentAt(index + 1);
+      };
+
+      utterance.onerror = (ev) => {
+        cleanupInterval();
+        if (_ttsDebug) {
+          log.error("[TTS] Utterance error", {
+            error: ev.error,
+            charIndex: ev.charIndex,
+            elapsedTime: ev.elapsedTime,
+            utteranceLang: utterance.lang,
+            utteranceVoice: utterance.voice?.name ?? "<default>",
+            segmentIndex: index,
+          });
+        }
+        speakSegmentAt(index + 1);
+      };
+
+      ttsLog(
+        `speak() — segment ${index + 1}/${segments.length}, lang="${segmentLang}", fromFlag=${segment.fromFlag}, text="${spokenText.slice(0, 80)}…"`,
+      );
+
+      setTimeout(() => {
+        if (session !== this._speakSession) return;
+        window.speechSynthesis.speak(utterance);
+      }, 50);
     };
 
-    const cleanup = () => {
-      this._speaking = false;
-      if (resumeInterval) { clearInterval(resumeInterval); resumeInterval = null; }
-    };
-
-    utterance.onend = () => {
-      cleanup();
-      ttsLog("⏹ Speaking ended.");
-    };
-    utterance.onerror = (ev) => {
-      cleanup();
-      if (_ttsDebug) {
-        log.error("[TTS] Utterance error", {
-          error: ev.error,
-          charIndex: ev.charIndex,
-          elapsedTime: ev.elapsedTime,
-          utteranceLang: utterance.lang,
-          utteranceVoice: utterance.voice?.name ?? "<default>",
-        });
-      }
-    };
-
-    // Chromium cancel-then-speak workaround:
-    // Calling speak() synchronously after cancel() silently drops the utterance.
-    // A microtask yield fixes it reliably.
-    setTimeout(() => {
-      window.speechSynthesis.speak(utterance);
-    }, 50);
+    speakSegmentAt(0);
   }
 
   /**

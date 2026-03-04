@@ -68,6 +68,8 @@ type SproutPluginLike = Plugin & {
         cjk?: string;
         devanagari?: string;
       };
+      useFlagsForVoiceSelection?: boolean;
+      speakFlagLanguageLabel?: boolean;
       rate?: number;
       pitch?: number;
       preferredVoiceURI?: string;
@@ -1825,6 +1827,15 @@ function renderMarkdownLineWithClozeSpans(value: string, style?: CleanMarkdownCl
   return out || processMarkdownFeatures(source);
 }
 
+function renderMarkdownTextWithExplicitBreaks(value: string, style?: CleanMarkdownClozeStyle): string {
+  const source = String(value ?? '');
+  if (!source) return '';
+  return source
+    .split('\n')
+    .map((line) => renderMarkdownLineWithClozeSpans(line, style))
+    .join('<br>');
+}
+
 function buildMarkdownModeContent(card: SproutCard, showLabels: boolean, clozeStyle?: CleanMarkdownClozeStyle): string {
   const lines: string[] = [];
   const addLine = (label: string, value: string) => {
@@ -2023,7 +2034,7 @@ function buildFlashcardContentHTML(card: SproutCard, options: { includeSpeakerBu
       [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]];
     }
 
-    const questionHtml = `<div class="sprout-flashcard-question-text">${renderMarkdownLineWithClozeSpans(q)}</div>`;
+    const questionHtml = `<div class="sprout-flashcard-question-text">${renderMarkdownTextWithExplicitBreaks(q)}</div>`;
     const optionsListHtml = allOptions.length
       ? `<ul class="sprout-flashcard-options sprout-flashcard-options-list">${allOptions.map((opt) => `<li>${renderMarkdownLineWithClozeSpans(String(opt))}</li>`).join('')}</ul>`
       : '';
@@ -2048,14 +2059,14 @@ function buildFlashcardContentHTML(card: SproutCard, options: { includeSpeakerBu
       const j = Math.floor(Math.random() * (i + 1));
       [shuffledSteps[i], shuffledSteps[j]] = [shuffledSteps[j], shuffledSteps[i]];
     }
-    const oqQuestionHtml = `<div class="sprout-flashcard-question-text">${renderMarkdownLineWithClozeSpans(q)}</div>`;
+    const oqQuestionHtml = `<div class="sprout-flashcard-question-text">${renderMarkdownTextWithExplicitBreaks(q)}</div>`;
     front = `${oqQuestionHtml}${shuffledSteps.length ? `<ul class="sprout-flashcard-options sprout-flashcard-options-list">${shuffledSteps.map((s) => `<li>${renderMarkdownLineWithClozeSpans(s)}</li>`).join('')}</ul>` : ''}`;
     back = `${oqQuestionHtml}<ol class="sprout-flashcard-sequence-list">${steps.map((s) => `<li>${renderMarkdownLineWithClozeSpans(s)}</li>`).join('')}</ol>`;
   } else {
     const q = card.type === 'reversed' ? toTextField(card.fields.RQ) : toTextField(card.fields.Q);
     const a = toTextField(card.fields.A);
-    front = `<div>${renderMarkdownLineWithClozeSpans(q)}</div>`;
-    back = `<div>${renderMarkdownLineWithClozeSpans(a)}</div>`;
+    front = `<div>${renderMarkdownTextWithExplicitBreaks(q)}</div>`;
+    back = `<div>${renderMarkdownTextWithExplicitBreaks(a)}</div>`;
   }
 
   const frontBodyClass = card.type === 'cloze'
@@ -2565,18 +2576,40 @@ function enhanceCardElement(
       const panel = el.querySelector<HTMLElement>(panelSelector);
       if (!panel) return;
 
-      const panelText = (panel.innerText || panel.textContent || "").replace(/\s+/g, " ").trim();
-      const imageAlt = Array.from(panel.querySelectorAll<HTMLImageElement>("img[alt]")).map((img) => (img.alt || "").trim()).filter(Boolean).join(" ");
-      const raw = [panelText, imageAlt].filter(Boolean).join(" ").trim();
       const isClozeLike = el.dataset.sproutType === "cloze" || el.dataset.sproutType === "cloze-child";
-      const clozeFrontText = raw.replace(/_+/g, " blank ").replace(/\s+/g, " ").trim();
-      const clozeFallback = String(card.fields.CQ ?? "")
-        .replace(/\{\{c\d+::([\s\S]*?)\}\}/g, " blank ")
-        .replace(/\s+/g, " ")
-        .trim();
-      const text = (isClozeLike && side === "front")
-        ? (clozeFrontText || clozeFallback)
-        : raw;
+
+      const rawQuestion = card.type === "reversed"
+        ? toTextField(card.fields.RQ)
+        : toTextField(card.fields.Q);
+      const rawAnswer = toTextField(card.fields.A);
+      const rawCloze = toTextField(card.fields.CQ);
+
+      const panelText = (panel.innerText || panel.textContent || "").replace(/\s+/g, " ").trim();
+      const imageAlt = Array.from(panel.querySelectorAll<HTMLImageElement>("img[alt]"))
+        .filter((img) => !img.classList.contains("sprout-inline-flag") && !img.hasAttribute("data-sprout-flag-code"))
+        .map((img) => (img.alt || "").trim())
+        .filter(Boolean)
+        .join(" ");
+      const domFallback = [panelText, imageAlt].filter(Boolean).join(" ").trim();
+
+      if (isClozeLike) {
+        const clozeSource = rawCloze || String(card.fields.CQ ?? "");
+        if (!clozeSource && !domFallback) return;
+        if (clozeSource) {
+          tts.speakClozeCard(clozeSource, side === "back", null, {
+            ...DEFAULT_SETTINGS.audio,
+            ...(audioSettings ?? {}),
+            scriptLanguages: {
+              ...DEFAULT_SETTINGS.audio.scriptLanguages,
+              ...(audioSettings?.scriptLanguages ?? {}),
+            },
+          });
+          return;
+        }
+      }
+
+      const fieldText = side === "back" ? rawAnswer : rawQuestion;
+      const text = (fieldText || domFallback || "").trim();
       if (!text) return;
       const mergedAudio = {
         ...DEFAULT_SETTINGS.audio,

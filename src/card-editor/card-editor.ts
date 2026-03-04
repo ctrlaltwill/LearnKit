@@ -17,6 +17,8 @@ import { normalizeCardOptions } from "../core/store";
 import { getCorrectIndices } from "../types/card";
 import { buildAnswerOrOptionsFor, escapePipes } from "../reviewer/fields";
 import { escapeDelimiterText, getDelimiter } from "../core/delimiter";
+import { replaceChildrenWithHTML } from "../core/ui";
+import { renderFlagPreviewHtml } from "../flags/flag-tokens";
 import {
   clearNode,
   titleCaseGroupPath,
@@ -179,6 +181,40 @@ export function createMobileClozeButtons(textarea: HTMLTextAreaElement): HTMLEle
 
   wrap.appendChild(repeatBtn);
   wrap.appendChild(addBtn);
+  return wrap;
+}
+
+function attachFlagPreviewOverlay(control: HTMLInputElement | HTMLTextAreaElement): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.className = `bc sprout-flag-editor-wrap${control instanceof HTMLTextAreaElement ? " sprout-flag-editor-wrap--multiline" : ""}`;
+
+  const overlay = document.createElement("div");
+  overlay.className = `bc sprout-flag-editor-overlay${control instanceof HTMLTextAreaElement ? " sprout-flag-editor-overlay--multiline" : ""}`;
+
+  control.classList.add("sprout-flag-editor-control");
+
+  const renderOverlay = () => {
+    replaceChildrenWithHTML(overlay, renderFlagPreviewHtml(String(control.value ?? "")));
+  };
+
+  overlay.addEventListener("click", () => control.focus());
+
+  control.addEventListener("focus", () => {
+    wrap.classList.add("sprout-flag-editor--focused");
+  });
+
+  control.addEventListener("blur", () => {
+    wrap.classList.remove("sprout-flag-editor--focused");
+    renderOverlay();
+  });
+
+  control.addEventListener("input", () => {
+    if (!wrap.classList.contains("sprout-flag-editor--focused")) renderOverlay();
+  });
+
+  renderOverlay();
+  wrap.appendChild(control);
+  wrap.appendChild(overlay);
   return wrap;
 }
 
@@ -426,7 +462,8 @@ export function createCardEditor(config: CardEditorConfig): CardEditorResult {
       wrapper.appendChild(overwriteNotice);
     }
 
-    wrapper.appendChild(input);
+    const shouldPreviewFlags = field.editable && ["title", "question", "answer", "info"].includes(field.key);
+    wrapper.appendChild(shouldPreviewFlags ? attachFlagPreviewOverlay(input) : input);
     inputEls[field.key] = input;
     if (input instanceof HTMLTextAreaElement) {
       attachFormatShortcuts(input);
@@ -887,7 +924,7 @@ function createOqEditor(card: CardRecord) {
     input.className = "bc input flex-1 text-sm sprout-input-fixed";
     input.placeholder = `Step ${idx + 1}`;
     input.value = value;
-    row.appendChild(input);
+    row.appendChild(attachFlagPreviewOverlay(input));
 
     // Delete button
     const delBtn = document.createElement("button");
@@ -985,7 +1022,7 @@ function createOqEditor(card: CardRecord) {
     renumber();
     addInput.value = "";
   });
-  addRow.appendChild(addInput);
+  addRow.appendChild(attachFlagPreviewOverlay(addInput));
   container.appendChild(addRow);
 
   const getSteps = (): string[] => {
@@ -1049,7 +1086,7 @@ function createMcqEditor(card: CardRecord) {
     input.className = "bc input flex-1 text-sm sprout-input-fixed";
     input.placeholder = "Enter an answer option";
     input.value = value;
-    row.appendChild(input);
+    row.appendChild(attachFlagPreviewOverlay(input));
 
     const removeBtn = document.createElement("button");
     removeBtn.type = "button";
@@ -1100,7 +1137,7 @@ function createMcqEditor(card: CardRecord) {
 
   const addInputWrap = document.createElement("div");
   addInputWrap.className = "bc flex items-center gap-2";
-  addInputWrap.appendChild(addInput);
+  addInputWrap.appendChild(attachFlagPreviewOverlay(addInput));
   container.appendChild(addInputWrap);
 
   // Populate from existing card

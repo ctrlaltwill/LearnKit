@@ -753,7 +753,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName("User name")
-      .setDesc("Your name for greetings and personalisation.")
+      .setDesc("Name used in greetings.")
       .addText((t) => {
         t.setPlaceholder("Your name");
         t.setValue(String(this.plugin.settings.general.userName ?? ""));
@@ -767,7 +767,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName("Show greeting text")
-      .setDesc("Turn off to show only 'home' as the title on the home page.")
+      .setDesc("Turn off to show only \"home\" on the home page.")
       .addToggle((t) => {
         t.setValue(this.plugin.settings.general.showGreeting !== false);
         t.onChange(async (v) => {
@@ -783,7 +783,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName("Enable animations")
-      .setDesc("Enable fade-up animations when pages load. Disable for a more immediate interface.")
+      .setDesc("Show fade-up animations when pages load.")
       .addToggle((t) =>
         t.setValue(this.plugin.settings?.general?.enableAnimations ?? true).onChange(async (v) => {
           if (!this.plugin.settings.general) this.plugin.settings.general = {} as typeof this.plugin.settings.general;
@@ -806,8 +806,8 @@ export class SproutSettingsTab extends PluginSettingTab {
       descInfo.createDiv({
         cls: "setting-item-description",
         text: "Read flashcard content aloud using your system's built-in text-to-speech. " +
-          "Non-Latin scripts (Chinese, Arabic, Cyrillic, etc.) are automatically detected " +
-          "and matched to the best available system voice. Latin-script text uses your chosen default voice.",
+          "Non-Latin scripts are detected automatically and matched to the best available system voice. " +
+          "Latin-script text uses your chosen default voice.",
       });
     }
 
@@ -816,7 +816,8 @@ export class SproutSettingsTab extends PluginSettingTab {
     new Setting(wrapper)
       .setName("Enable text to speech")
       .setDesc(
-        "Turn text to speech on or off globally. When disabled, no cards will be read aloud regardless of the settings below.",
+        "Enable or disable text to speech for cards that match your audio settings. " +
+        "If \"Limit to group\" is set, only that group is read aloud.",
       )
       .addToggle((t) => {
         t.setValue(audio.enabled);
@@ -839,12 +840,17 @@ export class SproutSettingsTab extends PluginSettingTab {
         cjk: "zh-CN",
         devanagari: "hi-IN",
       };
+      if (typeof (audio as Record<string, unknown>).useFlagsForVoiceSelection !== "boolean") {
+        (audio as Record<string, unknown>).useFlagsForVoiceSelection = true;
+      }
+      if (typeof (audio as Record<string, unknown>).speakFlagLanguageLabel !== "boolean") {
+        (audio as Record<string, unknown>).speakFlagLanguageLabel = false;
+      }
 
       new Setting(detailsWrapper)
         .setName("Limit to group")
         .setDesc(
-          "Only read aloud cards that belong to a specific group (set via the G| field). " +
-          "Leave empty to read all cards.",
+          "Limit read-aloud to one group. Leave blank to include every card.",
         )
         .addText((t) => {
           t.setPlaceholder("Example: tts");
@@ -858,7 +864,7 @@ export class SproutSettingsTab extends PluginSettingTab {
       new Setting(detailsWrapper)
         .setName("Autoplay audio")
         .setDesc(
-          "Automatically read the question aloud when a card is shown, and the answer when it is revealed.",
+          "Automatically read the question when a card appears, then the answer when it is revealed.",
         )
         .addToggle((t) => {
           t.setValue(audio.autoplay ?? true);
@@ -868,11 +874,33 @@ export class SproutSettingsTab extends PluginSettingTab {
           });
         });
 
+      new Setting(detailsWrapper)
+        .setName("Read aloud + replay in widget")
+        .setDesc("Automatically read widget card content and show replay buttons.")
+        .addToggle((t) => {
+          t.setValue((audio as Record<string, unknown>).widgetReplay !== false);
+          t.onChange(async (v) => {
+            (this.plugin.settings.audio as Record<string, unknown>).widgetReplay = v;
+            await this.plugin.saveAll();
+          });
+        });
+
+      new Setting(detailsWrapper)
+        .setName("Read aloud + replay in gatekeeper")
+        .setDesc("Automatically read gatekeeper question/answer content and show replay buttons.")
+        .addToggle((t) => {
+          t.setValue((audio as Record<string, unknown>).gatekeeperReplay === true);
+          t.onChange(async (v) => {
+            (this.plugin.settings.audio as Record<string, unknown>).gatekeeperReplay = v;
+            await this.plugin.saveAll();
+          });
+        });
+
       this._addSearchablePopover(detailsWrapper, {
         name: "Cloze answer read mode",
         description:
-          "\"Just the answer\" reads only the cloze deletion (e.g. \"mitochondria\"). " +
-          "\"Full sentence\" reads the whole sentence with the blank filled in.",
+          "\"Just the answer\" reads only the cloze answer (for example, \"mitochondria\"). " +
+          "\"Full sentence\" reads the full sentence with the answer filled in.",
         options: [
           { value: "cloze-only", label: "Just the answer" },
           { value: "full-sentence", label: "Full sentence" },
@@ -886,14 +914,51 @@ export class SproutSettingsTab extends PluginSettingTab {
         },
       });
 
+      new Setting(detailsWrapper).setName("Flag-aware routing").setHeading();
+
+      const flagsRoutingSetting = new Setting(detailsWrapper)
+        .setName("Use flags for language and accent")
+        .setDesc("Let flags control language/accent during playback.")
+        .addToggle((t) => {
+          t.setValue(Boolean((audio as Record<string, unknown>).useFlagsForVoiceSelection));
+          t.onChange(async (v) => {
+            (this.plugin.settings.audio as Record<string, unknown>).useFlagsForVoiceSelection = v;
+            await this.plugin.saveAll();
+          });
+        });
+
+      flagsRoutingSetting.descEl.appendText(" ");
+      const flagsGuideLink = flagsRoutingSetting.descEl.createEl("a", {
+        text: "Click here",
+        href: "#",
+      });
+      flagsGuideLink.onclick = (evt) => {
+        evt.preventDefault();
+        void this.app.workspace.openLinkText("Flags", "", false);
+      };
+      flagsRoutingSetting.descEl.appendText(" for a guide on using flags.");
+
+      new Setting(detailsWrapper)
+        .setName("Speak language name before flag segments")
+        .setDesc(
+          "Say the language name before each flag-switched segment (for example: \"spanish\").",
+        )
+        .addToggle((t) => {
+          t.setValue(Boolean((audio as Record<string, unknown>).speakFlagLanguageLabel));
+          t.onChange(async (v) => {
+            (this.plugin.settings.audio as Record<string, unknown>).speakFlagLanguageLabel = v;
+            await this.plugin.saveAll();
+          });
+        });
+
       new Setting(detailsWrapper).setName("Voice and accent").setHeading();
 
       const langOptions = getLanguageOptions();
       this._addSearchablePopover(detailsWrapper, {
         name: "Default voice",
         description:
-          "Accent and dialect for Latin-script text (English, Spanish, French, etc.). " +
-          "Also sets the word used for \"blank\" in cloze fronts.",
+          "Choose the accent and dialect for Latin-script text (English, Spanish, French, etc.). " +
+          "Also sets the word used for \"blank\" on cloze fronts.",
         options: langOptions.map((o) => ({ value: o.value, label: o.label })),
         value: audio.defaultLanguage || "en-US",
         onChange: (v) => {
@@ -914,8 +979,7 @@ export class SproutSettingsTab extends PluginSettingTab {
         advancedInfo.createDiv({
           cls: "setting-item-description",
           text:
-            "Choose languages for non-Latin scripts that map to multiple languages. " +
-            "These preferences are used when script detection is ambiguous.",
+            "Choose language defaults for non-Latin scripts when script detection is ambiguous.",
         });
 
         const advancedControl = advancedItem.createDiv({ cls: "setting-item-control" });
@@ -975,7 +1039,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
       new Setting(detailsWrapper)
         .setName("Speech rate")
-        .setDesc("Speed of speech (0.5 = slow, 1.0 = normal, 2.0 = fast).")
+        .setDesc("Speech speed (0.5 = slow, 1.0 = normal, 2.0 = fast).")
         .addSlider((s) => {
           s.setLimits(0.5, 2.0, 0.1);
           s.setValue(audio.rate ?? 1.0);
@@ -1036,8 +1100,8 @@ export class SproutSettingsTab extends PluginSettingTab {
         new Setting(detailsWrapper)
           .setName("Available system voices")
           .setDesc(
-            "No TTS voices detected yet. Voices load asynchronously — try reopening this tab. " +
-            "If still empty, check your operating system's speech/accessibility settings.",
+            "No system voices detected yet. Voices load asynchronously, so try reopening this tab. " +
+            "If it is still empty, check your operating system's speech settings.",
           );
       }
     }
@@ -1080,7 +1144,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName("Cloze mode")
-      .setDesc("Choose how cloze cards are answered: standard shows normal blanks, while typed uses an input box for active recall.")
+      .setDesc("Choose how cloze cards are answered: standard blanks or typed input.")
       .then((s) => {
         this._addSimpleSelect(s.controlEl, {
           options: [
@@ -1113,7 +1177,7 @@ export class SproutSettingsTab extends PluginSettingTab {
     // Cloze background colour
     const bgColourSetting = new Setting(wrapper)
       .setName("Cloze background colour")
-      .setDesc("Custom background colour for revealed cloze pills. Leave default to use the theme accent. Standard mode only.");
+      .setDesc("Background colour for revealed cloze pills. Leave empty to use the theme accent. Standard mode only.");
 
     const bgRestoreEl = bgColourSetting.controlEl.createDiv({
       cls: "clickable-icon extra-setting-button sprout-colour-restore",
@@ -1152,7 +1216,7 @@ export class SproutSettingsTab extends PluginSettingTab {
     // Cloze text colour
     const textColourSetting = new Setting(wrapper)
       .setName("Cloze text colour")
-      .setDesc("Custom text colour for revealed cloze pills. Leave default for automatic contrast. Standard mode only.");
+      .setDesc("Text colour for revealed cloze pills. Leave empty for automatic contrast. Standard mode only.");
 
     const textRestoreEl = textColourSetting.controlEl.createDiv({
       cls: "clickable-icon extra-setting-button sprout-colour-restore",
@@ -1195,7 +1259,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName("Reveal mode")
-      .setDesc("For hide-all image occlusion cards, choose reveal behavior: reveal group unmasks only the answer group, while reveal all unmasks every group. Hide-group cards are unaffected.")
+      .setDesc("For hide-all cards: \"reveal group\" shows only the answer group, and \"reveal all\" shows every group.")
       .then((s) => {
         this._addSimpleSelect(s.controlEl, {
           options: [
@@ -1225,7 +1289,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     const targetColourSetting = new Setting(wrapper)
       .setName("Target mask colour")
-      .setDesc("Background colour for the active/target mask (the mask being studied). Leave empty to use the theme accent colour.")
+      .setDesc("Background colour for the active mask. Leave empty to use the theme accent.")
       .addText((t) => {
         t.inputEl.type = "color";
         const currentColor = this.plugin.settings.imageOcclusion?.maskTargetColor || "";
@@ -1253,7 +1317,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     const otherColourSetting = new Setting(wrapper)
       .setName("Other mask colour")
-      .setDesc("Background colour for context masks (masks that provide context clues). Leave empty to use the theme foreground colour.")
+      .setDesc("Background colour for context masks. Leave empty to use the theme foreground colour.")
       .addText((t) => {
         t.inputEl.type = "color";
         const currentColor = this.plugin.settings.imageOcclusion?.maskOtherColor || "";
@@ -1365,7 +1429,7 @@ export class SproutSettingsTab extends PluginSettingTab {
     new Setting(wrapper).setName("Multiple choice").setHeading();
     new Setting(wrapper)
       .setName("Shuffle order")
-      .setDesc("Shuffles the order of answers in multiple choice questions and multi-select questions")
+      .setDesc("Shuffle answer order in multiple-choice and multi-select questions.")
       .addToggle((t) => {
         const cur = !!this.plugin.settings.study.randomizeMcqOptions;
         t.setValue(cur);
@@ -1386,7 +1450,7 @@ export class SproutSettingsTab extends PluginSettingTab {
     new Setting(wrapper).setName("Ordered questions").setHeading();
     new Setting(wrapper)
       .setName("Shuffle order")
-      .setDesc("Shuffles the order of steps every time the question appears")
+      .setDesc("Shuffle step order each time the question appears.")
       .addToggle((t) => {
         const cur = this.plugin.settings.study.randomizeOqOrder ?? true;
         t.setValue(cur);
@@ -1604,7 +1668,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName("Enable card styling")
-      .setDesc("When off, cards use native reading view with no plugin card styling.")
+      .setDesc("Turn off to use native reading view styling.")
       .addToggle((t) => {
         t.setValue(!!this.plugin.settings.general.enableReadingStyles);
         t.onChange(async (enabled) => {
@@ -1726,7 +1790,7 @@ export class SproutSettingsTab extends PluginSettingTab {
       const info = item.createDiv({ cls: "setting-item-info" });
       info.createDiv({
         cls: "setting-item-description",
-        text: "Write CSS scoped to .sprout-pretty-card.sprout-macro-custom. Use the clean hooks below for easy targeting.",
+        text: "Write CSS scoped to .sprout-pretty-card.sprout-macro-custom using the hooks below.",
       });
 
       const hooks = item.createDiv({ cls: "sprout-rv-custom-hooks" });
@@ -1790,7 +1854,7 @@ export class SproutSettingsTab extends PluginSettingTab {
       info.createDiv({
         cls: "setting-item-description",
         text: rv.activeMacro === "flashcards"
-          ? "Not editable for Flashcards. Layout is fixed to Question + Answer only."
+          ? "Not editable for Flashcards. Layout is fixed to Question + Answer."
           : "Choose which fields appear for the selected macro style.",
       });
     }
@@ -1891,10 +1955,10 @@ export class SproutSettingsTab extends PluginSettingTab {
       info.createDiv({
         cls: "setting-item-description",
         text: rv.activeMacro === "flashcards"
-          ? "Customise Flashcards colours. These changes apply only to Flashcards in reading view."
+          ? "Customize Flashcards colors for Reading view."
           : rv.activeMacro === "markdown"
-            ? "Customise Clean markdown cloze colours for light and dark themes."
-            : "Switch macro style to Flashcards or Clean markdown to configure colours.",
+            ? "Customize Clean markdown cloze colors for light and dark themes."
+            : "Switch to Flashcards or Clean markdown to customize colors.",
       });
     }
 
@@ -1955,7 +2019,7 @@ export class SproutSettingsTab extends PluginSettingTab {
       rvColourRow(
         `Background colour${lightSuffix}`,
         flashcardsAutoDark
-          ? "Source background colour. Dark theme is auto-generated from this."
+          ? "Source background color. Dark mode is generated from this."
           : "Flashcard background in light mode.",
         () => activeColours.cardBgLight,
         resolveThemeHex("--color-base-05", "light", "#f8f8f8"),
@@ -1965,7 +2029,7 @@ export class SproutSettingsTab extends PluginSettingTab {
       rvColourRow(
         `Text colour${lightSuffix}`,
         flashcardsAutoDark
-          ? "Source text colour. Dark theme is auto-generated from this."
+          ? "Source text color. Dark mode is generated from this."
           : "Primary flashcard text in light mode.",
         () => activeColours.cardTextLight,
         resolveThemeHex("--text-colour", "light", resolveThemeHex("--text-normal", "light", "#1f2937")),
@@ -1975,7 +2039,7 @@ export class SproutSettingsTab extends PluginSettingTab {
       rvColourRow(
         `Cloze background${lightSuffix}`,
         flashcardsAutoDark
-          ? "Source cloze background. Dark theme is auto-generated from this."
+          ? "Source cloze background. Dark mode is generated from this."
           : "Revealed cloze background in light mode.",
         () => activeColours.clozeBgLight,
         resolveThemeHex("--interactive-accent", "light", "#7c3aed"),
@@ -1985,7 +2049,7 @@ export class SproutSettingsTab extends PluginSettingTab {
       rvColourRow(
         `Cloze text${lightSuffix}`,
         flashcardsAutoDark
-          ? "Source cloze text colour. Dark theme is auto-generated from this."
+          ? "Source cloze text color. Dark mode is generated from this."
           : "Revealed cloze text in light mode.",
         () => activeColours.clozeTextLight,
         "#ffffff",
@@ -1994,7 +2058,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
       new Setting(wrapper)
         .setName("Create corresponding dark theme")
-        .setDesc("When enabled, dark colours are auto-generated from light colours using hue-saturation-lightness adjustments.")
+        .setDesc("Auto-generate dark colors from light colors.")
         .addToggle((t) => {
           t.setValue(flashcardsAutoDark);
           t.onChange(async (enabled) => {
@@ -2086,7 +2150,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
       new Setting(wrapper)
         .setName("Link dark-mode colours to light")
-        .setDesc("When enabled, dark-mode cloze colours are auto-derived from the light-theme colours.")
+        .setDesc("Auto-generate dark cloze colors from light-theme colors.")
         .addToggle((t) => {
           t.setValue(activeMarkdownColours.autoDarkAdjust !== false);
           t.onChange(async (enabled) => {
@@ -2122,7 +2186,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName("Daily new limit")
-      .setDesc("Maximum new cards introduced per day (per deck). 0 disables new cards.")
+      .setDesc("Maximum new cards per day (per deck). Set 0 to disable new cards.")
       .addText((t) =>
         t.setValue(String(this.plugin.settings.study.dailyNewLimit)).onChange(async (v) => {
           const prev = this.plugin.settings.study.dailyNewLimit;
@@ -2139,7 +2203,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName("Daily review limit")
-      .setDesc("Maximum due cards studied per day (per deck). 0 disables reviews.")
+      .setDesc("Maximum due cards per day (per deck). Set 0 to disable reviews.")
       .addText((t) =>
         t.setValue(String(this.plugin.settings.study.dailyReviewLimit)).onChange(async (v) => {
           const prev = this.plugin.settings.study.dailyReviewLimit;
@@ -2158,7 +2222,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName("Auto-advance")
-      .setDesc("Automatically fails unanswered cards and advances after the timer.")
+      .setDesc("Automatically marks unanswered cards as failed and advances after the timer.")
       .addToggle((t) =>
         t.setValue(this.plugin.settings.study.autoAdvanceEnabled).onChange(async (v) => {
           const prev = this.plugin.settings.study.autoAdvanceEnabled;
@@ -2176,7 +2240,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     autoAdvanceSecondsSetting = new Setting(wrapper)
       .setName("Auto-advance after")
-      .setDesc("Seconds (applies to the reviewer and widget).")
+      .setDesc("Delay in seconds (applies to reviewer and widget).")
       .addSlider((s) =>
         s
           .setLimits(3, 60, 1)
@@ -2234,7 +2298,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName("Skip button")
-      .setDesc("Shows a skip button (enter). Skip postpones within the session and does not affect scheduling.")
+      .setDesc("Show a skip button (enter). Skipped cards stay in the current session and do not change scheduling.")
       .addToggle((t) => {
         const cur = !!this.plugin.settings.study.enableSkipButton;
         t.setValue(cur);
@@ -2253,7 +2317,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName("Treat folder notes as decks")
-      .setDesc("When enabled, a folder note studies cards from all notes in that folder and its subfolders.")
+      .setDesc("A folder note studies cards from notes in that folder and its subfolders.")
       .addToggle((t) => {
         const current = this.plugin.settings.study.treatFolderNotesAsDecks;
         t.setValue(current !== false);
@@ -2326,7 +2390,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName("Enable reminders on launch")
-      .setDesc("Show a one-time reminder after Obsidian starts.")
+      .setDesc("Show one reminder after Obsidian starts.")
       .addToggle((t) => {
         t.setValue(!!this.plugin.settings.reminders.showOnStartup);
         t.onChange(async (v) => {
@@ -2345,7 +2409,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     startupDelaySetting = new Setting(wrapper)
       .setName("Launch delay")
-      .setDesc("Delay in seconds before launch reminders appear.")
+      .setDesc("Delay before launch reminders appear (seconds).")
       .addText((t) =>
         t
           .setPlaceholder("1")
@@ -2367,7 +2431,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName("Enable routine reminders")
-      .setDesc("Show recurring reminders while Obsidian stays open.")
+      .setDesc("Show recurring reminders while Obsidian is open.")
       .addToggle((t) => {
         t.setValue(!!this.plugin.settings.reminders.repeatEnabled);
         t.onChange(async (v) => {
@@ -2386,7 +2450,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     repeatIntervalSetting = new Setting(wrapper)
       .setName("Reminder frequency")
-      .setDesc("Time between routine reminders, in minutes.")
+      .setDesc("Time between routine reminders (minutes).")
       .addText((t) =>
         t
           .setPlaceholder("30")
@@ -2451,7 +2515,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     gatekeeperFrequencySetting = new Setting(wrapper)
       .setName("Gatekeeper frequency")
-      .setDesc("Time between gatekeeper popups, in minutes.")
+      .setDesc("Time between gatekeeper popups (minutes).")
       .addText((t) =>
         t
           .setPlaceholder("30")
@@ -2471,7 +2535,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     gatekeeperDueQuestionsSetting = new Setting(wrapper)
       .setName("Number of due questions")
-      .setDesc("Number of due questions to include in each gatekeeper popup.")
+      .setDesc("Number of due questions shown in each gatekeeper popup.")
       .addText((t) =>
         t
           .setPlaceholder("3")
@@ -2492,7 +2556,7 @@ export class SproutSettingsTab extends PluginSettingTab {
     gatekeeperScopeSetting = new Setting(wrapper)
       .setName("Gatekeeper scope")
       .setDesc(
-        "Choose what gatekeeper blocks: full workspace blocks the whole workspace; current tab blocks only the active tab.",
+        "Choose what gatekeeper blocks: the full workspace or only the current tab.",
       )
       .then((s) => {
         this._addSimpleSelect(s.controlEl, {
@@ -2550,7 +2614,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     gatekeeperBypassSetting = new Setting(wrapper)
       .setName("Enable gatekeeper bypass")
-      .setDesc("Allow bypassing or closing gatekeeper before all shown questions are completed.")
+      .setDesc("Allow closing gatekeeper before all shown questions are completed.")
       .addToggle((t) => {
         t.setValue(!!this.plugin.settings.reminders.gatekeeperAllowSkip);
         t.onChange(async (v) => {
@@ -2569,7 +2633,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     gatekeeperBypassWarningSetting = new Setting(wrapper)
       .setName("Enable bypass warning")
-      .setDesc("Show a confirmation warning before bypassing gatekeeper.")
+      .setDesc("Show a confirmation before bypassing gatekeeper.")
       .addToggle((t) => {
         t.setValue(!!this.plugin.settings.reminders.gatekeeperBypassWarning);
         t.onChange(async (v) => {
@@ -2586,7 +2650,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     const gatekeeperNote = wrapper.createDiv({ cls: "setting-item-description" });
     gatekeeperNote.textContent =
-      "If fewer due questions are available than requested, all due cards are shown. If none are due, gatekeeper is skipped.";
+      "If fewer due questions are available, all due cards are shown. If none are due, gatekeeper is skipped.";
 
     startupDelaySetting.setDisabled(!this.plugin.settings.reminders.showOnStartup);
     repeatIntervalSetting.setDisabled(!this.plugin.settings.reminders.repeatEnabled);
@@ -2675,9 +2739,9 @@ export class SproutSettingsTab extends PluginSettingTab {
       }
     };
 
-    new Setting(wrapper)
+    const schedulingPresetSetting = new Setting(wrapper)
       .setName("Preset")
-      .setDesc("Apply a scheduling preset to learning steps, relearning steps, and retention target, or choose custom to keep current values.")
+      .setDesc("Apply a scheduling preset to learning steps, relearning steps, and retention. Choose custom to keep your values.")
       .then((s) => {
         presetHandle = this._addSimpleSelect(s.controlEl, {
           options: presets.map((p) => ({ value: p.key, label: p.label })),
@@ -2731,9 +2795,20 @@ export class SproutSettingsTab extends PluginSettingTab {
         });
       });
 
+    schedulingPresetSetting.descEl.appendText(" ");
+    const schedulingGuideLink = schedulingPresetSetting.descEl.createEl("a", {
+      text: "Click here",
+      href: "#",
+    });
+    schedulingGuideLink.onclick = (evt) => {
+      evt.preventDefault();
+      void this.app.workspace.openLinkText("Scheduling", "", false);
+    };
+    schedulingPresetSetting.descEl.appendText(" for a guide to scheduling.");
+
     new Setting(wrapper)
       .setName("Learning steps")
-      .setDesc("Minutes, comma-separated. Examples: 10  |  10,1440")
+      .setDesc("Comma-separated minutes. Examples: 10 or 10,1440.")
       .addText((t) =>
         t.setValue(String((sched.learningStepsMinutes ?? []).join(","))).onChange(async (v) => {
           const prev = (sched.learningStepsMinutes ?? []).slice();
@@ -2753,7 +2828,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName("Relearning steps")
-      .setDesc("Minutes, comma-separated. Used after lapses.")
+      .setDesc("Comma-separated minutes used after lapses.")
       .addText((t) =>
         t.setValue(String((sched.relearningStepsMinutes ?? []).join(","))).onChange(async (v) => {
           const prev = (sched.relearningStepsMinutes ?? []).slice();
@@ -2773,7 +2848,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName("Requested retention")
-      .setDesc("Target recall probability at review time. Typical: 0.85–0.95.")
+      .setDesc("Target recall probability at review time. Typical range: 0.85-0.95.")
       .addSlider((s) =>
         s
           .setLimits(0.8, 0.97, 0.01)
@@ -2796,7 +2871,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName("Reset scheduling")
-      .setDesc("Resets all cards to new and clears scheduling fields. Back up your data first if you may want to restore.")
+      .setDesc("Reset all cards to new and clear scheduling fields. Back up first if you may want to restore.")
       .addButton((b) =>
         b.setButtonText("Reset…").onClick(() => {
           new ConfirmResetSchedulingModal(this.app, this.plugin).open();
@@ -2812,7 +2887,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName("Image occlusion folder")
-      .setDesc("Where image occlusion mask images are saved within your vault.")
+      .setDesc("Folder where image occlusion mask images are saved.")
       .addText((t) => {
         const allFolders = listVaultFolders(this.app);
 
@@ -2970,7 +3045,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName("Delete orphaned image occlusion images")
-      .setDesc("Automatically remove image occlusion files during sync when their corresponding cards in your notes have been deleted.")
+      .setDesc("During sync, automatically delete image occlusion files whose cards were removed from notes.")
       .addToggle((t) =>
         t.setValue(this.plugin.settings.storage?.deleteOrphanedImages ?? true).onChange(async (v) => {
           const prev = this.plugin.settings.storage?.deleteOrphanedImages ?? true;
@@ -2985,7 +3060,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName("Card attachment folder")
-      .setDesc("Where images and media in flashcards are saved within your vault.")
+      .setDesc("Folder where flashcard images and media are saved.")
       .addText((t) => {
         const allFolders = listVaultFolders(this.app);
 
@@ -3152,7 +3227,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName("Ignore fenced code blocks")
-      .setDesc("Prevents indexing of cards inside ``` fenced code blocks.")
+      .setDesc("Ignore cards inside fenced code blocks (``` ... ```).")
       .addToggle((t) =>
         t.setValue(this.plugin.settings.indexing.ignoreInCodeFences).onChange(async (v) => {
           const prev = this.plugin.settings.indexing.ignoreInCodeFences;
@@ -3165,10 +3240,10 @@ export class SproutSettingsTab extends PluginSettingTab {
         }),
       );
 
-    new Setting(wrapper)
+    const cardDelimiterSetting = new Setting(wrapper)
       .setName("Card delimiter")
       .setDesc(
-        "The character used to separate fields in card markup.",
+        "Character used to separate fields in card markup.",
       )
       .then((s) => {
         this._appendSettingWarning(
@@ -3196,6 +3271,17 @@ export class SproutSettingsTab extends PluginSettingTab {
           },
         });
       });
+
+    cardDelimiterSetting.descEl.appendText(" ");
+    const delimiterGuideLink = cardDelimiterSetting.descEl.createEl("a", {
+      text: "Click here",
+      href: "#",
+    });
+    delimiterGuideLink.onclick = (evt) => {
+      evt.preventDefault();
+      void this.app.workspace.openLinkText("Custom-Delimiters", "", false);
+    };
+    cardDelimiterSetting.descEl.appendText(" for the custom delimiters guide.");
   }
 
   private renderResetSection(wrapper: HTMLElement): void {
@@ -3206,7 +3292,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName("Reset to defaults")
-      .setDesc("Resets all settings back to their defaults. Does not delete cards or change scheduling.")
+      .setDesc("Reset all settings to defaults. Does not delete cards or change scheduling.")
       .then((s) => {
         this._appendSettingWarning(
           s,
@@ -3234,7 +3320,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName("Reset analytics")
-      .setDesc("Clears all review history, heatmaps, and statistics. Scheduling data (due dates, intervals) is preserved.")
+      .setDesc("Clear review history, heatmaps, and statistics. Scheduling data is preserved.")
       .then((s) => {
         this._appendSettingWarning(
           s,
@@ -3249,7 +3335,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName("Reset scheduling")
-      .setDesc("Resets all cards to new and clears scheduling fields.")
+      .setDesc("Reset all cards to new and clear scheduling fields.")
       .then((s) => {
         this._appendSettingWarning(
           s,
@@ -3269,7 +3355,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName("Delete all flashcards")
-      .setDesc("Deletes flashcards from notes and clears all plugin data. Irreversible.")
+      .setDesc("Delete flashcards from notes and clear all plugin data. This cannot be undone.")
       .then((s) => {
         this._appendSettingWarning(
           s,

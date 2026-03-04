@@ -1,6 +1,6 @@
 node_modules/
 .DS_Store
-scripts/build-local.sh
+.local/
 .vscode/
 sprout-latest.zip
 sprout-latest/

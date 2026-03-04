@@ -34,7 +34,8 @@ import {
   scopeModalToWorkspace,
 } from "./modal-utils";
 import { coerceGroups } from "../indexes/group-format";
-import { setCssProps } from "../core/ui";
+import { renderFlagPreviewHtml } from "../flags/flag-tokens";
+import { replaceChildrenWithHTML, setCssProps } from "../core/ui";
 
 type GroupPickerFieldFactory = (
   initialValue: string,
@@ -144,6 +145,35 @@ export class BulkEditCardModal extends Modal {
   // Map of input elements by field key
   const inputEls: Record<string, HTMLInputElement | HTMLTextAreaElement> = {};
 
+  const attachFlagPreviewOverlay = (control: HTMLInputElement | HTMLTextAreaElement): HTMLElement => {
+    const wrap = document.createElement("div");
+    wrap.className = `bc sprout-flag-editor-wrap${control instanceof HTMLTextAreaElement ? " sprout-flag-editor-wrap--multiline" : ""}`;
+
+    const overlay = document.createElement("div");
+    overlay.className = `bc sprout-flag-editor-overlay${control instanceof HTMLTextAreaElement ? " sprout-flag-editor-overlay--multiline" : ""}`;
+
+    control.classList.add("sprout-flag-editor-control");
+
+    const renderOverlay = () => {
+      replaceChildrenWithHTML(overlay, renderFlagPreviewHtml(String(control.value ?? "")));
+    };
+
+    overlay.addEventListener("click", () => control.focus());
+    control.addEventListener("focus", () => wrap.classList.add("sprout-flag-editor--focused"));
+    control.addEventListener("blur", () => {
+      wrap.classList.remove("sprout-flag-editor--focused");
+      renderOverlay();
+    });
+    control.addEventListener("input", () => {
+      if (!wrap.classList.contains("sprout-flag-editor--focused")) renderOverlay();
+    });
+
+    renderOverlay();
+    wrap.appendChild(control);
+    wrap.appendChild(overlay);
+    return wrap;
+  };
+
   /** Creates a label + textarea pair for an editable field. */
   const createEditableTextareaField = (label: string, field: "title" | "question" | "answer" | "info") => {
     const wrapper = document.createElement("div");
@@ -167,7 +197,7 @@ export class BulkEditCardModal extends Modal {
     textarea.className = "bc textarea w-full sprout-textarea-fixed";
     textarea.rows = 3;
     textarea.value = getSharedEditableFieldValue(cards, field);
-    wrapper.appendChild(textarea);
+    wrapper.appendChild(attachFlagPreviewOverlay(textarea));
     inputEls[field] = textarea;
 
     return wrapper;
@@ -305,7 +335,7 @@ export class BulkEditCardModal extends Modal {
       input.className = "bc input flex-1 text-sm sprout-input-fixed";
       input.placeholder = "Enter an answer option";
       input.value = value;
-      row.appendChild(input);
+      row.appendChild(attachFlagPreviewOverlay(input));
 
       const removeBtn = document.createElement("button");
       removeBtn.type = "button";
@@ -367,7 +397,7 @@ export class BulkEditCardModal extends Modal {
     });
     const addInputWrap = document.createElement("div");
     addInputWrap.className = "bc flex items-center gap-2";
-    addInputWrap.appendChild(addInput);
+    addInputWrap.appendChild(attachFlagPreviewOverlay(addInput));
     mcqSection.appendChild(addInputWrap);
 
     form.appendChild(mcqSection);
@@ -447,7 +477,7 @@ export class BulkEditCardModal extends Modal {
       input.className = "bc input flex-1 text-sm sprout-input-fixed";
       input.placeholder = `Step ${idx + 1}`;
       input.value = value;
-      row.appendChild(input);
+      row.appendChild(attachFlagPreviewOverlay(input));
 
       // Delete button
       const delBtn = document.createElement("button");
@@ -535,7 +565,7 @@ export class BulkEditCardModal extends Modal {
       renumberOq();
       addOqInput.value = "";
     });
-    addOqRow.appendChild(addOqInput);
+    addOqRow.appendChild(attachFlagPreviewOverlay(addOqInput));
     oqSection.appendChild(addOqRow);
 
     form.appendChild(oqSection);

@@ -12,9 +12,12 @@ import { logFsrsIfNeeded } from "../reviewer/fsrs-log";
 import { log } from "../core/logger";
 import { processMarkdownFeatures, setupInternalLinkHandlers } from "../widget/widget-markdown";
 import { processClozeForMath, textContainsMath, convertInlineDisplayMath, forceSingleLineDisplayMathInline } from "../core/shared-utils";
+import { processCircleFlagsInMarkdown, hydrateCircleFlagsInElement } from "../flags/flag-tokens";
 import { getCorrectIndices, isMultiAnswerMcq, normalizeCardOptions } from "../types/card";
 import { renderImageOcclusionReviewInto } from "../imageocclusion/image-occlusion-review-render";
 import * as IO from "../imageocclusion/image-occlusion-index";
+import { getTtsService } from "../tts/tts-service";
+import { shouldSkipBackAutoplay } from "../tts/autoplay-policy";
 
 type GatekeeperModalArgs = {
   app: App;
@@ -38,6 +41,7 @@ export class GatekeeperModal extends Modal {
   private _mcqMultiSelection = new Map<string, Set<number>>();
   private _cardStartedAt = Date.now();
   private _grading = false;
+  private _lastTtsKey = "";
   private _keyHandler: ((ev: KeyboardEvent) => void) | null = null;
   private _showBypassWarning = false;
   private _frozenModalSize: { width: number; height: number } | null = null;
@@ -218,7 +222,9 @@ export class GatekeeperModal extends Modal {
 
     const qaSection = contentEl.createDiv({ cls: "bc sprout-gatekeeper-qa-section" });
 
-    qaSection.createEl("h3", { text: "Question", cls: "text-sm font-medium sprout-gatekeeper-section-label" });
+    const qHeading = qaSection.createDiv({ cls: "bc flex items-center justify-between gap-2" });
+    qHeading.createEl("h3", { text: "Question", cls: "text-sm font-medium sprout-gatekeeper-section-label" });
+    this.appendTtsReplayButton(qHeading, card, false);
     const body = qaSection.createDiv({ cls: "sprout-gatekeeper-body" });
     this.renderCardBody(body, card);
 
@@ -465,7 +471,9 @@ export class GatekeeperModal extends Modal {
   private async renderMarkdownInto(containerEl: HTMLElement, md: string, sourcePath: string) {
     this.ensureMarkdownHelper();
     if (!this._md) return;
-    await this._md.renderInto(containerEl, md ?? "", sourcePath ?? "");
+    const withFlags = processCircleFlagsInMarkdown(md ?? "");
+    await this._md.renderInto(containerEl, withFlags, sourcePath ?? "");
+    hydrateCircleFlagsInElement(containerEl);
   }
 
   private renderCardBody(body: HTMLElement, card: CardRecord) {
@@ -502,10 +510,93 @@ export class GatekeeperModal extends Modal {
 
     if (!this.reveal) return;
 
-    body.createEl("h3", { text: "Answer", cls: "text-sm font-medium sprout-gatekeeper-section-label" });
+    const aHeading = body.createDiv({ cls: "bc flex items-center justify-between gap-2" });
+    aHeading.createEl("h3", { text: "Answer", cls: "text-sm font-medium sprout-gatekeeper-section-label" });
+    this.appendTtsReplayButton(aHeading, card, true);
     const aText = (isBackDirection || isOldReversed) ? (card.q || "") : (card.a || "");
     const aEl = body.createDiv({ cls: "whitespace-pre-wrap break-words" });
     this.renderTextBlock(aEl, aText, card);
+  }
+
+  private isGatekeeperTtsEnabled(): boolean {
+    const audio = this.plugin.settings.audio;
+    if (!audio?.enabled) return false;
+    return (audio as Record<string, unknown>).gatekeeperReplay === true;
+  }
+
+  private appendTtsReplayButton(parent: HTMLElement, card: CardRecord, answerSide: boolean): void {
+    if (!this.isGatekeeperTtsEnabled()) return;
+
+    const tts = getTtsService();
+    if (!tts.isSupported) return;
+
+    const btn = parent.createEl("button", {
+      cls: "bc btn-icon sprout-tts-replay-btn",
+      type: "button",
+    });
+    btn.setAttribute("data-tooltip", answerSide ? "Read answer aloud" : "Read question aloud");
+    btn.setAttribute("data-tooltip-position", "top");
+    setIcon(btn, "volume-2");
+    btn.addEventListener("click", (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      this.speakCardSide(card, answerSide);
+    });
+  }
+
+  private maybeAutoSpeakCurrentCard(card: CardRecord): void {
+    const audio = this.plugin.settings.audio;
+    if (!this.isGatekeeperTtsEnabled()) return;
+    if (audio.autoplay === false) return;
+
+    if (this.reveal && shouldSkipBackAutoplay(card)) return;
+
+    const sideKey = this.reveal ? "back" : "front";
+    const cardId = String(card.id ?? "");
+    const nextKey = `${cardId}:${sideKey}`;
+    if (this._lastTtsKey === nextKey) return;
+
+    this._lastTtsKey = nextKey;
+    this.speakCardSide(card, this.reveal);
+  }
+
+  private speakCardSide(card: CardRecord, answerSide: boolean): void {
+    const tts = getTtsService();
+    const audio = this.plugin.settings.audio;
+    if (!audio?.enabled || (audio as Record<string, unknown>).gatekeeperReplay !== true || !tts.isSupported) return;
+
+    const isBackDirection = card.type === "reversed-child" && (card as unknown as Record<string, unknown>).reversedDirection === "back";
+    const isOldReversed = card.type === "reversed";
+
+    if (card.type === "basic" || card.type === "reversed" || card.type === "reversed-child") {
+      const questionText = (isBackDirection || isOldReversed) ? (card.a || "") : (card.q || "");
+      const answerText = (isBackDirection || isOldReversed) ? (card.q || "") : (card.a || "");
+      tts.speakBasicCard(answerSide ? answerText : questionText, audio);
+      return;
+    }
+
+    if (card.type === "cloze" || card.type === "cloze-child") {
+      const targetIndex = card.type === "cloze-child" ? Number(card.clozeIndex) : null;
+      tts.speakClozeCard(card.clozeText || "", answerSide, targetIndex, audio);
+      return;
+    }
+
+    if (card.type === "mcq") {
+      const text = [card.stem || "", ...normalizeCardOptions(card.options)].filter(Boolean).join(". ");
+      tts.speakBasicCard(text, audio);
+      return;
+    }
+
+    if (card.type === "oq") {
+      const steps = Array.isArray(card.oqSteps) ? card.oqSteps : [];
+      const text = [card.q || "", ...steps].filter(Boolean).join(". ");
+      tts.speakBasicCard(text, audio);
+      return;
+    }
+
+    if (card.type === "io" || card.type === "io-child") {
+      tts.speakBasicCard(answerSide ? (card.a || "") : (card.q || ""), audio);
+    }
   }
 
   private renderClozeCard(body: HTMLElement, card: CardRecord) {

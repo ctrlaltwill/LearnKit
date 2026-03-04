@@ -1432,7 +1432,7 @@ export function renderSessionMode(args: Args) {
 
   // Center: Reveal/Grade/Next buttons
   const footerCenter = document.createElement("div");
-  footerCenter.className = "bc flex flex-wrap gap-2 items-center";
+  footerCenter.className = "bc flex flex-wrap gap-2 items-center justify-center";
   footer.appendChild(footerCenter);
 
   const canGradeNow =
@@ -1460,7 +1460,7 @@ export function renderSessionMode(args: Args) {
 
   // Grading / next buttons (in center)
   const mainRow = document.createElement("div");
-  mainRow.className = "bc flex flex-wrap items-center gap-2";
+  mainRow.className = "bc flex flex-wrap items-center justify-center gap-2";
   let hasMainRowContent = false;
 
   if (!graded) {
@@ -1480,7 +1480,7 @@ export function renderSessionMode(args: Args) {
       } else {
         // Normal mode: grading buttons
         const group = document.createElement("div");
-        group.className = "bc flex flex-wrap gap-2";
+        group.className = "bc flex flex-wrap justify-center gap-2";
         mainRow.appendChild(group);
         hasMainRowContent = true;
 

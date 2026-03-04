@@ -32,6 +32,7 @@ import { type SproutHeader, createViewHeader } from "../core/header";
 // ✅ extracted browser sub-modules
 import { renderPagination } from "./browser-pagination";
 import { openBulkEditModal } from "./browser-bulk-edit-modal";
+import { openBulkEditModalForCards } from "../modals/bulk-edit";
 import {
   computeBrowserRows,
   applyValueToCard,
@@ -512,6 +513,15 @@ export class SproutCardBrowserView extends ItemView {
 
     if (cards.length === 1 && (cards[0].type === "io" || cards[0].type === "io-child")) {
       this._openIoEditor(cards[0].id);
+      return;
+    }
+
+    if (cards.length === 1) {
+      openBulkEditModalForCards(this.plugin, cards, async (updatedCards) => {
+        for (const updatedCard of updatedCards) {
+          await this.writeCardToMarkdown(updatedCard);
+        }
+      });
       return;
     }
 

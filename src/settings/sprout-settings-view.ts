@@ -398,6 +398,7 @@ export class SproutSettingsView extends ItemView {
       };
 
       let renderTarget = container;
+      let settingsScrollInner: HTMLElement | null = null;
       let selectedSettingsSubTab: { id: string; label: string; paneTitle: string } | null = null;
 
       if (tab === "settings") {
@@ -420,6 +421,7 @@ export class SproutSettingsView extends ItemView {
         const settingsInner = document.createElement("div");
         settingsInner.className = "sprout-guide-content-inner sprout-guide-content-inner--snap";
         settingsContentFrame.appendChild(settingsInner);
+        settingsScrollInner = settingsInner;
 
         const settingsBody = document.createElement("div");
         settingsBody.className = "sprout-guide-body markdown-rendered sprout-settings-layout-content";
@@ -538,6 +540,11 @@ export class SproutSettingsView extends ItemView {
         msg.textContent = `Unknown tab: ${tab}`;
         renderTarget.appendChild(msg);
       }
+
+      if (tab === "settings" && settingsScrollInner) {
+        const snapHeadings = Array.from(renderTarget.querySelectorAll<HTMLElement>(".sprout-guide-snap-heading"));
+        this._attachSmartHeaderSnap(settingsScrollInner, snapHeadings);
+      }
     } catch (e) {
       log.error("Failed to render settings tab", e);
       const msg = document.createElement("div");
@@ -653,6 +660,74 @@ export class SproutSettingsView extends ItemView {
       ev.stopPropagation();
       void this.app.workspace.openLinkText(fallbackTarget, sourcePath || "", false);
     });
+  }
+
+  private _getHeadingSnapTargetTop(scroller: HTMLElement, heading: HTMLElement, headingTopOffset: number): number {
+    const maxScrollTop = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+    return Math.min(maxScrollTop, Math.max(0, heading.offsetTop - headingTopOffset));
+  }
+
+  private _attachSmartHeaderSnap(scroller: HTMLElement, headings: HTMLElement[]) {
+    if (!scroller || scroller.dataset.sproutSmartSnapBound === "1") return;
+    if (headings.length < 2) return;
+
+    scroller.dataset.sproutSmartSnapBound = "1";
+    const headingTopOffset = 16;
+    let settleTimer: number | null = null;
+    let isAutoSnapping = false;
+
+    const getSnapThresholdPx = () => Math.max(24, Math.min(84, Math.round(scroller.clientHeight * 0.09)));
+
+    const maybeSnapToClosestHeading = () => {
+      if (isAutoSnapping) return;
+
+      const maxScrollTop = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+      if (maxScrollTop <= 0) return;
+
+      const currentTop = scroller.scrollTop;
+      let nearestTop = currentTop;
+      let nearestDistance = Number.POSITIVE_INFINITY;
+
+      for (const heading of headings) {
+        if (!heading.isConnected) continue;
+        const targetTop = this._getHeadingSnapTargetTop(scroller, heading, headingTopOffset);
+        const distance = Math.abs(targetTop - currentTop);
+        if (distance < nearestDistance) {
+          nearestDistance = distance;
+          nearestTop = targetTop;
+        }
+      }
+
+      const threshold = getSnapThresholdPx();
+      if (nearestDistance > threshold || nearestDistance < 1) return;
+
+      isAutoSnapping = true;
+      scroller.scrollTo({ top: nearestTop, behavior: "smooth" });
+      window.setTimeout(() => {
+        isAutoSnapping = false;
+      }, 240);
+    };
+
+    const onScroll = () => {
+      if (isAutoSnapping) return;
+      if (settleTimer !== null) window.clearTimeout(settleTimer);
+      settleTimer = window.setTimeout(() => {
+        settleTimer = null;
+        maybeSnapToClosestHeading();
+      }, 120);
+    };
+
+    scroller.addEventListener("scroll", onScroll, { passive: true });
+
+    const onResize = () => {
+      if (settleTimer !== null) {
+        window.clearTimeout(settleTimer);
+        settleTimer = null;
+      }
+      maybeSnapToClosestHeading();
+    };
+
+    this._trackWindowListener("resize", onResize, { passive: true });
   }
 
   private _ensureReleaseComponent(): Component {
@@ -854,6 +929,7 @@ export class SproutSettingsView extends ItemView {
 
         const headingEls = Array.from(body.querySelectorAll<HTMLElement>("h1, h2"));
         headingEls.forEach((heading) => heading.classList.add("sprout-guide-snap-heading"));
+        this._attachSmartHeaderSnap(inner, headingEls);
 
         dotsRail.empty();
         dotsRail.hidden = headingEls.length < 2;
@@ -1187,6 +1263,7 @@ export class SproutSettingsView extends ItemView {
 
     const headingEls = Array.from(body.querySelectorAll<HTMLElement>("h1, h2, h3"));
     headingEls.forEach((heading) => heading.classList.add("sprout-guide-snap-heading"));
+    this._attachSmartHeaderSnap(contentInner, headingEls);
 
     dotsRail.empty();
     dotsRail.hidden = headingEls.length < 2;

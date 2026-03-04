@@ -43,6 +43,7 @@ import {
   getIoResolvedImage,
   extractImageRefs,
   renderMarkdownWithImages,
+  renderFlagPreviewHtml,
 } from "./browser-helpers";
 
 // ── Context interface ─────────────────────────────────────
@@ -483,6 +484,118 @@ function makeImageEditorCell(
   return td;
 }
 
+function wrapBrowserFlagPreviewInput(input: HTMLInputElement): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.className = "sprout-browser-flag-editor-wrap";
+
+  const overlay = document.createElement("div");
+  overlay.className = "sprout-browser-flag-overlay";
+
+  const renderOverlay = () => {
+    replaceChildrenWithHTML(overlay, renderFlagPreviewHtml(String(input.value ?? "")));
+  };
+
+  overlay.addEventListener("click", () => input.focus());
+  input.classList.add("sprout-browser-flag-input");
+
+  input.addEventListener("focus", () => {
+    wrap.classList.add("sprout-browser-flag-editor--focused");
+  });
+
+  input.addEventListener("blur", () => {
+    wrap.classList.remove("sprout-browser-flag-editor--focused");
+    renderOverlay();
+  });
+
+  input.addEventListener("input", () => {
+    if (!wrap.classList.contains("sprout-browser-flag-editor--focused")) renderOverlay();
+  });
+
+  renderOverlay();
+  wrap.appendChild(input);
+  wrap.appendChild(overlay);
+  return wrap;
+}
+
+function makeFlagPreviewEditorCell(
+  col: ColKey,
+  card: CardRecord,
+  ctx: RowRendererContext,
+  initial: string,
+): HTMLTableCellElement {
+  const td = document.createElement("td");
+  td.className = `align-top ${ctx.cellWrapClass} sprout-browser-cell`;
+  forceCellClip(td);
+  setColAttr(td, col);
+
+  const h = `${ctx.editorHeightPx}px`;
+  const wrap = document.createElement("div");
+  wrap.className = "sprout-browser-flag-editor-wrap sprout-browser-flag-editor-wrap--multiline";
+  setCssProps(wrap, "--sprout-editor-height", h);
+
+  const ta = document.createElement("textarea");
+  ta.className = `textarea w-full ${ctx.cellTextClass} sprout-browser-textarea sprout-browser-textarea--editable sprout-browser-flag-textarea`;
+  ta.value = initial;
+  setCssProps(ta, "--sprout-editor-height", h);
+
+  const overlay = document.createElement("div");
+  overlay.className = "sprout-browser-flag-overlay sprout-browser-flag-overlay--multiline";
+  const renderOverlay = (txt: string) => {
+    replaceChildrenWithHTML(overlay, renderFlagPreviewHtml(txt));
+  };
+  renderOverlay(initial);
+  overlay.addEventListener("click", () => ta.focus());
+
+  const key = `${card.id}:${col}`;
+  let baseline = initial;
+
+  ta.addEventListener("focus", () => {
+    baseline = ta.value;
+    wrap.classList.add("sprout-browser-flag-editor--focused");
+  });
+
+  ta.addEventListener("keydown", (ev: KeyboardEvent) => {
+    if (ev.key === "Escape") {
+      ev.preventDefault();
+      ev.stopPropagation();
+      ta.value = baseline;
+      renderOverlay(baseline);
+      ta.blur();
+    }
+  });
+
+  ta.addEventListener("blur", () => {
+    wrap.classList.remove("sprout-browser-flag-editor--focused");
+    void (async () => {
+      const nextVal = ta.value;
+      if (nextVal === baseline) {
+        renderOverlay(baseline);
+        return;
+      }
+      if (ctx.saving.has(key)) return;
+
+      ctx.saving.add(key);
+      try {
+        const updated = ctx.applyValueToCard(card, col, nextVal);
+        await ctx.writeCardToMarkdown(updated);
+        baseline = nextVal;
+        renderOverlay(nextVal);
+      } catch (err: unknown) {
+        new Notice(`${err instanceof Error ? err.message : String(err)}`);
+        ta.value = baseline;
+        renderOverlay(baseline);
+      } finally {
+        ctx.saving.delete(key);
+      }
+    })();
+  });
+
+  wrap.appendChild(ta);
+  wrap.appendChild(overlay);
+  td.appendChild(wrap);
+  return td;
+}
+
 // ──────────────────────────────────────────────────────────────────────────────
 // MCQ answer cell — multiple inputs for correct + wrong options
 // ──────────────────────────────────────────────────────────────────────────────
@@ -604,7 +717,7 @@ function makeMcqAnswerCell(
     input.className = "bc input flex-1 text-sm sprout-input-fixed sprout-browser-mcq-input";
     input.placeholder = "Answer option";
     input.value = value;
-    row.appendChild(input);
+    row.appendChild(wrapBrowserFlagPreviewInput(input));
 
     const entry: McqRow = { row, input, checkbox };
     rows.push(entry);
@@ -656,7 +769,7 @@ function makeMcqAnswerCell(
       if (!focusedInCell) void commitMcq();
     }, 0);
   });
-  wrap.appendChild(addInput);
+  wrap.appendChild(wrapBrowserFlagPreviewInput(addInput));
 
   td.appendChild(wrap);
   return td;
@@ -779,7 +892,7 @@ function makeOqStepsCell(
     input.className = "bc input flex-1 text-sm sprout-input-fixed sprout-browser-oq-input";
     input.placeholder = `Step ${idx + 1}`;
     input.value = value;
-    row.appendChild(input);
+    row.appendChild(wrapBrowserFlagPreviewInput(input));
 
     const entry: OqRow = { row, input, badge };
     oqRows.push(entry);
@@ -864,7 +977,7 @@ function makeOqStepsCell(
       if (!focusedInCell && !wrap.contains(document.activeElement)) void commitOq();
     }, 0);
   });
-  wrap.appendChild(addInput);
+  wrap.appendChild(wrapBrowserFlagPreviewInput(addInput));
 
   td.appendChild(wrap);
   return td;
@@ -928,54 +1041,7 @@ function makeEditorCell(
   if (hasImages && (col === "question" || col === "answer" || col === "info")) {
     return makeImageEditorCell(col, card, ctx, initial);
   }
-
-  const td = document.createElement("td");
-  td.className = `align-top ${ctx.cellWrapClass} sprout-browser-cell`;
-  forceCellClip(td);
-  setColAttr(td, col);
-
-  const ta = document.createElement("textarea");
-  ta.className = `textarea w-full ${ctx.cellTextClass} sprout-browser-textarea sprout-browser-textarea--editable`;
-  ta.value = initial;
-
-  const h = `${ctx.editorHeightPx}px`;
-  setCssProps(ta, "--sprout-editor-height", h);
-
-  const key = `${card.id}:${col}`;
-  let baseline = initial;
-
-  ta.addEventListener("focus", () => { baseline = ta.value; });
-
-  ta.addEventListener("keydown", (ev: KeyboardEvent) => {
-    if (ev.key === "Escape") {
-      ev.preventDefault();
-      ev.stopPropagation();
-      ta.value = baseline;
-    }
-  });
-
-  ta.addEventListener("blur", () => {
-    void (async () => {
-      const nextVal = ta.value;
-      if (nextVal === baseline) return;
-      if (ctx.saving.has(key)) return;
-
-      ctx.saving.add(key);
-      try {
-        const updated = ctx.applyValueToCard(card, col, nextVal);
-        await ctx.writeCardToMarkdown(updated);
-        baseline = nextVal;
-      } catch (err: unknown) {
-        new Notice(`${err instanceof Error ? err.message : String(err)}`);
-        ta.value = baseline;
-      } finally {
-        ctx.saving.delete(key);
-      }
-    })();
-  });
-
-  td.appendChild(ta);
-  return td;
+  return makeFlagPreviewEditorCell(col, card, ctx, initial);
 }
 
 function makeIoCell(

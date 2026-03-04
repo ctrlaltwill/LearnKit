@@ -36,6 +36,7 @@ import { initAOS } from "../core/aos-loader";
 
 import { openSproutImageZoom } from "./zoom";
 import { SproutMarkdownHelper } from "./markdown-render";
+import { processCircleFlagsInMarkdown, hydrateCircleFlagsInElement } from "../flags/flag-tokens";
 
 // split-out helpers
 import { isSkipEnabled, initSkipState, skipCurrentCard } from "./skip";
@@ -51,6 +52,7 @@ import { logFsrsIfNeeded, logUndoIfNeeded } from "./fsrs-log";
 import { renderTitleMarkdownIfNeeded } from "./title-markdown";
 import { findCardBlockRangeById, buildCardBlockMarkdown } from "./markdown-block";
 import { getTtsService } from "../tts/tts-service";
+import { shouldSkipBackAutoplay } from "../tts/autoplay-policy";
 import { openCardAnchorInNote } from "../core/open-card-anchor";
 
 import type { CardState } from "../core/store";
@@ -275,6 +277,7 @@ export class SproutReviewerView extends ItemView {
   private _speakCardBack(card: CardRecord) {
     const audio = this.plugin.settings?.audio;
     if (!audio?.autoplay) return;
+    if (shouldSkipBackAutoplay(card)) return;
     this._doSpeakBack(card);
   }
 
@@ -658,7 +661,9 @@ export class SproutReviewerView extends ItemView {
   async renderMarkdownInto(containerEl: HTMLElement, md: string, sourcePath: string) {
     this.ensureMarkdownHelper();
     if (!this._md) return;
-    await this._md.renderInto(containerEl, md ?? "", sourcePath ?? "");
+    const withFlags = processCircleFlagsInMarkdown(md ?? "");
+    await this._md.renderInto(containerEl, withFlags, sourcePath ?? "");
+    hydrateCircleFlagsInElement(containerEl);
   }
 
   async renderImageOcclusionInto(

@@ -66,6 +66,7 @@ import { cssClassForProps, setCssProps } from "../core/ui";
 import { normaliseGroupPath } from "../indexes/group-index";
 import { fmtGroups, coerceGroups } from "../indexes/group-format";
 import { buildAnswerOrOptionsFor, buildQuestionFor } from "../reviewer/fields";
+import { escapeTextWithCircleFlags } from "../flags/flag-tokens";
 import {
   escapeDelimiterText,
   pushDelimitedField,
@@ -295,6 +296,10 @@ export function escapeHtml(s: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+export function renderFlagPreviewHtml(text: string): string {
+  return escapeTextWithCircleFlags(String(text ?? "")).replace(/\r?\n/g, "<br>");
 }
 
 // ─── Image Occlusion rendering ───────────────────────────────────────
@@ -618,7 +623,7 @@ export function renderMarkdownWithImages(
 ): string {
   const images = extractImageRefs(markdown);
   if (images.length === 0) {
-    return escapeHtml(markdown);
+    return escapeTextWithCircleFlags(markdown);
   }
 
   let html = "";
@@ -628,7 +633,7 @@ export function renderMarkdownWithImages(
     // Add text before the image
     const beforeText = markdown.substring(lastEnd, img.start);
     if (beforeText) {
-      html += escapeHtml(beforeText);
+      html += escapeTextWithCircleFlags(beforeText);
     }
 
     // Resolve and add the image
@@ -639,7 +644,7 @@ export function renderMarkdownWithImages(
       html += `<img src="${safeSrc}" alt="${safeAlt}" class="sprout-browser-inline-img" data-img-ref="${escapeHtml(img.match)}" />`;
     } else {
       // Image couldn't be resolved, keep as text
-      html += escapeHtml(img.match);
+      html += escapeTextWithCircleFlags(img.match);
     }
 
     lastEnd = img.end;
@@ -647,7 +652,7 @@ export function renderMarkdownWithImages(
 
   // Add remaining text
   if (lastEnd < markdown.length) {
-    html += escapeHtml(markdown.substring(lastEnd));
+    html += escapeTextWithCircleFlags(markdown.substring(lastEnd));
   }
 
   return html;

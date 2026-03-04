@@ -62,6 +62,7 @@ See also:
 - [[Image Occlusion]]
 - [[Multiple Choice Questions]]
 - [[Ordered Questions]]
+- [[Flags]]
 
 ## Multi-line fields
 

@@ -99,6 +99,11 @@ export class SproutMarkdownHelper {
     const imgs = Array.from(containerEl.querySelectorAll("img"));
 
     for (const img of imgs) {
+      if (img.hasAttribute("data-sprout-flag-code")) {
+        img.classList.remove("sprout-zoomable");
+        if (img.dataset) delete img.dataset.bcZoomBound;
+        continue;
+      }
       if (img.dataset?.bcZoomBound === "1") continue;
       img.dataset.bcZoomBound = "1";
 
@@ -121,6 +126,23 @@ export class SproutMarkdownHelper {
     }
   }
 
+  private normalizeInlineFlagImages(containerEl: HTMLElement) {
+    const figures = Array.from(containerEl.querySelectorAll("figure"));
+    for (const figure of figures) {
+      const img = figure.querySelector<HTMLImageElement>("img[data-sprout-flag-code]");
+      if (!img) continue;
+      figure.querySelector("figcaption")?.remove();
+      figure.replaceWith(img);
+    }
+
+    const flags = Array.from(containerEl.querySelectorAll<HTMLImageElement>("img[data-sprout-flag-code]"));
+    for (const img of flags) {
+      img.classList.remove("sprout-zoomable");
+      img.removeAttribute("data-bc-zoom-bound");
+      img.style.removeProperty("--sprout-md-image-max-h");
+    }
+  }
+
   /**
    * IMPORTANT:
    * Stale-render prevention is PER-CONTAINER (dataset rid), not global.
@@ -140,6 +162,8 @@ export class SproutMarkdownHelper {
 
     if ((containerEl.dataset.bcMdRid || "") !== rid) return;
 
+    this.normalizeInlineFlagImages(containerEl);
     this.decorateRenderedImages(containerEl);
+    this.normalizeInlineFlagImages(containerEl);
   }
 }

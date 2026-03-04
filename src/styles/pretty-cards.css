@@ -700,7 +700,7 @@ mjx-container[jax="CHTML"][display="true"] {
 
 /* ---- Images inside reading-view cards ---- */
 
-.sprout-pretty-card img:not(.sprout-io-image) {
+.sprout-pretty-card img:not(.sprout-io-image):not(.sprout-inline-flag) {
   max-width: 100% !important;
   height: auto !important;
   border-radius: var(--button-radius, var(--radius-m)) !important;
@@ -1000,6 +1000,21 @@ mjx-container[jax="CHTML"][display="true"] {
   margin: 0;
 }
 
+.sprout-inline-flag,
+.sprout-pretty-card img.sprout-inline-flag {
+  width: 1em !important;
+  height: 1em !important;
+  min-width: 1em !important;
+  min-height: 1em !important;
+  max-width: 1em !important;
+  max-height: 1em !important;
+  border-radius: 999px;
+  object-fit: cover;
+  vertical-align: text-bottom;
+  display: inline-block;
+  margin: 0 5px;
+}
+
 .sprout-pretty-card.sprout-macro-flashcards .sprout-flashcard-body-cloze {
   display: block !important;
   text-align: center;
@@ -1097,7 +1112,6 @@ mjx-container[jax="CHTML"][display="true"] {
    a slightly thicker stroke, matching the surrounding bold text. */
 .sprout-pretty-card.sprout-macro-flashcards .sprout-flashcard-answer strong mjx-container {
   -webkit-text-stroke: 0.4px currentColor;
-  text-stroke: 0.4px currentColor;
 }
 
 .sprout-pretty-card.sprout-macro-flashcards .sprout-flashcard-question[hidden],

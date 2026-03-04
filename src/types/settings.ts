@@ -393,6 +393,10 @@ export type SproutSettings = {
     basicFront: boolean;
     /** Read aloud the back (answer) of basic cards. */
     basicBack: boolean;
+    /** Show and allow TTS replay controls inside the widget session view. */
+    widgetReplay: boolean;
+    /** Show and allow TTS replay controls inside Gatekeeper modal cards. */
+    gatekeeperReplay: boolean;
     /** Read aloud the front of cloze cards (with blanks spoken as "blank" in the default language). */
     clozeFront: boolean;
     /** Read aloud the revealed cloze answer. */
@@ -431,6 +435,10 @@ export type SproutSettings = {
       /** Language for Devanagari-script text (Hindi, Marathi, Nepali, etc.) */
       devanagari: string;
     };
+    /** When true, inline flag tokens (e.g. {{es}}, {{es-mx}}) drive language/voice selection while speaking. */
+    useFlagsForVoiceSelection: boolean;
+    /** When true, speaks the detected language name before each flag-switched segment (e.g. "Spanish"). */
+    speakFlagLanguageLabel: boolean;
     /** Speech rate (0.5 – 2.0, default 1.0). */
     rate: number;
     /** Speech pitch (0.5 – 2.0, default 1.0). */

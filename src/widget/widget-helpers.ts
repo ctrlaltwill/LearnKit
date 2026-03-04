@@ -199,6 +199,7 @@ export interface WidgetViewLike {
   _typedClozeCardId: string;
   _mcqMultiSelected: Set<number>;
   _mcqMultiCardId: string;
+  _lastTtsKey: string;
 
   render(): void;
   currentCard(): CardRecord | null;

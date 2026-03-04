@@ -38,6 +38,7 @@
 import { log } from "../core/logger";
 import { queryFirst } from "../core/ui";
 import { convertInlineDisplayMath } from "../core/shared-utils";
+import { replaceCircleFlagTokens } from "../flags/flag-tokens";
 import {
   FIELD_START_READING_RE,
   unescapeDelimiterText,
@@ -197,6 +198,8 @@ export function processMarkdownFeatures(text: string): string {
 
   // Convert highlight ==text== to <mark>text</mark>
   result = result.replace(/==(.+?)==/g, '<mark>$1</mark>');
+
+  result = replaceCircleFlagTokens(result);
 
   // ── Restore math blocks ──
   if (mathPlaceholders.length) {

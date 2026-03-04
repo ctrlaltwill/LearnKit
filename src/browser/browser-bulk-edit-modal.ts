@@ -33,9 +33,10 @@ import {
   expandGroupAncestors,
   parseGroupsInput,
   groupsToInput,
+  renderFlagPreviewHtml,
 } from "./browser-helpers";
 import { setModalTitle, scopeModalToWorkspace } from "../modals/modal-utils";
-import { setCssProps } from "../core/ui";
+import { replaceChildrenWithHTML, setCssProps } from "../core/ui";
 
 // ── Context interface ──────────────────────────────────────
 
@@ -123,6 +124,35 @@ export class BulkEditModal extends Modal {
   }
 
   const inputEls: Partial<Record<ColKey, HTMLInputElement | HTMLTextAreaElement>> = {};
+
+  const attachFlagPreviewOverlay = (control: HTMLInputElement | HTMLTextAreaElement): HTMLElement => {
+    const wrap = document.createElement("div");
+    wrap.className = `sprout-flag-editor-wrap${control instanceof HTMLTextAreaElement ? " sprout-flag-editor-wrap--multiline" : ""}`;
+
+    const overlay = document.createElement("div");
+    overlay.className = `sprout-flag-editor-overlay${control instanceof HTMLTextAreaElement ? " sprout-flag-editor-overlay--multiline" : ""}`;
+
+    control.classList.add("sprout-flag-editor-control");
+
+    const renderOverlay = () => {
+      replaceChildrenWithHTML(overlay, renderFlagPreviewHtml(String(control.value ?? "")));
+    };
+
+    overlay.addEventListener("click", () => control.focus());
+    control.addEventListener("focus", () => wrap.classList.add("sprout-flag-editor--focused"));
+    control.addEventListener("blur", () => {
+      wrap.classList.remove("sprout-flag-editor--focused");
+      renderOverlay();
+    });
+    control.addEventListener("input", () => {
+      if (!wrap.classList.contains("sprout-flag-editor--focused")) renderOverlay();
+    });
+
+    renderOverlay();
+    wrap.appendChild(control);
+    wrap.appendChild(overlay);
+    return wrap;
+  };
 
   const topKeys: ColKey[] = ["id", "type", "stage", "due"];
 
@@ -492,7 +522,8 @@ export class BulkEditModal extends Modal {
       updateOverwriteNotice();
     }
 
-    wrapper.appendChild(input);
+    const shouldPreviewFlags = field.editable && (field.key === "title" || field.key === "question" || field.key === "answer" || field.key === "info");
+    wrapper.appendChild(shouldPreviewFlags ? attachFlagPreviewOverlay(input) : input);
     inputEls[field.key] = input;
     if (field.key === "question" && input instanceof HTMLTextAreaElement && isClozeOnly) {
       attachClozeShortcuts(input);
@@ -562,7 +593,7 @@ export class BulkEditModal extends Modal {
       input.className = "input flex-1 text-sm sprout-input-fixed";
       input.placeholder = "Enter an answer option";
       input.value = value;
-      row.appendChild(input);
+      row.appendChild(attachFlagPreviewOverlay(input));
 
       const removeBtn = document.createElement("button");
       removeBtn.type = "button";
@@ -624,7 +655,7 @@ export class BulkEditModal extends Modal {
     });
     const addInputWrap = document.createElement("div");
     addInputWrap.className = "flex items-center gap-2";
-    addInputWrap.appendChild(addInput);
+    addInputWrap.appendChild(attachFlagPreviewOverlay(addInput));
     container.appendChild(addInputWrap);
 
     const buildValue = () => {

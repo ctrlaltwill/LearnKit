@@ -38,6 +38,7 @@ See [[Editing Cards]].
 
 - Use groups to organize cards.
 - Use [[Card Formatting]] for markdown, math, links, and images.
+- Use [[Flags]] for inline circle-flag tokens.
 
 ## Important behavior
 

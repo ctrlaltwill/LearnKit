@@ -3,7 +3,8 @@ import path from "path";
 
 export default defineConfig({
   test: {
-    include: ["tests/**/*.test.ts"],
+    include: ["**/*.test.ts"],
+    exclude: ["**/node_modules/**", "**/dist/**", "**/release/**", "**/coverage/**"],
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "lcov"],

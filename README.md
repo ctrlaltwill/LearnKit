@@ -54,13 +54,10 @@ Sprout is an Obsidian plugin for writing flashcards directly inside Markdown not
 2. Customisable homepage
    - Configure your study dashboard so the information you care about is always front and centre.
 
-3. Improved language detection and TTS controls
-   - More accurate language handling with expanded voice and playback configuration options.
-
-4. Plugin localisation
+3. Plugin localisation
    - Translations to make Sprout accessible to learners worldwide.
 
-5. Improved mobile experience
+4. Improved mobile experience
    - Faster, smoother studying designed specifically for mobile workflows.
 
 ## Feature highlights

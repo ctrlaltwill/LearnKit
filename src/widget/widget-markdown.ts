@@ -11,6 +11,7 @@
 
 import { log } from "../core/logger";
 import type { App } from "obsidian";
+import { replaceCircleFlagTokens, hydrateCircleFlagsInElement } from "../flags/flag-tokens";
 
 /* ------------------------------------------------------------------ */
 /*  HTML escaping                                                      */
@@ -91,6 +92,8 @@ export function processMarkdownFeatures(text: string): string {
   // Highlight: ==text== → <mark>text</mark>
   result = result.replace(/==(.+?)==/g, '<mark>$1</mark>');
 
+  result = replaceCircleFlagTokens(result);
+
   // ── Restore math blocks ──
   if (mathPlaceholders.length) {
     result = result.replace(/@@SPROUTMATH(\d+)@@/g, (_m, idx) => {
@@ -107,6 +110,7 @@ export function processMarkdownFeatures(text: string): string {
 
 /** Triggers MathJax typesetting on the given element (no-op if MathJax absent). */
 export function renderMathInElement(el: HTMLElement): void {
+  hydrateCircleFlagsInElement(el);
   const MathJax = (window as unknown as { MathJax?: { typesetPromise?: (els: HTMLElement[]) => Promise<unknown> } }).MathJax;
   if (MathJax && typeof MathJax.typesetPromise === "function") {
     try {

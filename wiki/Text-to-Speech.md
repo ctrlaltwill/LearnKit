@@ -8,6 +8,8 @@ Text to Speech (TTS) can read card content aloud.
 
 This helps with language study, listening practice, and accessibility.
 
+Sprout also supports flag-aware voice routing with [[Flags|inline flag tokens]].
+
 ## Supported card types
 
 | Card type | TTS support | What's read |
@@ -38,6 +40,20 @@ Configure this in **Settings → Audio → Cloze TTS mode**.
 3. Choose voice and language (see [[Language-Settings|Language Settings]]).
 4. TTS controls will appear in the study session interface.
 
+## Flag-aware voice routing
+
+In **Settings → Audio → Flag-aware routing**:
+
+- **Use flags for language and accent** (default: on)
+	- `{{es}}` and `{{es-mx}}` can switch spoken language/accent.
+	- A single flag anywhere in the text can apply to the full spoken content.
+	- Multiple flags in one field use segmented speaking (voice switches inline).
+- **Speak language name before flag segments** (default: off)
+	- Adds a spoken language prefix before each flag-switched segment.
+	- English variants use the label **English** while keeping regional accent (for example UK/US voice choice).
+
+See [[Flags]] for token syntax and supported formats.
+
 ## During a session
 
 When TTS is enabled:
@@ -62,3 +78,4 @@ If no suitable voice is installed for your chosen language, pronunciation qualit
 - For language learning, set the voice language to match your target language.
 - Use **deletion only** mode for cloze cards when you want to practise pronunciation of specific terms.
 - Use **full sentence** mode when context and sentence flow matter.
+- Use inline flags when a single card mixes languages or accents.
