@@ -65,7 +65,7 @@ export const GUIDE_CATEGORIES: GuideCategory[] = [
     sections: [
       { pageKeys: ["Cards", "Card-Browser", "Creating-Cards"] },
       { title: "Reading view", pageKeys: ["Reading-View", "Reading-View-Styles", "Custom-Reading-Styles"] },
-      { title: "Custom Cards", pageKeys: ["Flags", "Flag-Codes"] },
+      { title: "Flags", pageKeys: ["Flags", "Flag-Codes"] },
       {
         title: "Card Types",
         pageKeys: ["Basic-&-Reversed-Cards", "Cloze-Cards", "Image-Occlusion", "Multiple-Choice-Questions", "Ordered-Questions"],

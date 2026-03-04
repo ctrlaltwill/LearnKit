@@ -9,6 +9,7 @@ Text to Speech (TTS) can read card content aloud.
 This helps with language study, listening practice, and accessibility.
 
 Sprout also supports flag-aware voice routing with [[Flags|inline flag tokens]].
+Flag assets are provided by [HatScripts/circle-flags](https://github.com/HatScripts/circle-flags) (MIT).
 
 ## Supported card types
 

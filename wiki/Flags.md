@@ -5,6 +5,7 @@ Last modified: 04/03/2026
 ## Overview
 
 Sprout supports inline circle flags inside card text fields using token syntax.
+Flag assets are provided by [HatScripts/circle-flags](https://github.com/HatScripts/circle-flags) (MIT).
 
 Supported token formats:
 

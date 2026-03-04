@@ -5,6 +5,7 @@ Last modified: 13/02/2026
 ## Overview
 
 These settings control text-to-speech (TTS) in **Settings → Audio**.
+Flag-based routing uses Circle Flags assets from [HatScripts/circle-flags](https://github.com/HatScripts/circle-flags) (MIT).
 
 ## Available settings
 
