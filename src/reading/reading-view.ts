@@ -490,9 +490,9 @@ export function syncReadingViewStyles(): void {
     css += `  --sprout-rv-flash-cloze-text: ${darkClozeTextValue};\n`;
     css += `}\n`;
 
-    css += `${macroSelector} { background: var(--sprout-rv-flash-bg) !important; color: var(--sprout-rv-flash-text) !important; }\n`;
-    css += `${macroSelector}.sprout-flashcard-flipped { background: var(--sprout-rv-flash-bg) !important; }\n`;
-    css += `${macroSelector} .sprout-flashcard-question, ${macroSelector} .sprout-flashcard-answer { background: var(--sprout-rv-flash-bg) !important; color: var(--sprout-rv-flash-text) !important; }\n`;
+    css += `${macroSelector} { background: var(--color-base-20) !important; color: var(--sprout-rv-flash-text) !important; }\n`;
+    css += `${macroSelector}.sprout-flashcard-flipped { background: var(--color-base-20) !important; }\n`;
+    css += `${macroSelector} .sprout-flashcard-question, ${macroSelector} .sprout-flashcard-answer { background: var(--color-base-20) !important; color: var(--sprout-rv-flash-text) !important; }\n`;
     css += `${macroSelector} .sprout-card-content, ${macroSelector} .sprout-flashcard-options, ${macroSelector} .sprout-flashcard-info, ${macroSelector} .sprout-flashcard-body { color: var(--sprout-rv-flash-text) !important; }\n`;
     css += `${macroSelector} .sprout-reading-view-cloze { background-color: var(--sprout-rv-flash-cloze-bg) !important; }\n`;
     css += `${macroSelector} .sprout-cloze-text { color: var(--sprout-rv-flash-cloze-text) !important; }\n`;

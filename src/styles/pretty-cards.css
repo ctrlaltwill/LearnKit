@@ -971,7 +971,7 @@ mjx-container[jax="CHTML"][display="true"] {
   line-height: 1.5;
   border: var(--sprout-border-width) solid var(--sprout-border-color);
   border-radius: calc(var(--radius-l) - 1px);
-  background: var(--background-primary);
+  background: var(--color-base-20) !important;
   padding: 12px;
   overflow: hidden;
 }
@@ -1080,7 +1080,7 @@ mjx-container[jax="CHTML"][display="true"] {
 
 .sprout-pretty-card.sprout-macro-flashcards .sprout-flashcard-question,
 .sprout-pretty-card.sprout-macro-flashcards .sprout-flashcard-answer {
-  background: var(--sprout-rv-flash-bg) !important;
+  background: var(--color-base-20) !important;
   color: var(--sprout-rv-flash-text) !important;
   padding: 20px 30px;
 }

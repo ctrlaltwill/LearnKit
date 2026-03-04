@@ -612,6 +612,12 @@
   margin-bottom: 8px !important;
 }
 
+.sprout .sprout-widget-mcq-option:hover,
+.sprout .sprout-widget-mcq-option:focus-visible {
+  background-color: var(--background-modifier-hover) !important;
+  color: var(--foreground) !important;
+}
+
 /* MCQ option text span */
 .sprout .sprout-widget-mcq-text {
   font-size: var(--sprout-widget-font-card-text);

@@ -291,9 +291,9 @@ Steps are shuffled during review.`;function DCe(e){return!e||!e.length?"":e.join
 `,l+=`  --sprout-rv-flash-cloze-bg: ${we};
 `,l+=`  --sprout-rv-flash-cloze-text: ${Me};
 `,l+=`}
-`,l+=`${i} { background: var(--sprout-rv-flash-bg) !important; color: var(--sprout-rv-flash-text) !important; }
-`,l+=`${i}.sprout-flashcard-flipped { background: var(--sprout-rv-flash-bg) !important; }
-`,l+=`${i} .sprout-flashcard-question, ${i} .sprout-flashcard-answer { background: var(--sprout-rv-flash-bg) !important; color: var(--sprout-rv-flash-text) !important; }
+`,l+=`${i} { background: var(--color-base-20) !important; color: var(--sprout-rv-flash-text) !important; }
+`,l+=`${i}.sprout-flashcard-flipped { background: var(--color-base-20) !important; }
+`,l+=`${i} .sprout-flashcard-question, ${i} .sprout-flashcard-answer { background: var(--color-base-20) !important; color: var(--sprout-rv-flash-text) !important; }
 `,l+=`${i} .sprout-card-content, ${i} .sprout-flashcard-options, ${i} .sprout-flashcard-info, ${i} .sprout-flashcard-body { color: var(--sprout-rv-flash-text) !important; }
 `,l+=`${i} .sprout-reading-view-cloze { background-color: var(--sprout-rv-flash-cloze-bg) !important; }
 `,l+=`${i} .sprout-cloze-text { color: var(--sprout-rv-flash-cloze-text) !important; }
