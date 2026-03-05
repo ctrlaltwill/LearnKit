@@ -1,48 +1,22 @@
-import { readdirSync } from "node:fs";
-import { resolve } from "node:path";
 import { defineConfig } from "vitepress";
-
-const docsRoot = resolve(__dirname, "..");
-const priority = [
-  "Home.md",
-  "Installation.md",
-  "Creating-Cards.md",
-  "Cards.md",
-  "Study-Sessions.md",
-  "Scheduling.md",
-  "Settings.md",
-  "Syncing.md",
-  "Support-Sprout.md",
-];
 
 const titleOverrides = new Map<string, string>([
   ["Home", "Overview"],
   ["Support-Sprout", "About Sprout"],
 ]);
 
-function stripExtension(fileName: string): string {
-  return fileName.replace(/\.md$/i, "");
+function toPath(page: string): string {
+  return `/${page}`;
 }
 
-function toTitle(fileName: string): string {
-  const stem = stripExtension(fileName);
-  return titleOverrides.get(stem) ?? stem.replace(/-/g, " ");
+function toTitle(page: string): string {
+  return titleOverrides.get(page) ?? page.replace(/-/g, " ");
 }
 
-function orderedPages(): string[] {
-  const files = readdirSync(docsRoot)
-    .filter((fileName) => fileName.endsWith(".md") && fileName !== "index.md")
-    .sort((a, b) => a.localeCompare(b));
-
-  const rank = new Map(priority.map((name, index) => [name, index]));
-  return files.sort((a, b) => {
-    const aRank = rank.get(a);
-    const bRank = rank.get(b);
-    if (aRank !== undefined && bRank !== undefined) return aRank - bRank;
-    if (aRank !== undefined) return -1;
-    if (bRank !== undefined) return 1;
-    return a.localeCompare(b);
-  });
+function escapeMustache(content: string): string {
+  return String(content ?? "")
+    .replace(/\{\{/g, "&#123;&#123;")
+    .replace(/\}\}/g, "&#125;&#125;");
 }
 
 export default defineConfig({
@@ -51,12 +25,24 @@ export default defineConfig({
   base: "/Sprout/",
   cleanUrls: true,
   lastUpdated: true,
-  vue: {
-    template: {
-      compilerOptions: {
-        // Preserve Sprout cloze syntax (e.g. {{c1::term}}) in markdown.
-        delimiters: ["${", "}"],
-      },
+  markdown: {
+    config(md) {
+      md.core.ruler.after("inline", "sprout-preserve-cloze", (state) => {
+        for (const token of state.tokens) {
+          if (["fence", "code_block", "html_block"].includes(token.type)) {
+            token.content = escapeMustache(token.content);
+            continue;
+          }
+
+          if (token.type === "inline" && token.children) {
+            for (const child of token.children) {
+              if (["text", "code_inline", "html_inline"].includes(child.type)) {
+                child.content = escapeMustache(child.content);
+              }
+            }
+          }
+        }
+      });
     },
   },
   themeConfig: {
@@ -72,11 +58,98 @@ export default defineConfig({
     },
     sidebar: [
       {
-        text: "Guides",
-        items: orderedPages().map((fileName) => ({
-          text: toTitle(fileName),
-          link: `/${stripExtension(fileName)}`,
-        })),
+        text: "Home",
+        items: [{ text: toTitle("Home"), link: toPath("Home") }],
+      },
+      {
+        text: "Getting Started",
+        items: [
+          { text: toTitle("Installation"), link: toPath("Installation") },
+          { text: toTitle("Syncing"), link: toPath("Syncing") },
+        ],
+      },
+      {
+        text: "Analytics",
+        items: [
+          { text: toTitle("Analytics"), link: toPath("Analytics") },
+          { text: toTitle("Charts"), link: toPath("Charts") },
+        ],
+      },
+      {
+        text: "Audio",
+        items: [
+          { text: toTitle("Text-to-Speech"), link: toPath("Text-to-Speech") },
+          { text: toTitle("Language-Settings"), link: toPath("Language-Settings") },
+        ],
+      },
+      {
+        text: "Cards",
+        items: [
+          { text: toTitle("Cards"), link: toPath("Cards") },
+          { text: toTitle("Card-Browser"), link: toPath("Card-Browser") },
+          { text: toTitle("Creating-Cards"), link: toPath("Creating-Cards") },
+          {
+            text: "Reading View",
+            items: [
+              { text: toTitle("Reading-View"), link: toPath("Reading-View") },
+              { text: toTitle("Reading-View-Styles"), link: toPath("Reading-View-Styles") },
+              { text: toTitle("Custom-Reading-Styles"), link: toPath("Custom-Reading-Styles") },
+            ],
+          },
+          {
+            text: "Flags",
+            items: [
+              { text: toTitle("Flags"), link: toPath("Flags") },
+              { text: toTitle("Flag-Codes"), link: toPath("Flag-Codes") },
+            ],
+          },
+          {
+            text: "Card Types",
+            items: [
+              { text: toTitle("Basic-&-Reversed-Cards"), link: toPath("Basic-&-Reversed-Cards") },
+              { text: toTitle("Cloze-Cards"), link: toPath("Cloze-Cards") },
+              { text: toTitle("Image-Occlusion"), link: toPath("Image-Occlusion") },
+              { text: toTitle("Multiple-Choice-Questions"), link: toPath("Multiple-Choice-Questions") },
+              { text: toTitle("Ordered-Questions"), link: toPath("Ordered-Questions") },
+            ],
+          },
+        ],
+      },
+      {
+        text: "Maintenance",
+        items: [
+          { text: toTitle("Anki-Export-&-Import"), link: toPath("Anki-Export-&-Import") },
+          { text: toTitle("Backups"), link: toPath("Backups") },
+          { text: toTitle("Custom-Delimiters"), link: toPath("Custom-Delimiters") },
+          { text: toTitle("Keyboard-Shortcuts"), link: toPath("Keyboard-Shortcuts") },
+          { text: toTitle("Settings"), link: toPath("Settings") },
+          { text: toTitle("Reminders"), link: toPath("Reminders") },
+          { text: toTitle("Gatekeeper"), link: toPath("Gatekeeper") },
+        ],
+      },
+      {
+        text: "Study",
+        items: [
+          {
+            text: "Review Flow",
+            items: [
+              { text: toTitle("Study-Sessions"), link: toPath("Study-Sessions") },
+              { text: toTitle("Grading"), link: toPath("Grading") },
+              { text: toTitle("Scheduling"), link: toPath("Scheduling") },
+            ],
+          },
+          {
+            text: "Card State",
+            items: [
+              { text: toTitle("Burying-Cards"), link: toPath("Burying-Cards") },
+              { text: toTitle("Suspending-Cards"), link: toPath("Suspending-Cards") },
+            ],
+          },
+          {
+            text: "Scope",
+            items: [{ text: toTitle("Widget"), link: toPath("Widget") }],
+          },
+        ],
       },
     ],
     socialLinks: [{ icon: "github", link: "https://github.com/ctrlaltwill/Sprout" }],

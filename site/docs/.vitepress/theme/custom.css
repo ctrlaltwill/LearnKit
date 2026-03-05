@@ -1,0 +1,77 @@
+:root {
+  --sprout-accent: #4f8c0a;
+  --sprout-accent-soft: #d8efbf;
+  --sprout-slate: #10161f;
+  --sprout-ink: #1d2a3b;
+  --sprout-sky: #e7f1ff;
+  --sprout-mint: #ecf8ee;
+}
+
+.VPHome .VPHero {
+  background:
+    radial-gradient(circle at 8% 14%, rgba(79, 140, 10, 0.22) 0, rgba(79, 140, 10, 0) 36%),
+    radial-gradient(circle at 92% 16%, rgba(67, 112, 238, 0.22) 0, rgba(67, 112, 238, 0) 35%),
+    linear-gradient(180deg, #f8fcf4 0%, #eef5ff 100%);
+  border-radius: 18px;
+  margin: 18px 16px 14px;
+  border: 1px solid rgba(16, 22, 31, 0.08);
+}
+
+.VPHome .VPHero .name {
+  color: var(--sprout-slate);
+}
+
+.VPHome .VPHero .text {
+  color: var(--sprout-accent);
+}
+
+.VPHome .VPHero .tagline {
+  color: var(--sprout-ink);
+}
+
+.VPFeature .box {
+  border: 1px solid rgba(16, 22, 31, 0.09);
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+}
+
+.vp-doc .sprout-home-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 18px 0 10px;
+}
+
+.vp-doc .sprout-home-card {
+  border: 1px solid rgba(16, 22, 31, 0.1);
+  border-radius: 14px;
+  padding: 14px;
+  background: #ffffff;
+}
+
+.vp-doc .sprout-home-card svg {
+  width: 18px;
+  height: 18px;
+  color: var(--sprout-accent);
+  margin-bottom: 8px;
+}
+
+.vp-doc .sprout-home-card h3 {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+}
+
+.vp-doc .sprout-home-card p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #33475f;
+}
+
+@media (max-width: 768px) {
+  .VPHome .VPHero {
+    margin: 10px 8px 8px;
+  }
+
+  .vp-doc .sprout-home-grid {
+    grid-template-columns: 1fr;
+  }
+}
