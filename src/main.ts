@@ -38,43 +38,44 @@ import {
   DEFAULT_SETTINGS,
   deepMerge,
   type SproutSettings,
-} from "./core/constants";
+} from "./platform/core/constants";
 
-import { log } from "./core/logger";
-import { clamp, clonePlain, isPlainObject, type FlashcardType } from "./core/utils";
-import { getBasecoatApi } from "./core/basecoat";
-import { migrateSettingsInPlace } from "./settings/settings-migration";
-import { normaliseSettingsInPlace } from "./settings/settings-normalisation";
-import { registerReadingViewPrettyCards, teardownReadingView } from "./reading/reading-view";
-import { removeAosErrorHandler } from "./core/aos-loader";
-import { initTooltipPositioner } from "./core/tooltip-positioner";
-import { initButtonTooltipDefaults } from "./core/tooltip-defaults";
-import { initMobileKeyboardHandler, cleanupMobileKeyboardHandler } from "./core/mobile-keyboard-handler";
+import { log } from "./platform/core/logger";
+import { clamp, clonePlain, isPlainObject, type FlashcardType } from "./platform/core/utils";
+import { getBasecoatApi } from "./platform/core/basecoat";
+import { migrateSettingsInPlace } from "./views/settings/settings-migration";
+import { normaliseSettingsInPlace } from "./views/settings/settings-normalisation";
+import { registerReadingViewPrettyCards, teardownReadingView } from "./views/reading/reading-view";
+import { removeAosErrorHandler } from "./platform/core/aos-loader";
+import { initTooltipPositioner } from "./platform/core/tooltip-positioner";
+import { initButtonTooltipDefaults } from "./platform/core/tooltip-defaults";
+import { initMobileKeyboardHandler, cleanupMobileKeyboardHandler } from "./platform/core/mobile-keyboard-handler";
 
-import { JsonStore } from "./core/store";
-import { queryFirst } from "./core/ui";
-import { SproutReviewerView } from "./reviewer/review-view";
-import { SproutWidgetView } from "./widget/sprout-widget-view";
-import { SproutCardBrowserView } from "./browser/sprout-card-browser-view";
-import { SproutAnalyticsView } from "./analytics/analytics-view";
-import { SproutHomeView } from "./home/sprout-home-view";
-import { SproutSettingsTab } from "./settings/sprout-settings-tab";
-import { SproutSettingsView } from "./settings/sprout-settings-view";
-import { formatSyncNotice, syncQuestionBank } from "./sync/sync-engine";
-import { joinPath, safeStatMtime, createDataJsonBackupNow } from "./sync/backup";
-import { CardCreatorModal } from "./modals/card-creator-modal";
-import { ImageOcclusionCreatorModal } from "./modals/image-occlusion-creator-modal";
-import { ParseErrorModal } from "./modals/parse-error-modal";
-import { setDelimiter } from "./core/delimiter";
+import { JsonStore } from "./platform/core/store";
+import { queryFirst } from "./platform/core/ui";
+import { SproutReviewerView } from "./views/reviewer/review-view";
+import { SproutWidgetView } from "./views/widget/sprout-widget-view";
+import { SproutCardBrowserView } from "./views/browser/sprout-card-browser-view";
+import { SproutAnalyticsView } from "./views/analytics/analytics-view";
+import { SproutHomeView } from "./views/home/sprout-home-view";
+import { SproutSettingsTab } from "./views/settings/sprout-settings-tab";
+import { SproutSettingsView } from "./views/settings/sprout-settings-view";
+import { formatSyncNotice, syncQuestionBank } from "./platform/integrations/sync/sync-engine";
+import { joinPath, safeStatMtime, createDataJsonBackupNow } from "./platform/integrations/sync/backup";
+import { CardCreatorModal } from "./platform/modals/card-creator-modal";
+import { ImageOcclusionCreatorModal } from "./platform/modals/image-occlusion-creator-modal";
+import { ParseErrorModal } from "./platform/modals/parse-error-modal";
+import { setDelimiter } from "./platform/core/delimiter";
 // Anki modals are lazy-loaded to defer sql.js WASM parsing until needed
-// import { AnkiImportModal } from "./modals/anki-import-modal";
-// import { AnkiExportModal } from "./modals/anki-export-modal";
-import { resetCardScheduling, type CardState } from "./scheduler/scheduler";
-import { WhatsNewModal, hasReleaseNotes } from "./modals/whats-new-modal";
-import { checkForVersionUpgrade, loadVersionTracking, getVersionTrackingData } from "./core/version-manager";
-import { ReminderEngine } from "./reminders/reminder-engine";
+// import { AnkiImportModal } from "./platform/modals/anki-import-modal";
+// import { AnkiExportModal } from "./platform/modals/anki-export-modal";
+import { resetCardScheduling, type CardState } from "./engine/scheduler/scheduler";
+import { WhatsNewModal, hasReleaseNotes } from "./platform/modals/whats-new-modal";
+import { checkForVersionUpgrade, loadVersionTracking, getVersionTrackingData } from "./platform/core/version-manager";
+import { ReminderEngine } from "./views/reminders/reminder-engine";
 import { createRoot, type Root as ReactRoot } from "react-dom/client";
 import React from "react";
+import { t } from "./platform/translations/translator";
 
 
 const SPROUT_RIBBON_BRAND_ICON = `<svg viewBox="0 0 1536 1536" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g transform="matrix(13.970297,0,0,13.970297,-11267.410891,-2326.950495)"><path fill="currentColor" d="M857.924,173.62C857.924,173.606 857.924,173.591 857.924,173.576C857.924,171.603 859.526,170 861.5,170C863.474,170 865.076,171.603 865.076,173.576C865.076,173.591 865.076,173.606 865.076,173.62L864.621,210.894L886.162,180.471C886.171,180.459 886.179,180.448 886.188,180.436C887.348,178.839 889.586,178.484 891.183,179.645C892.78,180.805 893.135,183.043 891.974,184.64C891.966,184.652 891.957,184.664 891.948,184.675L869.671,214.563L904.98,202.612C904.994,202.608 905.008,202.603 905.022,202.598C906.899,201.988 908.918,203.017 909.528,204.895C910.138,206.772 909.109,208.791 907.232,209.401C907.218,209.406 907.204,209.41 907.191,209.414L871.6,220.5L907.191,231.586C907.204,231.59 907.218,231.594 907.232,231.599C909.109,232.209 910.138,234.228 909.528,236.105C908.918,237.983 906.899,239.012 905.022,238.402C905.008,238.397 904.994,238.392 904.98,238.388L869.671,226.437L891.948,256.325C891.957,256.336 891.966,256.348 891.974,256.36C893.135,257.957 892.78,260.195 891.183,261.355C889.586,262.516 887.348,262.161 886.188,260.564C886.179,260.552 886.171,260.541 886.162,260.529L864.621,230.106L865.076,267.38C865.076,267.394 865.076,267.409 865.076,267.424C865.076,269.397 863.474,271 861.5,271C859.526,271 857.924,269.397 857.924,267.424C857.924,267.409 857.924,267.394 857.924,267.38L858.379,230.106L836.838,260.529C836.829,260.541 836.821,260.552 836.812,260.564C835.652,262.161 833.414,262.516 831.817,261.355C830.22,260.195 829.865,257.957 831.026,256.36C831.034,256.348 831.043,256.336 831.052,256.325L853.329,226.437L818.02,238.388C818.006,238.392 817.992,238.397 817.978,238.402C816.101,239.012 814.082,237.983 813.472,236.105C812.862,234.228 813.891,232.209 815.768,231.599C815.782,231.594 815.796,231.59 815.809,231.586L851.4,220.5L815.809,209.414C815.796,209.41 815.782,209.406 815.768,209.401C813.891,208.791 812.862,206.772 813.472,204.895C814.082,203.017 816.101,201.988 817.978,202.598C817.992,202.603 818.006,202.608 818.02,202.612L853.329,214.563L831.052,184.675C831.043,184.664 831.034,184.652 831.026,184.64C829.865,183.043 830.22,180.805 831.817,179.645C833.414,178.484 835.652,178.839 836.812,180.436C836.821,180.448 836.829,180.459 836.838,180.471L858.379,210.894L857.924,173.62Z"/></g></svg>`;
@@ -144,6 +145,10 @@ export default class SproutPlugin extends Plugin {
     this.addCommand({ id, name, callback });
   }
 
+  private _tx(token: string, fallback: string, vars?: Record<string, string | number>) {
+    return t(this.settings?.general?.interfaceLanguage, token, fallback, vars);
+  }
+
   private _registerCommands() {
     this._addCommand("sync-flashcards", "Sync flashcards", async () => this._runSync());
     this._addCommand("open", "Open home", async () => this.openHomeTab());
@@ -168,12 +173,12 @@ export default class SproutPlugin extends Plugin {
     }
 
     this._addCommand("import-anki", "Import from Anki (.apkg)", async () => {
-      const { AnkiImportModal } = await import("./modals/anki-import-modal");
+      const { AnkiImportModal } = await import("./platform/modals/anki-import-modal");
       new AnkiImportModal(this).open();
     });
 
     this._addCommand("export-anki", "Export to Anki (.apkg)", async () => {
-      const { AnkiExportModal } = await import("./modals/anki-export-modal");
+      const { AnkiExportModal } = await import("./platform/modals/anki-export-modal");
       new AnkiExportModal(this).open();
     });
   }
@@ -413,7 +418,7 @@ export default class SproutPlugin extends Plugin {
       // Commands (hotkeys default to none; users can bind in Settings → Hotkeys)
       this._registerCommands();
 
-      // Register custom branded ribbon icon from branding/Sprout Icon.svg artwork.
+      // Register custom branded ribbon icon from site/branding/Sprout Icon.svg artwork.
       addIcon(SPROUT_BRAND_ICON_KEY, SPROUT_RIBBON_BRAND_ICON);
 
       // Replace dropdown with separate ribbon icons (desktop + mobile)
@@ -452,7 +457,7 @@ export default class SproutPlugin extends Plugin {
       log.info(`loaded`);
     } catch (e) {
       log.error(`failed to load`, e);
-      new Notice(`Failed to load. See console for details.`);
+      new Notice(this._tx("ui.main.notice.loadFailed", "Failed to load. See console for details."));
     }
   }
 
@@ -616,7 +621,7 @@ export default class SproutPlugin extends Plugin {
   openAddFlashcardModal(forcedType?: FlashcardType) {
     const ok = this._ensureEditingNoteEditor();
     if (!ok) {
-      new Notice("Must be editing a note to add a flashcard");
+      new Notice(this._tx("ui.main.notice.mustEditNote", "Must be editing a note to add a flashcard"));
       return;
     }
 
@@ -645,28 +650,28 @@ export default class SproutPlugin extends Plugin {
         let itemDom: HTMLElement | null = null;
 
         menu.addItem((item) => {
-          item.setTitle("Add flashcard").setIcon("plus");
+          item.setTitle(this._tx("ui.main.menu.addFlashcard", "Add flashcard")).setIcon("plus");
 
           // Create submenu
           const submenu = item.setSubmenu?.();
           if (submenu) {
             submenu.addItem((subItem: MenuItem) => {
-              subItem.setTitle("Basic").setIcon("file-text").onClick(() => this.openAddFlashcardModal("basic"));
+              subItem.setTitle(this._tx("ui.main.menu.basic", "Basic")).setIcon("file-text").onClick(() => this.openAddFlashcardModal("basic"));
             });
             submenu.addItem((subItem: MenuItem) => {
-              subItem.setTitle("Basic (reversed)").setIcon("file-text").onClick(() => this.openAddFlashcardModal("reversed"));
+              subItem.setTitle(this._tx("ui.main.menu.basicReversed", "Basic (reversed)")).setIcon("file-text").onClick(() => this.openAddFlashcardModal("reversed"));
             });
             submenu.addItem((subItem: MenuItem) => {
-              subItem.setTitle("Cloze").setIcon("file-minus").onClick(() => this.openAddFlashcardModal("cloze"));
+              subItem.setTitle(this._tx("ui.main.menu.cloze", "Cloze")).setIcon("file-minus").onClick(() => this.openAddFlashcardModal("cloze"));
             });
             submenu.addItem((subItem: MenuItem) => {
-              subItem.setTitle("Multiple choice").setIcon("list").onClick(() => this.openAddFlashcardModal("mcq"));
+              subItem.setTitle(this._tx("ui.main.menu.multipleChoice", "Multiple choice")).setIcon("list").onClick(() => this.openAddFlashcardModal("mcq"));
             });
             submenu.addItem((subItem: MenuItem) => {
-              subItem.setTitle("Ordered question").setIcon("list-ordered").onClick(() => this.openAddFlashcardModal("oq"));
+              subItem.setTitle(this._tx("ui.main.menu.orderedQuestion", "Ordered question")).setIcon("list-ordered").onClick(() => this.openAddFlashcardModal("oq"));
             });
             submenu.addItem((subItem: MenuItem) => {
-              subItem.setTitle("Image occlusion").setIcon("image").onClick(() => this.openAddFlashcardModal("io"));
+              subItem.setTitle(this._tx("ui.main.menu.imageOcclusion", "Image occlusion")).setIcon("image").onClick(() => this.openAddFlashcardModal("io"));
             });
           }
 
@@ -784,7 +789,10 @@ export default class SproutPlugin extends Plugin {
 
     const tagsDeleted = Number((res as { tagsDeleted?: number }).tagsDeleted ?? 0);
     if (tagsDeleted > 0) {
-      new Notice(`Deleted ${tagsDeleted}, unused tag${tagsDeleted === 1 ? "" : "s"}`);
+      new Notice(this._tx("ui.main.notice.deletedUnusedTags", "Deleted {count}, unused tag{suffix}", {
+        count: tagsDeleted,
+        suffix: tagsDeleted === 1 ? "" : "s",
+      }));
     }
 
     if (res.quarantinedCount > 0) {
@@ -971,7 +979,7 @@ export default class SproutPlugin extends Plugin {
     await this.saveAll();
     this._refreshOpenViews();
 
-    new Notice(`Reset scheduling for ${total} cards.`);
+    new Notice(this._tx("ui.main.notice.resetScheduling", "Reset scheduling for {count} cards.", { count: total }));
   }
 
   async resetAllAnalyticsData(): Promise<void> {
@@ -988,7 +996,7 @@ export default class SproutPlugin extends Plugin {
     await this.saveAll();
     this._refreshOpenViews();
 
-    new Notice("Analytics data cleared.");
+    new Notice(this._tx("ui.main.notice.analyticsCleared", "Analytics data cleared."));
   }
 
   async openReviewerTab(forceNew: boolean = false) {
@@ -1058,7 +1066,7 @@ export default class SproutPlugin extends Plugin {
   openPluginSettingsInObsidian() {
     const settings = this.app.setting;
     if (!settings) {
-      new Notice("Obsidian settings are unavailable.");
+      new Notice(this._tx("ui.main.notice.obsidianSettingsUnavailable", "Obsidian settings are unavailable."));
       return;
     }
 
@@ -1078,7 +1086,7 @@ export default class SproutPlugin extends Plugin {
       await this.openWidget();
     } catch (e) {
       log.error(`failed to open widget`, e);
-      new Notice(`Failed to open widget. See console for details.`);
+      new Notice(this._tx("ui.main.notice.widgetOpenFailed", "Failed to open widget. See console for details."));
     }
   }
 

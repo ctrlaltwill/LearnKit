@@ -5,9 +5,9 @@
 [![GitHub issues](https://img.shields.io/github/issues/ctrlaltwill/Sprout)](https://github.com/ctrlaltwill/Sprout/issues)
 ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/ctrlaltwill/sprout/total)
 [![CI](https://github.com/ctrlaltwill/Sprout/actions/workflows/ci.yml/badge.svg)](https://github.com/ctrlaltwill/Sprout/actions/workflows/ci.yml)
-[![Wiki - 34 pages](https://img.shields.io/badge/wiki-34%20pages-blue)](https://github.com/ctrlaltwill/Sprout/wiki)
+[![Docs](https://img.shields.io/badge/docs-vitepress-blue)](https://ctrlaltwill.github.io/Sprout/)
 
-![Sprout Banner One - Welcome](branding/Banner%20One%20-%20Welcome.png)
+![Sprout Banner One - Welcome](site/branding/Banner%20One%20-%20Welcome.png)
 
 Sprout is an Obsidian plugin for writing flashcards directly inside Markdown notes and reviewing them with an FSRS-based scheduler.
 
@@ -33,7 +33,11 @@ Sprout is an Obsidian plugin for writing flashcards directly inside Markdown not
 
 💡 Need help in-app? Open the built-in Sprout guide inside Obsidian.
 
-📖 Prefer online docs? **[Full Documentation & Guides →](https://github.com/ctrlaltwill/Sprout/wiki)**
+📖 Prefer online docs? **[Full Documentation & Guides →](https://ctrlaltwill.github.io/Sprout/)**
+
+🤝 Want to help translate Sprout? See the [Contributing Guide](CONTRIBUTING.md#translation-policy).
+
+🛠️ General contribution workflow: [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Key features
 
@@ -62,13 +66,13 @@ Sprout is an Obsidian plugin for writing flashcards directly inside Markdown not
 
 ## Feature highlights
 
-![Sprout Banner Two - Rich Card Types](branding/Banner%20Two%20-%20Rich%20Card%20Types.png)
-![Sprout Banner Three - Audio Functionality](branding/Banner%20Three%20-%20Audio%20Functionality.png)
-![Sprout Banner Four - FSRS Algorithm](branding/Banner%20Four%20-%20FSRS%20Algorithm.png)
-![Sprout Banner Five - Data Analysis](branding/Banner%20Five%20-%20Data%20Analysis.png)
-![Sprout Banner Six - Anki Compatibility](branding/Banner%20Six%20-%20Anki%20Compatibility.png)
-![Sprout Banner Seven - Card Creation](branding/Banner%20Seven%20-%20Card%20Creation.png)
-![Sprout Banner Eight - Reminders & Gatekeeper](branding/Banner%20Eight%20-%20Reminders%20%26%20Gatekeeper.png)
+![Sprout Banner Two - Rich Card Types](site/branding/Banner%20Two%20-%20Rich%20Card%20Types.png)
+![Sprout Banner Three - Audio Functionality](site/branding/Banner%20Three%20-%20Audio%20Functionality.png)
+![Sprout Banner Four - FSRS Algorithm](site/branding/Banner%20Four%20-%20FSRS%20Algorithm.png)
+![Sprout Banner Five - Data Analysis](site/branding/Banner%20Five%20-%20Data%20Analysis.png)
+![Sprout Banner Six - Anki Compatibility](site/branding/Banner%20Six%20-%20Anki%20Compatibility.png)
+![Sprout Banner Seven - Card Creation](site/branding/Banner%20Seven%20-%20Card%20Creation.png)
+![Sprout Banner Eight - Reminders & Gatekeeper](site/branding/Banner%20Eight%20-%20Reminders%20%26%20Gatekeeper.png)
 
 ## License
 

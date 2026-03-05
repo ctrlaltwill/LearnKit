@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Need help with Sprout? Ask your question below. For general questions, please check the [Wiki](https://github.com/ctrlaltwill/Sprout/wiki) first!
+        Need help with Sprout? Ask your question below. For general questions, please check the [docs site](https://ctrlaltwill.github.io/Sprout/) first.
 
   - type: textarea
     id: question
@@ -22,7 +22,7 @@ body:
     attributes:
       label: What Have You Tried?
       description: What have you tried so far or where did you look for an answer?
-      placeholder: "I checked the wiki and tried..."
+      placeholder: "I checked the docs and tried..."
     validations:
       required: false
 
