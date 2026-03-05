@@ -9,7 +9,9 @@
 
 ![Sprout Banner One - Welcome](site/branding/Banner%20One%20-%20Welcome.png)
 
-Sprout is an Obsidian plugin for writing flashcards directly inside Markdown notes and reviewing them with an FSRS-based scheduler.
+Sprout is an Obsidian plugin that lets you create flashcards directly inside your Markdown notes and review them with an FSRS-based scheduler.
+
+Rather than separating notes and flashcards, Sprout keeps everything in one place — turning Obsidian into a hub for learning.
 
 ## Getting started
 
@@ -60,14 +62,20 @@ Sprout is an Obsidian plugin for writing flashcards directly inside Markdown not
 
 ## License & Credits
 
+### License
 Sprout is released under the **MIT License**.
 
+See the [full license](LICENSE) for more details.
+
+### Credits
 FSRS scheduling in Sprout is powered by [open-spaced-repetition/ts-fsrs](https://github.com/open-spaced-repetition/ts-fsrs).
 
 This project also uses Circle Flags assets from [HatScripts/circle-flags](https://github.com/HatScripts/circle-flags), licensed under MIT.
 
 Thanks to the maintainers and contributors of these open-source projects.
 
-See the [full license](LICENSE) for more details.
+### Our Commitment 
 
-![Sprout Banner Nine - Our Commitment](site/branding/Banner%20Nine%20-%20Commitment.png)
+Sprout is proudly open source and will always remain free. No hidden fees. No subscriptions. No AI-generated flashcards. No internet connection required. We firmly believe learning tools shouldn’t lock your knowledge behind subscriptions. That’s why your notes and your data will always remain entirely under your control.
+
+If Sprout helps your learning, then it’s doing exactly what it was built for.
