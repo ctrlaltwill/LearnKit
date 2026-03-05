@@ -1,0 +1,13 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sprout mark">
+  <defs>
+    <linearGradient id="sprout-grad" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#A487FF"/>
+      <stop offset="1" stop-color="#8A5CF5"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="16" fill="url(#sprout-grad)"/>
+  <path d="M20 35C20 27.8203 25.8203 22 33 22V22C40.1797 22 46 27.8203 46 35V35" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <path d="M33 22V46" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <path d="M33 30C29 30 26 27.5 24.5 24C28 24 31.5 25.5 33 30Z" fill="white"/>
+  <path d="M33 30C37 30 40 27.5 41.5 24C38 24 34.5 25.5 33 30Z" fill="white"/>
+</svg>

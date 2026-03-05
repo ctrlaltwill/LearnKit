@@ -47,7 +47,7 @@ export default defineConfig({
   },
   themeConfig: {
     siteTitle: "Sprout Docs",
-    logo: "/avatar.png",
+    logo: "/sprout-mark.svg",
     nav: [
       { text: "Docs", link: "/" },
       { text: "GitHub", link: "https://github.com/ctrlaltwill/Sprout" },
