@@ -46,6 +46,11 @@
   color: var(--sprout-ink);
 }
 
+.VPHome .VPHero .image-src {
+  transform: scale(1.1);
+  transform-origin: center;
+}
+
 .VPFeature .box {
   border: 1px solid rgba(var(--sprout-primary-rgb), 0.2);
   background: linear-gradient(180deg, #ffffff 0%, #faf7ff 100%);

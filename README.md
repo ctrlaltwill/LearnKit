@@ -48,20 +48,6 @@ Sprout is an Obsidian plugin for writing flashcards directly inside Markdown not
 - Markdown-first workflow with note-linked cards
 - Reading view customisation to keep your notes clean
 
-## Planned enhancements
-
-1. Enhanced reading view customisation
-   - Greater control over how cards appear in reading mode, helping your notes stay clean and distraction-free.
-
-2. Customisable homepage
-   - Configure your study dashboard so the information you care about is always front and centre.
-
-3. Plugin localisation
-   - Translations to make Sprout accessible to learners worldwide.
-
-4. Improved mobile experience
-   - Faster, smoother studying designed specifically for mobile workflows.
-
 ## Feature highlights
 
 ![Sprout Banner Two - Rich Card Types](site/branding/Banner%20Two%20-%20Rich%20Card%20Types.png)
