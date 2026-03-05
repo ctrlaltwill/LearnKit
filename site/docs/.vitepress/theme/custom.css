@@ -46,12 +46,6 @@
   color: var(--sprout-ink);
 }
 
-.VPHome .VPHero .image-src {
-  width: 100%;
-  max-width: 100%;
-  height: auto;
-}
-
 .VPFeatures .VPFeature {
   background-color: transparent;
   border-color: transparent;
