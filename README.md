@@ -61,6 +61,7 @@ Sprout is an Obsidian plugin for writing flashcards directly inside Markdown not
 ## License
 
 Sprout is released under the **MIT License**.   
+FSRS scheduling in Sprout is powered by [open-spaced-repetition/ts-fsrs](https://github.com/open-spaced-repetition/ts-fsrs).  
 It also uses Circle Flags assets from [HatScripts/circle-flags](https://github.com/HatScripts/circle-flags), licensed under MIT.  
 
 See the [full license](LICENSE) for complete details.  
