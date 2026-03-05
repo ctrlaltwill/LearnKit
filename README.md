@@ -33,9 +33,9 @@ Sprout is an Obsidian plugin for writing flashcards directly inside Markdown not
 
 💡 Need help in-app? Open the built-in Sprout guide inside Obsidian.
 
-📖 Prefer online docs? **[Full Documentation & Guides →](https://ctrlaltwill.github.io/Sprout/)**
+📖 Prefer online docs? **[Full Documentation & Support →](https://ctrlaltwill.github.io/Sprout/)**
 
-🤝 Want to contribute or help translate Sprout? See the [Contributing Guide](CONTRIBUTING.md).
+🌐 Want to contribute or help translate Sprout? See the **[Contributing Guide →](CONTRIBUTING.md)**
 
 ## Key features
 
@@ -58,10 +58,14 @@ Sprout is an Obsidian plugin for writing flashcards directly inside Markdown not
 ![Sprout Banner Seven - Card Creation](site/branding/Banner%20Seven%20-%20Card%20Creation.png)
 ![Sprout Banner Eight - Reminders & Gatekeeper](site/branding/Banner%20Eight%20-%20Reminders%20%26%20Gatekeeper.png)
 
-## License
+## License & Credits
 
-Sprout is released under the **MIT License**.   
-FSRS scheduling in Sprout is powered by [open-spaced-repetition/ts-fsrs](https://github.com/open-spaced-repetition/ts-fsrs).  
-It also uses Circle Flags assets from [HatScripts/circle-flags](https://github.com/HatScripts/circle-flags), licensed under MIT.  
+Sprout is released under the **MIT License**.
 
-See the [full license](LICENSE) for complete details.  
+FSRS scheduling in Sprout is powered by [open-spaced-repetition/ts-fsrs](https://github.com/open-spaced-repetition/ts-fsrs).
+
+This project also uses Circle Flags assets from [HatScripts/circle-flags](https://github.com/HatScripts/circle-flags), licensed under MIT.
+
+Thanks to the maintainers and contributors of these open-source projects.
+
+See the [full license](LICENSE) for more details.
