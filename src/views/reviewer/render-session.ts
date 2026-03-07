@@ -8,6 +8,7 @@
 
 import { refreshAOS } from "../../platform/core/aos-loader";
 import { log } from "../../platform/core/logger";
+import { createOqReorderPreviewController } from "../../platform/core/oq-reorder-preview";
 import { setCssProps } from "../../platform/core/ui";
 import { applyInlineMarkdown } from "../../platform/integrations/anki/anki-mapper";
 import { setIcon } from "obsidian";
@@ -191,7 +192,7 @@ function makeTextButton(opts: {
   btn.type = "button";
   btn.className = opts.className.split(/\s+/).includes("bc") ? opts.className : `bc ${opts.className}`;
   btn.textContent = opts.label;
-  btn.setAttribute("data-tooltip", opts.title || opts.label);
+  btn.setAttribute("aria-label", opts.title || opts.label);
   btn.setAttribute("data-tooltip-position", "top");
 
   btn.addEventListener("click", (e) => {
@@ -352,7 +353,7 @@ function makeHeaderMenu(opts: {
   trigger.setAttribute("aria-haspopup", "menu");
   trigger.setAttribute("aria-controls", `${id}-menu`);
   trigger.setAttribute("aria-expanded", "false");
-  trigger.setAttribute("data-tooltip", tx("ui.reviewer.more.tooltip", "More actions"));
+  trigger.setAttribute("aria-label", tx("ui.reviewer.more.tooltip", "More actions"));
   if (opts.compactTrigger) {
     trigger.classList.add("sprout-review-more-icon-btn");
     trigger.setAttribute("aria-label", tx("ui.reviewer.more.tooltip", "More actions"));
@@ -678,7 +679,7 @@ function renderMcqContent(ctx: CardRenderCtx): void {
           // Reset empty-attempt counter when selection changes
           if (multiSelected.size > 0) {
             delete submitBtn.dataset.emptyAttempt;
-            submitBtn.removeAttribute("data-tooltip");
+            submitBtn.removeAttribute("aria-label");
             submitBtn.classList.remove("sprout-mcq-submit-tooltip-visible");
           }
         }
@@ -723,7 +724,7 @@ function renderMcqContent(ctx: CardRenderCtx): void {
         }, { once: true });
         // Show tooltip on second empty attempt
         if (submitBtn.dataset.emptyAttempt === "1") {
-          submitBtn.setAttribute("data-tooltip", t(args.interfaceLanguage, "ui.reviewer.mcq.chooseOne", "Choose at least one answer to proceed"));
+          submitBtn.setAttribute("aria-label", t(args.interfaceLanguage, "ui.reviewer.mcq.chooseOne", "Choose at least one answer to proceed"));
           submitBtn.setAttribute("data-tooltip-position", "top");
           submitBtn.classList.add("sprout-mcq-submit-tooltip-visible");
           setTimeout(() => {
@@ -763,19 +764,46 @@ function renderOqContent(ctx: CardRenderCtx): void {
     listWrap.className = "bc flex flex-col gap-2 sprout-oq-step-list";
     section.appendChild(listWrap);
 
+    const previewController = createOqReorderPreviewController(listWrap);
+
+    const commitReorder = (fromIdx: number, toIdx: number) => {
+      if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return;
+      const item = currentOrder[fromIdx];
+      currentOrder.splice(fromIdx, 1);
+      currentOrder.splice(toIdx, 0, item);
+      // Also update the session order map
+      const oqMap = ensureOqOrderMap(args.session);
+      oqMap[String(card.id)] = currentOrder.slice();
+      renderSteps();
+    };
+
+    listWrap.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+      previewController.updatePointer(e.clientY);
+    });
+
+    listWrap.addEventListener("drop", (e) => {
+      e.preventDefault();
+      const pending = previewController.getPendingMove();
+      previewController.endDrag();
+      if (!pending) return;
+      commitReorder(pending.fromIdx, pending.toIdx);
+    });
+
     const renderSteps = () => {
       listWrap.innerHTML = "";
       currentOrder.forEach((origIdx, displayIdx) => {
         const stepText = steps[origIdx] || "";
         const row = document.createElement("div");
         row.className = "bc flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 sprout-oq-step-row";
-        row.draggable = false;
+        row.draggable = true;
         row.dataset.oqIdx = String(displayIdx);
 
         // Grip handle
         const grip = document.createElement("span");
         grip.className = "bc sprout-oq-grip inline-flex items-center justify-center text-muted-foreground cursor-grab";
-        grip.draggable = true;
+        grip.draggable = false;
         setIcon(grip, "grip-vertical");
         row.appendChild(grip);
 
@@ -796,132 +824,46 @@ function renderOqContent(ctx: CardRenderCtx): void {
         row.appendChild(textEl);
 
         // ── Drag and drop ──
-        let dragOffset = 44;
         row.addEventListener("dragstart", (e) => {
-          listWrap.classList.add("sprout-oq-drag-active");
-          if (e.dataTransfer) {
-            e.dataTransfer.effectAllowed = "move";
-            e.dataTransfer.setData("text/plain", String(displayIdx));
-          }
-          row.classList.add("sprout-oq-row-dragging");
-          const allStepRows = listWrap.querySelectorAll<HTMLElement>(".sprout-oq-step-row");
-          const first = allStepRows[0];
-          if (first) {
-            const gap = parseFloat(getComputedStyle(listWrap).rowGap || "0");
-            dragOffset = Math.round(first.getBoundingClientRect().height + gap);
-          }
-          allStepRows.forEach((r) => {
-            r.classList.add("sprout-oq-row-anim");
-            setCssProps(r, "--sprout-oq-translate", "0px");
+          previewController.beginDrag({
+            fromIdx: displayIdx,
+            row,
+            dataTransfer: e.dataTransfer,
+            setDragImage: true,
           });
         });
 
         row.addEventListener("dragend", () => {
-          listWrap.classList.remove("sprout-oq-drag-active");
-          row.classList.remove("sprout-oq-row-dragging");
-          const allStepRows = listWrap.querySelectorAll<HTMLElement>(".sprout-oq-step-row");
-          allStepRows.forEach((r) => {
-            setCssProps(r, "--sprout-oq-translate", "0px");
-            r.classList.remove("sprout-oq-row-anim");
-          });
-        });
-
-        row.addEventListener("dragover", (e) => {
-          e.preventDefault();
-          if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-
-          const fromStr = e.dataTransfer?.getData("text/plain");
-          const fromIdx = fromStr ? Number(fromStr) : -1;
-          if (fromIdx === -1 || fromIdx === displayIdx) return;
-
-          const allStepRows = listWrap.querySelectorAll<HTMLElement>(".sprout-oq-step-row");
-          allStepRows.forEach((r, idx) => {
-            if (idx === fromIdx) {
-              setCssProps(r, "--sprout-oq-translate", `${(displayIdx - fromIdx) * dragOffset}px`);
-            } else {
-              let offset = 0;
-              if (fromIdx < displayIdx) {
-                if (idx > fromIdx && idx <= displayIdx) offset = -dragOffset;
-              } else {
-                if (idx >= displayIdx && idx < fromIdx) offset = dragOffset;
-              }
-              setCssProps(r, "--sprout-oq-translate", `${offset}px`);
-            }
-          });
-        });
-
-        row.addEventListener("drop", (e) => {
-          e.preventDefault();
-          const fromIdx = Number(e.dataTransfer?.getData("text/plain") || "-1");
-          if (fromIdx === -1 || fromIdx === displayIdx) return;
-          const allStepRows = listWrap.querySelectorAll<HTMLElement>(".sprout-oq-step-row");
-          allStepRows.forEach((r) => setCssProps(r, "--sprout-oq-translate", "0px"));
-          const item = currentOrder[fromIdx];
-          currentOrder.splice(fromIdx, 1);
-          currentOrder.splice(displayIdx, 0, item);
-          // Also update the session order map
-          const oqMap = ensureOqOrderMap(args.session);
-          oqMap[String(card.id)] = currentOrder.slice();
-          renderSteps();
+          previewController.endDrag();
         });
 
         // Touch drag support for mobile
-        let touchStartY = 0;
-        let touchCurrentIdx = displayIdx;
         row.addEventListener("touchstart", (e) => {
           const touch = e.touches[0];
           if (!touch) return;
-          listWrap.classList.add("sprout-oq-drag-active");
-          touchStartY = touch.clientY;
-          touchCurrentIdx = displayIdx;
-          row.classList.add("sprout-oq-row-dragging");
+          previewController.beginDrag({
+            fromIdx: displayIdx,
+            row,
+          });
+          previewController.updatePointer(touch.clientY);
         }, { passive: true });
 
         row.addEventListener("touchmove", (e) => {
           const touch = e.touches[0];
           if (!touch) return;
           e.preventDefault();
-          const deltaY = touch.clientY - touchStartY;
-          const moveSteps = Math.round(deltaY / dragOffset);
-          const targetIdx = Math.max(0, Math.min(currentOrder.length - 1, displayIdx + moveSteps));
-
-          const allStepRows = listWrap.querySelectorAll<HTMLElement>(".sprout-oq-step-row");
-          allStepRows.forEach((r, idx) => {
-            if (idx === displayIdx) {
-              setCssProps(r, "--sprout-oq-translate", `${(targetIdx - displayIdx) * dragOffset}px`);
-            } else {
-              let offset = 0;
-              if (displayIdx < targetIdx) {
-                if (idx > displayIdx && idx <= targetIdx) offset = -dragOffset;
-              } else {
-                if (idx >= targetIdx && idx < displayIdx) offset = dragOffset;
-              }
-              setCssProps(r, "--sprout-oq-translate", `${offset}px`);
-            }
-          });
-          touchCurrentIdx = targetIdx;
+          previewController.updatePointer(touch.clientY);
         }, { passive: false });
 
         row.addEventListener("touchend", () => {
-          listWrap.classList.remove("sprout-oq-drag-active");
-          row.classList.remove("sprout-oq-row-dragging");
-          const allStepRows = listWrap.querySelectorAll<HTMLElement>(".sprout-oq-step-row");
-          allStepRows.forEach((r) => {
-            setCssProps(r, "--sprout-oq-translate", "0px");
-            r.classList.remove("sprout-oq-row-anim");
-          });
-          if (touchCurrentIdx !== displayIdx) {
-            const item = currentOrder[displayIdx];
-            currentOrder.splice(displayIdx, 1);
-            currentOrder.splice(touchCurrentIdx, 0, item);
-            const oqMap = ensureOqOrderMap(args.session);
-            oqMap[String(card.id)] = currentOrder.slice();
-            renderSteps();
-          }
+          const pending = previewController.getPendingMove();
+          previewController.endDrag();
+          if (!pending) return;
+          commitReorder(pending.fromIdx, pending.toIdx);
         });
 
         row.addEventListener("touchcancel", () => {
-          listWrap.classList.remove("sprout-oq-drag-active");
+          previewController.endDrag();
         });
 
         listWrap.appendChild(row);
@@ -1059,7 +1001,7 @@ export function renderSessionMode(args: Args) {
   const quitBtn = document.createElement("button");
   quitBtn.type = "button";
   quitBtn.className = "bc btn-icon sprout-quit-btn";
-  quitBtn.setAttribute("data-tooltip", tx("ui.reviewer.session.quit", "Quit study session"));
+  quitBtn.setAttribute("aria-label", tx("ui.reviewer.session.quit", "Quit study session"));
   const quitSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   quitSvg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
   quitSvg.setAttribute("width", "20");
@@ -1262,7 +1204,7 @@ export function renderSessionMode(args: Args) {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "bc btn-icon sprout-tts-replay-btn";
-      btn.setAttribute("data-tooltip", `Read ${text.toLowerCase()} aloud`);
+      btn.setAttribute("aria-label", `Read ${text.toLowerCase()} aloud`);
       btn.setAttribute("data-tooltip-position", "top");
       const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
       svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");

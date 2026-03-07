@@ -197,7 +197,15 @@
 
 .sprout-deck-row {
   height: 42px;
+  margin-top: 0;
+  margin-bottom: 0;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sprout-deck-drag-active,
+.sprout-deck-drag-active * {
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .sprout-deck-row:hover {
@@ -226,10 +234,22 @@
   z-index: 10;
 }
 
+.sprout-deck-row-dragging.sprout-deck-row-dragging-native {
+  opacity: 0.04;
+}
+
 .sprout-deck-row-anim {
   position: relative;
   transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   transform: translateY(var(--sprout-deck-row-translate, 0px));
+}
+
+.sprout-deck-row.sprout-deck-slot-before {
+  margin-top: 8px;
+}
+
+.sprout-deck-row.sprout-deck-slot-after {
+  margin-bottom: 8px;
 }
 
 /* ---- Trend badge ---- */

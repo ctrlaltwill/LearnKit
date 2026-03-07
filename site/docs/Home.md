@@ -46,6 +46,13 @@ See [Study Sessions](./Study-Sessions.md), [Scheduling](./Scheduling.md), and [G
 - [Reading View](./Reading-View.md) for reviewing extracted content
 - [Flags](./Flags.md) for inline circle-flag tokens in card text
 
+## Study assistant (Sprig)
+
+- [Setting Up](./Assistant-Setting-Up.md) for API key and safety setup
+- [Configuration](./Assistant-Configuration.md) for provider and mode options
+- [Usage](./Assistant-Usage.md) for Ask, Review, and Generate workflows
+- [AI Usage Policy](./AI-Usage-Policy.md) for privacy, data handling, and risk guidance
+
 ## Important notes
 
 - If card syntax is invalid, the card is quarantined until fixed.

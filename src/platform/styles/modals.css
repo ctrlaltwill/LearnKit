@@ -155,6 +155,21 @@
   line-height: 1.5 !important;
 }
 
+/* Quick edit modal field baselines */
+.sprout .sprout-edit-modal .sprout-edit-field-title.input {
+  min-height: 4.5rem !important;
+  height: 4.5rem !important;
+}
+
+.sprout .sprout-edit-modal .sprout-edit-field-question.textarea,
+.sprout .sprout-edit-modal .sprout-edit-field-answer.textarea {
+  min-height: 4.5rem !important;
+}
+
+.sprout .sprout-edit-modal .sprout-edit-field-info.textarea {
+  min-height: 4.5rem !important;
+}
+
 /* Input and textarea focus styles */
 .sprout .sprout-modals.modal .input:focus,
 .sprout .sprout-modals.modal select.input:focus,

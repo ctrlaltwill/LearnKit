@@ -211,7 +211,7 @@ export class CardCreatorModal extends Modal {
       if (type === "reversed") return "Basic (Reversed)";
       if (type === "cloze") return "Cloze";
       if (type === "mcq") return "Multiple choice";
-      if (type === "oq") return "Ordered question";
+      if (type === "oq") return "Ordered Question";
       return "Basic";
     };
     const isTypeMenuOption = (type: CardType) => type === "basic" || type === "reversed" || type === "cloze" || type === "mcq" || type === "oq";
@@ -275,7 +275,7 @@ export class CardCreatorModal extends Modal {
       { value: "reversed", label: "Basic (Reversed)" },
       { value: "cloze", label: this.tx("ui.cardCreator.type.cloze", "Cloze") },
       { value: "mcq", label: this.tx("ui.cardCreator.type.multipleChoiceTitle", "Multiple Choice") },
-      { value: "oq", label: "Ordered question" },
+      { value: "oq", label: "Ordered Question" },
     ];
 
     updateTypeMenuLabel = () => {
@@ -610,14 +610,14 @@ export class CardCreatorModal extends Modal {
     // ── Footer buttons ──────────────────────────────────────────────────────
     const footer = modalRoot.createDiv({ cls: "bc flex items-center justify-end gap-4 sprout-modal-footer" });
 
-    const cancelBtn = footer.createEl("button", { cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm", attr: { "data-tooltip": "Cancel" } });
+    const cancelBtn = footer.createEl("button", { cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm", attr: { "aria-label": "Cancel" } });
     cancelBtn.type = "button";
     const cancelIcon = cancelBtn.createEl("span", { cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
     setIcon(cancelIcon, "x");
     cancelBtn.createSpan({ text: common.cancel });
     cancelBtn.onclick = () => this.close();
 
-    const addBtn = footer.createEl("button", { cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm", attr: { "data-tooltip": "Add card to the active note" } });
+    const addBtn = footer.createEl("button", { cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm", attr: { "aria-label": "Add card to the active note" } });
     addBtn.type = "button";
     const addIcon = addBtn.createEl("span", { cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
     setIcon(addIcon, "plus");

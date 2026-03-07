@@ -215,17 +215,19 @@ export class CardEditModal extends Modal {
       return input;
     };
 
-    const mkTextarea = (value: string, rows = 4) => {
+    const mkTextarea = (value: string, rows = 4, extraClass = "") => {
       const ta = contentEl.createEl("textarea");
       ta.value = value || "";
       ta.rows = rows;
       ta.classList.add("textarea", "w-full", "sprout-textarea-fixed");
+      if (extraClass) ta.classList.add(extraClass);
       return ta;
     };
 
     // ---- Title (always first) ----
     mkSectionTitle(contentEl, tx("ui.reviewer.cardEditor.field.title", "Title"));
     const titleEl = mkInput(String((this.card).title || ""));
+    titleEl.classList.add("sprout-edit-field-title");
 
     // ---- Per-type fields ----
     let qEl: HTMLTextAreaElement | null = null;
@@ -305,10 +307,10 @@ export class CardEditModal extends Modal {
 
     if (type === "cloze") {
       mkSectionTitle(contentEl, tx("ui.reviewer.cardEditor.field.cloze", "Cloze"));
-      clozeEl = mkTextarea(String((this.card).clozeText || ""), 5);
+      clozeEl = mkTextarea(String((this.card).clozeText || ""), 5, "sprout-edit-field-question");
 
       mkSectionTitle(contentEl, tx("ui.reviewer.cardEditor.field.extraInfo", "Extra information"));
-      const infoEl = mkTextarea(String((this.card).info || ""), 4);
+      const infoEl = mkTextarea(String((this.card).info || ""), 4, "sprout-edit-field-info");
 
       this.renderButtons(type, titleEl, {
         clozeEl,
@@ -323,13 +325,13 @@ export class CardEditModal extends Modal {
 
     if (type === "basic" || type === "reversed") {
       mkSectionTitle(contentEl, tx("ui.reviewer.cardEditor.field.question", "Question"));
-      qEl = mkTextarea(String((this.card).q || ""), 4);
+      qEl = mkTextarea(String((this.card).q || ""), 4, "sprout-edit-field-question");
 
       mkSectionTitle(contentEl, tx("ui.reviewer.cardEditor.field.answer", "Answer"));
-      aEl = mkTextarea(String((this.card).a || ""), 4);
+      aEl = mkTextarea(String((this.card).a || ""), 4, "sprout-edit-field-answer");
 
       mkSectionTitle(contentEl, tx("ui.reviewer.cardEditor.field.extraInfo", "Extra information"));
-      const infoEl = mkTextarea(String((this.card).info || ""), 4);
+      const infoEl = mkTextarea(String((this.card).info || ""), 4, "sprout-edit-field-info");
 
       this.renderButtons(type, titleEl, {
         qEl,
@@ -344,7 +346,7 @@ export class CardEditModal extends Modal {
 
     if (type === "oq") {
       mkSectionTitle(contentEl, tx("ui.reviewer.cardEditor.field.question", "Question"));
-      qEl = mkTextarea(String((this.card).q || ""), 4);
+      qEl = mkTextarea(String((this.card).q || ""), 4, "sprout-edit-field-question");
 
       mkSectionTitle(contentEl, tx("ui.reviewer.cardEditor.field.stepsCorrectOrder", "Steps (correct order)"));
 
@@ -455,7 +457,7 @@ export class CardEditModal extends Modal {
       };
 
       mkSectionTitle(contentEl, tx("ui.reviewer.cardEditor.field.extraInfo", "Extra information"));
-      const infoEl = mkTextarea(String((this.card).info || ""), 4);
+      const infoEl = mkTextarea(String((this.card).info || ""), 4, "sprout-edit-field-info");
 
       this.renderButtons(type, titleEl, {
         qEl,
@@ -471,7 +473,7 @@ export class CardEditModal extends Modal {
 
     // MCQ
     mkSectionTitle(contentEl, tx("ui.reviewer.cardEditor.field.question", "Question"));
-    mcqStemEl = mkTextarea(String((this.card).stem || ""), 4);
+    mcqStemEl = mkTextarea(String((this.card).stem || ""), 4, "sprout-edit-field-question");
 
     mkSectionTitle(contentEl, tx("ui.reviewer.cardEditor.field.options", "Options"));
 
@@ -494,7 +496,7 @@ export class CardEditModal extends Modal {
     plusBtn.onclick = () => addMcqOptionRow("", false);
 
     mkSectionTitle(contentEl, tx("ui.reviewer.cardEditor.field.extraInfo", "Extra information"));
-    const infoEl = mkTextarea(String((this.card).info || ""), 4);
+    const infoEl = mkTextarea(String((this.card).info || ""), 4, "sprout-edit-field-info");
 
     this.renderButtons(type, titleEl, {
       qEl: null,

@@ -51,6 +51,9 @@
 /* 14. Widget — root transparency, buttons, badges, cloze */
 @import "./widget.css";
 
+/* 14a. Study Assistant — dedicated panel/chat styles */
+@import "./study-assistant.css";
+
 /* 15. Settings — backup grid rows, table wrapper, cell labels */
 @import "./settings.css";
 

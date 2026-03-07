@@ -429,7 +429,7 @@ export function createModalMcqSection() {
   label.textContent = "Answers and options";
   const mcqInfoIcon = document.createElement("span");
   mcqInfoIcon.className = "bc inline-flex items-center justify-center [&_svg]:size-3 text-muted-foreground sprout-info-icon-elevated";
-  mcqInfoIcon.setAttribute("data-tooltip", "Check the box next to each correct answer. At least one correct and one incorrect option required.");
+  mcqInfoIcon.setAttribute("aria-label", "Check the box next to each correct answer. At least one correct and one incorrect option required.");
   mcqInfoIcon.setAttribute("data-tooltip-position", "top");
   setIcon(mcqInfoIcon, "info");
   label.appendChild(mcqInfoIcon);
@@ -459,7 +459,7 @@ export function createModalMcqSection() {
     checkbox.type = "checkbox";
     checkbox.checked = isCorrect;
     checkbox.className = "bc sprout-mcq-correct-checkbox";
-    checkbox.setAttribute("data-tooltip", "Mark as correct answer");
+    checkbox.setAttribute("aria-label", "Mark as correct answer");
     checkbox.setAttribute("data-tooltip-position", "top");
     row.appendChild(checkbox);
 
@@ -473,7 +473,7 @@ export function createModalMcqSection() {
     const removeBtn = document.createElement("button");
     removeBtn.type = "button";
     removeBtn.className = "bc inline-flex items-center justify-center h-9 w-9 p-0 sprout-remove-btn-ghost";
-    removeBtn.setAttribute("data-tooltip", "Remove option");
+    removeBtn.setAttribute("aria-label", "Remove option");
     removeBtn.setAttribute("data-tooltip-position", "top");
     const xIcon = document.createElement("span");
     xIcon.className = "bc inline-flex items-center justify-center [&_svg]:size-4";
@@ -610,7 +610,7 @@ export function createThemedDropdown(
     buttonJustify === "between" ? "justify-between" : "",
     config?.buttonClassName ?? "",
   ].filter(Boolean).join(" ");
-  btn.setAttribute("data-tooltip", "Open menu");
+  btn.setAttribute("aria-label", "Open menu");
   btn.setAttribute("data-tooltip-position", "top");
   btn.setAttribute("aria-haspopup", "menu");
   btn.setAttribute("aria-expanded", "false");

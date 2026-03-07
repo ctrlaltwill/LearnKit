@@ -64,7 +64,7 @@ export function renderPagination(
     b.className = active ? "btn" : "btn-outline";
     b.classList.add(..."h-8 px-2".split(" "));
     b.textContent = label;
-    b.setAttribute("data-tooltip", tooltip);
+    b.setAttribute("aria-label", tooltip);
     b.setAttribute("data-tooltip-position", "top");
     b.disabled = disabled;
     if (active) b.setAttribute("aria-current", "page");
@@ -82,7 +82,7 @@ export function renderPagination(
     b.type = "button";
     b.className = "btn-outline h-8 px-2";
     b.textContent = "…";
-    b.setAttribute("data-tooltip", tx("ui.browser.pagination.pageN", "Page {page}", { page: targetPage }));
+    b.setAttribute("aria-label", tx("ui.browser.pagination.pageN", "Page {page}", { page: targetPage }));
     b.setAttribute("data-tooltip-position", "top");
     b.addEventListener("click", (ev) => {
       ev.preventDefault();
@@ -108,7 +108,7 @@ export function renderPagination(
   prev.type = "button";
   prev.className = "btn-outline";
   prev.classList.add(..."h-8 px-2".split(" "));
-  prev.setAttribute("data-tooltip", tx("ui.browser.pagination.prevPage", "Previous page"));
+  prev.setAttribute("aria-label", tx("ui.browser.pagination.prevPage", "Previous page"));
   prev.setAttribute("data-tooltip-position", "top");
   prev.disabled = pageIndex <= 0;
   prev.addEventListener("click", (ev) => {
@@ -169,7 +169,7 @@ export function renderPagination(
   next.type = "button";
   next.className = "btn-outline";
   next.classList.add(..."h-8 px-2".split(" "));
-  next.setAttribute("data-tooltip", tx("ui.browser.pagination.nextPage", "Next page"));
+  next.setAttribute("aria-label", tx("ui.browser.pagination.nextPage", "Next page"));
   next.setAttribute("data-tooltip-position", "top");
   next.disabled = pageIndex >= totalPagesLocal - 1;
   next.addEventListener("click", (ev) => {

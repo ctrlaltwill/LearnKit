@@ -85,7 +85,7 @@ export class SproutWidgetView extends ItemView {
   }
 
   getDisplayText() {
-    return "Sprout";
+    return "Open study widget";
   }
 
   getIcon() {
@@ -504,7 +504,7 @@ export class SproutWidgetView extends ItemView {
               submitBtnEl.classList.remove("sprout-mcq-submit-shake");
             }, { once: true });
             if (submitBtnEl.dataset.emptyAttempt === "1") {
-              submitBtnEl.setAttribute("data-tooltip", "Choose at least one answer to proceed");
+              submitBtnEl.setAttribute("aria-label", "Choose at least one answer to proceed");
               submitBtnEl.setAttribute("data-tooltip-position", "top");
               submitBtnEl.classList.add("sprout-mcq-submit-tooltip-visible");
               setTimeout(() => {

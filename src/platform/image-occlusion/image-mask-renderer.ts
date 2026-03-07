@@ -329,7 +329,7 @@ export class ImageOcclusionEditorModal extends Modal {
       cls: "bc btn-icon-ghost",
       attr: {
         type: "button",
-        "data-tooltip": "What does the group field do?",
+        "aria-label": "What does the group field do?",
         title:
           "Group sets which rectangles are hidden together.\nSelect a rectangle, then edit this field to change its group.",
       },
@@ -341,7 +341,7 @@ export class ImageOcclusionEditorModal extends Modal {
 
     this.btnDelete = toolbar.createEl("button", {
       cls: "bc btn-icon-ghost",
-      attr: { type: "button", "data-tooltip": "Delete selected occlusion" },
+      attr: { type: "button", "aria-label": "Delete selected occlusion" },
     });
     {
       const ico = this.btnDelete.createSpan({ cls: "bc sprout-io-ico" });
@@ -379,7 +379,7 @@ export class ImageOcclusionEditorModal extends Modal {
 
     this.btnZoomIn = canvasControls.createEl("button", {
       cls: "bc btn-icon-outline",
-      attr: { type: "button", "data-tooltip": "Zoom in" },
+      attr: { type: "button", "aria-label": "Zoom in" },
     });
     {
       const ico = this.btnZoomIn.createSpan({ cls: "bc sprout-io-ico" });
@@ -389,7 +389,7 @@ export class ImageOcclusionEditorModal extends Modal {
 
     this.btnZoomOut = canvasControls.createEl("button", {
       cls: "bc btn-icon-outline",
-      attr: { type: "button", "data-tooltip": "Zoom out" },
+      attr: { type: "button", "aria-label": "Zoom out" },
     });
     {
       const ico = this.btnZoomOut.createSpan({ cls: "bc sprout-io-ico" });
@@ -399,7 +399,7 @@ export class ImageOcclusionEditorModal extends Modal {
 
     this.btnFit = canvasControls.createEl("button", {
       cls: "bc btn-icon-outline",
-      attr: { type: "button", "data-tooltip": "Fit" },
+      attr: { type: "button", "aria-label": "Fit" },
     });
     {
       const ico = this.btnFit.createSpan({ cls: "bc sprout-io-ico" });

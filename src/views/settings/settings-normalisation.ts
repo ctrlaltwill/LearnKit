@@ -17,6 +17,25 @@ import { resolveInterfaceLocale } from "../../platform/translations/locale-regis
  * clamp numeric ranges, and remove legacy scheduling keys.
  */
 export function normaliseSettingsInPlace(s: SproutSettings): void {
+  const LEGACY_ASSISTANT_PROMPT = "You are a helpful study assistant. Answer using only the provided note context where possible.";
+  const LEGACY_OPENAI_MODEL_MAP: Record<string, string> = {
+    "gpt-5.4": "gpt-5",
+    "gpt-5.4 pro": "gpt-5",
+    "gpt-5 mini": "gpt-5-mini",
+    "gpt-5": "gpt-5",
+    "gpt-4.1": "gpt-4.1",
+  };
+  const LEGACY_ANTHROPIC_MODEL_MAP: Record<string, string> = {
+    "opus 4.6": "claude-opus-4-1",
+    "sonnet 4.6": "claude-sonnet-4-5",
+    "haiku 4.5": "claude-3-5-haiku-latest",
+  };
+  const LEGACY_GROQ_MODEL_MAP: Record<string, string> = {
+    "grok-4-0709": "llama-3.3-70b-versatile",
+    "grok-4-1-fast-reasoning": "deepseek-r1-distill-llama-70b",
+    "grok-4-1-fast-non-reasoning": "llama-3.1-8b-instant",
+  };
+
   s.scheduling ??= {} as SproutSettings["scheduling"];
   s.general ??= {} as SproutSettings["general"];
   s.general.enableReadingStyles ??= DEFAULT_SETTINGS.general.enableReadingStyles;
@@ -31,6 +50,86 @@ export function normaliseSettingsInPlace(s: SproutSettings): void {
     1.8,
   );
   s.general.githubStars ??= { count: null, fetchedAt: null };
+
+  s.studyAssistant ??= {} as SproutSettings["studyAssistant"];
+  s.studyAssistant.enabled ??= DEFAULT_SETTINGS.studyAssistant.enabled;
+  const provider = String(s.studyAssistant.provider ?? DEFAULT_SETTINGS.studyAssistant.provider);
+  s.studyAssistant.provider =
+    provider === "openai" || provider === "anthropic" || provider === "deepseek" || provider === "groq" || provider === "custom"
+      ? provider
+      : DEFAULT_SETTINGS.studyAssistant.provider;
+  s.studyAssistant.model = String(s.studyAssistant.model ?? DEFAULT_SETTINGS.studyAssistant.model).trim();
+  if (s.studyAssistant.provider === "openai") {
+    const mapped = LEGACY_OPENAI_MODEL_MAP[s.studyAssistant.model.toLowerCase()];
+    if (mapped) s.studyAssistant.model = mapped;
+  } else if (s.studyAssistant.provider === "anthropic") {
+    const mapped = LEGACY_ANTHROPIC_MODEL_MAP[s.studyAssistant.model.toLowerCase()];
+    if (mapped) s.studyAssistant.model = mapped;
+  } else if (s.studyAssistant.provider === "groq") {
+    const mapped = LEGACY_GROQ_MODEL_MAP[s.studyAssistant.model.toLowerCase()];
+    if (mapped) s.studyAssistant.model = mapped;
+  }
+  s.studyAssistant.endpointOverride = String(
+    s.studyAssistant.endpointOverride ?? DEFAULT_SETTINGS.studyAssistant.endpointOverride,
+  ).trim();
+  // Strip obviously invalid endpoint overrides at normalisation time
+  if (s.studyAssistant.endpointOverride && !/^https?:\/\//i.test(s.studyAssistant.endpointOverride)) {
+    s.studyAssistant.endpointOverride = "";
+  }
+  s.studyAssistant.apiKeys ??= { ...DEFAULT_SETTINGS.studyAssistant.apiKeys };
+  s.studyAssistant.apiKeys.openai = String(
+    s.studyAssistant.apiKeys.openai ?? DEFAULT_SETTINGS.studyAssistant.apiKeys.openai,
+  );
+  s.studyAssistant.apiKeys.anthropic = String(
+    s.studyAssistant.apiKeys.anthropic ?? DEFAULT_SETTINGS.studyAssistant.apiKeys.anthropic,
+  );
+  s.studyAssistant.apiKeys.deepseek = String(
+    s.studyAssistant.apiKeys.deepseek ?? DEFAULT_SETTINGS.studyAssistant.apiKeys.deepseek,
+  );
+  s.studyAssistant.apiKeys.groq = String(
+    s.studyAssistant.apiKeys.groq ?? DEFAULT_SETTINGS.studyAssistant.apiKeys.groq,
+  );
+  s.studyAssistant.apiKeys.custom = String(
+    s.studyAssistant.apiKeys.custom ?? DEFAULT_SETTINGS.studyAssistant.apiKeys.custom,
+  );
+  s.studyAssistant.prompts ??= { ...DEFAULT_SETTINGS.studyAssistant.prompts };
+  s.studyAssistant.prompts.assistant = String(
+    s.studyAssistant.prompts.assistant ?? DEFAULT_SETTINGS.studyAssistant.prompts.assistant,
+  );
+  // Preserve user custom prompts, but transparently upgrade the legacy strict default.
+  if (s.studyAssistant.prompts.assistant.trim() === LEGACY_ASSISTANT_PROMPT) {
+    s.studyAssistant.prompts.assistant = DEFAULT_SETTINGS.studyAssistant.prompts.assistant;
+  }
+  s.studyAssistant.prompts.noteReview = String(
+    s.studyAssistant.prompts.noteReview ?? DEFAULT_SETTINGS.studyAssistant.prompts.noteReview,
+  );
+  s.studyAssistant.prompts.generator = String(
+    s.studyAssistant.prompts.generator ?? DEFAULT_SETTINGS.studyAssistant.prompts.generator,
+  );
+  s.studyAssistant.generatorTypes ??= { ...DEFAULT_SETTINGS.studyAssistant.generatorTypes };
+  s.studyAssistant.generatorTypes.basic ??= DEFAULT_SETTINGS.studyAssistant.generatorTypes.basic;
+  s.studyAssistant.generatorTypes.reversed ??= DEFAULT_SETTINGS.studyAssistant.generatorTypes.reversed;
+  s.studyAssistant.generatorTypes.cloze ??= DEFAULT_SETTINGS.studyAssistant.generatorTypes.cloze;
+  s.studyAssistant.generatorTypes.mcq ??= DEFAULT_SETTINGS.studyAssistant.generatorTypes.mcq;
+  s.studyAssistant.generatorTypes.oq ??= DEFAULT_SETTINGS.studyAssistant.generatorTypes.oq;
+  s.studyAssistant.generatorTypes.io ??= DEFAULT_SETTINGS.studyAssistant.generatorTypes.io;
+  s.studyAssistant.generatorOutput ??= { ...DEFAULT_SETTINGS.studyAssistant.generatorOutput };
+  s.studyAssistant.generatorOutput.includeTitle ??= DEFAULT_SETTINGS.studyAssistant.generatorOutput.includeTitle;
+  s.studyAssistant.generatorOutput.includeInfo ??= DEFAULT_SETTINGS.studyAssistant.generatorOutput.includeInfo;
+  s.studyAssistant.generatorOutput.includeGroups ??= DEFAULT_SETTINGS.studyAssistant.generatorOutput.includeGroups;
+  s.studyAssistant.privacy ??= { ...DEFAULT_SETTINGS.studyAssistant.privacy };
+  s.studyAssistant.privacy.autoSendOnOpen ??= DEFAULT_SETTINGS.studyAssistant.privacy.autoSendOnOpen;
+  const legacyIncludeImages =
+    (s.studyAssistant.privacy as unknown as Record<string, unknown>).includeImagesFromNote;
+  const legacyIncludeImagesBool = typeof legacyIncludeImages === "boolean" ? legacyIncludeImages : undefined;
+  s.studyAssistant.privacy.includeImagesInAsk ??=
+    legacyIncludeImagesBool ?? DEFAULT_SETTINGS.studyAssistant.privacy.includeImagesInAsk;
+  s.studyAssistant.privacy.includeImagesInReview ??=
+    legacyIncludeImagesBool ?? DEFAULT_SETTINGS.studyAssistant.privacy.includeImagesInReview;
+  s.studyAssistant.privacy.includeImagesInFlashcard ??=
+    legacyIncludeImagesBool ?? DEFAULT_SETTINGS.studyAssistant.privacy.includeImagesInFlashcard;
+  s.studyAssistant.privacy.previewPayload ??= DEFAULT_SETTINGS.studyAssistant.privacy.previewPayload;
+  s.studyAssistant.privacy.saveChatHistory ??= DEFAULT_SETTINGS.studyAssistant.privacy.saveChatHistory;
 
   s.reminders ??= {} as SproutSettings["reminders"];
   s.reminders.showOnStartup ??= DEFAULT_SETTINGS.reminders.showOnStartup;

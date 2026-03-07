@@ -49,16 +49,33 @@ Rather than separating notes and flashcards, Sprout keeps everything in one plac
 - Inline editor, card browser, and bulk edit tools
 - Markdown-first workflow with note-linked cards
 - Reading view customisation to keep your notes clean
+- Sprig AI assistant (beta) for note Q&A, review feedback, and flashcard suggestions
+
+## Sprig
+
+Sprig is your built-in AI learning assistant. It can:
+- Answer questions about your current note
+- Review notes and suggest improvements
+- Generate Sprout flashcards from your note content
+
+Sprig is currently in **beta**, so responses may vary by model and provider as the feature set is refined. A formal release is planned for v1.1. If you'd like to try it now, you can use the build in `dist`.
+
+### Bring your own API key
+
+Sprig uses a **bring your own API key** model. You connect your own provider key and pay the provider directly.
+
+This is intentional: Sprout is open source, free, and not built for profit. Instead of charging a markup, Sprig lets you use APIs at your own cost, which is cheaper and more transparent than bundled AI subscriptions from other products.
 
 ## Feature highlights
 
 ![Sprout Banner Two - Rich Card Types](site/branding/Banner%20Two%20-%20Rich%20Card%20Types.png)
 ![Sprout Banner Three - Audio Functionality](site/branding/Banner%20Three%20-%20Audio%20Functionality.png)
 ![Sprout Banner Four - FSRS Algorithm](site/branding/Banner%20Four%20-%20FSRS%20Algorithm.png)
-![Sprout Banner Five - Data Analysis](site/branding/Banner%20Five%20-%20Data%20Analysis.png)
+![Sprout Banner Five - Meet Sprig](site/branding/Banner%20Five%20-%20Meet%20Sprig.png)
 ![Sprout Banner Six - Anki Compatibility](site/branding/Banner%20Six%20-%20Anki%20Compatibility.png)
 ![Sprout Banner Seven - Card Creation](site/branding/Banner%20Seven%20-%20Card%20Creation.png)
 ![Sprout Banner Eight - Reminders & Gatekeeper](site/branding/Banner%20Eight%20-%20Reminders%20%26%20Gatekeeper.png)
+![Sprout Banner Nine - Data Analysis](site/branding/Banner%20Nine%20-%20Data%20Analysis.png)
 
 ## License & Credits
 
@@ -76,6 +93,6 @@ See [here](NOTICES.md) for additional third-party attributions and license notic
 
 ### Our Commitment 
 
-Sprout is proudly open source and will always remain free. No hidden fees. No subscriptions. No AI-generated flashcards. No internet connection required. We firmly believe learning tools shouldn’t lock your knowledge behind subscriptions. That’s why your notes and your data will always remain entirely under your control.
+Sprout is proudly open source and will always remain free. We firmly believe learning tools shouldn’t lock your knowledge behind subscriptions. That’s why your notes and your data will always remain entirely under your control.
 
 If Sprout helps your learning, then it’s doing exactly what it was built for.

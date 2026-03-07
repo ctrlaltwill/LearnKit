@@ -720,7 +720,7 @@
 }
 
 .sprout .sprout-browser-mcq-row {
-  min-height: 24px !important;
+  min-height: 32px !important;
   pointer-events: auto !important;
 }
 
@@ -731,8 +731,8 @@
 }
 
 .sprout .sprout-browser-mcq-input {
-  height: 24px !important;
-  min-height: 24px !important;
+  height: 32px !important;
+  min-height: 32px !important;
   padding: 2px 6px !important;
   font-size: var(--sprout-font-2xs) !important;
 }
@@ -753,8 +753,8 @@
 }
 
 .sprout .sprout-browser-mcq-add {
-  height: 24px !important;
-  min-height: 24px !important;
+  height: 32px !important;
+  min-height: 32px !important;
   padding: 2px 6px !important;
   font-size: var(--sprout-font-2xs) !important;
   opacity: 0.6 !important;
@@ -779,7 +779,7 @@
 }
 
 .sprout .sprout-browser-oq-row {
-  min-height: 24px !important;
+  min-height: 32px !important;
 }
 
 .sprout .sprout-browser-oq-row.sprout-oq-row-dragging {
@@ -797,8 +797,8 @@
 }
 
 .sprout .sprout-browser-oq-input {
-  height: 24px !important;
-  min-height: 24px !important;
+  height: 32px !important;
+  min-height: 32px !important;
   padding: 2px 6px !important;
   font-size: var(--sprout-font-2xs) !important;
 }
@@ -810,8 +810,8 @@
 }
 
 .sprout .sprout-browser-oq-add {
-  height: 24px !important;
-  min-height: 24px !important;
+  height: 32px !important;
+  min-height: 32px !important;
   padding: 2px 6px !important;
   font-size: var(--sprout-font-2xs) !important;
   opacity: 0.6 !important;

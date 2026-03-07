@@ -70,7 +70,7 @@ function makeIconButton(opts: {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = opts.className || "btn-outline";
-  btn.setAttribute("data-tooltip", opts.title || opts.label);
+  btn.setAttribute("aria-label", opts.title || opts.label);
   btn.setAttribute("data-tooltip-position", "top");
 
   const iconWrap = document.createElement("span");
@@ -97,7 +97,7 @@ function makeDisclosureChevron(isOpen: boolean, onToggle: () => void, collapseLa
   btn.type = "button";
   btn.className =
     "sprout-deck-disclosure sprout-deck-disclosure-btn inline-flex items-center justify-center text-muted-foreground hover:text-foreground focus-visible:text-foreground";
-  btn.setAttribute("data-tooltip", isOpen ? collapseLabel : expandLabel);
+  btn.setAttribute("aria-label", isOpen ? collapseLabel : expandLabel);
   btn.setAttribute("data-tooltip-position", "top");
   btn.setAttribute("aria-expanded", isOpen ? "true" : "false");
   btn.dataset.open = isOpen ? "true" : "false";

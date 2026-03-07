@@ -54,6 +54,47 @@ export const DEFAULT_SETTINGS: SproutSettings = {
     treatFolderNotesAsDecks: true,
   },
 
+  studyAssistant: {
+    enabled: false,
+    provider: "openai",
+    model: "gpt-4.1-mini",
+    endpointOverride: "",
+    apiKeys: {
+      openai: "",
+      anthropic: "",
+      deepseek: "",
+      groq: "",
+      custom: "",
+    },
+    prompts: {
+      assistant: "You are a helpful study assistant. Use note context first, then supplement with clearly-labeled background knowledge when needed. If I ask for flashcards, format them as parser-compatible rows in a markdown code block and remind me that the Generate key creates context-aware cards I can insert directly.",
+      noteReview: "Review this note for correctness, clarity, and exam readiness. Suggest concrete improvements. If I ask for flashcards, format them as parser-compatible rows in a markdown code block and remind me that the Generate key creates context-aware cards I can insert directly.",
+      generator: "Generate high-quality flashcards from this note. Avoid duplicates and prioritize testable facts.",
+    },
+    generatorTypes: {
+      basic: true,
+      reversed: true,
+      cloze: true,
+      mcq: true,
+      oq: true,
+      io: true,
+    },
+    generatorTargetCount: 5,
+    generatorOutput: {
+      includeTitle: true,
+      includeInfo: true,
+      includeGroups: false,
+    },
+    privacy: {
+      autoSendOnOpen: false,
+      includeImagesInAsk: true,
+      includeImagesInReview: true,
+      includeImagesInFlashcard: true,
+      previewPayload: true,
+      saveChatHistory: true,
+    },
+  },
+
   reminders: {
     showOnStartup: false,
     startupDelayMs: 1000,

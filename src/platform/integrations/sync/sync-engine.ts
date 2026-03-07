@@ -422,22 +422,15 @@ function getBlockBounds(lines: string[], cardStartLine: number): { lo: number; h
 
 /**
  * Finds the line index where a `^sprout-*` anchor should be inserted.
- * Prefers placing it directly before the first title line (`T:` or `T|`).
+ * Places it directly before the first flashcard row in the contiguous block.
  */
 function findAnchorInsertLineIndex(lines: string[], cardStartLine: number): number {
   const { lo: blockLo, hi: blockHi } = getBlockBounds(lines, cardStartLine);
   const start = Math.max(0, Math.min(lines.length - 1, cardStartLine));
 
-  const T_RE = /^\s*T\s*(?::|\|)\s*/;
-
-  for (let i = blockLo; i < start; i++) {
+  for (let i = blockLo; i < blockHi; i++) {
     const { rest } = splitMdPrefix(lines[i] || "");
-    if (T_RE.test(rest)) return i;
-  }
-
-  for (let i = start; i < blockHi; i++) {
-    const { rest } = splitMdPrefix(lines[i] || "");
-    if (T_RE.test(rest)) return i;
+    if (looksLikeFlashcardHeader(rest)) return i;
   }
 
   return start;

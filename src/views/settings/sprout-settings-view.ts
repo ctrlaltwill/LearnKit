@@ -242,7 +242,7 @@ export class SproutSettingsView extends ItemView {
         settings: tx("ui.topTabs.tooltip.settings", "Open settings"),
       };
       const tooltip = tooltipMap[tab.id] ?? tab.label;
-      btn.setAttribute("data-tooltip", tooltip);
+      btn.setAttribute("aria-label", tooltip);
       btn.setAttribute("data-tooltip-position", "top");
 
       if (tab.icon) {
@@ -395,6 +395,12 @@ export class SproutSettingsView extends ItemView {
       const displayableAdapter = adapter as unknown as DisplayableSettingsAdapter;
       const settingsSubTabs: Array<{ id: string; label: string; paneTitle?: string; method: Exclude<RenderMethodName, "renderAboutTab" | "renderGuideTab"> }> = [
         { id: "general", label: tx("ui.settings.subTabs.general", "General"), method: "renderGeneralTab" },
+        {
+          id: "assistant",
+          label: tx("ui.settings.subTabs.assistant", "Assistant"),
+          paneTitle: tx("ui.settings.subTabs.assistantPane", "Assistant"),
+          method: "renderStudyTab",
+        },
         { id: "audio", label: tx("ui.settings.subTabs.audio", "Audio"), method: "renderAudioTab" },
         { id: "cards", label: tx("ui.settings.subTabs.cards", "Cards"), method: "renderCardsTab" },
         { id: "reading", label: tx("ui.settings.subTabs.reading", "Reading"), method: "renderReadingViewTab" },
@@ -459,12 +465,13 @@ export class SproutSettingsView extends ItemView {
             cards: tx("ui.settings.subTabs.tooltip.cards", "Open cards options"),
             general: tx("ui.settings.subTabs.tooltip.general", "Open general options"),
             reading: tx("ui.settings.subTabs.tooltip.reading", "Open reading options"),
+            assistant: tx("ui.settings.subTabs.tooltip.assistant", "Open assistant options"),
             reminders: tx("ui.settings.subTabs.tooltip.reminders", "Open reminders options"),
             reset: tx("ui.settings.subTabs.tooltip.reset", "Open reset options"),
             storage: tx("ui.settings.subTabs.tooltip.storage", "Open storage & sync options"),
             study: tx("ui.settings.subTabs.tooltip.study", "Open study options"),
           };
-          btn.setAttribute("data-tooltip", tooltipMap[sub.id] ?? tx("ui.settings.subTabs.tooltip.openOptions", "Open options"));
+          btn.setAttribute("aria-label", tooltipMap[sub.id] ?? tx("ui.settings.subTabs.tooltip.openOptions", "Open options"));
           btn.setAttribute("data-tooltip-position", "bottom");
           const label = document.createElement("span");
           label.textContent = sub.label;
@@ -841,7 +848,7 @@ export class SproutSettingsView extends ItemView {
 
         if (categoryPages.length === 1) {
           const single = categoryPages[0];
-          btn.setAttribute("data-tooltip", `Open ${this._getGuideTooltipLabel(single.key).toLowerCase()} page`);
+          btn.setAttribute("aria-label", `Open ${this._getGuideTooltipLabel(single.key).toLowerCase()} page`);
           btn.setAttribute("data-tooltip-position", "bottom");
           navPageItems.push({ item: btn, pageKey: single.key });
         } else {
@@ -879,7 +886,7 @@ export class SproutSettingsView extends ItemView {
               item.type = "button";
               item.className = "sprout-guide-dropdown-item";
               item.classList.toggle("is-active", page.key === this._activeGuidePage);
-              item.setAttribute("data-tooltip", `Open ${this._getGuideTooltipLabel(page.key).toLowerCase()} page`);
+              item.setAttribute("aria-label", `Open ${this._getGuideTooltipLabel(page.key).toLowerCase()} page`);
               item.setAttribute("data-tooltip-position", "bottom");
 
               const iconWrap = document.createElement("span");
@@ -1286,7 +1293,7 @@ export class SproutSettingsView extends ItemView {
       const tooltip = page.version
         ? `Open ${page.version} release notes`
         : `Open ${page.label.toLowerCase()}`;
-      btn.setAttribute("data-tooltip", tooltip);
+      btn.setAttribute("aria-label", tooltip);
       btn.setAttribute("data-tooltip-position", "bottom");
       btn.addEventListener("click", () => {
         this._activeReleasePage = page.key;
@@ -1564,7 +1571,7 @@ export class SproutSettingsView extends ItemView {
   ): HTMLAnchorElement | HTMLButtonElement {
     const btn = document.createElement(tagName);
     btn.className = `bc btn-outline sprout-header-btn inline-flex items-center gap-2 sprout-about-btn ${cls}`;
-    btn.setAttribute("data-tooltip", tooltipLabel);
+    btn.setAttribute("aria-label", tooltipLabel);
     btn.setAttribute("data-tooltip-position", "top");
 
     const icon = document.createElement("span");
@@ -1592,8 +1599,10 @@ export class SproutSettingsView extends ItemView {
     const basePath = (this.app.vault.adapter as { getBasePath?: () => string }).getBasePath?.();
 
     const candidateBases: string[] = [
+      `${relPluginDir}/site/branding`,
       `${relPluginDir}/wiki`,
       `${relPluginDir}/site/docs`,
+      `${configDir}/plugins/sprout/site/branding`,
       `${configDir}/plugins/sprout/wiki`,
       `${configDir}/plugins/sprout/site/docs`,
     ];
@@ -1603,13 +1612,21 @@ export class SproutSettingsView extends ItemView {
       if (basePath && normalizedPluginDir.startsWith(normalizePath(basePath))) {
         const relFromVault = normalizePath(normalizedPluginDir.slice(normalizePath(basePath).length)).replace(/^\/+/, "");
         if (relFromVault) {
+          candidateBases.unshift(`${relFromVault}/site/branding`);
           candidateBases.unshift(`${relFromVault}/site/docs`);
           candidateBases.unshift(`${relFromVault}/wiki`);
         }
       }
     }
 
-    const avatarCandidates = ["avatar.png", "avatar.jpg", "avatar.jpeg", "avatar.webp"];
+    const avatarCandidates = [
+      "Founder.jpg",
+      "founder.jpg",
+      "avatar.png",
+      "avatar.jpg",
+      "avatar.jpeg",
+      "avatar.webp",
+    ];
     for (const base of candidateBases) {
       for (const fileName of avatarCandidates) {
         const avatarPath = normalizePath(`${base}/${fileName}`);
@@ -1625,10 +1642,12 @@ export class SproutSettingsView extends ItemView {
       "https://raw.githubusercontent.com/ctrlaltwill/Sprout/main/wiki/avatar.jpg",
       "https://raw.githubusercontent.com/ctrlaltwill/Sprout/main/wiki/avatar.jpeg",
       "https://raw.githubusercontent.com/ctrlaltwill/Sprout/main/wiki/avatar.webp",
+      "https://raw.githubusercontent.com/ctrlaltwill/Sprout/main/site/branding/Founder.jpg",
       "https://raw.githubusercontent.com/ctrlaltwill/Sprout/main/site/docs/avatar.png",
       "https://raw.githubusercontent.com/ctrlaltwill/Sprout/main/site/docs/avatar.jpg",
       "https://raw.githubusercontent.com/ctrlaltwill/Sprout/main/site/docs/avatar.jpeg",
       "https://raw.githubusercontent.com/ctrlaltwill/Sprout/main/site/docs/avatar.webp",
+      "https://cdn.jsdelivr.net/gh/ctrlaltwill/Sprout@main/site/branding/Founder.jpg",
       "https://cdn.jsdelivr.net/gh/ctrlaltwill/Sprout@main/wiki/avatar.png",
       "https://cdn.jsdelivr.net/gh/ctrlaltwill/Sprout@main/wiki/avatar.jpg",
       "https://cdn.jsdelivr.net/gh/ctrlaltwill/Sprout@main/site/docs/avatar.png",
@@ -1910,6 +1929,19 @@ export class SproutSettingsView extends ItemView {
       reading: ["Reading view styles", "Macro styles", "Reading view fields", "Reading view colours", "Custom style CSS"],
       storage: ["Attachment storage", "Data backup", "Syncing"],
       study: ["Study sessions", "Scheduling"],
+      assistant: [
+        "Assistant",
+        "Study assistant",
+        "Info",
+        "Enable Sprig",
+        "AI Provider",
+        "Ask Mode",
+        "Review mode",
+        "Flashcard mode",
+        "Flashcard generation",
+        "What flashcard types to generate",
+        "Generated fields",
+      ],
       reminders: [
         "Launch reminders",
         "Routine reminders",
@@ -1943,7 +1975,7 @@ export class SproutSettingsView extends ItemView {
    */
   public navigateToTab(tabId: string) {
     const topTabs = new Set(["guide", "about", "settings"]);
-    const settingsSubTabs = new Set(["general", "audio", "cards", "reading", "storage", "study", "reminders", "reset"]);
+    const settingsSubTabs = new Set(["general", "audio", "cards", "reading", "storage", "study", "assistant", "reminders", "reset"]);
 
     if (topTabs.has(tabId)) {
       this._activeTab = tabId;

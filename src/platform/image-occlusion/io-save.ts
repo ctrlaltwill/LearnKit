@@ -35,9 +35,10 @@ export async function insertTextAtCursorOrAppend(
   active: TFile,
   textToInsert: string,
   forcePersist = false,
+  preferAppend = false,
 ): Promise<void> {
   const view = app.workspace.getActiveViewOfType(MarkdownView);
-  if (view?.file?.path === active.path && view.editor) {
+  if (!preferAppend && view?.file?.path === active.path && view.editor) {
     const ed = view.editor;
     const cur = ed.getCursor();
     ed.replaceRange(textToInsert, cur);

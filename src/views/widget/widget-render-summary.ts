@@ -47,15 +47,10 @@ export function renderWidgetSummary(view: WidgetViewLike, root: HTMLElement): vo
   const titleCased = toTitleCase(titleText);
 
   const summaryLabelWrap = el("div", "bc flex flex-col items-start");
-  const summaryScope = titleCased;
-  const summaryTitle = el("div", "bc sprout-widget-summary-title", tx("ui.widget.summary.studyScope", "Study {scope}", { scope: summaryScope }));
+  const summaryTitle = el("div", "bc sprout-widget-summary-title", tx("ui.widget.summary.headerTitle", "Sprout – Flashcards"));
   summaryLabelWrap.appendChild(summaryTitle);
 
-  const remainingCount = counts.total;
-  const remainingLabel = tx("ui.widget.summary.flashcardsCount", "{count} Flashcard{suffix}", {
-    count: remainingCount,
-    suffix: remainingCount === 1 ? "" : "s",
-  });
+  const remainingLabel = tx("ui.widget.summary.studyScope", "Study {scope}", { scope: titleText });
   const remainingLine = el("div", "bc sprout-widget-remaining-line", remainingLabel);
   summaryLabelWrap.appendChild(remainingLine);
 

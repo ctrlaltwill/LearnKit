@@ -133,7 +133,7 @@ export class SproutHeader {
     const hide =
       availableWidth > 0 ? availableWidth <= MAX_CONTENT_WIDTH : typeof window !== "undefined" && window.innerWidth <= MAX_CONTENT_WIDTH;
     this.widthBtnEl.classList.toggle("sprout-is-hidden", hide);
-    this.widthBtnEl.setAttribute("data-tooltip", isWide ? "Collapse table" : "Expand table");
+    this.widthBtnEl.setAttribute("aria-label", isWide ? "Collapse table" : "Expand table");
     this.widthBtnEl.setAttribute("data-tooltip-position", "bottom");
 
     const text = isWide ? "Collapse" : "Expand";
@@ -545,7 +545,7 @@ export class SproutHeader {
     navTrigger.className = "btn-outline sprout-header-btn h-7 px-2 text-xs inline-flex items-center gap-2";
     navTrigger.setAttribute("aria-haspopup", "menu");
     navTrigger.setAttribute("aria-expanded", "false");
-    navTrigger.setAttribute("data-tooltip", "Sprout menu");
+    navTrigger.setAttribute("aria-label", "Sprout menu");
     navTrigger.setAttribute("data-tooltip-position", "bottom");
     navRoot.appendChild(navTrigger);
 
@@ -614,7 +614,7 @@ export class SproutHeader {
     const syncBtn = document.createElement("button");
     syncBtn.type = "button";
     syncBtn.className = "bc btn-outline sprout-header-btn inline-flex items-center gap-2";
-    syncBtn.setAttribute("data-tooltip", "Sync flashcards");
+    syncBtn.setAttribute("aria-label", "Sync flashcards");
     syncBtn.setAttribute("data-tooltip-position", "bottom");
     syncBtn.setAttribute("data-sprout-sync", "true");
     syncBtn.addEventListener("click", (ev) => {
@@ -650,7 +650,7 @@ export class SproutHeader {
     moreBtn.className = "bc btn-icon-outline sprout-header-btn";
     moreBtn.setAttribute("aria-haspopup", "menu");
     moreBtn.setAttribute("aria-expanded", "false");
-    moreBtn.setAttribute("data-tooltip", "More options");
+    moreBtn.setAttribute("aria-label", "More options");
     moreBtn.setAttribute("data-tooltip-position", "bottom");
     moreWrap.appendChild(moreBtn);
 

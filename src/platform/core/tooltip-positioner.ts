@@ -34,7 +34,7 @@ export function initTooltipPositioner(): () => void {
   const WORKSPACE_DARK_SPROUT_SELECTOR = ".workspace-leaf-content.sprout.theme-dark";
   const WORKSPACE_SPROUT_SELECTOR = ".workspace-leaf-content.sprout";
   const WORKSPACE_SELECTOR = ".workspace-leaf-content";
-  const TOOLTIP_SELECTOR = "[data-tooltip]";
+  const TOOLTIP_SELECTOR = "[aria-label]";
   const MARGIN_PX = 60;
   const GAP_PX = 6;
   const FADE_OUT_CLEAR_DELAY_MS = 220;
@@ -97,7 +97,7 @@ export function initTooltipPositioner(): () => void {
   const update = (el: HTMLElement) => {
     cancelScheduledClear(el);
 
-    const tooltip = (el.getAttribute("data-tooltip") ?? "").trim();
+    const tooltip = (el.getAttribute("aria-label") ?? "").trim();
     if (!tooltip) {
       clearVars(el);
       restoreOriginalPosition(el);

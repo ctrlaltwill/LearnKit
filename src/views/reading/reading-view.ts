@@ -1742,17 +1742,26 @@ function buildLatexMathRangeChecker(text: string): (pos: number) => boolean {
  * same rendering pipeline Obsidian's MarkdownRenderer uses internally.
  */
 function renderLatexInContainer(container: HTMLElement): void {
-  // Collect text nodes containing LaTeX
+  // Collect text nodes containing LaTeX markers.
   const textNodes: Text[] = [];
   const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
   let node: Node | null;
   while ((node = walker.nextNode()) !== null) {
-    const text = node.textContent || '';
-    if (/\\\(|\\\[|\$\$|\$/.test(text)) {
-      // Skip text nodes inside the hidden original content store
-      if ((node.parentNode as Element)?.closest?.('.sprout-original-content')) continue;
-      textNodes.push(node as Text);
-    }
+    if (!(node instanceof Text)) continue;
+
+    const parent = node.parentElement;
+    if (!parent) continue;
+
+    // Skip text nodes inside the hidden original content store.
+    if (parent.closest('.sprout-original-content')) continue;
+
+    // Skip nodes already rendered by Obsidian/MathJax.
+    if (parent.closest('.MathJax, mjx-container, .math')) continue;
+
+    const text = node.nodeValue ?? '';
+    if (!/\\\(|\\\[|\$\$|\$/.test(text)) continue;
+
+    textNodes.push(node);
   }
 
   if (textNodes.length === 0) return;
@@ -1760,12 +1769,9 @@ function renderLatexInContainer(container: HTMLElement): void {
   let rendered = false;
 
   for (const textNode of textNodes) {
-    const text = textNode.textContent || '';
+    const text = textNode.nodeValue ?? '';
     const parent = textNode.parentNode;
     if (!parent) continue;
-
-    // Skip nodes inside elements that already have rendered math
-    if ((parent as Element).closest?.('.MathJax, mjx-container, .math')) continue;
 
     // Build a list of math segments with their positions
     const segments: Array<{ start: number; end: number; source: string; display: boolean }> = [];
@@ -1774,12 +1780,18 @@ function renderLatexInContainer(container: HTMLElement): void {
       re.lastIndex = 0;
       let match: RegExpExecArray | null;
       while ((match = re.exec(text)) !== null) {
+        const full = match[0] ?? '';
+        const source = match[1] ?? '';
+        if (!full || !source.trim()) continue;
+
         segments.push({
           start: match.index,
-          end: match.index + match[0].length,
-          source: match[1],
+          end: match.index + full.length,
+          source,
           display,
         });
+
+        if (re.lastIndex === match.index) re.lastIndex += 1;
       }
     };
 
@@ -1792,7 +1804,11 @@ function renderLatexInContainer(container: HTMLElement): void {
     if (segments.length === 0) continue;
 
     // Sort by position and remove overlapping matches (first match wins)
-    segments.sort((a, b) => a.start - b.start);
+    segments.sort((a, b) => {
+      if (a.start !== b.start) return a.start - b.start;
+      // Prefer wider match when two regexes start at the same location.
+      return (b.end - b.start) - (a.end - a.start);
+    });
     const filtered: typeof segments = [];
     let lastEnd = 0;
     for (const seg of segments) {
@@ -1815,7 +1831,7 @@ function renderLatexInContainer(container: HTMLElement): void {
       }
 
       try {
-        let normalizedSource = String(seg.source ?? "")
+        const normalizedSource = String(seg.source ?? "")
           // Support field style where a trailing backslash escapes the source newline.
           // Preserve command continuations like \frac{...}\n{...}, but keep visual
           // line breaks for normal multiline equations.
@@ -1824,7 +1840,7 @@ function renderLatexInContainer(container: HTMLElement): void {
             return nextChar === "{" ? "" : "\\\\\n";
           });
 
-        const mathEl = renderMath(normalizedSource, seg.display);
+        const mathEl = renderMath(normalizedSource.trim(), seg.display);
         frag.appendChild(mathEl);
         rendered = true;
       } catch {
@@ -2048,10 +2064,10 @@ function buildFlashcardContentHTML(card: SproutCard, options: { includeSpeakerBu
 
   const actionsFor = (side: 'front' | 'back') => {
     const speaker = options.includeSpeakerButton && allowSpeakerForCardType
-      ? `<button class="sprout-flashcard-action-btn sprout-flashcard-speak-btn" type="button" data-sprout-tts-side="${side}" data-tooltip="Read aloud" data-tooltip-position="top" aria-label="Read aloud"></button>`
+      ? `<button class="sprout-flashcard-action-btn sprout-flashcard-speak-btn" type="button" data-sprout-tts-side="${side}" aria-label="Read aloud" data-tooltip-position="top"></button>`
       : '';
     const edit = options.includeEditButton
-      ? `<button class="sprout-flashcard-action-btn sprout-card-edit-btn" type="button" data-tooltip="Edit card" data-tooltip-position="top" aria-label="Edit card"></button>`
+      ? `<button class="sprout-flashcard-action-btn sprout-card-edit-btn" type="button" aria-label="Edit card" data-tooltip-position="top"></button>`
       : '';
     if (!edit && !speaker) return '';
     return `<div class="sprout-flashcard-actions">${edit}${speaker}</div>`;
@@ -2147,7 +2163,7 @@ function buildGroupsSectionHTML(groups: string[]): string {
     <div class="sprout-card-section sprout-section-groups">
       <div class="sprout-section-label">
         <span>Groups</span>
-        <button class="sprout-toggle-btn sprout-toggle-btn-compact" data-target=".${contentId}" aria-expanded="false" data-tooltip="Toggle Groups" data-tooltip-position="top">
+        <button class="sprout-toggle-btn sprout-toggle-btn-compact" data-target=".${contentId}" aria-expanded="false" aria-label="Toggle Groups" data-tooltip-position="top">
           <svg class="sprout-toggle-chevron sprout-toggle-chevron-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>
         </button>
       </div>
@@ -2410,7 +2426,7 @@ function enhanceCardElement(
       ? ``
       : macroPreset === 'markdown'
         ? `<div class="sprout-card-header sprout-reading-card-header"><div class="sprout-card-title sprout-reading-card-title">${processMarkdownFeatures(card.title || '')}</div></div>`
-        : `<div class="sprout-card-header sprout-reading-card-header"><div class="sprout-card-title sprout-reading-card-title">${processMarkdownFeatures(card.title || '')}</div><span class="sprout-card-edit-btn" role="button" data-tooltip="Edit card" data-tooltip-position="top" tabindex="0"></span></div>`;
+        : `<div class="sprout-card-header sprout-reading-card-header"><div class="sprout-card-title sprout-reading-card-title">${processMarkdownFeatures(card.title || '')}</div><span class="sprout-card-edit-btn" role="button" aria-label="Edit card" data-tooltip-position="top" tabindex="0"></span></div>`;
 
     const innerHTML = `
       ${headerHTML}

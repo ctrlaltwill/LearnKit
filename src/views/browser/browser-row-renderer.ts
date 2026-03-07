@@ -18,7 +18,7 @@ import type SproutPlugin from "../../main";
 import type { CardRecord } from "../../platform/core/store";
 import { normalizeCardOptions, getCorrectIndices } from "../../platform/core/store";
 import { log } from "../../platform/core/logger";
-import { placePopover, queryFirst, replaceChildrenWithHTML, setCssProps } from "../../platform/core/ui";
+import { placePopover, queryFirst, renderFlagAndLatexPreviewInElement, replaceChildrenWithHTML, setCssProps } from "../../platform/core/ui";
 import { coerceGroups } from "../../engine/indexing/group-format";
 import { buildAnswerOrOptionsFor, buildQuestionFor } from "../reviewer/fields";
 import { stageLabel } from "../reviewer/labels";
@@ -44,7 +44,6 @@ import {
   getIoResolvedImage,
   extractImageRefs,
   renderMarkdownWithImages,
-  renderFlagPreviewHtml,
 } from "./browser-helpers";
 
 // ── Context interface ─────────────────────────────────────
@@ -156,7 +155,7 @@ export function buildPageTableBody(
       const td = document.createElement("td");
       td.className = `align-top ${ctx.readonlyTextClass} ${ctx.cellWrapClass} text-muted-foreground sprout-browser-cell`;
       td.textContent = txt;
-      if (title) td.setAttribute("data-tooltip", title);
+      if (title) td.setAttribute("aria-label", title);
       forceWrapStyles(td);
       forceCellClip(td);
       setColAttr(td, col);
@@ -373,7 +372,7 @@ function makeReadOnlyFieldCell(
     const td = document.createElement("td");
     td.className = `align-top ${ctx.readonlyTextClass} ${ctx.cellWrapClass} text-muted-foreground sprout-browser-cell`;
     td.textContent = value;
-    if (title) td.setAttribute("data-tooltip", title);
+    if (title) td.setAttribute("aria-label", title);
     forceWrapStyles(td);
     forceCellClip(td);
     setColAttr(td, col);
@@ -390,7 +389,7 @@ function makeReadOnlyFieldCell(
   ta.className = `textarea w-full ${ctx.readonlyTextClass} sprout-browser-textarea sprout-browser-textarea--readonly`;
   ta.value = value;
   ta.readOnly = true;
-  if (title) ta.setAttribute("data-tooltip", title);
+  if (title) ta.setAttribute("aria-label", title);
 
   const h = `${ctx.editorHeightPx}px`;
   setCssProps(ta, "--sprout-editor-height", h);
@@ -496,7 +495,7 @@ function wrapBrowserFlagPreviewInput(input: HTMLInputElement): HTMLElement {
   overlay.className = "sprout-browser-flag-overlay";
 
   const renderOverlay = () => {
-    replaceChildrenWithHTML(overlay, renderFlagPreviewHtml(String(input.value ?? "")));
+    renderFlagAndLatexPreviewInElement(overlay, String(input.value ?? ""));
   };
 
   overlay.addEventListener("click", () => input.focus());
@@ -545,7 +544,7 @@ function makeFlagPreviewEditorCell(
   const overlay = document.createElement("div");
   overlay.className = "sprout-browser-flag-overlay sprout-browser-flag-overlay--multiline";
   const renderOverlay = (txt: string) => {
-    replaceChildrenWithHTML(overlay, renderFlagPreviewHtml(txt));
+    renderFlagAndLatexPreviewInElement(overlay, txt);
   };
   renderOverlay(initial);
   overlay.addEventListener("click", () => ta.focus());
@@ -707,7 +706,7 @@ function makeMcqAnswerCell(
     checkbox.type = "checkbox";
     checkbox.checked = isCorrect;
     checkbox.className = "bc sprout-mcq-correct-checkbox";
-    checkbox.setAttribute("data-tooltip", txFromCtx(ctx, "ui.browser.row.mcq.markCorrect", "Mark as correct answer"));
+    checkbox.setAttribute("aria-label", txFromCtx(ctx, "ui.browser.row.mcq.markCorrect", "Mark as correct answer"));
     checkbox.setAttribute("data-tooltip-position", "top");
     row.appendChild(checkbox);
 
@@ -811,6 +810,7 @@ function makeOqStepsCell(
 
   type OqRow = { row: HTMLElement; input: HTMLInputElement; badge: HTMLElement };
   const oqRows: OqRow[] = [];
+  let draggingRow: OqRow | null = null;
 
   const key = `${card.id}:answer`;
   let saving = false;
@@ -871,16 +871,30 @@ function makeOqStepsCell(
     renumber();
   };
 
+  // The add-step input is wrapped for flag preview, so we need a direct child
+  // anchor node of `wrap` when inserting/reordering OQ rows.
+  const getAddAnchor = (): HTMLElement | null => {
+    const addInput = wrap.querySelector<HTMLElement>(".sprout-browser-oq-add");
+    if (!addInput) return null;
+    if (addInput.parentElement === wrap) return addInput;
+
+    const wrapped = addInput.closest<HTMLElement>(".sprout-browser-flag-editor-wrap");
+    if (wrapped && wrapped.parentElement === wrap) return wrapped;
+
+    return null;
+  };
+
   const addOqInputRow = (value: string) => {
     const idx = oqRows.length;
 
     const row = document.createElement("div");
     row.className = "bc flex items-center gap-1 sprout-browser-oq-row";
-    row.draggable = true;
+    row.draggable = false;
 
     // Drag grip
     const grip = document.createElement("span");
     grip.className = "bc inline-flex items-center justify-center text-muted-foreground cursor-grab sprout-oq-grip-sm";
+    grip.draggable = true;
     setIcon(grip, "grip-vertical");
     row.appendChild(grip);
 
@@ -903,30 +917,36 @@ function makeOqStepsCell(
 
     // ── DnD reordering ──
     row.addEventListener("dragstart", (ev) => {
-      const fromIdx = oqRows.findIndex((e) => e.row === row);
-      ev.dataTransfer?.setData("text/plain", String(fromIdx));
+      draggingRow = entry;
+      if (ev.dataTransfer) {
+        const fromIdx = oqRows.findIndex((e) => e.row === row);
+        ev.dataTransfer.effectAllowed = "move";
+        ev.dataTransfer.setData("text/plain", String(fromIdx));
+      }
       row.classList.add("sprout-oq-row-dragging");
     });
     row.addEventListener("dragend", () => {
+      draggingRow = null;
       row.classList.remove("sprout-oq-row-dragging");
     });
     row.addEventListener("dragover", (ev) => {
       ev.preventDefault();
-      ev.dataTransfer!.dropEffect = "move";
+      if (ev.dataTransfer) ev.dataTransfer.dropEffect = "move";
     });
     row.addEventListener("drop", (ev) => {
       ev.preventDefault();
-      const fromStr = ev.dataTransfer?.getData("text/plain");
-      if (fromStr === undefined || fromStr === null) return;
-      const fromIdx = parseInt(fromStr, 10);
+      const fromIdx = draggingRow ? oqRows.indexOf(draggingRow) : -1;
       const toIdx = oqRows.findIndex((e) => e.row === row);
       if (isNaN(fromIdx) || fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return;
       const [moved] = oqRows.splice(fromIdx, 1);
       oqRows.splice(toIdx, 0, moved);
       // Reorder DOM
       const listEl = wrap;
-      const addEl = listEl.querySelector<HTMLElement>(".sprout-browser-oq-add");
-      for (const entry of oqRows) listEl.insertBefore(entry.row, addEl);
+      const addEl = getAddAnchor();
+      for (const entry of oqRows) {
+        if (addEl) listEl.insertBefore(entry.row, addEl);
+        else listEl.appendChild(entry.row);
+      }
       renumber();
       void commitOq();
     });
@@ -940,7 +960,7 @@ function makeOqStepsCell(
     });
 
     // Insert before the "add" input
-    const addEl = wrap.querySelector<HTMLElement>(".sprout-browser-oq-add");
+    const addEl = getAddAnchor();
     if (addEl) wrap.insertBefore(row, addEl);
     else wrap.appendChild(row);
 

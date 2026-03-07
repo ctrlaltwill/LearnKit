@@ -8,6 +8,7 @@
 
 import { setIcon } from "obsidian";
 
+import { createOqReorderPreviewController } from "../../platform/core/oq-reorder-preview";
 import { el, replaceChildrenWithHTML, setCssProps } from "../../platform/core/ui";
 import { renderClozeFront } from "../reviewer/question-cloze";
 
@@ -64,8 +65,6 @@ export function renderWidgetSession(view: WidgetViewLike, root: HTMLElement): vo
   const backBtn = document.createElement("button");
   backBtn.type = "button";
   backBtn.className = "bc btn-outline sprout-widget-back-btn";
-  backBtn.setAttribute("data-tooltip", tx(view, "ui.widget.backToSummary", "Back to summary"));
-  backBtn.setAttribute("data-tooltip-position", "top");
   setIcon(backBtn, "arrow-left");
   applyWidgetHoverDarken(backBtn);
 
@@ -216,10 +215,9 @@ function renderBasicCard(
   applySectionStyles: (e: HTMLElement) => void,
   makeDivider: () => HTMLElement,
 ) {
-  const qHeading = el("div", "bc flex items-center justify-between gap-2");
-  qHeading.appendChild(el("h3", "bc text-sm font-medium sprout-gatekeeper-section-label", "Question"));
-  appendWidgetTtsReplayButton(view, qHeading, card, graded, false);
-  body.appendChild(qHeading);
+  const qActions = el("div", "bc flex items-center justify-end gap-2");
+  appendWidgetTtsReplayButton(view, qActions, card, graded, false);
+  if (qActions.childElementCount > 0) body.appendChild(qActions);
 
   const qEl = el("div", "bc");
   // For reversed-child cards, use reversedDirection to swap content
@@ -244,10 +242,9 @@ function renderBasicCard(
 
   if (view.showAnswer || graded) {
     body.appendChild(makeDivider());
-    const aHeading = el("div", "bc flex items-center justify-between gap-2");
-    aHeading.appendChild(el("h3", "bc text-sm font-medium sprout-gatekeeper-section-label", "Answer"));
-    appendWidgetTtsReplayButton(view, aHeading, card, graded, true);
-    body.appendChild(aHeading);
+    const aActions = el("div", "bc flex items-center justify-end gap-2");
+    appendWidgetTtsReplayButton(view, aActions, card, graded, true);
+    if (aActions.childElementCount > 0) body.appendChild(aActions);
 
     const aEl = el("div", "bc");
     const aText = (isBackDirection || isOldReversed) ? (card.q || "") : (card.a || "");
@@ -292,7 +289,7 @@ function appendWidgetTtsReplayButton(
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = "bc btn-icon sprout-tts-replay-btn";
-  btn.setAttribute("data-tooltip", answerSide ? "Read answer aloud" : "Read question aloud");
+  btn.setAttribute("aria-label", answerSide ? "Read answer aloud" : "Read question aloud");
   btn.setAttribute("data-tooltip-position", "top");
   setIcon(btn, "volume-2");
   btn.addEventListener("click", (ev) => {
@@ -488,7 +485,7 @@ function renderMcqCard(
         }, { once: true });
         // Show tooltip on second empty attempt
         if (submitBtn.dataset.emptyAttempt === "1") {
-          submitBtn.setAttribute("data-tooltip", tx(view, "ui.widget.mcq.chooseOne", "Choose at least one answer to proceed"));
+          submitBtn.setAttribute("aria-label", tx(view, "ui.widget.mcq.chooseOne", "Choose at least one answer to proceed"));
           submitBtn.setAttribute("data-tooltip-position", "top");
           submitBtn.classList.add("sprout-mcq-submit-tooltip-visible");
           setTimeout(() => {
@@ -613,6 +610,32 @@ function renderOqCard(
     const listWrap = el("div", "bc flex flex-col gap-2 sprout-oq-step-list");
     body.appendChild(listWrap);
 
+    const previewController = createOqReorderPreviewController(listWrap);
+
+    const commitReorder = (fromIdx: number, toIdx: number) => {
+      if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return;
+      const item = currentOrder[fromIdx];
+      currentOrder.splice(fromIdx, 1);
+      currentOrder.splice(toIdx, 0, item);
+      const oqMap = ensureWidgetOqOrderMap(view.session as unknown as Record<string, unknown>);
+      oqMap[String(card.id)] = currentOrder.slice();
+      renderSteps();
+    };
+
+    listWrap.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+      previewController.updatePointer(e.clientY);
+    });
+
+    listWrap.addEventListener("drop", (e) => {
+      e.preventDefault();
+      const pending = previewController.getPendingMove();
+      previewController.endDrag();
+      if (!pending) return;
+      commitReorder(pending.fromIdx, pending.toIdx);
+    });
+
     const renderSteps = () => {
       listWrap.innerHTML = "";
       currentOrder.forEach((origIdx, displayIdx) => {
@@ -645,102 +668,46 @@ function renderOqCard(
         row.appendChild(textEl);
 
         // ── Drag and drop ──
-        let dragOffset = 40;
         row.addEventListener("dragstart", (e) => {
-          if (e.dataTransfer) {
-            e.dataTransfer.effectAllowed = "move";
-            e.dataTransfer.setData("text/plain", String(displayIdx));
-          }
-          row.classList.add("sprout-oq-row-dragging");
-          const allStepRows = listWrap.querySelectorAll<HTMLElement>(".sprout-oq-step-row");
-          const first = allStepRows[0];
-          if (first) {
-            const gap = parseFloat(getComputedStyle(listWrap).rowGap || "0");
-            dragOffset = Math.round(first.getBoundingClientRect().height + gap);
-          }
-          allStepRows.forEach((r) => {
-            r.classList.add("sprout-oq-row-anim");
-            setCssProps(r, "--sprout-oq-translate", "0px");
+          previewController.beginDrag({
+            fromIdx: displayIdx,
+            row,
+            dataTransfer: e.dataTransfer,
+            setDragImage: true,
           });
         });
+
         row.addEventListener("dragend", () => {
-          row.classList.remove("sprout-oq-row-dragging");
-          listWrap.querySelectorAll<HTMLElement>(".sprout-oq-step-row").forEach((r) => {
-            setCssProps(r, "--sprout-oq-translate", "0px");
-            r.classList.remove("sprout-oq-row-anim");
-          });
-        });
-        row.addEventListener("dragover", (e) => {
-          e.preventDefault();
-          if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-          const fromStr = e.dataTransfer?.getData("text/plain");
-          const fromIdx = fromStr ? Number(fromStr) : -1;
-          if (fromIdx === -1 || fromIdx === displayIdx) return;
-          listWrap.querySelectorAll<HTMLElement>(".sprout-oq-step-row").forEach((r, idx) => {
-            if (idx === fromIdx) {
-              setCssProps(r, "--sprout-oq-translate", `${(displayIdx - fromIdx) * dragOffset}px`);
-            } else {
-              let offset = 0;
-              if (fromIdx < displayIdx) { if (idx > fromIdx && idx <= displayIdx) offset = -dragOffset; }
-              else { if (idx >= displayIdx && idx < fromIdx) offset = dragOffset; }
-              setCssProps(r, "--sprout-oq-translate", `${offset}px`);
-            }
-          });
-        });
-        row.addEventListener("drop", (e) => {
-          e.preventDefault();
-          const fromIdx = Number(e.dataTransfer?.getData("text/plain") || "-1");
-          if (fromIdx === -1 || fromIdx === displayIdx) return;
-          listWrap.querySelectorAll<HTMLElement>(".sprout-oq-step-row").forEach((r) => setCssProps(r, "--sprout-oq-translate", "0px"));
-          const item = currentOrder[fromIdx];
-          currentOrder.splice(fromIdx, 1);
-          currentOrder.splice(displayIdx, 0, item);
-          const oqMap = ensureWidgetOqOrderMap(view.session as unknown as Record<string, unknown>);
-          oqMap[String(card.id)] = currentOrder.slice();
-          renderSteps();
+          previewController.endDrag();
         });
 
         // Touch drag support
-        let touchStartY = 0;
-        let touchCurrentIdx = displayIdx;
         row.addEventListener("touchstart", (e) => {
-          const touch = e.touches[0]; if (!touch) return;
-          touchStartY = touch.clientY;
-          touchCurrentIdx = displayIdx;
-          row.classList.add("sprout-oq-row-dragging");
+          const touch = e.touches[0];
+          if (!touch) return;
+          previewController.beginDrag({
+            fromIdx: displayIdx,
+            row,
+          });
+          previewController.updatePointer(touch.clientY);
         }, { passive: true });
+
         row.addEventListener("touchmove", (e) => {
-          const touch = e.touches[0]; if (!touch) return;
+          const touch = e.touches[0];
+          if (!touch) return;
           e.preventDefault();
-          const deltaY = touch.clientY - touchStartY;
-          const moveSteps = Math.round(deltaY / dragOffset);
-          const targetIdx = Math.max(0, Math.min(currentOrder.length - 1, displayIdx + moveSteps));
-          listWrap.querySelectorAll<HTMLElement>(".sprout-oq-step-row").forEach((r, idx) => {
-            if (idx === displayIdx) {
-              setCssProps(r, "--sprout-oq-translate", `${(targetIdx - displayIdx) * dragOffset}px`);
-            } else {
-              let offset = 0;
-              if (displayIdx < targetIdx) { if (idx > displayIdx && idx <= targetIdx) offset = -dragOffset; }
-              else { if (idx >= targetIdx && idx < displayIdx) offset = dragOffset; }
-              setCssProps(r, "--sprout-oq-translate", `${offset}px`);
-            }
-          });
-          touchCurrentIdx = targetIdx;
+          previewController.updatePointer(touch.clientY);
         }, { passive: false });
+
         row.addEventListener("touchend", () => {
-          row.classList.remove("sprout-oq-row-dragging");
-          listWrap.querySelectorAll<HTMLElement>(".sprout-oq-step-row").forEach((r) => {
-            setCssProps(r, "--sprout-oq-translate", "0px");
-            r.classList.remove("sprout-oq-row-anim");
-          });
-          if (touchCurrentIdx !== displayIdx) {
-            const item = currentOrder[displayIdx];
-            currentOrder.splice(displayIdx, 1);
-            currentOrder.splice(touchCurrentIdx, 0, item);
-            const oqMap = ensureWidgetOqOrderMap(view.session as unknown as Record<string, unknown>);
-            oqMap[String(card.id)] = currentOrder.slice();
-            renderSteps();
-          }
+          const pending = previewController.getPendingMove();
+          previewController.endDrag();
+          if (!pending) return;
+          commitReorder(pending.fromIdx, pending.toIdx);
+        });
+
+        row.addEventListener("touchcancel", () => {
+          previewController.endDrag();
         });
 
         listWrap.appendChild(row);
@@ -1074,7 +1041,7 @@ function renderActionRow(view: WidgetViewLike, footer: HTMLElement, card: CardRe
   const moreBtn = document.createElement("button");
   moreBtn.type = "button";
   moreBtn.className = "bc btn-outline flex-1 flex items-center justify-center gap-2";
-  moreBtn.setAttribute("data-tooltip", tx(view, "ui.widget.more.tooltip", "More actions (M)"));
+  moreBtn.setAttribute("aria-label", tx(view, "ui.widget.more.tooltip", "More actions (M)"));
   moreBtn.setAttribute("data-tooltip-position", "top");
   applyWidgetHoverDarken(moreBtn);
 
@@ -1129,7 +1096,9 @@ function renderActionRow(view: WidgetViewLike, footer: HTMLElement, card: CardRe
 function renderProgressBar(view: WidgetViewLike, wrap: HTMLElement) {
   const progressBar = el("div", "bc px-4 py-2 border-b border-border sprout-widget-progress");
 
-  const progressPercent = ((view.session!.index + 1) / view.session!.stats.total) * 100;
+  const total = Math.max(0, view.session?.stats?.total || 0);
+  const done = Math.max(0, view.session?.stats?.done || 0);
+  const progressPercent = total > 0 ? (Math.min(done, total) / total) * 100 : 0;
   const barBg = el("div", "bc w-full rounded-full overflow-hidden sprout-widget-progress-track");
 
   const barFill = el("div", "bc h-full transition-all sprout-widget-progress-fill");

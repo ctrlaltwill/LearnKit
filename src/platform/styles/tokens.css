@@ -67,7 +67,7 @@
   --sprout-font-xl-minus: 1.3rem;
   --sprout-font-xl: 1.3125rem;
   --sprout-font-lg: 1.5rem;
-  --font-ui-small: var(--sprout-font-xs);
+  --font-ui-small: var(--sprout-font-xs) !important;
 
   /* Destructive (light: rgb(231,0,11); dark: rgb(255,100,103)) */
   --destructive: rgb(231, 0, 11) !important;

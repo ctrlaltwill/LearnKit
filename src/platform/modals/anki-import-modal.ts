@@ -74,7 +74,7 @@ export class AnkiImportModal extends Modal {
   private mkNavBtn(parent: HTMLElement, label: string, icon: string, opts?: { tooltip?: string }): HTMLButtonElement {
     const btn = parent.createEl("button", {
       cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm",
-      attr: { type: "button", "data-tooltip": opts?.tooltip || label },
+      attr: { type: "button", "aria-label": opts?.tooltip || label },
     });
     const ic = btn.createEl("span", { cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
     setIcon(ic, icon);
@@ -86,7 +86,7 @@ export class AnkiImportModal extends Modal {
   private mkField(parent: HTMLElement, label: string, hint?: string) {
     const wrapper = parent.createDiv({ cls: "bc flex flex-col gap-1" });
     const lbl = wrapper.createEl("label", { cls: "bc text-sm font-medium", text: label });
-    if (hint) lbl.setAttribute("data-tooltip", hint);
+    if (hint) lbl.setAttribute("aria-label", hint);
     return wrapper;
   }
 
@@ -114,7 +114,7 @@ export class AnkiImportModal extends Modal {
 
     const pickBtn = fileRow.createEl("button", {
       cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm",
-      attr: { type: "button", "data-tooltip": "Choose an Anki .apkg file from your computer" },
+      attr: { type: "button", "aria-label": "Choose an Anki .apkg file from your computer" },
     });
     const pickIcon = pickBtn.createEl("span", { cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
     setIcon(pickIcon, "file-up");

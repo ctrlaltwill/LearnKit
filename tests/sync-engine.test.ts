@@ -100,6 +100,30 @@ describe("sync engine", () => {
     expect(plugin.store.data.states["100000000"]).toBeDefined();
   });
 
+  it("inserts missing anchor before an IO-first card block", async () => {
+    const vault = new MemoryVault();
+    const file = await vault.create(
+      "Notes/IoOrder.md",
+      [
+        "IO | ![[Attachments/Image Occlusion/example.png|200]] |",
+        "T | FND umbrella - label recall |",
+        "G | Study/Clinical Skills/Explanation |",
+        "I | Occlude each label and recall it from the diagram. |",
+        "O | [{\"rectId\":\"r1\",\"x\":0.18,\"y\":0.06,\"w\":0.64,\"h\":0.1,\"groupKey\":\"1\",\"shape\":\"rect\"}] |",
+        "C | solo |",
+      ].join("\n"),
+    );
+    const plugin = makePlugin(vault);
+    setCryptoSequence([0]);
+
+    const res = await syncOneFile(plugin, file);
+    const content = await vault.read(file);
+
+    expect(res.idsInserted).toBe(1);
+    expect(content).toContain("^sprout-100000000\nIO | ![[Attachments/Image Occlusion/example.png|200]] |");
+    expect(content).not.toContain("IO | ![[Attachments/Image Occlusion/example.png|200]] |\n^sprout-100000000");
+  });
+
   it("creates scheduling state for new cards", async () => {
     const vault = new MemoryVault();
     const file = await vault.create("Notes/Test.md", "Q | Q? |\nA | A! |");

@@ -35,7 +35,7 @@ export function applyWidgetHoverDarken(btn: HTMLButtonElement) {
  * Creates a square icon button with a tooltip label.
  *
  * @param opts.icon   – Lucide icon name (passed to Obsidian `setIcon`)
- * @param opts.label  – Tooltip text (via `data-tooltip`)
+ * @param opts.label  – Tooltip text (via `aria-label`)
  * @param opts.title  – Optional tooltip override
  * @param opts.className – CSS classes
  * @param opts.onClick   – Click handler
@@ -50,7 +50,7 @@ export function makeIconButton(opts: {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = opts.className;
-  btn.setAttribute("data-tooltip", opts.title || opts.label);
+  btn.setAttribute("aria-label", opts.title || opts.label);
   btn.setAttribute("data-tooltip-position", "top");
   setIcon(btn, opts.icon);
   btn.addEventListener("click", (e) => {
@@ -85,7 +85,7 @@ export function makeTextButton(opts: {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = opts.className;
-  btn.setAttribute("data-tooltip", opts.title || opts.label);
+  btn.setAttribute("aria-label", opts.title || opts.label);
   btn.setAttribute("data-tooltip-position", "top");
 
   const content = document.createElement("span");

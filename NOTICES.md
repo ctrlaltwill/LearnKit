@@ -15,6 +15,7 @@ Scope: direct dependencies used by the plugin runtime and documentation site, pl
 | dompurify | [cure53/DOMPurify](https://github.com/cure53/DOMPurify) | 3.3.1 | MPL-2.0 OR Apache-2.0 | Sanitization of rendered HTML content |
 | fflate | [101arrowz/fflate](https://github.com/101arrowz/fflate) | 0.8.2 | MIT | ZIP handling for Anki package import and export |
 | interactjs | [taye/interact.js](https://github.com/taye/interact.js) | 1.10.27 | MIT | Drag and resize interactions for image occlusion editor |
+| marked | [markedjs/marked](https://github.com/markedjs/marked) | 15.0.12 | MIT | Markdown parsing for AI and study assistant content rendering |
 | obsidian | [obsidianmd/obsidian-api](https://github.com/obsidianmd/obsidian-api) | 1.12.2 | MIT | Obsidian host API for plugin lifecycle and integrations |
 | react | [facebook/react](https://github.com/facebook/react) | 19.2.4 | MIT | Component system for Sprout interface views |
 | react-dom | [facebook/react](https://github.com/facebook/react) | 19.2.4 | MIT | DOM mounting and rendering for React views |

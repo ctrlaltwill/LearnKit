@@ -92,12 +92,12 @@ export class ParseErrorModal extends Modal {
       // Action buttons: open in note and quick edit
       const actions = top.createDiv({ cls: "bc flex items-center gap-2" });
 
-      const openBtn = actions.createEl("button", { cls: "bc btn-icon-ghost", attr: { "data-tooltip": "Open at anchor" } });
+      const openBtn = actions.createEl("button", { cls: "bc btn-icon-ghost", attr: { "aria-label": "Open at anchor" } });
       openBtn.type = "button";
       setIcon(openBtn, "arrow-up-right");
       openBtn.onclick = () => void this.openAtAnchor(id);
 
-      const editBtn = actions.createEl("button", { cls: "bc btn-icon-ghost", attr: { "data-tooltip": "Quick edit" } });
+      const editBtn = actions.createEl("button", { cls: "bc btn-icon-ghost", attr: { "aria-label": "Quick edit" } });
       editBtn.type = "button";
       setIcon(editBtn, "edit-3");
       editBtn.onclick = () => void this.openQuickEdit(id);
@@ -115,7 +115,7 @@ export class ParseErrorModal extends Modal {
     const footer = root.createDiv({ cls: "bc flex items-center justify-end gap-4 sprout-modal-footer" });
     const closeBtn = footer.createEl("button", {
       cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm",
-      attr: { type: "button", "data-tooltip": "Close this dialog" },
+      attr: { type: "button", "aria-label": "Close this dialog" },
     });
     const closeBtnIcon = closeBtn.createEl("span", { cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
     setIcon(closeBtnIcon, "x");

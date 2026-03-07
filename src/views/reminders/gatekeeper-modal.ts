@@ -2,6 +2,7 @@ import { Modal, setIcon, type App, type Component } from "obsidian";
 import type { CardRecord } from "../../platform/core/store";
 import type SproutPlugin from "../../main";
 import { scopeModalToWorkspace } from "../../platform/modals/modal-utils";
+import { createOqReorderPreviewController } from "../../platform/core/oq-reorder-preview";
 import { replaceChildrenWithHTML, setCssProps } from "../../platform/core/ui";
 import { renderClozeFront } from "../../views/reviewer/question-cloze";
 import { SproutMarkdownHelper } from "../../views/reviewer/markdown-render";
@@ -176,7 +177,7 @@ export class GatekeeperModal extends Modal {
       const iconWrap = bypassBtn.createSpan({ cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
       setIcon(iconWrap, "shield-off");
       bypassBtn.createSpan({ text: "Bypass", cls: "sprout-gatekeeper-bypass-label" });
-      bypassBtn.setAttribute("data-tooltip", "Bypass this round");
+      bypassBtn.setAttribute("aria-label", "Bypass this round");
       bypassBtn.setAttribute("data-tooltip-position", "top");
       bypassBtn.onclick = (ev) => {
         ev.preventDefault();
@@ -222,10 +223,10 @@ export class GatekeeperModal extends Modal {
 
     const qaSection = contentEl.createDiv({ cls: "bc sprout-gatekeeper-qa-section" });
 
-    const qHeading = qaSection.createDiv({ cls: "bc flex items-center justify-between gap-2" });
+    const body = qaSection.createDiv({ cls: "sprout-gatekeeper-body" });
+    const qHeading = body.createDiv({ cls: "bc flex items-center justify-between gap-2" });
     qHeading.createEl("h3", { text: "Question", cls: "text-sm font-medium sprout-gatekeeper-section-label" });
     this.appendTtsReplayButton(qHeading, card, false);
-    const body = qaSection.createDiv({ cls: "sprout-gatekeeper-body" });
     this.renderCardBody(body, card);
 
     const footer = contentEl.createDiv({ cls: "bc flex flex-col items-center gap-3 sprout-modal-footer sprout-gatekeeper-footer" });
@@ -330,7 +331,7 @@ export class GatekeeperModal extends Modal {
     const actions = wrap.createDiv({ cls: "bc flex items-center justify-center gap-2" });
     const goBack = actions.createEl("button", { cls: "bc btn-outline h-9 px-3 text-sm", type: "button" });
     goBack.createSpan({ text: "Go back" });
-    goBack.removeAttribute("data-tooltip");
+    goBack.removeAttribute("aria-label");
     goBack.removeAttribute("data-tooltip-position");
     goBack.addEventListener("click", () => {
       this.exitWarningMode();
@@ -339,7 +340,7 @@ export class GatekeeperModal extends Modal {
 
     const continueBtn = actions.createEl("button", { cls: "bc sprout-gatekeeper-bypass-btn h-9 px-3 text-sm", type: "button" });
     continueBtn.createSpan({ text: "Continue" });
-    continueBtn.removeAttribute("data-tooltip");
+    continueBtn.removeAttribute("aria-label");
     continueBtn.removeAttribute("data-tooltip-position");
     continueBtn.addEventListener("click", () => this.close());
   }
@@ -373,7 +374,7 @@ export class GatekeeperModal extends Modal {
   private makeButtonWithKbd(parent: HTMLElement, args: { text: string; cls: string; kbd?: string; tooltip?: string }) {
     const btn = parent.createEl("button", { cls: args.cls, type: "button" });
     btn.createSpan({ text: args.text });
-    btn.setAttribute("data-tooltip", args.tooltip || (args.kbd ? `${args.text} (${args.kbd})` : args.text));
+    btn.setAttribute("aria-label", args.tooltip || (args.kbd ? `${args.text} (${args.kbd})` : args.text));
     btn.setAttribute("data-tooltip-position", "top");
     if (args.kbd) {
       btn.createEl("kbd", { cls: "bc kbd", text: args.kbd });
@@ -534,7 +535,7 @@ export class GatekeeperModal extends Modal {
       cls: "bc btn-icon sprout-tts-replay-btn",
       type: "button",
     });
-    btn.setAttribute("data-tooltip", answerSide ? "Read answer aloud" : "Read question aloud");
+    btn.setAttribute("aria-label", answerSide ? "Read answer aloud" : "Read question aloud");
     btn.setAttribute("data-tooltip-position", "top");
     setIcon(btn, "volume-2");
     btn.addEventListener("click", (ev) => {
@@ -742,6 +743,31 @@ export class GatekeeperModal extends Modal {
       const listWrap = body.createDiv({ cls: "flex flex-col gap-2 sprout-oq-step-list" });
       const currentOrder = this._oqOrderMap[cardId].slice();
 
+      const previewController = createOqReorderPreviewController(listWrap);
+
+      const commitReorder = (fromIdx: number, toIdx: number) => {
+        if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return;
+        const item = currentOrder[fromIdx];
+        currentOrder.splice(fromIdx, 1);
+        currentOrder.splice(toIdx, 0, item);
+        this._oqOrderMap[cardId] = currentOrder.slice();
+        renderSteps();
+      };
+
+      listWrap.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+        previewController.updatePointer(e.clientY);
+      });
+
+      listWrap.addEventListener("drop", (e) => {
+        e.preventDefault();
+        const pending = previewController.getPendingMove();
+        previewController.endDrag();
+        if (!pending) return;
+        commitReorder(pending.fromIdx, pending.toIdx);
+      });
+
       const renderSteps = () => {
         listWrap.empty();
         currentOrder.forEach((origIdx, displayIdx) => {
@@ -770,26 +796,44 @@ export class GatekeeperModal extends Modal {
           row.appendChild(textEl);
 
           row.addEventListener("dragstart", (e) => {
-            if (e.dataTransfer) {
-              e.dataTransfer.effectAllowed = "move";
-              e.dataTransfer.setData("text/plain", String(displayIdx));
-            }
+            previewController.beginDrag({
+              fromIdx: displayIdx,
+              row,
+              dataTransfer: e.dataTransfer,
+              setDragImage: true,
+            });
           });
 
-          row.addEventListener("dragover", (e) => {
-            e.preventDefault();
-            if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+          row.addEventListener("dragend", () => {
+            previewController.endDrag();
           });
 
-          row.addEventListener("drop", (e) => {
+          row.addEventListener("touchstart", (e) => {
+            const touch = e.touches[0];
+            if (!touch) return;
+            previewController.beginDrag({
+              fromIdx: displayIdx,
+              row,
+            });
+            previewController.updatePointer(touch.clientY);
+          }, { passive: true });
+
+          row.addEventListener("touchmove", (e) => {
+            const touch = e.touches[0];
+            if (!touch) return;
             e.preventDefault();
-            const fromIdx = Number(e.dataTransfer?.getData("text/plain") || "-1");
-            if (fromIdx === -1 || fromIdx === displayIdx) return;
-            const item = currentOrder[fromIdx];
-            currentOrder.splice(fromIdx, 1);
-            currentOrder.splice(displayIdx, 0, item);
-            this._oqOrderMap[cardId] = currentOrder.slice();
-            renderSteps();
+            previewController.updatePointer(touch.clientY);
+          }, { passive: false });
+
+          row.addEventListener("touchend", () => {
+            const pending = previewController.getPendingMove();
+            previewController.endDrag();
+            if (!pending) return;
+            commitReorder(pending.fromIdx, pending.toIdx);
+          });
+
+          row.addEventListener("touchcancel", () => {
+            previewController.endDrag();
           });
 
           listWrap.appendChild(row);

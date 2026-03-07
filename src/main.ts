@@ -42,7 +42,7 @@ import {
 
 import { log } from "./platform/core/logger";
 import { clamp, clonePlain, isPlainObject, type FlashcardType } from "./platform/core/utils";
-import { getBasecoatApi } from "./platform/core/basecoat";
+import { getBasecoatApi, patchBasecoatNullGuards } from "./platform/core/basecoat";
 import { migrateSettingsInPlace } from "./views/settings/settings-migration";
 import { normaliseSettingsInPlace } from "./views/settings/settings-normalisation";
 import { registerReadingViewPrettyCards, teardownReadingView } from "./views/reading/reading-view";
@@ -55,6 +55,7 @@ import { JsonStore } from "./platform/core/store";
 import { queryFirst } from "./platform/core/ui";
 import { SproutReviewerView } from "./views/reviewer/review-view";
 import { SproutWidgetView } from "./views/widget/sprout-widget-view";
+import { SproutAssistantPopup } from "./views/study-assistant/sprout-assistant-popup";
 import { SproutCardBrowserView } from "./views/browser/sprout-card-browser-view";
 import { SproutAnalyticsView } from "./views/analytics/analytics-view";
 import { SproutHomeView } from "./views/home/sprout-home-view";
@@ -81,7 +82,29 @@ import { t } from "./platform/translations/translator";
 const SPROUT_RIBBON_BRAND_ICON = `<svg viewBox="0 0 1536 1536" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g transform="matrix(13.970297,0,0,13.970297,-11267.410891,-2326.950495)"><path fill="currentColor" d="M857.924,173.62C857.924,173.606 857.924,173.591 857.924,173.576C857.924,171.603 859.526,170 861.5,170C863.474,170 865.076,171.603 865.076,173.576C865.076,173.591 865.076,173.606 865.076,173.62L864.621,210.894L886.162,180.471C886.171,180.459 886.179,180.448 886.188,180.436C887.348,178.839 889.586,178.484 891.183,179.645C892.78,180.805 893.135,183.043 891.974,184.64C891.966,184.652 891.957,184.664 891.948,184.675L869.671,214.563L904.98,202.612C904.994,202.608 905.008,202.603 905.022,202.598C906.899,201.988 908.918,203.017 909.528,204.895C910.138,206.772 909.109,208.791 907.232,209.401C907.218,209.406 907.204,209.41 907.191,209.414L871.6,220.5L907.191,231.586C907.204,231.59 907.218,231.594 907.232,231.599C909.109,232.209 910.138,234.228 909.528,236.105C908.918,237.983 906.899,239.012 905.022,238.402C905.008,238.397 904.994,238.392 904.98,238.388L869.671,226.437L891.948,256.325C891.957,256.336 891.966,256.348 891.974,256.36C893.135,257.957 892.78,260.195 891.183,261.355C889.586,262.516 887.348,262.161 886.188,260.564C886.179,260.552 886.171,260.541 886.162,260.529L864.621,230.106L865.076,267.38C865.076,267.394 865.076,267.409 865.076,267.424C865.076,269.397 863.474,271 861.5,271C859.526,271 857.924,269.397 857.924,267.424C857.924,267.409 857.924,267.394 857.924,267.38L858.379,230.106L836.838,260.529C836.829,260.541 836.821,260.552 836.812,260.564C835.652,262.161 833.414,262.516 831.817,261.355C830.22,260.195 829.865,257.957 831.026,256.36C831.034,256.348 831.043,256.336 831.052,256.325L853.329,226.437L818.02,238.388C818.006,238.392 817.992,238.397 817.978,238.402C816.101,239.012 814.082,237.983 813.472,236.105C812.862,234.228 813.891,232.209 815.768,231.599C815.782,231.594 815.796,231.59 815.809,231.586L851.4,220.5L815.809,209.414C815.796,209.41 815.782,209.406 815.768,209.401C813.891,208.791 812.862,206.772 813.472,204.895C814.082,203.017 816.101,201.988 817.978,202.598C817.992,202.603 818.006,202.608 818.02,202.612L853.329,214.563L831.052,184.675C831.043,184.664 831.034,184.652 831.026,184.64C829.865,183.043 830.22,180.805 831.817,179.645C833.414,178.484 835.652,178.839 836.812,180.436C836.821,180.448 836.829,180.459 836.838,180.471L858.379,210.894L857.924,173.62Z"/></g></svg>`;
 const SPROUT_BRAND_ICON_KEY = "sprout-brand";
 
+type StudyAssistantApiKeys = SproutSettings["studyAssistant"]["apiKeys"];
 
+/**
+ * Maps each configuration file in `configuration/` to the settings key(s) it
+ * persists. Single-key entries store the value directly; multi-key entries
+ * store a wrapper object `{ key1: {...}, key2: {...} }`.
+ * `api-keys.json` is handled separately for backward compatibility.
+ */
+const SETTINGS_CONFIG_FILES: ReadonlyArray<{
+  readonly file: string;
+  readonly keys: readonly (keyof SproutSettings)[];
+}> = [
+  { file: "general.json", keys: ["general"] },
+  { file: "study.json", keys: ["study"] },
+  { file: "assistant.json", keys: ["studyAssistant"] },
+  { file: "reminders.json", keys: ["reminders"] },
+  { file: "scheduling.json", keys: ["scheduling"] },
+  { file: "indexing.json", keys: ["indexing"] },
+  { file: "cards.json", keys: ["cards", "imageOcclusion"] },
+  { file: "reading-view.json", keys: ["readingView"] },
+  { file: "storage.json", keys: ["storage"] },
+  { file: "audio.json", keys: ["audio"] },
+];
 
 export default class SproutPlugin extends Plugin {
   settings!: SproutSettings;
@@ -122,6 +145,7 @@ export default class SproutPlugin extends Plugin {
 
   private _disposeTooltipPositioner: (() => void) | null = null;
   private _reminderEngine: ReminderEngine | null = null;
+  private _assistantPopup: SproutAssistantPopup | null = null;
   private readonly _reminderDevConsoleCommandNames = [
     "sproutReminderLaunch",
     "sproutReminderRoutine",
@@ -152,7 +176,7 @@ export default class SproutPlugin extends Plugin {
   private _registerCommands() {
     this._addCommand("sync-flashcards", "Sync flashcards", async () => this._runSync());
     this._addCommand("open", "Open home", async () => this.openHomeTab());
-    this._addCommand("open-widget", "Open widget", async () => this.openWidgetSafe());
+    this._addCommand("open-widget", "Open Study Widget", async () => this.openWidgetSafe());
     this._addCommand("open-analytics", "Open analytics", async () => this.openAnalyticsTab());
     this._addCommand("open-settings", "Open plugin settings", () => this.openPluginSettingsInObsidian());
     this._addCommand("open-guide", "Open guide", async () => this.openSettingsTab(false, "guide"));
@@ -206,6 +230,9 @@ export default class SproutPlugin extends Plugin {
     }
 
     try {
+      // Patch known null-dereference issues in bundled Basecoat runtime before init/start.
+      patchBasecoatNullGuards(bc);
+
       // If hot-reloading or reloading the plugin, avoid multiple observers.
       bc.stop?.();
 
@@ -348,7 +375,7 @@ export default class SproutPlugin extends Plugin {
       this._disposeTooltipPositioner?.();
       this._disposeTooltipPositioner = initTooltipPositioner();
 
-      // Ensure all buttons use `data-tooltip` and never rely on native `title` tooltips.
+      // Ensure all buttons use `aria-label` and never rely on native `title` tooltips.
       this.register(initButtonTooltipDefaults());
 
       // Initialize mobile keyboard handler for adaptive bottom padding
@@ -382,8 +409,10 @@ export default class SproutPlugin extends Plugin {
         ? (rootObj.settings as Partial<SproutSettings>)
         : {};
       this.settings = deepMerge(DEFAULT_SETTINGS, rootSettings);
+      await this._loadSettingsFromConfigFiles();
       this._migrateSettingsInPlace();
       this._normaliseSettingsInPlace();
+      await this._initialiseDedicatedApiKeyStorage();
       this._registerSproutPinchZoom();
 
       // Activate the user's chosen delimiter before any parsing occurs
@@ -430,24 +459,49 @@ export default class SproutPlugin extends Plugin {
       this.registerEvent(
         this.app.workspace.on("active-leaf-change", (leaf) => {
           this._updateStatusBarVisibility(leaf ?? null);
+          this._assistantPopup?.onActiveLeafChange();
         }),
       );
 
       this.registerEvent(
         this.app.workspace.on("file-open", (file) => {
           const f = file instanceof TFile ? file : null;
+          this._assistantPopup?.onFileOpen(f);
           this.app.workspace
             .getLeavesOfType(VIEW_TYPE_WIDGET)
             .forEach((leaf) => (leaf.view as { onFileOpen?(f: TFile | null): void })?.onFileOpen?.(f));
         }),
       );
 
+      // Rename assistant chat files when notes are renamed
+      this.registerEvent(
+        this.app.vault.on("rename", (file, oldPath) => {
+          if (file instanceof TFile && file.path.toLowerCase().endsWith(".md")) {
+            void this._assistantPopup?.onFileRename(oldPath, file);
+          }
+        }),
+      );
+
       this.app.workspace.onLayoutReady(() => {
         // Ensure status bar class matches the active view after layout settles
         this._updateStatusBarVisibility(null);
+
+        // Remove any legacy sidebar assistant leaves from previous versions.
+        this.app.workspace.getLeavesOfType("sprout-study-assistant").forEach((leaf) => {
+          try {
+            leaf.detach();
+          } catch (e) {
+            log.swallow("detach legacy study assistant leaf", e);
+          }
+        });
         
         // Check for version upgrades and show What's New modal if needed
         this._checkAndShowWhatsNewModal();
+
+        // Mount per-leaf assistant popup triggers
+        this._assistantPopup = new SproutAssistantPopup(this);
+        this._assistantPopup.mount();
+        this._assistantPopup.onActiveLeafChange();
 
         this._reminderEngine?.start();
       });
@@ -496,6 +550,10 @@ export default class SproutPlugin extends Plugin {
 
     // Clean up mobile keyboard handler
     cleanupMobileKeyboardHandler();
+
+    // Clean up floating assistant popup
+    this._assistantPopup?.destroy();
+    this._assistantPopup = null;
 
     // ✅ stop Basecoat observer on unload (helps plugin reload / dev)
     this._stopBasecoatRuntime();
@@ -815,6 +873,187 @@ export default class SproutPlugin extends Plugin {
     return joinPath(configDir, "plugins", pluginId, "data.json");
   }
 
+  private _getConfigDirPath(): string | null {
+    const configDir = this.app?.vault?.configDir;
+    const pluginId = this.manifest?.id;
+    if (!configDir || !pluginId) return null;
+    return joinPath(configDir, "plugins", pluginId, "configuration");
+  }
+
+  private _getConfigFilePath(filename: string): string | null {
+    const dir = this._getConfigDirPath();
+    return dir ? joinPath(dir, filename) : null;
+  }
+
+  private _getApiKeysFilePath(): string | null {
+    return this._getConfigFilePath("api-keys.json");
+  }
+
+  private _normaliseApiKeys(raw: unknown): StudyAssistantApiKeys {
+    const obj = isPlainObject(raw) ? raw : {};
+    const asApiKey = (value: unknown): string => {
+      if (typeof value === "string") return value.trim();
+      if (typeof value === "number" || typeof value === "boolean" || typeof value === "bigint") {
+        return String(value).trim();
+      }
+      return "";
+    };
+    return {
+      openai: asApiKey(obj.openai),
+      anthropic: asApiKey(obj.anthropic),
+      deepseek: asApiKey(obj.deepseek),
+      groq: asApiKey(obj.groq),
+      custom: asApiKey(obj.custom),
+    };
+  }
+
+  private _hasAnyApiKey(apiKeys: StudyAssistantApiKeys): boolean {
+    return Object.values(apiKeys).some((value) => String(value || "").trim().length > 0);
+  }
+
+  private _settingsWithoutApiKeys(): SproutSettings {
+    const snapshot = clonePlain(this.settings);
+    snapshot.studyAssistant.apiKeys = { ...DEFAULT_SETTINGS.studyAssistant.apiKeys };
+    return snapshot;
+  }
+
+  private async _loadApiKeysFromDedicatedFile(): Promise<boolean> {
+    const adapter = this.app?.vault?.adapter;
+    const filePath = this._getApiKeysFilePath();
+    if (!adapter || !filePath) return false;
+    try {
+      if (!(await adapter.exists(filePath))) return false;
+      const raw = await adapter.read(filePath);
+      const parsed = JSON.parse(raw) as unknown;
+      this.settings.studyAssistant.apiKeys = this._normaliseApiKeys(parsed);
+      return true;
+    } catch (e) {
+      log.warn("Failed to read dedicated API key file; continuing with settings payload.", e);
+      return false;
+    }
+  }
+
+  private async _persistApiKeysToDedicatedFile(apiKeys: StudyAssistantApiKeys): Promise<boolean> {
+    const adapter = this.app?.vault?.adapter;
+    const dirPath = this._getConfigDirPath();
+    const filePath = this._getApiKeysFilePath();
+    if (!adapter || !dirPath || !filePath) return false;
+    try {
+      const hasAny = this._hasAnyApiKey(apiKeys);
+      if (!hasAny) {
+        if (await adapter.exists(filePath)) {
+          await (adapter as { remove?: (path: string) => Promise<void> }).remove?.(filePath);
+        }
+        return true;
+      }
+      if (!(await adapter.exists(dirPath))) {
+        await (adapter as { mkdir?: (path: string) => Promise<void> }).mkdir?.(dirPath);
+      }
+      await adapter.write(filePath, `${JSON.stringify(apiKeys, null, 2)}\n`);
+      return true;
+    } catch (e) {
+      log.warn("Failed to write dedicated API key file.", e);
+      return false;
+    }
+  }
+
+  private async _initialiseDedicatedApiKeyStorage(): Promise<void> {
+    this.settings.studyAssistant.apiKeys = this._normaliseApiKeys(this.settings.studyAssistant.apiKeys);
+    const loadedFromDedicatedFile = await this._loadApiKeysFromDedicatedFile();
+    if (loadedFromDedicatedFile) return;
+    if (!this._hasAnyApiKey(this.settings.studyAssistant.apiKeys)) return;
+    const migrated = await this._persistApiKeysToDedicatedFile(this.settings.studyAssistant.apiKeys);
+    if (migrated) log.info("Migrated study assistant API keys to configuration/api-keys.json");
+  }
+
+  // ── Generalised config-file persistence ─────────────────────────────
+
+  /**
+   * On startup, load each settings group from its dedicated config file.
+   * Values are deep-merged into the already-initialised `this.settings`
+   * so that new keys added in a version upgrade keep their defaults.
+   */
+  private async _loadSettingsFromConfigFiles(): Promise<void> {
+    const adapter = this.app?.vault?.adapter;
+    if (!adapter) return;
+
+    for (const entry of SETTINGS_CONFIG_FILES) {
+      const filePath = this._getConfigFilePath(entry.file);
+      if (!filePath) continue;
+      try {
+        if (!(await adapter.exists(filePath))) continue;
+        const raw = await adapter.read(filePath);
+        const parsed = JSON.parse(raw) as unknown;
+        if (!isPlainObject(parsed)) continue;
+
+        const parsedObj = parsed;
+        const s = this.settings as Record<string, unknown>;
+
+        if (entry.keys.length === 1) {
+          const key = entry.keys[0];
+          s[key] = deepMerge(s[key] ?? {}, parsedObj);
+        } else {
+          for (const key of entry.keys) {
+            if (isPlainObject(parsedObj[key])) {
+                s[key] = deepMerge(s[key] ?? {}, parsedObj[key]);
+            }
+          }
+        }
+      } catch (e) {
+        log.warn(`Failed to load config file ${entry.file}; using data.json/default values.`, e);
+      }
+    }
+  }
+
+  /**
+   * Persist every settings group to its own config file inside
+   * `configuration/`. Returns the set of settings keys that were
+   * successfully written (so they can be stripped from data.json).
+   */
+  private async _persistSettingsToConfigFiles(): Promise<Set<keyof SproutSettings>> {
+    const adapter = this.app?.vault?.adapter;
+    const dirPath = this._getConfigDirPath();
+    const written = new Set<keyof SproutSettings>();
+    if (!adapter || !dirPath) return written;
+
+    try {
+      if (!(await adapter.exists(dirPath))) {
+        await (adapter as { mkdir?: (path: string) => Promise<void> }).mkdir?.(dirPath);
+      }
+    } catch (e) {
+      log.warn("Failed to create configuration directory.", e);
+      return written;
+    }
+
+    for (const entry of SETTINGS_CONFIG_FILES) {
+      const filePath = this._getConfigFilePath(entry.file);
+      if (!filePath) continue;
+      try {
+        let payload: unknown;
+        if (entry.keys.length === 1) {
+          const key = entry.keys[0];
+          let value = clonePlain((this.settings as Record<string, unknown>)[key]);
+          // Strip API keys from assistant.json — they live in api-keys.json
+          if (key === "studyAssistant" && isPlainObject(value)) {
+            value.apiKeys = { ...DEFAULT_SETTINGS.studyAssistant.apiKeys };
+          }
+          payload = value;
+        } else {
+          const wrapper: Record<string, unknown> = {};
+          for (const key of entry.keys) {
+            wrapper[key] = clonePlain((this.settings as Record<string, unknown>)[key]);
+          }
+          payload = wrapper;
+        }
+        await adapter.write(filePath, `${JSON.stringify(payload, null, 2)}\n`);
+        for (const key of entry.keys) written.add(key);
+      } catch (e) {
+        log.warn(`Failed to write config file ${entry.file}.`, e);
+      }
+    }
+    return written;
+  }
+
   private async _doSave() {
     const adapter = this.app?.vault?.adapter ?? null;
     const dataPath = this._getDataJsonPath();
@@ -840,7 +1079,35 @@ export default class SproutPlugin extends Plugin {
         try { await createDataJsonBackupNow(this, "safety-regression"); } catch { /* best effort */ }
       }
 
-      root.settings = this.settings;
+      // ── Persist settings to dedicated config files ──────────────────
+      this.settings.studyAssistant.apiKeys = this._normaliseApiKeys(this.settings.studyAssistant.apiKeys);
+      const writtenKeys = await this._persistSettingsToConfigFiles();
+      const apiKeyWriteOk = await this._persistApiKeysToDedicatedFile(this.settings.studyAssistant.apiKeys);
+
+      // Build the settings fallback for data.json: only include groups
+      // whose config-file write failed, so data.json stays lean.
+      const fallbackSettings: Record<string, unknown> = {};
+      const allKeys: (keyof SproutSettings)[] = [
+        "general", "study", "studyAssistant", "reminders", "scheduling",
+        "indexing", "cards", "imageOcclusion", "readingView", "storage", "audio",
+      ];
+      for (const key of allKeys) {
+        if (!writtenKeys.has(key)) {
+          fallbackSettings[key] = clonePlain((this.settings as Record<string, unknown>)[key]);
+        }
+      }
+      // If API key write failed, log a warning and notify the user — do NOT fall back to data.json
+      if (!apiKeyWriteOk && this._hasAnyApiKey(this.settings.studyAssistant.apiKeys)) {
+        log.error("API key dedicated file write failed; keys were NOT persisted this save.");
+        new Notice("Sprout: failed to save API keys securely. Please check file permissions.", 8000);
+      }
+      if (fallbackSettings.studyAssistant && isPlainObject(fallbackSettings.studyAssistant)) {
+        // Always strip real API keys from the data.json fallback
+        fallbackSettings.studyAssistant.apiKeys =
+          { ...DEFAULT_SETTINGS.studyAssistant.apiKeys };
+      }
+
+      root.settings = Object.keys(fallbackSettings).length > 0 ? fallbackSettings : undefined;
       root.store = this.store.data;
       root.versionTracking = getVersionTrackingData();
 
@@ -858,7 +1125,28 @@ export default class SproutPlugin extends Plugin {
 
     // Last resort: write latest snapshot even if the file is churny.
     const root: Record<string, unknown> = ((await this.loadData()) || {}) as Record<string, unknown>;
-    root.settings = this.settings;
+    this.settings.studyAssistant.apiKeys = this._normaliseApiKeys(this.settings.studyAssistant.apiKeys);
+    const writtenKeys = await this._persistSettingsToConfigFiles();
+    const apiKeyWriteOk = await this._persistApiKeysToDedicatedFile(this.settings.studyAssistant.apiKeys);
+    const fallbackSettings: Record<string, unknown> = {};
+    const allKeys: (keyof SproutSettings)[] = [
+      "general", "study", "studyAssistant", "reminders", "scheduling",
+      "indexing", "cards", "imageOcclusion", "readingView", "storage", "audio",
+    ];
+    for (const key of allKeys) {
+      if (!writtenKeys.has(key)) {
+        fallbackSettings[key] = clonePlain((this.settings as Record<string, unknown>)[key]);
+      }
+    }
+    if (!apiKeyWriteOk && this._hasAnyApiKey(this.settings.studyAssistant.apiKeys)) {
+      log.error("API key dedicated file write failed; keys were NOT persisted this save.");
+      new Notice("Sprout: failed to save API keys securely. Please check file permissions.", 8000);
+    }
+    if (fallbackSettings.studyAssistant && isPlainObject(fallbackSettings.studyAssistant)) {
+      fallbackSettings.studyAssistant.apiKeys =
+        { ...DEFAULT_SETTINGS.studyAssistant.apiKeys };
+    }
+    root.settings = Object.keys(fallbackSettings).length > 0 ? fallbackSettings : undefined;
     root.store = this.store.data;
     root.versionTracking = getVersionTrackingData();
     await this.saveData(root);

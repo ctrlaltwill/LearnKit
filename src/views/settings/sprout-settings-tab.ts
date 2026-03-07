@@ -15,6 +15,7 @@ import {
   setIcon,
 } from "obsidian";
 import type SproutPlugin from "../../main";
+import type { SproutSettings } from "../../platform/types/settings";
 import type { CardState } from "../../platform/types/scheduler";
 import { log } from "../../platform/core/logger";
 import { placePopover, setCssProps } from "../../platform/core/ui";
@@ -675,7 +676,7 @@ export class SproutSettingsTab extends PluginSettingTab {
           /* Restore button */
           const btnRestore = actionsTd.createEl("button", { cls: "sprout-settings-icon-btn" });
           btnRestore.setAttribute(
-            "data-tooltip",
+            "aria-label",
             r.integrity === "invalid"
               ? this._tx("ui.settings.backups.actions.restore.disabledTooltip", "This backup failed integrity checks and cannot be restored.")
               : this._tx("ui.settings.backups.actions.restore.tooltip", "Restore this backup and replace current scheduling data."),
@@ -694,7 +695,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
           /* Delete button */
           const btnDelete = actionsTd.createEl("button", { cls: "sprout-settings-icon-btn sprout-settings-icon-btn--danger" });
-          btnDelete.setAttribute("data-tooltip", this._tx("ui.settings.backups.actions.delete.tooltip", "Delete this scheduling data backup."));
+          btnDelete.setAttribute("aria-label", this._tx("ui.settings.backups.actions.delete.tooltip", "Delete this scheduling data backup."));
           setIcon(btnDelete, "trash-2");
           btnDelete.onclick = () => {
             new ConfirmDeleteBackupModal(this.app, this.plugin, s, () => {
@@ -731,7 +732,7 @@ export class SproutSettingsTab extends PluginSettingTab {
         };
 
         const btnPrev = pager.createEl("button", { text: this._tx("ui.settings.backups.pager.prev", "Prev"), cls: "sprout-settings-icon-btn" });
-        btnPrev.setAttribute("data-tooltip", this._tx("ui.settings.backups.pager.prevTooltip", "Previous backup page"));
+        btnPrev.setAttribute("aria-label", this._tx("ui.settings.backups.pager.prevTooltip", "Previous backup page"));
         btnPrev.setAttribute("data-tooltip-position", "top");
         if (backupPageIndex <= 0) btnPrev.setAttribute("disabled", "true");
         btnPrev.onclick = () => {
@@ -747,7 +748,7 @@ export class SproutSettingsTab extends PluginSettingTab {
         });
 
         const btnNext = pager.createEl("button", { text: this._tx("ui.settings.backups.pager.next", "Next"), cls: "sprout-settings-icon-btn" });
-        btnNext.setAttribute("data-tooltip", this._tx("ui.settings.backups.pager.nextTooltip", "Next backup page"));
+        btnNext.setAttribute("aria-label", this._tx("ui.settings.backups.pager.nextTooltip", "Next backup page"));
         btnNext.setAttribute("data-tooltip-position", "top");
         if (backupPageIndex >= totalPages - 1) btnNext.setAttribute("disabled", "true");
         btnNext.onclick = () => {
@@ -1034,6 +1035,7 @@ export class SproutSettingsTab extends PluginSettingTab {
     this.renderCardsSection(wrapper);
     this.renderReadingViewSection(wrapper);
     this.renderStudySection(wrapper);
+    this.renderStudyAssistantSection(wrapper);
     this.renderSchedulingSection(wrapper);
     this.renderStorageSection(wrapper);
     this.renderSyncSection(wrapper);
@@ -1354,7 +1356,7 @@ export class SproutSettingsTab extends PluginSettingTab {
         });
         advancedToggle.type = "button";
         advancedToggle.setAttribute(
-          "data-tooltip",
+          "aria-label",
           this._audioAdvancedOptionsExpanded
             ? this._tx("ui.settings.audio.advanced.tooltipHide", "Hide advanced voice options")
             : this._tx("ui.settings.audio.advanced.tooltipShow", "Show advanced voice options"),
@@ -1402,7 +1404,7 @@ export class SproutSettingsTab extends PluginSettingTab {
             : this._tx("ui.settings.audio.advanced.show", "Show advanced options");
           advancedToggle.setAttribute("aria-expanded", expanded ? "true" : "false");
           advancedToggle.setAttribute(
-            "data-tooltip",
+            "aria-label",
             expanded
               ? this._tx("ui.settings.audio.advanced.tooltipHide", "Hide advanced voice options")
               : this._tx("ui.settings.audio.advanced.tooltipShow", "Show advanced voice options"),
@@ -1567,7 +1569,7 @@ export class SproutSettingsTab extends PluginSettingTab {
     const bgRestoreEl = bgColourSetting.controlEl.createDiv({
       cls: "clickable-icon extra-setting-button sprout-colour-restore",
     });
-    bgRestoreEl.setAttribute("data-tooltip", this._tx("ui.settings.cards.cloze.bgColor.restoreTooltip", "Restore default"));
+    bgRestoreEl.setAttribute("aria-label", this._tx("ui.settings.cards.cloze.bgColor.restoreTooltip", "Restore default"));
     bgRestoreEl.setAttribute("data-tooltip-position", "top");
     bgRestoreEl.setAttribute("aria-disabled", cardsSettings.clozeBgColor ? "false" : "true");
     setIcon(bgRestoreEl, "rotate-ccw");
@@ -1613,7 +1615,7 @@ export class SproutSettingsTab extends PluginSettingTab {
     const textRestoreEl = textColourSetting.controlEl.createDiv({
       cls: "clickable-icon extra-setting-button sprout-colour-restore",
     });
-    textRestoreEl.setAttribute("data-tooltip", this._tx("ui.settings.cards.cloze.textColor.restoreTooltip", "Restore default"));
+    textRestoreEl.setAttribute("aria-label", this._tx("ui.settings.cards.cloze.textColor.restoreTooltip", "Restore default"));
     textRestoreEl.setAttribute("data-tooltip-position", "top");
     textRestoreEl.setAttribute("aria-disabled", cardsSettings.clozeTextColor ? "false" : "true");
     setIcon(textRestoreEl, "rotate-ccw");
@@ -1701,7 +1703,7 @@ export class SproutSettingsTab extends PluginSettingTab {
       .addExtraButton((btn) => {
         btn.setIcon("reset");
         btn.extraSettingsEl.setAttribute(
-          "data-tooltip",
+          "aria-label",
           this._tx("ui.settings.cards.imageOcclusion.targetMaskColor.resetTooltip", "Reset to theme accent"),
         );
         btn.extraSettingsEl.setAttribute("data-tooltip-position", "top");
@@ -1732,7 +1734,7 @@ export class SproutSettingsTab extends PluginSettingTab {
       .addExtraButton((btn) => {
         btn.setIcon("reset");
         btn.extraSettingsEl.setAttribute(
-          "data-tooltip",
+          "aria-label",
           this._tx("ui.settings.cards.imageOcclusion.otherMaskColor.resetTooltip", "Reset to theme foreground"),
         );
         btn.extraSettingsEl.setAttribute("data-tooltip-position", "top");
@@ -2403,7 +2405,7 @@ export class SproutSettingsTab extends PluginSettingTab {
       const restoreEl = setting.controlEl.createDiv({
         cls: "clickable-icon extra-setting-button sprout-colour-restore",
       });
-      restoreEl.setAttribute("data-tooltip", this._tx("ui.settings.reading.colours.restoreDefaultTooltip", "Restore default"));
+      restoreEl.setAttribute("aria-label", this._tx("ui.settings.reading.colours.restoreDefaultTooltip", "Restore default"));
       restoreEl.setAttribute("data-tooltip-position", "top");
       restoreEl.setAttribute("aria-disabled", getValue() ? "false" : "true");
       setIcon(restoreEl, "rotate-ccw");
@@ -2961,7 +2963,12 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     gatekeeperDueQuestionsSetting = new Setting(wrapper)
       .setName(this._tx("ui.settings.study.gatekeeperBehaviour.dueQuestions.name", "Number of due questions"))
-      .setDesc(this._tx("ui.settings.study.gatekeeperBehaviour.dueQuestions.desc", "Number of due questions shown in each gatekeeper popup."))
+      .setDesc(
+        this._tx(
+          "ui.settings.study.gatekeeperBehaviour.dueQuestions.desc",
+          "Number of due questions shown in each gatekeeper popup. If fewer due questions are available, all due cards are shown. If none are due, gatekeeper is skipped.",
+        ),
+      )
       .addText((t) =>
         t
           .setPlaceholder(this._tx("ui.settings.study.gatekeeperBehaviour.dueQuestions.placeholder", "3"))
@@ -3080,13 +3087,6 @@ export class SproutSettingsTab extends PluginSettingTab {
         });
       });
 
-    const gatekeeperNote = wrapper.createDiv({ cls: "setting-item-description" });
-    gatekeeperNote.textContent =
-      this._tx(
-        "ui.settings.study.gatekeeperBypass.note",
-        "If fewer due questions are available, all due cards are shown. If none are due, gatekeeper is skipped.",
-      );
-
     startupDelaySetting.setDisabled(!this.plugin.settings.reminders.showOnStartup);
     repeatIntervalSetting.setDisabled(!this.plugin.settings.reminders.repeatEnabled);
     gatekeeperFrequencySetting.setDisabled(!this.plugin.settings.reminders.gatekeeperEnabled);
@@ -3095,6 +3095,411 @@ export class SproutSettingsTab extends PluginSettingTab {
     gatekeeperPauseSetting.setDisabled(!this.plugin.settings.reminders.gatekeeperEnabled);
     gatekeeperBypassSetting.setDisabled(!this.plugin.settings.reminders.gatekeeperEnabled);
     gatekeeperBypassWarningSetting.setDisabled(!this.plugin.settings.reminders.gatekeeperEnabled || !this.plugin.settings.reminders.gatekeeperAllowSkip);
+  }
+
+  private renderStudyAssistantSection(wrapper: HTMLElement): void {
+    const dependentSettings: Setting[] = [];
+    const provider = this.plugin.settings.studyAssistant.provider;
+    const modelLikelySupportsVision = (rawModel: string): boolean => {
+      const model = String(rawModel || "").toLowerCase();
+      if (!model) return false;
+      return [
+        "vision",
+        "vl",
+        "gpt-4o",
+        "gpt-4.1",
+        "gpt-5",
+        "o1",
+        "o3",
+        "o4",
+        "claude",
+        "sonnet",
+        "opus",
+        "haiku",
+        "gemini",
+        "pixtral",
+        "llava",
+      ].some((token) => model.includes(token));
+    };
+
+    const modelDefaults: Record<typeof provider, string[]> = {
+      // OpenAI requires exact model IDs, not display names.
+      openai: ["gpt-5", "gpt-5-mini", "gpt-5-nano", "gpt-4.1", "gpt-4.1-mini"],
+      deepseek: ["deepseek-chat", "deepseek-reasoner"],
+      // Anthropic requires Claude model IDs.
+      anthropic: ["claude-opus-4-1", "claude-sonnet-4-5", "claude-3-5-haiku-latest"],
+      // Groq requires Groq model IDs (not xAI Grok names).
+      groq: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "deepseek-r1-distill-llama-70b"],
+      custom: [],
+    };
+
+    const withDependentSetting = (setting: Setting): Setting => {
+      dependentSettings.push(setting);
+      return setting;
+    };
+
+    new Setting(wrapper).setName(this._tx("ui.settings.studyAssistant.sections.info", "Info")).setHeading();
+
+    const infoItem = wrapper.createDiv({ cls: "setting-item" });
+    const infoInfo = infoItem.createDiv({ cls: "setting-item-info" });
+    infoInfo.createDiv({
+      cls: "setting-item-description",
+      text: this._tx(
+        "ui.settings.studyAssistant.info.desc",
+        "Sprig uses a bring-your-own-API-key (BYOK) model: you provide your own API key, and usage is billed directly by your selected AI provider. Many AI tools work similarly behind the scenes but bundle API costs into their subscription pricing; Sprig presents this model transparently. API keys are kept in your local plugin settings and sent directly to the provider you choose for each request, and Sprout does not share them with a separate Sprout service. AI output can still be incorrect or hallucinated, so verify important answers before relying on them.",
+      ),
+    });
+
+    new Setting(wrapper).setName(this._tx("ui.settings.studyAssistant.sections.enableSprig", "Enable Sprig")).setHeading();
+
+    new Setting(wrapper)
+      .setName(this._tx("ui.settings.studyAssistant.enabled.name", "Enable Sprig"))
+      .setDesc(this._tx("ui.settings.studyAssistant.enabled.desc", "Turn Sprig on or off. For functionality, an API key is required below."))
+      .addToggle((toggle) =>
+        toggle.setValue(!!this.plugin.settings.studyAssistant.enabled).onChange(async (value) => {
+          this.plugin.settings.studyAssistant.enabled = !!value;
+          await this.plugin.saveAll();
+          this.queueSettingsNotice(
+            "studyAssistant.enabled",
+            this._tx("ui.settings.studyAssistant.notice.enabled", "Sprig: {state}", {
+              state: value ? this._tx("ui.common.on", "On") : this._tx("ui.common.off", "Off"),
+            }),
+          );
+          this.onRequestRerender?.();
+        }),
+      );
+
+    new Setting(wrapper).setName(this._tx("ui.settings.studyAssistant.sections.provider", "AI Provider")).setHeading();
+
+    const standardProviderOptions: Array<{ value: typeof provider; label: string }> = [
+      { value: "anthropic", label: "Anthropic" },
+      { value: "deepseek", label: "DeepSeek" },
+      { value: "groq", label: "Groq" },
+      { value: "openai", label: "OpenAI" },
+    ].sort((a, b) => a.label.localeCompare(b.label));
+
+    const providerOptions: Array<{ value: typeof provider; label: string }> = [
+      ...standardProviderOptions,
+      { value: "custom", label: "Custom" },
+    ];
+
+    withDependentSetting(
+      new Setting(wrapper)
+        .setName(this._tx("ui.settings.studyAssistant.provider.name", "AI provider"))
+        .setDesc(this._tx("ui.settings.studyAssistant.provider.desc", "Choose which AI provider Sprig should use."))
+        .then((setting) => {
+          this._addSimpleSelect(setting.controlEl, {
+            options: providerOptions,
+            value: this.plugin.settings.studyAssistant.provider,
+            separatorAfterIndex: standardProviderOptions.length - 1,
+            onChange: (value) => {
+              const next = value === "openai" || value === "deepseek" || value === "anthropic" || value === "groq" || value === "custom"
+                ? value
+                : "openai";
+              const previousProvider = this.plugin.settings.studyAssistant.provider;
+              const previousModel = String(this.plugin.settings.studyAssistant.model || "").trim();
+              this.plugin.settings.studyAssistant.provider = next;
+
+              if (next !== "custom") {
+                const nextProviderModels = [...modelDefaults[next]].sort((a, b) => a.localeCompare(b));
+                if (!previousModel || previousProvider !== next) {
+                  this.plugin.settings.studyAssistant.model = nextProviderModels[0] || "";
+                }
+                if (this.plugin.settings.studyAssistant.model && !nextProviderModels.includes(this.plugin.settings.studyAssistant.model)) {
+                  this.plugin.settings.studyAssistant.model = nextProviderModels[0] || this.plugin.settings.studyAssistant.model;
+                }
+              }
+
+              void this.plugin.saveAll();
+              this._softRerender();
+            },
+          });
+        }),
+    );
+
+    withDependentSetting(
+      new Setting(wrapper)
+        .setName(this._tx("ui.settings.studyAssistant.model.name", "Model"))
+        .setDesc(this._tx("ui.settings.studyAssistant.model.desc", "Model name used for the selected provider."))
+        .then((setting) => {
+          if (provider === "custom") {
+            setting.controlEl.empty();
+            setting.addText((text) => {
+              text.setValue(this.plugin.settings.studyAssistant.model || "");
+              text.onChange(async (value) => {
+                this.plugin.settings.studyAssistant.model = String(value || "").trim();
+                await this.plugin.saveAll();
+              });
+            });
+            return;
+          }
+
+          const models = [...modelDefaults[provider]].sort((a, b) => a.localeCompare(b));
+          const currentModel = String(this.plugin.settings.studyAssistant.model || "").trim();
+          const modelOptions = models.map((model) => ({ value: model, label: model }));
+          if (currentModel && !models.includes(currentModel)) {
+            modelOptions.push({ value: currentModel, label: `${currentModel} (custom)` });
+            modelOptions.sort((a, b) => a.label.localeCompare(b.label));
+          }
+
+          this._addSimpleSelect(setting.controlEl, {
+            options: modelOptions,
+            value: currentModel || models[0] || "",
+            onChange: (value) => {
+              this.plugin.settings.studyAssistant.model = String(value || "").trim();
+              void this.plugin.saveAll();
+            },
+          });
+        }),
+    );
+
+    if (provider === "custom") {
+      withDependentSetting(
+        new Setting(wrapper)
+          .setName(this._tx("ui.settings.studyAssistant.endpointOverride.name", "Endpoint override"))
+          .setDesc(this._tx("ui.settings.studyAssistant.endpointOverride.custom.desc", "Required custom base URL for your endpoint."))
+          .addText((text) => {
+            text.setValue(this.plugin.settings.studyAssistant.endpointOverride || "");
+            text.onChange(async (value) => {
+              this.plugin.settings.studyAssistant.endpointOverride = String(value || "").trim();
+              await this.plugin.saveAll();
+            });
+          }),
+      );
+    }
+
+    const providerKeyField: Record<typeof provider, { key: keyof SproutSettings["studyAssistant"]["apiKeys"]; label: string; placeholder: string }> = {
+      openai: { key: "openai", label: "OpenAI API key", placeholder: "sk-..." },
+      deepseek: { key: "deepseek", label: "DeepSeek API key", placeholder: "sk-..." },
+      anthropic: { key: "anthropic", label: "Anthropic API key", placeholder: "sk-ant-..." },
+      groq: { key: "groq", label: "Groq API key", placeholder: "gsk_..." },
+      custom: { key: "custom", label: "Custom API key", placeholder: "sk-..." },
+    };
+
+    const currentKeyField = providerKeyField[provider];
+    const currentKeyToken = String(currentKeyField.key);
+    const pluginId = this.plugin.manifest?.id || "sprout";
+    const apiKeysPath = `.obsidian/plugins/${pluginId}/configuration/api-keys.json`;
+
+    withDependentSetting(
+      new Setting(wrapper)
+          .setName(this._tx(`ui.settings.studyAssistant.keys.${currentKeyToken}.name`, currentKeyField.label))
+        .setDesc(
+          this._tx(
+              `ui.settings.studyAssistant.keys.${currentKeyToken}.desc`,
+            "Stored in {path}. If you use Git, add only this file to .gitignore so other Sprout settings can still sync across devices.",
+            { path: apiKeysPath },
+          ),
+        )
+        .addText((text) => {
+          text.inputEl.type = "password";
+          text.inputEl.autocomplete = "off";
+          text.setPlaceholder(currentKeyField.placeholder);
+          text.setValue(this.plugin.settings.studyAssistant.apiKeys[currentKeyField.key] || "");
+          text.onChange(async (value) => {
+            this.plugin.settings.studyAssistant.apiKeys[currentKeyField.key] = String(value || "").trim();
+            await this.plugin.saveAll();
+          });
+        }),
+    );
+
+    withDependentSetting(
+      new Setting(wrapper)
+        .setName(this._tx("ui.settings.studyAssistant.privacy.saveChatHistory.name", "Save chat history"))
+        .setDesc(this._tx("ui.settings.studyAssistant.privacy.saveChatHistory.desc", "Save conversations for each note so they are restored in future chat sessions."))
+        .addToggle((toggle) =>
+          toggle.setValue(!!this.plugin.settings.studyAssistant.privacy.saveChatHistory).onChange(async (value) => {
+            this.plugin.settings.studyAssistant.privacy.saveChatHistory = !!value;
+            await this.plugin.saveAll();
+          }),
+        ),
+    );
+
+    new Setting(wrapper).setName(this._tx("ui.settings.studyAssistant.sections.askMode", "Ask Mode")).setHeading();
+
+    withDependentSetting(
+      new Setting(wrapper)
+        .setName(this._tx("ui.settings.studyAssistant.prompts.assistant.name", "Custom instructions"))
+        .setDesc(this._tx("ui.settings.studyAssistant.prompts.assistant.desc", "Custom instructions for Ask mode."))
+        .addTextArea((text) => {
+          text.inputEl.placeholder = this._tx("ui.settings.studyAssistant.prompts.placeholder", "Enter custom instructions here");
+          text.setValue(this.plugin.settings.studyAssistant.prompts.assistant || "");
+          text.onChange(async (value) => {
+            this.plugin.settings.studyAssistant.prompts.assistant = String(value || "");
+            await this.plugin.saveAll();
+          });
+        }),
+    );
+
+    withDependentSetting(
+      new Setting(wrapper)
+        .setName(this._tx("ui.settings.studyAssistant.ask.includeImages.name", "Include images from note in messages"))
+        .setDesc(this._tx("ui.settings.studyAssistant.ask.includeImages.desc", "Include embedded note images in Ask mode messages."))
+        .addToggle((toggle) =>
+          toggle.setValue(!!this.plugin.settings.studyAssistant.privacy.includeImagesInAsk).onChange(async (value) => {
+            this.plugin.settings.studyAssistant.privacy.includeImagesInAsk = !!value;
+            await this.plugin.saveAll();
+          }),
+        ),
+    );
+
+    new Setting(wrapper).setName(this._tx("ui.settings.studyAssistant.sections.reviewMode", "Review mode")).setHeading();
+
+    withDependentSetting(
+      new Setting(wrapper)
+        .setName(this._tx("ui.settings.studyAssistant.prompts.review.name", "Custom instructions"))
+        .setDesc(this._tx("ui.settings.studyAssistant.prompts.review.desc", "Custom instructions for Review mode."))
+        .addTextArea((text) => {
+          text.inputEl.placeholder = this._tx("ui.settings.studyAssistant.prompts.placeholder", "Enter custom instructions here");
+          text.setValue(this.plugin.settings.studyAssistant.prompts.noteReview || "");
+          text.onChange(async (value) => {
+            this.plugin.settings.studyAssistant.prompts.noteReview = String(value || "");
+            await this.plugin.saveAll();
+          });
+        }),
+    );
+
+    withDependentSetting(
+      new Setting(wrapper)
+        .setName(this._tx("ui.settings.studyAssistant.review.includeImages.name", "Include images from note in messages"))
+        .setDesc(this._tx("ui.settings.studyAssistant.review.includeImages.desc", "Include embedded note images in Review mode messages."))
+        .addToggle((toggle) =>
+          toggle.setValue(!!this.plugin.settings.studyAssistant.privacy.includeImagesInReview).onChange(async (value) => {
+            this.plugin.settings.studyAssistant.privacy.includeImagesInReview = !!value;
+            await this.plugin.saveAll();
+          }),
+        ),
+    );
+
+    new Setting(wrapper).setName(this._tx("ui.settings.studyAssistant.sections.flashcardMode", "Flashcard mode")).setHeading();
+
+    withDependentSetting(
+      new Setting(wrapper)
+        .setName(this._tx("ui.settings.studyAssistant.prompts.generator.name", "Custom instructions"))
+        .setDesc(this._tx("ui.settings.studyAssistant.prompts.generator.desc", "Custom instructions for Flashcard mode."))
+        .addTextArea((text) => {
+          text.inputEl.placeholder = this._tx("ui.settings.studyAssistant.prompts.placeholder", "Enter custom instructions here");
+          text.setValue(this.plugin.settings.studyAssistant.prompts.generator || "");
+          text.onChange(async (value) => {
+            this.plugin.settings.studyAssistant.prompts.generator = String(value || "");
+            await this.plugin.saveAll();
+          });
+        }),
+    );
+
+    const flashcardModelIsVisionCapable = modelLikelySupportsVision(this.plugin.settings.studyAssistant.model);
+    const flashcardImagesDesc = flashcardModelIsVisionCapable
+      ? this._tx("ui.settings.studyAssistant.flashcard.includeImages.desc", "Include embedded note images in Flashcard mode messages.")
+      : this._tx(
+        "ui.settings.studyAssistant.flashcard.includeImages.notVisionCapable.desc",
+        "Selected model is not vision-capable. Choose a vision-capable model to enable image input for Flashcard mode.",
+      );
+
+    const flashcardImagesSetting = withDependentSetting(
+      new Setting(wrapper)
+        .setName(this._tx("ui.settings.studyAssistant.flashcard.includeImages.name", "Include images from note in messages"))
+        .setDesc(flashcardImagesDesc)
+        .addToggle((toggle) =>
+          toggle.setValue(!!this.plugin.settings.studyAssistant.privacy.includeImagesInFlashcard).onChange(async (value) => {
+            this.plugin.settings.studyAssistant.privacy.includeImagesInFlashcard = !!value;
+            await this.plugin.saveAll();
+          }),
+        ),
+    );
+    flashcardImagesSetting.setDisabled(!flashcardModelIsVisionCapable);
+
+    withDependentSetting(new Setting(wrapper).setName(this._tx("ui.settings.studyAssistant.sections.flashcardGeneration", "Flashcard generation")).setHeading());
+
+    withDependentSetting(
+      new Setting(wrapper)
+        .setName(this._tx("ui.settings.studyAssistant.generatorTargetCount.name", "Approximate number of cards"))
+        .setDesc(this._tx("ui.settings.studyAssistant.generatorTargetCount.desc", "Target 1-10 cards. AI may return +/- 1 around this value."))
+        .addSlider((s) =>
+          s
+            .setLimits(1, 10, 1)
+            .setValue(Math.max(1, Math.min(10, Math.round(Number(this.plugin.settings.studyAssistant.generatorTargetCount) || 5)))
+            )
+            .setDynamicTooltip()
+            .onChange(async (value) => {
+              this.plugin.settings.studyAssistant.generatorTargetCount = Math.max(1, Math.min(10, Math.round(Number(value) || 5)));
+              await this.plugin.saveAll();
+            }),
+        ),
+    );
+
+    withDependentSetting(new Setting(wrapper).setName(this._tx("ui.settings.studyAssistant.sections.generatorTypes", "What flashcard types to generate")).setHeading());
+
+    const cardTypes: Array<{ key: keyof typeof this.plugin.settings.studyAssistant.generatorTypes; label: string }> = [
+      { key: "basic", label: "Basic" },
+      { key: "reversed", label: "Basic (reversed)" },
+      { key: "cloze", label: "Cloze" },
+      { key: "mcq", label: "Multiple choice" },
+      { key: "oq", label: "Ordered question" },
+      { key: "io", label: "Image occlusion" },
+    ];
+
+    for (const type of cardTypes) {
+      if (type.key === "io" && !flashcardModelIsVisionCapable) continue;
+      const typeToken = String(type.key);
+      const typeDesc = type.key === "io"
+        ? this._tx(
+          "ui.settings.studyAssistant.generatorTypes.io.desc",
+          "If off, Sprig will not generate this type. Some models cannot analyse images. More advanced models can read text in images and turn it into questions. The most advanced models may attempt to generate image occlusion cards, but mask positioning can still be inaccurate. Check generated IO cards in the flashcard editor and adjust masks before studying.",
+        )
+        : this._tx(`ui.settings.studyAssistant.generatorTypes.${typeToken}.desc`, "If off, Sprig will not generate this type.");
+      withDependentSetting(
+        new Setting(wrapper)
+          .setName(this._tx(`ui.settings.studyAssistant.generatorTypes.${typeToken}.name`, type.label))
+          .setDesc(typeDesc)
+          .addToggle((toggle) =>
+            toggle.setValue(!!this.plugin.settings.studyAssistant.generatorTypes[type.key]).onChange(async (value) => {
+              this.plugin.settings.studyAssistant.generatorTypes[type.key] = !!value;
+              await this.plugin.saveAll();
+            }),
+          ),
+      );
+    }
+
+    withDependentSetting(new Setting(wrapper).setName(this._tx("ui.settings.studyAssistant.sections.generatorOutput", "Generated fields")).setHeading());
+
+    withDependentSetting(
+      new Setting(wrapper)
+        .setName(this._tx("ui.settings.studyAssistant.generatorOutput.title.name", "Include title fields"))
+        .setDesc(this._tx("ui.settings.studyAssistant.generatorOutput.title.desc", "Allow Sprig to generate `T | ... |` title rows."))
+        .addToggle((toggle) =>
+          toggle.setValue(!!this.plugin.settings.studyAssistant.generatorOutput.includeTitle).onChange(async (value) => {
+            this.plugin.settings.studyAssistant.generatorOutput.includeTitle = !!value;
+            await this.plugin.saveAll();
+          }),
+        ),
+    );
+
+    withDependentSetting(
+      new Setting(wrapper)
+        .setName(this._tx("ui.settings.studyAssistant.generatorOutput.info.name", "Include extra information fields"))
+        .setDesc(this._tx("ui.settings.studyAssistant.generatorOutput.info.desc", "Allow Sprig to generate `I | ... |` rows."))
+        .addToggle((toggle) =>
+          toggle.setValue(!!this.plugin.settings.studyAssistant.generatorOutput.includeInfo).onChange(async (value) => {
+            this.plugin.settings.studyAssistant.generatorOutput.includeInfo = !!value;
+            await this.plugin.saveAll();
+          }),
+        ),
+    );
+
+    withDependentSetting(
+      new Setting(wrapper)
+        .setName(this._tx("ui.settings.studyAssistant.generatorOutput.groups.name", "Include groups fields"))
+        .setDesc(this._tx("ui.settings.studyAssistant.generatorOutput.groups.desc", "Allow Sprig to generate `G | ... |` rows."))
+        .addToggle((toggle) =>
+          toggle.setValue(!!this.plugin.settings.studyAssistant.generatorOutput.includeGroups).onChange(async (value) => {
+            this.plugin.settings.studyAssistant.generatorOutput.includeGroups = !!value;
+            await this.plugin.saveAll();
+          }),
+        ),
+    );
+
+    const enabled = !!this.plugin.settings.studyAssistant.enabled;
+    for (const setting of dependentSettings) setting.setDisabled(!enabled);
   }
 
   private renderSchedulingSection(wrapper: HTMLElement): void {

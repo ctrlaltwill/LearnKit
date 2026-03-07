@@ -24,6 +24,7 @@
 
 export const VIEW_TYPE_REVIEWER = "sprout-reviewer";
 export const VIEW_TYPE_WIDGET = "sprout-widget";
+export const VIEW_TYPE_STUDY_ASSISTANT = "sprout-study-assistant";
 export const VIEW_TYPE_BROWSER = "sprout-browser";
 export const VIEW_TYPE_ANALYTICS = "sprout-analytics";
 export const VIEW_TYPE_HOME = "sprout-home";

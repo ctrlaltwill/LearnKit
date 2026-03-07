@@ -17,8 +17,7 @@ import { normalizeCardOptions } from "../../platform/core/store";
 import { getCorrectIndices } from "../../platform/types/card";
 import { buildAnswerOrOptionsFor, escapePipes } from "../../views/reviewer/fields";
 import { escapeDelimiterText, getDelimiter } from "../../platform/core/delimiter";
-import { replaceChildrenWithHTML } from "../../platform/core/ui";
-import { renderFlagPreviewHtml } from "../flags/flag-tokens";
+import { renderFlagAndLatexPreviewInElement, setCssProps } from "../../platform/core/ui";
 import {
   clearNode,
   titleCaseGroupPath,
@@ -184,7 +183,16 @@ export function createMobileClozeButtons(textarea: HTMLTextAreaElement): HTMLEle
   return wrap;
 }
 
-function attachFlagPreviewOverlay(control: HTMLInputElement | HTMLTextAreaElement): HTMLElement {
+function remToPx(rem: number): number {
+  const rootFontPx = Number.parseFloat(window.getComputedStyle(document.documentElement).fontSize || "16");
+  return Math.max(1, Math.round(rem * (Number.isFinite(rootFontPx) ? rootFontPx : 16)));
+}
+
+function fieldMinHeightPx(field: "title" | "question" | "answer" | "info"): number {
+  return remToPx(4.5);
+}
+
+function attachFlagPreviewOverlay(control: HTMLInputElement | HTMLTextAreaElement, minControlHeight = 38): HTMLElement {
   const wrap = document.createElement("div");
   wrap.className = `bc sprout-flag-editor-wrap${control instanceof HTMLTextAreaElement ? " sprout-flag-editor-wrap--multiline" : ""}`;
 
@@ -193,14 +201,58 @@ function attachFlagPreviewOverlay(control: HTMLInputElement | HTMLTextAreaElemen
 
   control.classList.add("sprout-flag-editor-control");
 
-  const renderOverlay = () => {
-    replaceChildrenWithHTML(overlay, renderFlagPreviewHtml(String(control.value ?? "")));
+  if (control instanceof HTMLTextAreaElement) {
+    // Let actual content drive height instead of keeping a fixed multi-row baseline.
+    control.rows = 1;
+  }
+
+  const measureControlHeight = () => {
+    if (control instanceof HTMLTextAreaElement) {
+      setCssProps(control, "height", "auto");
+      return Math.max(minControlHeight, Math.ceil(control.scrollHeight || 0));
+    }
+    return Math.max(minControlHeight, Math.ceil(control.getBoundingClientRect().height || 0));
   };
+
+  const applyControlHeight = (height: number) => {
+    setCssProps(control, "min-height", `${height}px`);
+    setCssProps(control, "height", `${height}px`);
+    if (control instanceof HTMLInputElement) {
+      setCssProps(control, "max-height", `${height}px`);
+    }
+  };
+
+  const syncPreviewHeight = () => {
+    const scrollbarFudgePx = 5;
+    const controlHeight = measureControlHeight();
+    const overlayHeight = Math.ceil(overlay.scrollHeight || 0);
+    const previewHeight = Math.max(
+      minControlHeight,
+      controlHeight + scrollbarFudgePx,
+      overlayHeight,
+    );
+    wrap.style.setProperty("--sprout-flag-preview-height", `${previewHeight}px`);
+    applyControlHeight(previewHeight);
+  };
+
+  const renderOverlay = () => {
+    renderFlagAndLatexPreviewInElement(overlay, String(control.value ?? ""));
+    syncPreviewHeight();
+    window.requestAnimationFrame(syncPreviewHeight);
+    window.setTimeout(syncPreviewHeight, 80);
+  };
+
+  overlay.addEventListener("pointerdown", (ev: PointerEvent) => {
+    if (ev.button !== 0) return;
+    ev.preventDefault();
+    control.focus();
+  }, true);
 
   overlay.addEventListener("click", () => control.focus());
 
   control.addEventListener("focus", () => {
     wrap.classList.add("sprout-flag-editor--focused");
+    syncPreviewHeight();
   });
 
   control.addEventListener("blur", () => {
@@ -209,8 +261,32 @@ function attachFlagPreviewOverlay(control: HTMLInputElement | HTMLTextAreaElemen
   });
 
   control.addEventListener("input", () => {
+    syncPreviewHeight();
     if (!wrap.classList.contains("sprout-flag-editor--focused")) renderOverlay();
   });
+
+  let ro: ResizeObserver | null = null;
+  let detachObserver: MutationObserver | null = null;
+  const cleanup = () => {
+    ro?.disconnect();
+    ro = null;
+    detachObserver?.disconnect();
+    detachObserver = null;
+  };
+
+  if (typeof ResizeObserver !== "undefined") {
+    ro = new ResizeObserver(() => {
+      syncPreviewHeight();
+    });
+    ro.observe(overlay);
+  }
+
+  if (document.body) {
+    detachObserver = new MutationObserver(() => {
+      if (!wrap.isConnected) cleanup();
+    });
+    detachObserver.observe(document.body, { childList: true, subtree: true });
+  }
 
   renderOverlay();
   wrap.appendChild(control);
@@ -395,7 +471,7 @@ export function createCardEditor(config: CardEditorConfig): CardEditorResult {
       label.className = "bc text-sm font-medium inline-flex items-center gap-1";
       const infoIcon = document.createElement("span");
       infoIcon.className = "bc inline-flex items-center justify-center [&_svg]:size-3 text-muted-foreground sprout-info-icon-elevated";
-      infoIcon.setAttribute("data-tooltip", CLOZE_TOOLTIP);
+      infoIcon.setAttribute("aria-label", CLOZE_TOOLTIP);
       infoIcon.setAttribute("data-tooltip-position", "top");
       setIcon(infoIcon, "info");
       label.appendChild(infoIcon);
@@ -403,7 +479,7 @@ export function createCardEditor(config: CardEditorConfig): CardEditorResult {
       label.className = "bc text-sm font-medium inline-flex items-center gap-1";
       const infoIcon = document.createElement("span");
       infoIcon.className = "bc inline-flex items-center justify-center [&_svg]:size-3 text-muted-foreground sprout-info-icon-elevated";
-      infoIcon.setAttribute("data-tooltip", FORMAT_TOOLTIP);
+      infoIcon.setAttribute("aria-label", FORMAT_TOOLTIP);
       infoIcon.setAttribute("data-tooltip-position", "top");
       setIcon(infoIcon, "info");
       label.appendChild(infoIcon);
@@ -463,7 +539,12 @@ export function createCardEditor(config: CardEditorConfig): CardEditorResult {
     }
 
     const shouldPreviewFlags = field.editable && ["title", "question", "answer", "info"].includes(field.key);
-    wrapper.appendChild(shouldPreviewFlags ? attachFlagPreviewOverlay(input) : input);
+    const modalFieldMin =
+      field.editable && (field.key === "title" || field.key === "question" || field.key === "answer" || field.key === "info")
+        ? fieldMinHeightPx(field.key)
+        : 38;
+
+    wrapper.appendChild(shouldPreviewFlags ? attachFlagPreviewOverlay(input, modalFieldMin) : input);
     inputEls[field.key] = input;
     if (input instanceof HTMLTextAreaElement) {
       attachFormatShortcuts(input);
@@ -864,7 +945,7 @@ function createOqEditor(card: CardRecord) {
   label.appendChild(Object.assign(document.createElement("span"), { className: "bc text-destructive", textContent: "*" }));
   const stepsInfoIcon = document.createElement("span");
   stepsInfoIcon.className = "bc inline-flex items-center justify-center [&_svg]:size-3 text-muted-foreground sprout-info-icon-elevated";
-  stepsInfoIcon.setAttribute("data-tooltip", OQ_TOOLTIP);
+  stepsInfoIcon.setAttribute("aria-label", OQ_TOOLTIP);
   stepsInfoIcon.setAttribute("data-tooltip-position", "top");
   setIcon(stepsInfoIcon, "info");
   label.appendChild(stepsInfoIcon);
@@ -879,7 +960,7 @@ function createOqEditor(card: CardRecord) {
   listContainer.className = "bc flex flex-col gap-2 sprout-oq-editor-list";
   container.appendChild(listContainer);
 
-  const stepRows: Array<{ row: HTMLElement; input: HTMLInputElement; badge: HTMLElement }> = [];
+  const stepRows: Array<{ row: HTMLElement; input: HTMLTextAreaElement; badge: HTMLElement }> = [];
 
   const renumber = () => {
     stepRows.forEach((entry, i) => {
@@ -904,11 +985,12 @@ function createOqEditor(card: CardRecord) {
 
     const row = document.createElement("div");
     row.className = "bc flex items-center gap-2 sprout-oq-editor-row";
-    row.draggable = true;
+    row.draggable = false;
 
     // Drag grip
     const grip = document.createElement("span");
     grip.className = "bc inline-flex items-center justify-center text-muted-foreground cursor-grab sprout-oq-grip";
+    grip.draggable = true;
     setIcon(grip, "grip-vertical");
     row.appendChild(grip);
 
@@ -919,18 +1001,24 @@ function createOqEditor(card: CardRecord) {
     row.appendChild(badge);
 
     // Text input
-    const input = document.createElement("input");
-    input.type = "text";
-    input.className = "bc input flex-1 text-sm sprout-input-fixed";
+    const input = document.createElement("textarea");
+    input.className = "bc textarea flex-1 text-sm sprout-oq-step-input";
+    input.rows = 1;
     input.placeholder = `Step ${idx + 1}`;
     input.value = value;
+    const autoGrow = () => {
+      setCssProps(input, "height", "auto");
+      setCssProps(input, "height", `${Math.max(38, input.scrollHeight)}px`);
+    };
+    input.addEventListener("input", autoGrow);
+    autoGrow();
     row.appendChild(attachFlagPreviewOverlay(input));
 
     // Delete button
     const delBtn = document.createElement("button");
     delBtn.type = "button";
     delBtn.className = "bc inline-flex items-center justify-center p-0 sprout-remove-btn-ghost sprout-oq-del-btn";
-    delBtn.setAttribute("data-tooltip", "Remove step");
+    delBtn.setAttribute("aria-label", "Remove step");
     delBtn.setAttribute("data-tooltip-position", "top");
     const xIcon = document.createElement("span");
     xIcon.className = "bc inline-flex items-center justify-center [&_svg]:size-4";
@@ -1047,7 +1135,7 @@ function createMcqEditor(card: CardRecord) {
   label.textContent = "Answers and options";
   const mcqInfoIcon = document.createElement("span");
   mcqInfoIcon.className = "bc inline-flex items-center justify-center [&_svg]:size-3 text-muted-foreground sprout-info-icon-elevated";
-  mcqInfoIcon.setAttribute("data-tooltip", "Check the box next to each correct answer. At least one correct and one incorrect option required.");
+  mcqInfoIcon.setAttribute("aria-label", "Check the box next to each correct answer. At least one correct and one incorrect option required.");
   mcqInfoIcon.setAttribute("data-tooltip-position", "top");
   setIcon(mcqInfoIcon, "info");
   label.appendChild(mcqInfoIcon);
@@ -1077,7 +1165,7 @@ function createMcqEditor(card: CardRecord) {
     checkbox.type = "checkbox";
     checkbox.checked = isCorrect;
     checkbox.className = "bc sprout-mcq-correct-checkbox";
-    checkbox.setAttribute("data-tooltip", "Mark as correct answer");
+    checkbox.setAttribute("aria-label", "Mark as correct answer");
     checkbox.setAttribute("data-tooltip-position", "top");
     row.appendChild(checkbox);
 
@@ -1091,7 +1179,7 @@ function createMcqEditor(card: CardRecord) {
     const removeBtn = document.createElement("button");
     removeBtn.type = "button";
     removeBtn.className = "bc inline-flex items-center justify-center p-0 sprout-remove-btn-ghost";
-    removeBtn.setAttribute("data-tooltip", "Remove option");
+    removeBtn.setAttribute("aria-label", "Remove option");
     removeBtn.setAttribute("data-tooltip-position", "top");
     const xIcon = document.createElement("span");
     xIcon.className = "bc inline-flex items-center justify-center [&_svg]:size-4";

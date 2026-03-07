@@ -52,7 +52,7 @@ export function makeDropdownMenu<T extends string>(
   trigger.className = "btn-outline h-9 px-3 text-sm inline-flex items-center gap-2";
   trigger.setAttribute("aria-haspopup", "menu");
   trigger.setAttribute("aria-expanded", "false");
-  trigger.setAttribute("data-tooltip", args.label);
+  trigger.setAttribute("aria-label", args.label);
   trigger.setAttribute("data-tooltip-position", "top");
   trigger.classList.add("sprout-pointer-auto");
   root.appendChild(trigger);
@@ -298,7 +298,7 @@ export function makeColumnsDropdown(
   trigger.className = "btn-outline h-9 px-3 text-sm inline-flex items-center gap-2";
   trigger.setAttribute("aria-haspopup", "menu");
   trigger.setAttribute("aria-expanded", "false");
-  trigger.setAttribute("data-tooltip", args.label);
+  trigger.setAttribute("aria-label", args.label);
   trigger.setAttribute("data-tooltip-position", "top");
   root.appendChild(trigger);
 
@@ -330,7 +330,7 @@ export function makeColumnsDropdown(
   const menu = document.createElement("div");
   menu.setAttribute("role", "menu");
   menu.id = `${id}-menu`;
-  menu.setAttribute("data-tooltip", trigger.id);
+  menu.setAttribute("aria-label", trigger.id);
   menu.className = "flex flex-col";
   panel.appendChild(menu);
 

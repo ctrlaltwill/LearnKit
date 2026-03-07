@@ -402,6 +402,7 @@ export class SproutAnalyticsView extends ItemView {
     this._renderStatsTable(body, applyAos, animationsEnabled,
       statsCardDelay, rowBaseDelay, rowStep,
       events, reviewLog, timezone, todayIndex, dayMap, dueByDay, parentIds,
+      tx,
     );
 
     if (animationsEnabled) refreshAOS();
@@ -1209,7 +1210,7 @@ export class SproutAnalyticsView extends ItemView {
         b.type = "button";
         b.className = `bc ${active ? "btn" : "btn-outline"} h-8 px-2`;
         b.textContent = label;
-        b.setAttribute("data-tooltip", tooltip);
+        b.setAttribute("aria-label", tooltip);
         b.setAttribute("data-tooltip-position", "top");
         b.disabled = disabled;
         if (active) b.setAttribute("aria-current", "page");
@@ -1227,7 +1228,7 @@ export class SproutAnalyticsView extends ItemView {
         b.type = "button";
         b.className = "bc btn-outline h-8 px-2";
         b.textContent = "…";
-        b.setAttribute("data-tooltip", tx("ui.analytics.table.pageN", "Page {page}", { page: targetPage }));
+        b.setAttribute("aria-label", tx("ui.analytics.table.pageN", "Page {page}", { page: targetPage }));
         b.setAttribute("data-tooltip-position", "top");
         b.addEventListener("click", (ev) => {
           ev.preventDefault();
@@ -1252,7 +1253,7 @@ export class SproutAnalyticsView extends ItemView {
       const prev = document.createElement("button");
       prev.type = "button";
       prev.className = "bc btn-outline h-8 px-2";
-      prev.setAttribute("data-tooltip", tx("ui.analytics.table.prevPage", "Previous page"));
+      prev.setAttribute("aria-label", tx("ui.analytics.table.prevPage", "Previous page"));
       prev.setAttribute("data-tooltip-position", "top");
       prev.disabled = currentPage <= 0;
       prev.addEventListener("click", (ev) => {
@@ -1319,7 +1320,7 @@ export class SproutAnalyticsView extends ItemView {
       const next = document.createElement("button");
       next.type = "button";
       next.className = "bc btn-outline h-8 px-2";
-      next.setAttribute("data-tooltip", tx("ui.analytics.table.nextPage", "Next page"));
+      next.setAttribute("aria-label", tx("ui.analytics.table.nextPage", "Next page"));
       next.setAttribute("data-tooltip-position", "top");
       next.disabled = currentPage >= totalPagesLocal - 1;
       next.addEventListener("click", (ev) => {

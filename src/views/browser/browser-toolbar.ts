@@ -275,7 +275,7 @@ export function buildBrowserLayout(
   suspendBtn.type = "button";
   suspendBtn.className = "btn-outline h-9 px-3 text-sm inline-flex items-center gap-2 sprout-browser-action-btn sprout-browser-action-btn-suspend";
   suspendBtn.disabled = true;
-  suspendBtn.setAttribute("data-tooltip", tx("ui.browser.action.suspend.tooltip", "Suspend or Unsuspend selected cards"));
+  suspendBtn.setAttribute("aria-label", tx("ui.browser.action.suspend.tooltip", "Suspend or Unsuspend selected cards"));
   suspendBtn.setAttribute("data-tooltip-position", "top");
   suspendBtn.addEventListener("click", (ev) => {
     ev.preventDefault();
@@ -289,7 +289,7 @@ export function buildBrowserLayout(
   editBtn.type = "button";
   editBtn.className = "btn-outline h-9 px-3 text-sm inline-flex items-center gap-2 sprout-browser-action-btn sprout-browser-action-btn-edit";
   editBtn.disabled = true;
-  editBtn.setAttribute("data-tooltip", tx("ui.browser.action.edit.tooltip", "Edit selected cards"));
+  editBtn.setAttribute("aria-label", tx("ui.browser.action.edit.tooltip", "Edit selected cards"));
   editBtn.setAttribute("data-tooltip-position", "top");
   editBtn.setAttribute("aria-live", "polite");
   const editIcon = document.createElement("span");
@@ -312,7 +312,7 @@ export function buildBrowserLayout(
   resetFiltersBtn.type = "button";
   resetFiltersBtn.className = "btn-outline h-9 px-3 text-sm inline-flex items-center gap-2 sprout-browser-action-btn sprout-browser-action-btn-reset";
   resetFiltersBtn.disabled = true;
-  resetFiltersBtn.setAttribute("data-tooltip", tx("ui.browser.action.reset.tooltip", "Reset filters"));
+  resetFiltersBtn.setAttribute("aria-label", tx("ui.browser.action.reset.tooltip", "Reset filters"));
   resetFiltersBtn.setAttribute("data-tooltip-position", "top");
   const resetIcon = document.createElement("span");
   resetIcon.className = "inline-flex items-center justify-center [&_svg]:size-4";

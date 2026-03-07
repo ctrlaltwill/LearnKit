@@ -64,7 +64,7 @@ export function renderStudySessionHeader(container: HTMLElement, interfaceLangua
   const timerGroup = document.createElement("div");
   timerGroup.className = "bc button-group sprout-session-timer-group";
   timerGroup.setAttribute("role", "group");
-  timerGroup.setAttribute("data-tooltip", tx(interfaceLanguage, "ui.reviewer.session.header.timerControls", "Timer controls"));
+  timerGroup.setAttribute("aria-label", tx(interfaceLanguage, "ui.reviewer.session.header.timerControls", "Timer controls"));
 
   const timerDisplay = document.createElement("div");
   timerDisplay.className = "bc btn-outline text-sm flex items-center justify-center sprout-session-timer-display";
@@ -126,7 +126,7 @@ export function renderStudySessionHeader(container: HTMLElement, interfaceLangua
   const playBtn = document.createElement("button");
   playBtn.type = "button";
   playBtn.className = "bc btn-outline inline-flex items-center gap-1 sprout-session-timer-btn";
-  playBtn.setAttribute("data-tooltip", tx(interfaceLanguage, "ui.reviewer.session.header.playTooltip", "Play timer"));
+  playBtn.setAttribute("aria-label", tx(interfaceLanguage, "ui.reviewer.session.header.playTooltip", "Play timer"));
   const playIconWrap = document.createElement("span");
   playIconWrap.className = "bc inline-flex items-center justify-center [&_svg]:size-3.5 scale-60";
   setIcon(playIconWrap, "play");
@@ -141,7 +141,7 @@ export function renderStudySessionHeader(container: HTMLElement, interfaceLangua
   const pauseBtn = document.createElement("button");
   pauseBtn.type = "button";
   pauseBtn.className = "bc btn-outline inline-flex items-center gap-1 sprout-session-timer-btn";
-  pauseBtn.setAttribute("data-tooltip", tx(interfaceLanguage, "ui.reviewer.session.header.pauseTooltip", "Pause timer"));
+  pauseBtn.setAttribute("aria-label", tx(interfaceLanguage, "ui.reviewer.session.header.pauseTooltip", "Pause timer"));
   const pauseIconWrap = document.createElement("span");
   pauseIconWrap.className = "bc inline-flex items-center justify-center [&_svg]:size-3.5 scale-60";
   setIcon(pauseIconWrap, "pause");

@@ -135,6 +135,7 @@ export class ImageOcclusionCreatorModal extends Modal {
   private textPreviewEl: HTMLElement | null = null;
   private onDocPaste?: (ev: ClipboardEvent) => void;
   private onDocKeyDown?: (ev: KeyboardEvent) => void;
+  private fitRetryRaf: number | null = null;
 
   constructor(app: App, plugin: SproutPlugin) {
     super(app);
@@ -544,11 +545,9 @@ export class ImageOcclusionCreatorModal extends Modal {
     if (this.viewportEl) this.viewportEl.classList.remove("sprout-is-hidden");
     if (this.placeholderEl) this.placeholderEl.classList.add("sprout-is-hidden");
 
-    this.updateCanvasHeightForImage();
-    this.fitToViewport();
     this.updatePlaceholderVisibility();
     this.seedHistoryFromImage();
-    this.renderRects();
+    this.fitToViewportWhenReady();
 
   }
 
@@ -599,20 +598,45 @@ export class ImageOcclusionCreatorModal extends Modal {
 
   // ── Viewport / transform ──────────────────────────────────────────────────
 
-  private fitToViewport() {
-    if (!this.viewportEl || !this.stageEl) return;
+  private fitToViewport(): boolean {
+    if (!this.viewportEl || !this.stageEl) return false;
 
     const vw = this.viewportEl.clientWidth;
     const vh = this.viewportEl.clientHeight;
 
+    // On first modal open/paste the viewport can report 0x0 briefly.
+    // Avoid applying a scale(0) transform and retry on the next frame.
+    if (!vw || !vh || vw < 2 || vh < 2 || !this.stageW || !this.stageH) return false;
+
     const scaleX = vw / this.stageW;
     const scaleY = vh / this.stageH;
-    const scale = Math.min(scaleX, scaleY);
+    const scale = Math.max(0.0001, Math.min(scaleX, scaleY));
     const tx = (vw - this.stageW * scale) / 2;
     const ty = (vh - this.stageH * scale) / 2;
 
     this.t = { scale, tx, ty };
     this.applyTransform();
+    return true;
+  }
+
+  private fitToViewportWhenReady(maxAttempts = 5) {
+    if (this.fitRetryRaf != null) {
+      cancelAnimationFrame(this.fitRetryRaf);
+      this.fitRetryRaf = null;
+    }
+
+    const attemptFit = (attempt: number) => {
+      this.updateCanvasHeightForImage();
+      const fitted = this.fitToViewport();
+      this.renderRects();
+      if (fitted || attempt >= maxAttempts) {
+        this.fitRetryRaf = null;
+        return;
+      }
+      this.fitRetryRaf = requestAnimationFrame(() => attemptFit(attempt + 1));
+    };
+
+    attemptFit(0);
   }
 
   private applyTransform() {
@@ -1310,6 +1334,10 @@ export class ImageOcclusionCreatorModal extends Modal {
     if (this.onDocKeyDown) {
       document.removeEventListener("keydown", this.onDocKeyDown);
       this.onDocKeyDown = undefined;
+    }
+    if (this.fitRetryRaf != null) {
+      cancelAnimationFrame(this.fitRetryRaf);
+      this.fitRetryRaf = null;
     }
     this.containerEl.removeClass("sprout-modal-container");
     this.containerEl.removeClass("sprout-modal-dim");

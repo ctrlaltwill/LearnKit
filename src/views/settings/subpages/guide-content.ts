@@ -26,6 +26,9 @@ const PREFERRED_GUIDE_FILES = [
   "Home.md",
   "Installation.md",
   "Syncing.md",
+  "Assistant-Configuration.md",
+  "Assistant-Setting-Up.md",
+  "Assistant-Usage.md",
   "Creating-Cards.md",
   "Cards.md",
   "Flag-Codes.md",
@@ -55,6 +58,7 @@ const PREFERRED_GUIDE_FILES = [
   "Keyboard-Shortcuts.md",
   "Custom-Delimiters.md",
   "Anki-Export-&-Import.md",
+  "AI-Usage-Policy.md",
   "Backups.md",
   "Support-Sprout.md",
 ];
@@ -72,6 +76,12 @@ export const GUIDE_CATEGORIES: GuideCategory[] = [
     label: tx("ui.guide.categories.analytics", "Analytics"),
     icon: "chart-column",
     sections: [{ pageKeys: ["Analytics", "Charts"] }],
+  },
+  {
+    key: "assistant",
+    label: tx("ui.guide.categories.assistant", "Assistant"),
+    icon: "sparkles",
+    sections: [{ pageKeys: ["Assistant-Configuration", "Assistant-Setting-Up", "Assistant-Usage"] }],
   },
   {
     key: "audio",
@@ -98,7 +108,7 @@ export const GUIDE_CATEGORIES: GuideCategory[] = [
     label: tx("ui.guide.categories.maintenance", "Maintenance"),
     icon: "shield-check",
     sections: [
-      { pageKeys: ["Anki-Export-&-Import", "Backups", "Custom-Delimiters", "Keyboard-Shortcuts", "Settings", "Reminders", "Gatekeeper"] },
+      { pageKeys: ["AI-Usage-Policy", "Anki-Export-&-Import", "Backups", "Custom-Delimiters", "Gatekeeper", "Keyboard-Shortcuts", "Reminders", "Settings"] },
     ],
   },
   {
@@ -114,6 +124,9 @@ export const GUIDE_CATEGORIES: GuideCategory[] = [
 ];
 
 const GUIDE_LABEL_MAP: Record<string, string> = {
+  "Assistant-Configuration": "Configuration",
+  "Assistant-Setting-Up": "Setting Up",
+  "Assistant-Usage": "Usage",
   Cards: "Cards Overview",
   "Language-Settings": "Language Options",
   Backups: "Back Up",
@@ -128,6 +141,9 @@ const GUIDE_LABEL_MAP: Record<string, string> = {
 const GUIDE_ICON_MAP: Record<string, string> = {
   Home: "house",
   Installation: "download",
+  "Assistant-Configuration": "settings-2",
+  "Assistant-Setting-Up": "key-round",
+  "Assistant-Usage": "messages-square",
   "Creating-Cards": "plus-circle",
   Cards: "square-stack",
   "Custom-Delimiters": "separator-vertical",
@@ -154,6 +170,7 @@ const GUIDE_ICON_MAP: Record<string, string> = {
   Reminders: "bell",
   Gatekeeper: "shield-alert",
   "Anki-Export-&-Import": "arrow-right-left",
+  "AI-Usage-Policy": "shield-check",
   Settings: "settings",
   Syncing: "refresh-cw",
   Backups: "database-backup",

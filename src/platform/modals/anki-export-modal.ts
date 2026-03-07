@@ -100,7 +100,7 @@ export class AnkiExportModal extends Modal {
   private mkField(parent: HTMLElement, label: string, hint?: string) {
     const wrapper = parent.createDiv({ cls: "bc flex flex-col gap-1" });
     const lbl = wrapper.createEl("label", { cls: "bc text-sm font-medium", text: label });
-    if (hint) lbl.setAttribute("data-tooltip", hint);
+    if (hint) lbl.setAttribute("aria-label", hint);
     return wrapper;
   }
 
@@ -538,7 +538,7 @@ export class AnkiExportModal extends Modal {
 
     const cancelBtn = footer.createEl("button", {
       cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm",
-      attr: { type: "button", "data-tooltip": "Cancel export" },
+      attr: { type: "button", "aria-label": "Cancel export" },
     });
     const cancelIcon = cancelBtn.createEl("span", { cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
     setIcon(cancelIcon, "x");
@@ -547,7 +547,7 @@ export class AnkiExportModal extends Modal {
 
     const exportBtn = footer.createEl("button", {
       cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm",
-      attr: { type: "button", "data-tooltip": "Export cards to .apkg file" },
+      attr: { type: "button", "aria-label": "Export cards to .apkg file" },
     });
     const exportIcon = exportBtn.createEl("span", { cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
     setIcon(exportIcon, "download");
@@ -624,7 +624,7 @@ export class AnkiExportModal extends Modal {
 
     const downloadBtn = footer.createEl("button", {
       cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm",
-      attr: { type: "button", "data-tooltip": "Download .apkg file to your computer" },
+      attr: { type: "button", "aria-label": "Download .apkg file to your computer" },
     });
     const dlIcon = downloadBtn.createEl("span", { cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
     setIcon(dlIcon, "download");
@@ -645,7 +645,7 @@ export class AnkiExportModal extends Modal {
 
     const saveBtn = footer.createEl("button", {
       cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm",
-      attr: { type: "button", "data-tooltip": "Save .apkg file into your vault" },
+      attr: { type: "button", "aria-label": "Save .apkg file into your vault" },
     });
     const saveIcon = saveBtn.createEl("span", { cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
     setIcon(saveIcon, "save");
@@ -671,7 +671,7 @@ export class AnkiExportModal extends Modal {
 
     const doneBtn = footer.createEl("button", {
       cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm",
-      attr: { type: "button", "data-tooltip": "Close this dialog" },
+      attr: { type: "button", "aria-label": "Close this dialog" },
     });
     const doneIcon = doneBtn.createEl("span", { cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
     setIcon(doneIcon, "check");

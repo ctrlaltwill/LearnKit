@@ -67,6 +67,7 @@ import {
   isIoRevealableType,
   renderImageOcclusionReviewInto,
 } from "../../platform/image-occlusion/image-occlusion-review-render";
+import { ImageOcclusionCreatorModal } from "../../platform/modals/image-occlusion-creator-modal";
 
 // ✅ shared header import (like browser.ts)
 import { type SproutHeader, createViewHeader } from "../../platform/core/header";
@@ -226,7 +227,7 @@ export class SproutReviewerView extends ItemView {
     const btn = this._widthToggleActionEl;
     if (btn) {
       const label = this._wideLabel();
-      btn.setAttribute("data-tooltip", label);
+      btn.setAttribute("aria-label", label);
       btn.setAttribute("title", label);
 
       btn.classList.toggle("is-active", this.plugin.isWideMode);
@@ -858,7 +859,9 @@ export class SproutReviewerView extends ItemView {
         new Notice(this.tx("ui.reviewer.notice.editIoMissingParent", "Cannot edit image occlusion card: missing parent card."));
         return;
       }
-      IO.ImageOcclusionEditorModal.openForParent(this.plugin, parentId);
+      ImageOcclusionCreatorModal.openForParent(this.plugin, parentId, {
+        onClose: () => { this.render(); },
+      });
       return;
     }
 
@@ -1571,7 +1574,7 @@ export class SproutReviewerView extends ItemView {
               // Reset empty-attempt counter when selection changes via keyboard
               if (this._mcqMultiSelected.size > 0) {
                 delete submitBtnEl.dataset.emptyAttempt;
-                submitBtnEl.removeAttribute("data-tooltip");
+                submitBtnEl.removeAttribute("aria-label");
                 submitBtnEl.classList.remove("sprout-mcq-submit-tooltip-visible");
               }
             }
@@ -1593,7 +1596,7 @@ export class SproutReviewerView extends ItemView {
               submitBtnEl.classList.remove("sprout-mcq-submit-shake");
             }, { once: true });
             if (submitBtnEl.dataset.emptyAttempt === "1") {
-              submitBtnEl.setAttribute("data-tooltip", "Choose at least one answer to proceed");
+              submitBtnEl.setAttribute("aria-label", "Choose at least one answer to proceed");
               submitBtnEl.setAttribute("data-tooltip-position", "top");
               submitBtnEl.classList.add("sprout-mcq-submit-tooltip-visible");
               setTimeout(() => {

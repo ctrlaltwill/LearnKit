@@ -3,6 +3,9 @@ import { defineConfig } from "vitepress";
 const titleOverrides = new Map<string, string>([
   ["Home", "Overview"],
   ["Support-Sprout", "About Sprout"],
+  ["Assistant-Configuration", "Configuration"],
+  ["Assistant-Setting-Up", "Setting Up"],
+  ["Assistant-Usage", "Usage"],
 ]);
 
 function toPath(page: string): string {
@@ -80,6 +83,14 @@ export default defineConfig({
         ],
       },
       {
+        text: "Assistant",
+        items: [
+          { text: toTitle("Assistant-Configuration"), link: toPath("Assistant-Configuration") },
+          { text: toTitle("Assistant-Setting-Up"), link: toPath("Assistant-Setting-Up") },
+          { text: toTitle("Assistant-Usage"), link: toPath("Assistant-Usage") },
+        ],
+      },
+      {
         text: "Audio",
         items: [
           { text: toTitle("Text-to-Speech"), link: toPath("Text-to-Speech") },
@@ -122,13 +133,14 @@ export default defineConfig({
       {
         text: "Maintenance",
         items: [
+          { text: toTitle("AI-Usage-Policy"), link: toPath("AI-Usage-Policy") },
           { text: toTitle("Anki-Export-&-Import"), link: toPath("Anki-Export-&-Import") },
           { text: toTitle("Backups"), link: toPath("Backups") },
           { text: toTitle("Custom-Delimiters"), link: toPath("Custom-Delimiters") },
-          { text: toTitle("Keyboard-Shortcuts"), link: toPath("Keyboard-Shortcuts") },
-          { text: toTitle("Settings"), link: toPath("Settings") },
-          { text: toTitle("Reminders"), link: toPath("Reminders") },
           { text: toTitle("Gatekeeper"), link: toPath("Gatekeeper") },
+          { text: toTitle("Keyboard-Shortcuts"), link: toPath("Keyboard-Shortcuts") },
+          { text: toTitle("Reminders"), link: toPath("Reminders") },
+          { text: toTitle("Settings"), link: toPath("Settings") },
         ],
       },
       {

@@ -33,10 +33,9 @@ import {
   expandGroupAncestors,
   parseGroupsInput,
   groupsToInput,
-  renderFlagPreviewHtml,
 } from "./browser-helpers";
 import { setModalTitle, scopeModalToWorkspace } from "../../platform/modals/modal-utils";
-import { replaceChildrenWithHTML, setCssProps } from "../../platform/core/ui";
+import { renderFlagAndLatexPreviewInElement, setCssProps } from "../../platform/core/ui";
 import { t } from "../../platform/translations/translator";
 
 // ── Context interface ──────────────────────────────────────
@@ -50,11 +49,21 @@ export interface BulkEditContext {
   getAllCards(): CardRecord[];
 }
 
+function remToPx(rem: number): number {
+  const rootFontPx = Number.parseFloat(window.getComputedStyle(document.documentElement).fontSize || "16");
+  return Math.max(1, Math.round(rem * (Number.isFinite(rootFontPx) ? rootFontPx : 16)));
+}
+
+function fieldMinHeightPx(field: "title" | "question" | "answer" | "info"): number {
+  return remToPx(4.5);
+}
+
 // ── Modal class ────────────────────────────────────────────
 
 export class BulkEditModal extends Modal {
   private cards: CardRecord[];
   private ctx: BulkEditContext;
+  private closeCleanup: Array<() => void> = [];
 
   constructor(app: App, cards: CardRecord[], ctx: BulkEditContext) {
     super(app);
@@ -88,6 +97,13 @@ export class BulkEditModal extends Modal {
 
     const { contentEl } = this;
     contentEl.empty();
+
+    // Reset cleanup handlers for this modal instance and collect teardown work
+    // (document listeners, observers) created while building the form.
+    this.closeCleanup = [];
+    const registerCloseCleanup = (fn: () => void) => {
+      this.closeCleanup.push(fn);
+    };
 
   const form = document.createElement("div");
   form.className = "flex flex-col gap-4";
@@ -125,7 +141,7 @@ export class BulkEditModal extends Modal {
 
   const inputEls: Partial<Record<ColKey, HTMLInputElement | HTMLTextAreaElement>> = {};
 
-  const attachFlagPreviewOverlay = (control: HTMLInputElement | HTMLTextAreaElement): HTMLElement => {
+  const attachFlagPreviewOverlay = (control: HTMLInputElement | HTMLTextAreaElement, minControlHeight = 38): HTMLElement => {
     const wrap = document.createElement("div");
     wrap.className = `sprout-flag-editor-wrap${control instanceof HTMLTextAreaElement ? " sprout-flag-editor-wrap--multiline" : ""}`;
 
@@ -134,19 +150,74 @@ export class BulkEditModal extends Modal {
 
     control.classList.add("sprout-flag-editor-control");
 
-    const renderOverlay = () => {
-      replaceChildrenWithHTML(overlay, renderFlagPreviewHtml(String(control.value ?? "")));
+    if (control instanceof HTMLTextAreaElement) {
+      // Let actual content drive height instead of keeping a fixed multi-row baseline.
+      control.rows = 1;
+    }
+
+    const measureControlHeight = () => {
+      if (control instanceof HTMLTextAreaElement) {
+        setCssProps(control, "height", "auto");
+        return Math.max(minControlHeight, Math.ceil(control.scrollHeight || 0));
+      }
+      return Math.max(minControlHeight, Math.ceil(control.getBoundingClientRect().height || 0));
     };
 
+    const applyControlHeight = (height: number) => {
+      setCssProps(control, "min-height", `${height}px`);
+      setCssProps(control, "height", `${height}px`);
+      if (control instanceof HTMLInputElement) {
+        setCssProps(control, "max-height", `${height}px`);
+      }
+    };
+
+    const syncPreviewHeight = () => {
+      const scrollbarFudgePx = 5;
+      const controlHeight = measureControlHeight();
+      const overlayHeight = Math.ceil(overlay.scrollHeight || 0);
+      const previewHeight = Math.max(
+        minControlHeight,
+        controlHeight + scrollbarFudgePx,
+        overlayHeight,
+      );
+      wrap.style.setProperty("--sprout-flag-preview-height", `${previewHeight}px`);
+      applyControlHeight(previewHeight);
+    };
+
+    const renderOverlay = () => {
+      renderFlagAndLatexPreviewInElement(overlay, String(control.value ?? ""));
+      syncPreviewHeight();
+      window.requestAnimationFrame(syncPreviewHeight);
+      window.setTimeout(syncPreviewHeight, 80);
+    };
+
+    overlay.addEventListener("pointerdown", (ev: PointerEvent) => {
+      if (ev.button !== 0) return;
+      ev.preventDefault();
+      control.focus();
+    }, true);
+
     overlay.addEventListener("click", () => control.focus());
-    control.addEventListener("focus", () => wrap.classList.add("sprout-flag-editor--focused"));
+    control.addEventListener("focus", () => {
+      wrap.classList.add("sprout-flag-editor--focused");
+      syncPreviewHeight();
+    });
     control.addEventListener("blur", () => {
       wrap.classList.remove("sprout-flag-editor--focused");
       renderOverlay();
     });
     control.addEventListener("input", () => {
+      syncPreviewHeight();
       if (!wrap.classList.contains("sprout-flag-editor--focused")) renderOverlay();
     });
+
+    if (typeof ResizeObserver !== "undefined") {
+      const ro = new ResizeObserver(() => {
+        syncPreviewHeight();
+      });
+      ro.observe(overlay);
+      registerCloseCleanup(() => ro.disconnect());
+    }
 
     renderOverlay();
     wrap.appendChild(control);
@@ -423,6 +494,8 @@ export class BulkEditModal extends Modal {
       };
     };
 
+    registerCloseCleanup(() => closePopover());
+
     tagBox.addEventListener("pointerdown", (ev) => {
       if ((ev).button !== 0) return;
       ev.preventDefault();
@@ -534,7 +607,12 @@ export class BulkEditModal extends Modal {
     }
 
     const shouldPreviewFlags = field.editable && (field.key === "title" || field.key === "question" || field.key === "answer" || field.key === "info");
-    wrapper.appendChild(shouldPreviewFlags ? attachFlagPreviewOverlay(input) : input);
+    const modalFieldMin =
+      field.editable && (field.key === "title" || field.key === "question" || field.key === "answer" || field.key === "info")
+        ? fieldMinHeightPx(field.key)
+        : 38;
+
+    wrapper.appendChild(shouldPreviewFlags ? attachFlagPreviewOverlay(input, modalFieldMin) : input);
     inputEls[field.key] = input;
     if (field.key === "question" && input instanceof HTMLTextAreaElement && isClozeOnly) {
       attachClozeShortcuts(input);
@@ -565,7 +643,7 @@ export class BulkEditModal extends Modal {
     label.textContent = tx("ui.browser.bulkEdit.mcq.answersAndOptions", "Answers and options");
     const mcqInfoIcon = document.createElement("span");
     mcqInfoIcon.className = "inline-flex items-center justify-center [&_svg]:size-3 text-muted-foreground sprout-info-icon-elevated";
-    mcqInfoIcon.setAttribute("data-tooltip", tx("ui.browser.bulkEdit.mcq.correctHint", "Check the box next to each correct answer. At least one correct and one incorrect option required."));
+    mcqInfoIcon.setAttribute("aria-label", tx("ui.browser.bulkEdit.mcq.correctHint", "Check the box next to each correct answer. At least one correct and one incorrect option required."));
     mcqInfoIcon.setAttribute("data-tooltip-position", "top");
     setIcon(mcqInfoIcon, "info");
     label.appendChild(mcqInfoIcon);
@@ -595,7 +673,7 @@ export class BulkEditModal extends Modal {
       checkbox.type = "checkbox";
       checkbox.checked = isCorrect;
       checkbox.className = "sprout-mcq-correct-checkbox";
-      checkbox.setAttribute("data-tooltip", tx("ui.browser.bulkEdit.mcq.markCorrect", "Mark as correct answer"));
+      checkbox.setAttribute("aria-label", tx("ui.browser.bulkEdit.mcq.markCorrect", "Mark as correct answer"));
       checkbox.setAttribute("data-tooltip-position", "top");
       row.appendChild(checkbox);
 
@@ -609,7 +687,7 @@ export class BulkEditModal extends Modal {
       const removeBtn = document.createElement("button");
       removeBtn.type = "button";
       removeBtn.className = "inline-flex items-center justify-center h-9 w-9 p-0 sprout-remove-btn-ghost";
-      removeBtn.setAttribute("data-tooltip", tx("ui.browser.bulkEdit.mcq.removeOption", "Remove option"));
+      removeBtn.setAttribute("aria-label", tx("ui.browser.bulkEdit.mcq.removeOption", "Remove option"));
       removeBtn.setAttribute("data-tooltip-position", "top");
       const xIcon = document.createElement("span");
       xIcon.className = "inline-flex items-center justify-center [&_svg]:size-4";
@@ -785,6 +863,13 @@ export class BulkEditModal extends Modal {
   }
 
   onClose() {
+    for (const fn of this.closeCleanup.splice(0)) {
+      try {
+        fn();
+      } catch {
+        // Best-effort teardown; avoid blocking modal close.
+      }
+    }
     this.contentEl.empty();
   }
 }

@@ -57,7 +57,7 @@ class ConfirmBuryForTodayModal extends Modal {
     const xBtn = document.createElement("button");
     xBtn.type = "button";
     xBtn.className = "clickable-icon";
-    xBtn.setAttribute("data-tooltip", tx("ui.reviewer.skip.modal.close", "Close (Esc)"));
+    xBtn.setAttribute("aria-label", tx("ui.reviewer.skip.modal.close", "Close (Esc)"));
     xBtn.setAttribute("data-tooltip-position", "top");
     setIcon(xBtn, "x");
     xBtn.onclick = () => this.ignore();

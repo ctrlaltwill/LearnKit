@@ -37,7 +37,7 @@ export function makeResizableTh(
 
   const handle = document.createElement("div");
   handle.className = "sprout-col-resize sprout-col-resize-handle";
-  handle.setAttribute("data-tooltip", "Drag to resize");
+  handle.setAttribute("aria-label", "Drag to resize");
   setCssProps(handle, "--sprout-resize-zone", `${RESIZE_ZONE_PX}px`);
 
   th.appendChild(handle);

@@ -63,7 +63,7 @@ export function buildToolbar(parent: HTMLElement, cb: ToolbarCallbacks): Toolbar
   ): HTMLButtonElement => {
     const btn = iconParent.createEl("button", { cls: "bc sprout-io-btn" });
     btn.type = "button";
-    btn.setAttribute("data-tooltip", tooltip);
+    btn.setAttribute("aria-label", tooltip);
 
     const iconWrapper = btn.createEl("span", { cls: "bc inline-flex items-center justify-center" });
     setIcon(iconWrapper, iconName);
@@ -232,8 +232,8 @@ export function buildFooter(parent: HTMLElement, cb: FooterCallbacks, defaultMod
     cls: "bc inline-flex items-center justify-center [&_svg]:size-3 text-muted-foreground sprout-info-icon-elevated",
   });
   modeInfo.setAttribute(
-    "data-tooltip",
-    "Choose how masks are revealed on the back: Reveal group shows only the selected group; Reveal all shows every group.",
+    "aria-label",
+    "Choose how masks are revealed on the back: reveal group shows only the selected group; reveal all shows every group.",
   );
   modeInfo.setAttribute("data-tooltip-position", "top");
   setIcon(modeInfo, "info");
@@ -391,7 +391,7 @@ export function buildHeader(parent: HTMLElement, title: string, onClose: () => v
   headerRow.createDiv({ text: title, cls: "bc text-lg font-semibold" });
   const headerClose = headerRow.createEl("button", {
     cls: "bc inline-flex items-center justify-center h-9 w-9 text-muted-foreground hover:text-foreground focus-visible:text-foreground",
-    attr: { type: "button", "data-tooltip": "Close" },
+    attr: { type: "button", "aria-label": "Close" },
   });
   headerClose.classList.add("sprout-io-close-btn");
   const headerCloseIcon = headerClose.createEl("span", { cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });

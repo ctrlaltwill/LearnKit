@@ -316,6 +316,7 @@
 .sprout .sprout-flag-editor-wrap {
   position: relative;
   width: 100%;
+  min-height: var(--sprout-flag-preview-height, auto);
 }
 
 .sprout .sprout-flag-editor-control {
@@ -323,20 +324,37 @@
   z-index: 0;
 }
 
+.sprout .sprout-flag-editor-wrap .sprout-flag-editor-control.sprout-textarea-fixed {
+  min-height: 38px !important;
+}
+
 .sprout .sprout-flag-editor-overlay {
   position: absolute;
   inset: 0;
+  min-height: var(--sprout-flag-preview-height, auto);
   border-radius: var(--input-radius);
   border: var(--sprout-border-width) solid var(--sprout-border-color);
   background: var(--background-modifier-form-field);
   color: var(--text-normal);
   padding: 6px 8px;
   box-sizing: border-box;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  overflow: auto;
+  text-overflow: clip;
   cursor: text;
+  pointer-events: none;
   z-index: 1;
+}
+
+.sprout .sprout-flag-editor-overlay * {
+  pointer-events: none;
+}
+
+.sprout .sprout-oq-step-input {
+  resize: none;
+  overflow: hidden;
+  min-height: 38px;
 }
 
 .sprout .sprout-flag-editor-overlay--multiline {

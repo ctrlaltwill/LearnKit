@@ -69,6 +69,49 @@ export type SproutSettings = {
     treatFolderNotesAsDecks: boolean;
   };
 
+  // Study Assistant — AI providers, prompts, and generation preferences
+  studyAssistant: {
+    enabled: boolean;
+    provider: "openai" | "anthropic" | "deepseek" | "groq" | "custom";
+    model: string;
+    endpointOverride: string;
+    apiKeys: {
+      openai: string;
+      anthropic: string;
+      deepseek: string;
+      groq: string;
+      custom: string;
+    };
+    prompts: {
+      assistant: string;
+      noteReview: string;
+      generator: string;
+    };
+    generatorTypes: {
+      basic: boolean;
+      reversed: boolean;
+      cloze: boolean;
+      mcq: boolean;
+      oq: boolean;
+      io: boolean;
+    };
+    /** Approximate number of generated flashcards requested from AI (actual output may vary by +/- 1). */
+    generatorTargetCount: number;
+    generatorOutput: {
+      includeTitle: boolean;
+      includeInfo: boolean;
+      includeGroups: boolean;
+    };
+    privacy: {
+      autoSendOnOpen: boolean;
+      includeImagesInAsk: boolean;
+      includeImagesInReview: boolean;
+      includeImagesInFlashcard: boolean;
+      previewPayload: boolean;
+      saveChatHistory: boolean;
+    };
+  };
+
   // Reminders — startup and recurring study alerts
   reminders: {
     /** Show one reminder shortly after Obsidian layout is ready. */

@@ -82,11 +82,11 @@
 
 /* ---- OQ reading-view (pretty-card) ---- */
 
-.sprout-oq-answer-list {
+.sprout .sprout-pretty-card .sprout-oq-answer-list {
   position: relative;
 }
 
-.sprout-oq-answer-row {
+.sprout .sprout-pretty-card .sprout-oq-answer-row {
   position: relative;
   padding-left: 1.7em;
   color: var(--text-color);
@@ -703,7 +703,7 @@ mjx-container[jax="CHTML"][display="true"] {
 .sprout-pretty-card img:not(.sprout-io-image):not(.sprout-inline-flag) {
   max-width: 100% !important;
   height: auto !important;
-  border-radius: var(--button-radius, var(--radius-m)) !important;
+  border-radius: var(--radius-m) !important;
   margin: 6px 0 !important;
   display: block !important;
 }
@@ -717,6 +717,21 @@ mjx-container[jax="CHTML"][display="true"] {
   max-width: 100% !important;
   height: auto !important;
   border-radius: var(--button-radius, var(--radius-m)) !important;
+}
+
+/* Defend reading-view card images from theme avatar/circle rules. */
+.sprout .sprout-pretty-card img.sprout-reading-embed-img,
+.sprout .sprout-pretty-card .sprout-io-reading-img,
+.sprout .sprout-pretty-card .internal-embed.image-embed img {
+  width: auto !important;
+  height: auto !important;
+  max-width: 100% !important;
+  border-radius: var(--radius-md) !important;
+  aspect-ratio: auto !important;
+  object-fit: contain !important;
+  clip-path: none !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
 }
 
 /* ---- IO cards in reading view ---- */

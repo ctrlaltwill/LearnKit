@@ -359,7 +359,7 @@ export function renderImageOcclusionReviewInto(args: {
 
             const closeBtn = document.createElement("button");
             closeBtn.type = "button";
-            closeBtn.setAttribute("data-tooltip", "Close");
+            closeBtn.setAttribute("aria-label", "Close");
             closeBtn.classList.add("sprout-zoom-close");
             setIcon(closeBtn, "x");
             closeBtn.addEventListener("click", (e) => {

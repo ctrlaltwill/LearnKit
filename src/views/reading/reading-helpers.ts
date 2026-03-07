@@ -801,7 +801,7 @@ export function buildCollapsibleSectionHTML(label: string, targetSelector: strin
     <div class="sprout-card-section ${escapeHtml(sectionClass).trim()}">
       <div class="sprout-section-label">
         <span>${escapeHtml(label)}</span>
-        <button class="sprout-toggle-btn sprout-toggle-btn-compact" data-target=".${contentId}" aria-expanded="false" data-tooltip="Toggle ${escapeHtml(label)}" data-tooltip-position="top">
+        <button class="sprout-toggle-btn sprout-toggle-btn-compact" data-target=".${contentId}" aria-expanded="false" aria-label="Toggle ${escapeHtml(label)}" data-tooltip-position="top">
           ${chevronSvg}
         </button>
       </div>

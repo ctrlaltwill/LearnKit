@@ -178,7 +178,7 @@ export function injectMoreMenu(view: SproutReviewerView) {
   moreBtn.setAttribute("aria-expanded", "false");
   moreBtn.setAttribute("popovertarget", popoverId);
   moreBtn.setAttribute("title", tx("ui.reviewer.more.tooltip", "More actions"));
-  moreBtn.setAttribute("data-tooltip", tx("ui.reviewer.more.tooltip", "More actions"));
+  moreBtn.setAttribute("aria-label", tx("ui.reviewer.more.tooltip", "More actions"));
   moreBtn.textContent = tx("ui.reviewer.more.label", "More");
 
   const kbd = document.createElement("kbd");

@@ -19,6 +19,7 @@ import type { Scope } from "../reviewer/types";
 import { isParentCard } from "../../platform/core/card-utils";
 import { ReviewCalendarHeatmap } from "../analytics/review-calendar-heatmap";
 import { cascadeAOSOnLoad, initAOS, resetAOS } from "../../platform/core/aos-loader";
+import { createListReorderPreviewController } from "../../platform/core/oq-reorder-preview";
 import { t } from "../../platform/translations/translator";
 
 import {
@@ -319,6 +320,10 @@ export class SproutHomeView extends ItemView {
       const onNameResize = () => syncNameWidth();
       nameInput.addEventListener("input", onNameResize);
       nameInput.addEventListener("change", onNameResize);
+      if (this._nameObserver) {
+        this._nameObserver.disconnect();
+        this._nameObserver = null;
+      }
       this._nameObserver =
         typeof ResizeObserver !== "undefined"
           ? new ResizeObserver(() => {
@@ -667,6 +672,29 @@ export class SproutHomeView extends ItemView {
     
     const renderPinnedDecks = () => {
       pinnedList.empty();
+
+      const previewController = createListReorderPreviewController(pinnedList, {
+        rowSelector: ".sprout-deck-row",
+        translateVar: "--sprout-deck-row-translate",
+        listActiveClass: "sprout-deck-drag-active",
+        rowAnimatingClass: "sprout-deck-row-anim",
+        rowDraggingClass: "sprout-deck-row-dragging",
+        rowDraggingNativeClass: "sprout-deck-row-dragging-native",
+        slotBeforeClass: "sprout-deck-slot-before",
+        slotAfterClass: "sprout-deck-slot-after",
+      });
+
+      const commitPinnedReorder = async (fromIndex: number, toIndex: number) => {
+        if (fromIndex === toIndex) return;
+        if (fromIndex < 0 || fromIndex >= currentPinned.length) return;
+        if (toIndex < 0 || toIndex >= currentPinned.length) return;
+        const item = currentPinned[fromIndex];
+        if (!item) return;
+        currentPinned.splice(fromIndex, 1);
+        currentPinned.splice(toIndex, 0, item);
+        await savePinnedDecks(currentPinned);
+        renderPinnedDecks();
+      };
       
       // Render all 5 slots: pinned decks, then input (if space), then placeholders
       for (let i = 0; i < MAX_PINNED; i++) {
@@ -676,9 +704,10 @@ export class SproutHomeView extends ItemView {
           const row = pinnedList.createDiv({ 
             cls: "sprout-deck-row flex items-center justify-between gap-3 p-2 rounded-lg border border-border bg-background cursor-pointer hover:bg-accent/50"
           });
+          row.dataset.pinnedIdx = String(i);
           const pinnedLeafName = getDeckLeafName(path);
           const pinnedTooltip = tx("ui.home.deck.tooltip.study", "Study {deck}", { deck: pinnedLeafName || "deck" });
-          row.setAttr("data-tooltip", pinnedTooltip);
+          row.setAttr("aria-label", pinnedTooltip);
           
           // Make row clickable to open deck
           row.addEventListener("click", (e) => {
@@ -693,7 +722,7 @@ export class SproutHomeView extends ItemView {
           // Hamburger menu for reordering
           const hamburger = left.createEl("span", { 
             cls: "sprout-drag-handle inline-flex items-center justify-center",
-            attr: { "data-action": "drag", "data-tooltip": tx("ui.home.deck.tooltip.drag", "Drag to reorder") }
+            attr: { "data-action": "drag", "aria-label": tx("ui.home.deck.tooltip.drag", "Drag to reorder") }
           });
           setIcon(hamburger, "grip-vertical");
           
@@ -708,7 +737,7 @@ export class SproutHomeView extends ItemView {
           
           const removeBtn = right.createEl("span", { 
             cls: "sprout-deck-remove-btn inline-flex items-center justify-center cursor-pointer",
-            attr: { "data-action": "delete", "data-tooltip": tx("ui.home.deck.tooltip.removePinned", "Remove from pinned decks") }
+            attr: { "data-action": "delete", "aria-label": tx("ui.home.deck.tooltip.removePinned", "Remove from pinned decks") }
           });
           setIcon(removeBtn, "x");
           removeBtn.addEventListener("click", (e) => {
@@ -722,89 +751,20 @@ export class SproutHomeView extends ItemView {
           
           // Drag and drop reordering with animation
           row.draggable = true;
-          let draggedOverIndex: number | null = null;
-          let dragOffset = 50;
-          
+
           row.addEventListener("dragstart", (e) => {
-            if (e.dataTransfer) {
-              e.dataTransfer.effectAllowed = "move";
-              e.dataTransfer.setData("text/plain", i.toString());
-            }
-            row.classList.add("sprout-deck-row-dragging");
-            // Set all rows to relative for transform animation
-            const allRows = pinnedList.querySelectorAll<HTMLElement>(".sprout-deck-row");
-            const firstRow = allRows[0];
-            const gapValue = parseFloat(getComputedStyle(pinnedList).rowGap || "0");
-            if (firstRow) {
-              dragOffset = Math.round(firstRow.getBoundingClientRect().height + gapValue);
-            }
-            allRows.forEach(r => {
-              r.classList.add("sprout-deck-row-anim");
-              setCssProps(r, "--sprout-deck-row-translate", "0px");
+            const fromIndex = Number(row.dataset.pinnedIdx || "-1");
+            if (fromIndex < 0) return;
+            previewController.beginDrag({
+              fromIdx: fromIndex,
+              row,
+              dataTransfer: e.dataTransfer,
+              setDragImage: true,
             });
           });
           
           row.addEventListener("dragend", () => {
-            row.classList.remove("sprout-deck-row-dragging");
-            draggedOverIndex = null;
-            // Clear any transforms and reset position
-            const allRows = pinnedList.querySelectorAll<HTMLElement>(".sprout-deck-row");
-            allRows.forEach(r => {
-              setCssProps(r, "--sprout-deck-row-translate", "0px");
-              r.classList.remove("sprout-deck-row-anim");
-            });
-          });
-          
-          row.addEventListener("dragover", (e) => {
-            e.preventDefault();
-            if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-
-            const fromIndexStr = e.dataTransfer?.getData("text/plain");
-            const fromIndex = fromIndexStr ? Number(fromIndexStr) : -1;
-            if (fromIndex === -1 || fromIndex === i) return;
-
-            // Animate other rows moving up or down (no re-render)
-            if (draggedOverIndex !== i) {
-              draggedOverIndex = i;
-              const allRows = pinnedList.querySelectorAll<HTMLElement>(".sprout-deck-row");
-              allRows.forEach((r, idx) => {
-                if (idx === fromIndex) {
-                  // Dragged item: visually move to hovered slot
-                  setCssProps(r, "--sprout-deck-row-translate", `${(i - fromIndex) * dragOffset}px`);
-                } else {
-                  // Calculate if this row should move up or down
-                  let offset = 0;
-                  if (fromIndex < i) {
-                    // Dragging down: items between fromIndex and i move up
-                    if (idx > fromIndex && idx <= i) {
-                      offset = -dragOffset;
-                    }
-                  } else {
-                    // Dragging up: items between i and fromIndex move down
-                    if (idx >= i && idx < fromIndex) {
-                      offset = dragOffset;
-                    }
-                  }
-                  setCssProps(r, "--sprout-deck-row-translate", `${offset}px`);
-                }
-              });
-            }
-          });
-          
-          row.addEventListener("drop", (e) => {
-            e.preventDefault();
-            void (async () => {
-              const fromIndex = Number(e.dataTransfer?.getData("text/plain") || "-1");
-              if (fromIndex === -1 || fromIndex === i) return;
-              // Clear transforms before re-rendering
-              const allRows = pinnedList.querySelectorAll<HTMLElement>(".sprout-deck-row");
-              allRows.forEach(r => setCssProps(r, "--sprout-deck-row-translate", "0px"));
-              const item = currentPinned[fromIndex];
-              currentPinned.splice(fromIndex, 1);
-              currentPinned.splice(i, 0, item);
-              await savePinnedDecks(currentPinned);
-              renderPinnedDecks();
-            })();
+            previewController.endDrag();
           });
         } else if (i === currentPinned.length && currentPinned.length < MAX_PINNED) {
           // Render search input in the first empty slot
@@ -813,7 +773,7 @@ export class SproutHomeView extends ItemView {
             cls: "sprout-deck-search-input w-full text-sm text-center text-muted-foreground", 
               attr: { type: "text", placeholder: tx("ui.home.deck.search.placeholder", "Search to add a pinned deck") }
           });
-          searchInputEl.setAttr("data-tooltip", tx("ui.home.deck.tooltip.searchDecks", "Search for decks"));
+          searchInputEl.setAttr("aria-label", tx("ui.home.deck.tooltip.searchDecks", "Search for decks"));
           searchInputEl.setAttr("title", tx("ui.home.deck.tooltip.searchDecks", "Search for decks"));
           
           searchInputEl.addEventListener("focus", () => {
@@ -850,6 +810,20 @@ export class SproutHomeView extends ItemView {
           placeholder.textContent = tx("ui.home.deck.emptySlot", "Empty slot {index}", { index: i + 1 });
         }
       }
+
+      pinnedList.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+        previewController.updatePointer(e.clientY);
+      });
+
+      pinnedList.addEventListener("drop", (e) => {
+        e.preventDefault();
+        const pending = previewController.getPendingMove();
+        previewController.endDrag();
+        if (!pending) return;
+        void commitPinnedReorder(pending.fromIdx, pending.toIdx);
+      });
     };
     
     const renderSearchDropdown = () => {
@@ -886,7 +860,7 @@ export class SproutHomeView extends ItemView {
         const addPinnedTooltip = tx("ui.home.deck.tooltip.addPinned", "Add {deck} to pinned decks", {
           deck: deckLeafName || "deck",
         });
-        item.setAttr("data-tooltip", addPinnedTooltip);
+        item.setAttr("aria-label", addPinnedTooltip);
         item.setAttr("title", addPinnedTooltip);
         
         const label = item.createDiv({ cls: "sprout-text-truncate-rtl truncate flex-1" });
@@ -923,7 +897,7 @@ export class SproutHomeView extends ItemView {
           ? tx("ui.home.deck.allCards", "All cards")
           : getDeckLeafName(deck.label);
         const recentTooltip = tx("ui.home.deck.tooltip.study", "Study {deck}", { deck: recentLeafName || "deck" });
-        row.setAttr("data-tooltip", recentTooltip);
+        row.setAttr("aria-label", recentTooltip);
         row.setAttr("data-tooltip-position", "bottom");
         row.addEventListener("click", () => void openStudyForScope(deck.scope));
         

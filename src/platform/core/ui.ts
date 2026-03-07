@@ -11,8 +11,8 @@
  */
 
 import createDOMPurify from "dompurify";
-import { setIcon } from "obsidian";
-import { hydrateCircleFlagsInElement } from "../../platform/flags/flag-tokens";
+import { finishRenderMath, renderMath, setIcon } from "obsidian";
+import { hydrateCircleFlagsInElement, renderFlagPreviewHtml } from "../../platform/flags/flag-tokens";
 
 export type CssPropValue = string | number | null | undefined;
 
@@ -244,7 +244,7 @@ export function iconButton(
   b.className = "sprout-btn";
   b.type = "button";
   if (title) {
-    b.setAttribute("data-tooltip", title);
+    b.setAttribute("aria-label", title);
     b.setAttribute("data-tooltip-position", "top");
   }
 
@@ -266,7 +266,7 @@ export function smallToggleButton(isOpen: boolean, onClick: () => void): HTMLBut
   const b = document.createElement("button");
   b.className = "sprout-toggle";
   b.type = "button";
-  b.setAttribute("data-tooltip", isOpen ? "Collapse" : "Expand");
+  b.setAttribute("aria-label", isOpen ? "Collapse" : "Expand");
   b.setAttribute("data-tooltip-position", "top");
   b.textContent = isOpen ? "-" : "+";
   b.addEventListener("click", (ev) => {
@@ -300,6 +300,123 @@ export function replaceChildrenWithHTML(el: HTMLElement, html: string): void {
   const frag = createFragmentFromHTML(html);
   el.replaceChildren(frag);
   hydrateCircleFlagsInElement(el);
+}
+
+const LATEX_INLINE_PARENS_RE = /\\\((.+?)\\\)/g;
+const LATEX_DISPLAY_PARENS_RE = /\\\[([\s\S]+?)\\\]/g;
+const LATEX_DISPLAY_DOLLAR_RE = /\$\$([\s\S]+?)\$\$/g;
+const LATEX_INLINE_DOLLAR_RE = /(?<!\$)\$(?!\$)([^\s$](?:[^$]*[^\s$])?)\$(?!\$)/g;
+
+function hasLatexMarkers(text: string): boolean {
+  return /\\\(|\\\[|\$\$|\$/.test(text);
+}
+
+function renderLatexInElement(container: HTMLElement): void {
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+  const nodes: Text[] = [];
+
+  let current: Node | null;
+  while ((current = walker.nextNode())) {
+    if (!(current instanceof Text)) continue;
+    const parent = current.parentElement;
+    if (!parent) continue;
+    if (parent.closest(".MathJax, mjx-container, .math")) continue;
+    const value = current.nodeValue ?? "";
+    if (!value || !hasLatexMarkers(value)) continue;
+    nodes.push(current);
+  }
+
+  let didRenderMath = false;
+
+  for (const node of nodes) {
+    const sourceText = node.nodeValue ?? "";
+    if (!sourceText) continue;
+
+    type Match = { start: number; end: number; source: string; display: boolean };
+    const matches: Match[] = [];
+
+    const collectMatches = (re: RegExp, display: boolean | ((start: number, end: number) => boolean)) => {
+      re.lastIndex = 0;
+      let match: RegExpExecArray | null;
+      while ((match = re.exec(sourceText)) !== null) {
+        const full = match[0] ?? "";
+        const src = match[1] ?? "";
+        if (!full || !src.trim()) continue;
+        const start = match.index;
+        const end = match.index + full.length;
+        const isDisplay = typeof display === "function" ? display(start, end) : display;
+        matches.push({
+          start,
+          end,
+          source: src,
+          display: isDisplay,
+        });
+        if (re.lastIndex === match.index) re.lastIndex += 1;
+      }
+    };
+
+    collectMatches(LATEX_DISPLAY_DOLLAR_RE, (start, end) => {
+      // In these editable previews, treat $$..$$ as block only when it stands
+      // on its own visual line segment (typically split by <br> into a node).
+      const left = sourceText.slice(0, start).trim();
+      const right = sourceText.slice(end).trim();
+      return left.length === 0 && right.length === 0;
+    });
+    collectMatches(LATEX_DISPLAY_PARENS_RE, true);
+    collectMatches(LATEX_INLINE_PARENS_RE, false);
+    collectMatches(LATEX_INLINE_DOLLAR_RE, false);
+
+    if (!matches.length) continue;
+
+    matches.sort((a, b) => {
+      if (a.start !== b.start) return a.start - b.start;
+      return (b.end - b.start) - (a.end - a.start);
+    });
+
+    const nonOverlapping: Match[] = [];
+    let cursor = 0;
+    for (const m of matches) {
+      if (m.start < cursor) continue;
+      nonOverlapping.push(m);
+      cursor = m.end;
+    }
+    if (!nonOverlapping.length) continue;
+
+    const frag = document.createDocumentFragment();
+    let pos = 0;
+
+    for (const m of nonOverlapping) {
+      if (m.start > pos) {
+        frag.appendChild(document.createTextNode(sourceText.slice(pos, m.start)));
+      }
+
+      try {
+        const mathEl = renderMath(m.source.trim(), m.display);
+        frag.appendChild(mathEl);
+        didRenderMath = true;
+      } catch {
+        // Preserve the original segment if rendering fails.
+        frag.appendChild(document.createTextNode(sourceText.slice(m.start, m.end)));
+      }
+
+      pos = m.end;
+    }
+
+    if (pos < sourceText.length) {
+      frag.appendChild(document.createTextNode(sourceText.slice(pos)));
+    }
+
+    node.replaceWith(frag);
+  }
+
+  if (didRenderMath) {
+    void finishRenderMath();
+  }
+}
+
+export function renderFlagAndLatexPreviewInElement(el: HTMLElement, input: string): void {
+  replaceChildrenWithHTML(el, renderFlagPreviewHtml(String(input ?? "")));
+  renderLatexInElement(el);
 }
 
 export function queryFirst<T extends Element = Element>(root: ParentNode, selector: string): T | null {

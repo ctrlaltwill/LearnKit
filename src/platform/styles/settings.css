@@ -662,7 +662,9 @@ body.is-mobile .sprout-guide-dots-rail,
 }
 
 .sprout .sprout-guide-body h1 + h2 {
-  margin-top: 0.4em;
+  margin-top: 0 !important;
+  border-top: none !important;
+  padding-top: 0 !important;
 }
 
 .sprout .sprout-guide-body h2:first-child {
@@ -1255,15 +1257,6 @@ button.sprout-settings-tab-btn {
   border-left: var(--sprout-border-width) solid var(--sprout-border-color) !important;
 }
 
-.sprout-settings-tab-nav .sprout-settings-tab-btn:first-child {
-  border-top-left-radius: var(--button-radius,var(--radius-m))!important;
-  border-bottom-left-radius: var(--button-radius,var(--radius-m))!important;
-}
-
-.sprout-settings-tab-nav .sprout-settings-tab-btn:last-child {
-  border-top-right-radius: var(--button-radius,var(--radius-m))!important;
-  border-bottom-right-radius: var(--button-radius,var(--radius-m))!important;
-}
 
 .sprout-settings-tab-btn:hover {
   background-color: var(--background-modifier-hover);
@@ -1837,13 +1830,27 @@ button.sprout-settings-tab-btn {
 
 /* Clean up input fields, buttons, and toggles */
 .sprout-settings-tab-content input[type="text"],
+.sprout-settings-tab-content input[type="password"],
 .sprout-settings-tab-content input[type="number"],
 .sprout-settings-tab-content textarea {
   background-color: var(--background-primary);
   border: var(--sprout-border-width) solid var(--sprout-border-color);
+  border-radius: var(--button-radius) !important;
+    padding-left: 14px;
+}
+
+.sprout-settings-tab-content textarea {
+  resize: vertical;
+      width: 100%;
+    min-height: 80px;
+    max-height: 200px;
+    max-width: 350px;
+    border-radius: var(--radius-l) !important;
+    padding: 6px 10px;
 }
 
 .sprout-settings-tab-content input[type="text"],
+.sprout-settings-tab-content input[type="password"],
 .sprout-settings-tab-content input[type="number"] {
   min-height: 38px;
 }
@@ -1865,6 +1872,7 @@ button.sprout-settings-tab-btn {
 }
 
 .sprout-settings-tab-content input[type="text"]:focus,
+.sprout-settings-tab-content input[type="password"]:focus,
 .sprout-settings-tab-content input[type="number"]:focus,
 .sprout-settings-tab-content textarea:focus {
   border-color: var(--background-modifier-border-focus);

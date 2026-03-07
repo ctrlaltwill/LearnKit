@@ -205,6 +205,7 @@
 .sprout :is(button, .button) {
   height: auto !important;
   padding: 8px 12px !important;
+  font-weight: 400 !important;
 }
 
 /* Keep icon-only/round controls compact. */
@@ -251,6 +252,7 @@ button[aria-current="page"] {
   .sprout-widget-action-btn
 ) {
   min-height: 36px !important;
+  font-weight: 400 !important;
 }
 
 .sprout :is(.btn, .btn-outline, .btn-primary, .btn-destructive, .btn-icon-outline) {

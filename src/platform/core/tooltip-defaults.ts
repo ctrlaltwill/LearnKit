@@ -1,11 +1,11 @@
 /**
  * @file src/core/tooltip-defaults.ts
- * @summary Ensures interactive buttons use Sprout's `data-tooltip` system.
+ * @summary Ensures interactive buttons use Sprout's `aria-label` system.
  *
  * Goals:
  * - Avoid native browser tooltips (`title`).
  * - Ensure every <button> (and role="button") has a clear tooltip, even when icon-only.
- * - Preserve existing explicit `data-tooltip` values.
+ * - Preserve existing explicit `aria-label` values.
  */
 
 type TooltipTarget = HTMLElement & {
@@ -26,7 +26,7 @@ function ensureTooltip(el: TooltipTarget): void {
   // Always remove native tooltips.
   if (el.hasAttribute("title")) el.removeAttribute("title");
 
-  if (el.hasAttribute("data-tooltip")) {
+  if (el.hasAttribute("aria-label")) {
     if (!el.hasAttribute("data-tooltip-position")) el.setAttribute("data-tooltip-position", "top");
     return;
   }
@@ -38,7 +38,7 @@ function ensureTooltip(el: TooltipTarget): void {
   const tooltip = aria || title || text;
   if (!tooltip) return;
 
-  el.setAttribute("data-tooltip", tooltip);
+  el.setAttribute("aria-label", tooltip);
   if (!el.hasAttribute("data-tooltip-position")) el.setAttribute("data-tooltip-position", "top");
 }
 
@@ -69,7 +69,7 @@ export function initButtonTooltipDefaults(): () => void {
     for (const m of mutations) {
       for (const n of m.addedNodes) processNode(n as Node);
       // If attributes change (e.g., textContent updated later), callers should
-      // set `data-tooltip` explicitly; we intentionally don't observe characterData.
+      // set `aria-label` explicitly; we intentionally don't observe characterData.
     }
   });
 

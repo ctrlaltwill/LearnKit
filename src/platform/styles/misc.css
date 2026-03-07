@@ -615,12 +615,12 @@ input[type="checkbox"]:checked:hover::after {
 
 /* ---- Global input and textarea focus styles ---- */
 
-.sprout input:not(.sprout-home-name-input):not(.sprout-ss-search-input):focus,
-.sprout textarea:focus,
+.sprout input:not(.sprout-home-name-input):not(.sprout-ss-search-input):not(.sprout-search-naked):focus,
+.sprout textarea:not(.sprout-assistant-popup-input):focus,
 .sprout .input:focus,
 .sprout .textarea:focus,
-.sprout input[type="text"]:not(.sprout-home-name-input):not(.sprout-ss-search-input):focus,
-.sprout input[type="search"]:not(.sprout-ss-search-input):focus,
+.sprout input[type="text"]:not(.sprout-home-name-input):not(.sprout-ss-search-input):not(.sprout-search-naked):focus,
+.sprout input[type="search"]:not(.sprout-ss-search-input):not(.sprout-search-naked):focus,
 .sprout input[type="number"]:focus,
 .sprout select:focus {
   border: 1.5px solid var(--theme-accent) !important;
@@ -654,7 +654,7 @@ input[type="checkbox"]:checked:hover::after {
 }
 
 .sprout .rounded-lg {
-    border-radius: var(--radius-l) !important;
+    border-radius: var(--radius-m) !important;
 }
 
 .sprout h1, h2, h3, h4, h5, h6 {
