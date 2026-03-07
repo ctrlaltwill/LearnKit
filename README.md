@@ -49,22 +49,22 @@ Rather than separating notes and flashcards, Sprout keeps everything in one plac
 - Inline editor, card browser, and bulk edit tools
 - Markdown-first workflow with note-linked cards
 - Reading view customisation to keep your notes clean
-- Sprig AI assistant (beta) for note Q&A, review feedback, and flashcard suggestions
+- Sprig AI learning companion (currently in _beta_)
 
-## Sprig
+## Meet Sprig
 
-Sprig is your built-in AI learning assistant. It can:
+Sprig is your built-in AI learning companion. It can:
 - Answer questions about your current note
-- Review notes and suggest improvements
+- Review your study notes and suggest improvements
 - Generate Sprout flashcards from your note content
 
-Sprig is currently in **beta**, so responses may vary by model and provider as the feature set is refined. A formal release is planned for v1.1. If you'd like to try it now, you can use the build in `dist`.
+Sprig is currently in _beta_, so responses may vary by model and provider as the feature set is refined. We recommend utilising a model with strong reasoning and/or research ability. A formal release of Sprig planned for v1.1.0. If you'd like to try it now, you can use the latest build in `dist`.
 
-### Bring your own API key
+#### Bring your own API key
 
-Sprig uses a **bring your own API key** model. You connect your own provider key and pay the provider directly.
+Sprig uses a bring your own API key model. You connect your own AI provider key (e.g. Anthropic, OpenAI) and pay them directly for any usage.
 
-This is intentional: Sprout is open source, free, and not built for profit. Instead of charging a markup, Sprig lets you use APIs at your own cost, which is cheaper and more transparent than bundled AI subscriptions from other products.
+This approach is intentional. Sprout is open source, free, and not built for profit. Many AI tools bundle API usage into a subscription and charge a markup on the underlying model costs. Sprig avoids this by letting you connect directly to the provider, making usage more transparent and cheaper.
 
 ## Feature highlights
 
