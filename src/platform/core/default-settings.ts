@@ -44,6 +44,7 @@ export const DEFAULT_SETTINGS: SproutSettings = {
 
     // DEFAULT = two-button
     fourButtonMode: false,
+    showGradeIntervals: false,
 
     enableSkipButton: false,
     randomizeMcqOptions: true,

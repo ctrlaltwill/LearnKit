@@ -71,6 +71,33 @@
   font-size: var(--sprout-widget-font-button) !important;
 }
 
+.sprout.sprout-widget .sprout-grade-btn-with-interval {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+.sprout.sprout-widget .sprout-grade-btn-label-wrap {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  line-height: 1.05;
+}
+
+.sprout.sprout-widget .sprout-grade-btn-subtitle {
+  font-size: 0.78em;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+/* Match study/gatekeeper spacing for label + keycap in widget grading buttons. */
+.sprout.sprout-widget .sprout-widget-action-btn:is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy) {
+  column-gap: 0 !important;
+}
+
 .sprout.sprout-widget kbd,
 .sprout.sprout-widget .kbd {
   font-size: var(--sprout-widget-font-kbd) !important;

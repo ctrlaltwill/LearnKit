@@ -21,6 +21,8 @@ import type { ClozeRenderOptions } from "./question-cloze";
 import { openCardAnchorInNote } from "../../platform/core/open-card-anchor";
 import { processClozeForMath, convertInlineDisplayMath, forceSingleLineDisplayMathInline } from "../../platform/core/shared-utils";
 import { t } from "../../platform/translations/translator";
+import { getRatingIntervalPreview } from "../../platform/core/grade-intervals";
+import type { CardState, SchedulerSettings } from "../../platform/types/scheduler";
 
 declare global {
   interface Window {
@@ -97,6 +99,9 @@ type Args = {
 
   // grading mode
   fourButtonMode?: boolean;
+  showGradeIntervals?: boolean;
+  schedulingSettings?: SchedulerSettings;
+  getCardStateForPreview?: (cardId: string, now: number) => CardState | null;
 
   // edit modal
   openEditModal?: () => void;
@@ -183,6 +188,7 @@ function appendKbdRight(btn: HTMLElement, label: string) {
 
 function makeTextButton(opts: {
   label: string;
+  subtitle?: string;
   title?: string;
   className: string;
   onClick: () => void;
@@ -191,7 +197,25 @@ function makeTextButton(opts: {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = opts.className.split(/\s+/).includes("bc") ? opts.className : `bc ${opts.className}`;
-  btn.textContent = opts.label;
+  if (opts.subtitle) {
+    btn.classList.add("sprout-grade-btn-with-interval");
+    const labelWrap = document.createElement("span");
+    labelWrap.className = "bc sprout-grade-btn-label-wrap";
+
+    const labelLine = document.createElement("span");
+    labelLine.className = "bc sprout-grade-btn-label";
+    labelLine.textContent = opts.label;
+
+    const subtitleLine = document.createElement("span");
+    subtitleLine.className = "bc sprout-grade-btn-subtitle";
+    subtitleLine.textContent = opts.subtitle;
+
+    labelWrap.appendChild(labelLine);
+    labelWrap.appendChild(subtitleLine);
+    btn.appendChild(labelWrap);
+  } else {
+    btn.textContent = opts.label;
+  }
   btn.setAttribute("aria-label", opts.title || opts.label);
   btn.setAttribute("data-tooltip-position", "top");
 
@@ -1417,6 +1441,25 @@ export function renderSessionMode(args: Args) {
   if (!graded) {
     if (canGradeNow) {
       const goNext = () => void args.nextCard(true);
+      const showIntervals =
+        !!args.showGradeIntervals &&
+        !!args.schedulingSettings &&
+        !!args.getCardStateForPreview;
+      const previewNow = Date.now();
+      const previewState = showIntervals
+        ? args.getCardStateForPreview?.(String(card.id), previewNow) ?? null
+        : null;
+      const getSubtitle = (rating: Rating): string | undefined => {
+        if (!previewState || !args.schedulingSettings) return undefined;
+        return (
+          getRatingIntervalPreview({
+            state: previewState,
+            rating,
+            now: previewNow,
+            scheduling: args.schedulingSettings,
+          }) ?? undefined
+        );
+      };
 
       // Practice mode: single Continue button
       if (practiceMode) {
@@ -1437,6 +1480,7 @@ export function renderSessionMode(args: Args) {
 
         const againBtn = makeTextButton({
           label: "Again",
+          subtitle: getSubtitle("again"),
           title: "Grade question as again (1)",
           className: "btn-destructive",
           onClick: () => void args.gradeCurrentRating("again", {}).then(goNext),
@@ -1448,6 +1492,7 @@ export function renderSessionMode(args: Args) {
         if (four) {
           const hardBtn = makeTextButton({
             label: "Hard",
+            subtitle: getSubtitle("hard"),
             title: "Grade question as hard (2)",
             className: "btn",
             onClick: () => void args.gradeCurrentRating("hard", {}).then(goNext),
@@ -1458,6 +1503,7 @@ export function renderSessionMode(args: Args) {
 
           const goodBtn = makeTextButton({
             label: "Good",
+            subtitle: getSubtitle("good"),
             title: "Grade question as good (3)",
             className: "btn",
             onClick: () => void args.gradeCurrentRating("good", {}).then(goNext),
@@ -1468,6 +1514,7 @@ export function renderSessionMode(args: Args) {
 
           const easyBtn = makeTextButton({
             label: "Easy",
+            subtitle: getSubtitle("easy"),
             title: "Grade question as easy (4)",
             className: "btn",
             onClick: () => void args.gradeCurrentRating("easy", {}).then(goNext),
@@ -1478,6 +1525,7 @@ export function renderSessionMode(args: Args) {
         } else {
           const goodBtn = makeTextButton({
             label: "Good",
+            subtitle: getSubtitle("good"),
             title: "Grade question as good (2)",
             className: "btn",
             onClick: () => void args.gradeCurrentRating("good", {}).then(goNext),

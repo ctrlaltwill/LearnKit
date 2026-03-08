@@ -1951,6 +1951,9 @@ export class SproutReviewerView extends ItemView {
       randomizeOqOrder: this.plugin.settings.study?.randomizeOqOrder ?? true,
 
       fourButtonMode: isFourButtonMode(this.plugin),
+      showGradeIntervals: !!this.plugin.settings.study?.showGradeIntervals,
+      schedulingSettings: this.plugin.settings.scheduling,
+      getCardStateForPreview: (cardId: string, now: number) => this.plugin.store.ensureState(cardId, now),
 
       openEditModal: () => this.openEditModalForCurrentCard(),
 

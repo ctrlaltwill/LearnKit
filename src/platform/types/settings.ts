@@ -53,6 +53,9 @@ export type SproutSettings = {
     /** true = Again/Hard/Good/Easy; false = Pass/Fail two-button mode. */
     fourButtonMode: boolean;
 
+    /** Show compact next-interval hints under grading buttons (e.g. 10m, 4.5d). */
+    showGradeIntervals: boolean;
+
     enableSkipButton: boolean;
     randomizeMcqOptions: boolean;
     randomizeOqOrder: boolean;

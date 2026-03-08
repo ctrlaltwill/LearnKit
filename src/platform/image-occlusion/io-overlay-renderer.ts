@@ -39,6 +39,8 @@ export interface OverlayCallbacks {
   rerender(): void;
   /** Called on double-click of a text box (open inline editor). */
   editTextBox(textBox: IOTextBox): void;
+  /** Delete a rectangle by id. */
+  deleteRect(rectId: string): void;
 }
 
 export interface RenderOverlayOptions {
@@ -76,6 +78,7 @@ export function renderOverlay(opts: RenderOverlayOptions): void {
   const stageW = rawStageW || 1;
   const stageH = rawStageH || 1;
   const scale = rawScale || 1;
+  const uiInverseScale = 1 / Math.max(0.0001, scale);
   const isCropTool = currentTool === "crop";
 
   // ── Clear existing overlay children (preserve active previews) ──────────
@@ -115,7 +118,11 @@ export function renderOverlay(opts: RenderOverlayOptions): void {
     const isSelected = rect.rectId === selectedRectId;
     el.classList.toggle("is-selected", isSelected);
 
-    // GroupKey input (centred on the rect)
+    // GroupKey input controls (centered on rect, visually unscaled from canvas zoom)
+    const inputUi = document.createElement("div");
+    inputUi.className = "sprout-io-group-ui";
+    setCssProps(inputUi, "--sprout-io-ui-inverse-scale", `${uiInverseScale}`);
+
     const groupInput = document.createElement("input");
     groupInput.type = "text";
     groupInput.value = rect.groupKey || "1";
@@ -144,7 +151,30 @@ export function renderOverlay(opts: RenderOverlayOptions): void {
       }
     });
 
-    el.appendChild(groupInput);
+    inputUi.appendChild(groupInput);
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "sprout-assistant-popup-close sprout-io-mask-delete";
+    deleteBtn.setAttribute("aria-label", "Delete mask");
+    deleteBtn.setAttribute("data-tooltip-position", "top");
+    deleteBtn.innerHTML =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-x"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>';
+
+    deleteBtn.addEventListener("mousedown", (e) => {
+      // Keep input focus behavior stable while clicking the delete affordance.
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
+    deleteBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      cb.deleteRect(rect.rectId);
+    });
+
+    inputUi.appendChild(deleteBtn);
+    el.appendChild(inputUi);
 
     // Corner resize affordances (rectangles only)
     if (rect.shape !== "circle") {
@@ -204,7 +234,7 @@ export function renderOverlay(opts: RenderOverlayOptions): void {
     // Interactjs: drag + resize
     interact(el)
       .draggable({
-        ignoreFrom: "input,textarea,button,select,.sprout-io-corner",
+        ignoreFrom: "input,textarea,button,select,.sprout-io-corner,.sprout-io-mask-delete",
         listeners: {
           move: (event: DragMoveEvent) => {
             const r = getRectRef();

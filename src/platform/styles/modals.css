@@ -984,22 +984,66 @@ body.is-mobile .sprout .sprout-bulk-edit-content {
   border-radius: 50% !important;
 }
 
-.sprout .sprout-io-group-input {
+.sprout .sprout-io-group-ui {
   position: absolute !important;
-  left: 50% !important;
   top: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  width: 60px !important;
-  padding: 6px 12px !important;
-  font-size: var(--sprout-font-xl) !important;
-  font-weight: 700 !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) scale(var(--sprout-io-ui-inverse-scale, 1)) !important;
+  transform-origin: center center !important;
+  z-index: 10 !important;
+  pointer-events: auto !important;
+}
+
+.sprout .sprout-io-group-input {
+  height: 1.5rem !important;
+  width: 3rem !important;
+  max-width: 3rem !important;
+  min-height: 1.5rem !important;
   text-align: center !important;
-  border: 2px solid rgba(0, 0, 0, 0.3) !important;
   border-radius: var(--button-radius, var(--radius-m)) !important;
-  background-color: rgba(255, 255, 255, 0.95) !important;
   color: #000 !important;
   cursor: text !important;
   z-index: 10 !important;
+  background-color: #fffffff2 !important;
+  border: 1.5px solid #0000004d !important;
+  font-size: 0.9rem !important;
+  font-weight: 400 !important;
+  line-height: 1.1 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+}
+
+.sprout .sprout-io-mask-delete {
+  position: absolute !important;
+left: 50px !important;
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  min-height: 24px !important;
+  border-radius: 50% !important;
+  z-index: 11 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+}
+
+.sprout .sprout-io-mask-delete:hover {
+    background-color: var(--interactive-normal);
+}
+
+.sprout .sprout-io-mask-delete .svg-icon {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+.sprout .sprout-io-group-ui:focus-within .sprout-io-mask-delete {
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 
 .sprout .sprout-io-corner {
@@ -1616,8 +1660,10 @@ body.is-mobile .sprout .sprout-bulk-edit-content {
 }
 
 .sprout-io-toolbar-group {
-  display: inline-flex;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  max-width: 100%;
   gap: 4px;
   padding: 4px;
   border-radius: var(--radius-m);
@@ -1633,9 +1679,8 @@ body.is-mobile .sprout .sprout-bulk-edit-content {
 }
 
 .sprout-io-btn {
-  width: 28px;
   height: 28px;
-  border-radius: var(--radius-m);
+  border-radius: var(--button-radius);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1663,6 +1708,14 @@ body.is-mobile .sprout .sprout-bulk-edit-content {
 .sprout-io-btn svg {
   width: 17px;
   height: 17px;
+}
+
+.sprout-io-btn-text {
+  width: auto;
+  min-width: 28px;
+  padding: 0 8px;
+  column-gap: 6px;
+  gap: 6px;
 }
 
 .sprout-io-field {

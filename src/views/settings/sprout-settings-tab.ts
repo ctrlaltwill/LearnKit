@@ -2659,6 +2659,28 @@ export class SproutSettingsTab extends PluginSettingTab {
       });
 
     new Setting(wrapper)
+      .setName(this._tx("ui.settings.study.gradeIntervals.name", "Show grade intervals"))
+      .setDesc(this._tx("ui.settings.study.gradeIntervals.desc", "Show next review times under grade buttons in reviewer and widget."))
+      .addToggle((t) =>
+        t.setValue(!!this.plugin.settings.study.showGradeIntervals).onChange(async (v) => {
+          const prev = !!this.plugin.settings.study.showGradeIntervals;
+          this.plugin.settings.study.showGradeIntervals = v;
+          await this.plugin.saveAll();
+          this.refreshReviewerViewsIfPossible();
+          this.refreshAllWidgetViews();
+
+          if (prev !== v) {
+            this.queueSettingsNotice(
+              "study.showGradeIntervals",
+              v
+                ? "Showing grade intervals under grading buttons."
+                : "Hiding grade intervals under grading buttons.",
+            );
+          }
+        }),
+      );
+
+    new Setting(wrapper)
       .setName(this._tx("ui.settings.study.skipButton.name", "Skip button"))
       .setDesc(this._tx("ui.settings.study.skipButton.desc", "Show a skip button (enter). Skipped cards stay in the current session and do not change scheduling."))
       .addToggle((t) => {

@@ -1,6 +1,6 @@
 # Image Occlusion
 
-Last modified: 13/02/2026
+Last modified: 09/03/2026
 
 ## What it does
 
@@ -14,7 +14,9 @@ Image Occlusion (IO) hides parts of an image so you recall the hidden label or s
 2. Choose an image from your vault or drag one into the modal.
 3. The **IO Editor** opens with the image on a canvas.
 4. Use the toolbar to draw mask regions over the areas you want to test.
-5. Choose a save mode (Solo or All) and click **Save**.
+5. Optional: click **Auto-Mask** to detect text regions and create masks automatically.
+6. Review and adjust generated masks (move/resize/delete, update group keys).
+7. Choose a save mode (Solo or All) and click **Save**.
 
 ### Writing in Markdown
 
@@ -40,6 +42,7 @@ The editor opens in a modal canvas.
 | Tool | Description |
 |---|---|
 | **Occlusion** | Draw new mask rectangles/circles over the image |
+| **Auto-Mask** | Detect text-like regions with OCR and create masks automatically |
 | **Transform** | Move or resize existing masks |
 | **Delete** | Remove the selected mask |
 | **Reset** | Revert all masks to their saved state |
@@ -47,6 +50,14 @@ The editor opens in a modal canvas.
 ### Shapes
 
 Masks can be rectangles or circles.
+
+### Auto-Mask (OCR)
+
+The editor includes an **Auto-Mask** action that uses OCR to detect likely text regions and create masks automatically.
+
+- Works best on clear, high-contrast images.
+- Generated masks are editable: you can move, resize, regroup, or delete them before saving.
+- If no regions are detected, use manual mask drawing as usual.
 
 ### Zoom & pan
 

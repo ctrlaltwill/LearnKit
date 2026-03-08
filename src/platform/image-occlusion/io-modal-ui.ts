@@ -16,8 +16,19 @@
  *   - buildHeader — builds the modal header row with title and close button
  */
 
-import { setIcon } from "obsidian";
+import { Platform, setIcon } from "obsidian";
 import { setCssProps } from "../../platform/core/ui";
+
+function isMobileLikePlatform(): boolean {
+  if (Platform.isMobileApp || Platform.isIosApp || Platform.isAndroidApp) return true;
+  if (typeof document !== "undefined" && document.body?.classList.contains("is-mobile")) return true;
+  return false;
+}
+
+function getPlatformShortcut(key: string): string | null {
+  if (isMobileLikePlatform()) return null;
+  return Platform.isMacOS ? `⌘${key}` : `Ctrl+${key}`;
+}
 
 // ── Toolbar ─────────────────────────────────────────────────────────────────
 
@@ -26,9 +37,9 @@ export interface ToolbarRefs {
   fileInput: HTMLInputElement;
   btnUndo: HTMLButtonElement;
   btnRedo: HTMLButtonElement;
+  btnAutoMask: HTMLButtonElement;
   btnTransform: HTMLButtonElement;
   btnRectTool: HTMLButtonElement;
-  btnCircleTool: HTMLButtonElement;
   btnCrop: HTMLButtonElement;
   btnRotateLeft: HTMLButtonElement;
   btnRotateRight: HTMLButtonElement;
@@ -38,12 +49,15 @@ export interface ToolbarCallbacks {
   onFileSelected(file: File): void;
   onUndo(): void;
   onRedo(): void;
+  onAutoMask(): void;
   onSetTool(tool: "occlusion-rect" | "occlusion-circle" | "transform" | "text" | "crop"): void;
   onRotate(dir: "cw" | "ccw"): void;
 }
 
 /** Build the IO-editor toolbar and return element references. */
 export function buildToolbar(parent: HTMLElement, cb: ToolbarCallbacks): ToolbarRefs {
+  const findShortcut = getPlatformShortcut("F");
+
   const toolbar = parent.createDiv();
   toolbar.removeAttribute("class");
   toolbar.setAttr("role", "toolbar");
@@ -59,7 +73,7 @@ export function buildToolbar(parent: HTMLElement, cb: ToolbarCallbacks): Toolbar
     iconName: string,
     tooltip: string,
     onClick: () => void,
-    opts: { disabled?: boolean } = {},
+    opts: { disabled?: boolean; label?: string; hotkeyHint?: string } = {},
   ): HTMLButtonElement => {
     const btn = iconParent.createEl("button", { cls: "bc sprout-io-btn" });
     btn.type = "button";
@@ -67,6 +81,15 @@ export function buildToolbar(parent: HTMLElement, cb: ToolbarCallbacks): Toolbar
 
     const iconWrapper = btn.createEl("span", { cls: "bc inline-flex items-center justify-center" });
     setIcon(iconWrapper, iconName);
+
+    if (opts.label) {
+      btn.classList.add("sprout-io-btn-text");
+      btn.createSpan({ cls: "bc sprout-io-btn-label", text: opts.label });
+    }
+    if (opts.hotkeyHint) {
+      const hintWrap = btn.createSpan({ cls: "bc sprout-io-btn-hotkeys" });
+      hintWrap.createEl("kbd", { cls: "bc kbd", text: opts.hotkeyHint.trim() });
+    }
 
     btn.addEventListener("click", (ev) => {
       if (btn.disabled) return;
@@ -95,23 +118,31 @@ export function buildToolbar(parent: HTMLElement, cb: ToolbarCallbacks): Toolbar
 
   createSep();
 
-  // Undo / Redo
+  // Undo / Redo / Move / Crop / Rotate
   const btnUndo = createIconBtn(toolbarGroup, "undo", "Undo (Ctrl+Z)", () => cb.onUndo());
   const btnRedo = createIconBtn(toolbarGroup, "redo", "Redo (Ctrl+Shift+Z)", () => cb.onRedo());
-
-  createSep();
-
-  // Move, Rectangle, Ellipse
   const btnTransform = createIconBtn(toolbarGroup, "move", "Pan / Move", () => cb.onSetTool("transform"));
-  const btnRectTool = createIconBtn(toolbarGroup, "square", "Draw rectangle", () => cb.onSetTool("occlusion-rect"));
-  const btnCircleTool = createIconBtn(toolbarGroup, "circle", "Draw ellipse", () => cb.onSetTool("occlusion-circle"));
+  const btnCrop = createIconBtn(toolbarGroup, "crop", "Crop image", () => cb.onSetTool("crop"));
+  const btnRotateLeft = createIconBtn(toolbarGroup, "rotate-ccw", "Rotate 90° left", () => cb.onRotate("ccw"));
+  const btnRotateRight = createIconBtn(toolbarGroup, "rotate-cw", "Rotate 90° right", () => cb.onRotate("cw"));
 
   createSep();
 
-  // Crop, Rotate
-  const btnCrop = createIconBtn(toolbarGroup, "crop", "Crop image", () => cb.onSetTool("crop"));
-  const btnRotateLeft = createIconBtn(toolbarGroup, "rotate-ccw-square", "Rotate 90° left", () => cb.onRotate("ccw"));
-  const btnRotateRight = createIconBtn(toolbarGroup, "rotate-cw-square", "Rotate 90° right", () => cb.onRotate("cw"));
+  // Rectangle, auto-detect
+  const btnRectTool = createIconBtn(
+    toolbarGroup,
+    "square",
+    "Add Mask",
+    () => cb.onSetTool("occlusion-rect"),
+    { label: "Add Mask" },
+  );
+  const btnAutoMask = createIconBtn(
+    toolbarGroup,
+    "wand-sparkles",
+    findShortcut ? `Auto-Mask (${findShortcut})` : "Auto-Mask",
+    () => cb.onAutoMask(),
+    { label: "Auto-Mask" },
+  );
 
   fileInput.addEventListener("change", (e) => {
     const file = (e.target as HTMLInputElement).files?.[0];
@@ -124,9 +155,9 @@ export function buildToolbar(parent: HTMLElement, cb: ToolbarCallbacks): Toolbar
     fileInput,
     btnUndo,
     btnRedo,
+    btnAutoMask,
     btnTransform,
     btnRectTool,
-    btnCircleTool,
     btnCrop,
     btnRotateLeft,
     btnRotateRight,
@@ -154,6 +185,8 @@ export function buildCanvasContainer(
   defaults: { height: string; minHeight: string; maxHeight: string },
   cb: CanvasContainerCallbacks,
 ): CanvasContainerRefs {
+  const pasteShortcut = getPlatformShortcut("V");
+
   const canvasContainer = parent.createDiv({ cls: "bc rounded-lg border border-border bg-background" });
   canvasContainer.classList.add("sprout-io-canvas", "sprout-io-canvas-container");
   setCssProps(canvasContainer, "--sprout-io-canvas-height", defaults.height);
@@ -165,11 +198,11 @@ export function buildCanvasContainer(
     cls: "bc flex items-center justify-center text-muted-foreground text-sm",
   });
   placeholder.classList.add("sprout-io-canvas-placeholder");
-  placeholder.createSpan({ text: "Insert from file or paste an image " });
-  const kbdWrap = placeholder.createSpan({ cls: "bc inline-flex items-center gap-1 ml-1" });
-  kbdWrap.createEl("kbd", { cls: "bc kbd", text: "⌘+V" });
-  kbdWrap.createSpan({ text: " / " });
-  kbdWrap.createEl("kbd", { cls: "bc kbd", text: "Ctrl+V" });
+  placeholder.createSpan({ text: "Insert from file or paste an image" });
+  if (pasteShortcut) {
+    const kbdWrap = placeholder.createSpan({ cls: "bc inline-flex items-center gap-1 ml-1" });
+    kbdWrap.createEl("kbd", { cls: "bc kbd", text: pasteShortcut });
+  }
   placeholder.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();

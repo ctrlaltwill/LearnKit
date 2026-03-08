@@ -685,6 +685,33 @@
 
 /* ---- Grading buttons ---- */
 
+.sprout .sprout-grade-btn-with-interval {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+.sprout .sprout-grade-btn-label-wrap {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  line-height: 1.05;
+}
+
+.sprout .sprout-grade-btn-subtitle {
+  font-size: 0.78em;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+/* Keep grade label + keycap tight in study and gatekeeper grading buttons. */
+.sprout :is(.sprout-session-card, .sprout-gatekeeper-modal) :is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy) {
+  column-gap: 0 !important;
+}
+
 /* Remove box shadow from all reviewer footer buttons to match outline buttons */
 .sprout .sprout-session-card footer .btn {
   box-shadow: none !important;

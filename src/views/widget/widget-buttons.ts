@@ -77,6 +77,7 @@ export function makeIconButton(opts: {
  */
 export function makeTextButton(opts: {
   label: string;
+  subtitle?: string;
   title?: string;
   className: string;
   onClick: () => void;
@@ -88,9 +89,27 @@ export function makeTextButton(opts: {
   btn.setAttribute("aria-label", opts.title || opts.label);
   btn.setAttribute("data-tooltip-position", "top");
 
-  const content = document.createElement("span");
-  content.textContent = opts.label;
-  btn.appendChild(content);
+  if (opts.subtitle) {
+    btn.classList.add("sprout-grade-btn-with-interval");
+    const labelWrap = document.createElement("span");
+    labelWrap.className = "bc sprout-grade-btn-label-wrap";
+
+    const labelLine = document.createElement("span");
+    labelLine.className = "bc sprout-grade-btn-label";
+    labelLine.textContent = opts.label;
+
+    const subtitleLine = document.createElement("span");
+    subtitleLine.className = "bc sprout-grade-btn-subtitle";
+    subtitleLine.textContent = opts.subtitle;
+
+    labelWrap.appendChild(labelLine);
+    labelWrap.appendChild(subtitleLine);
+    btn.appendChild(labelWrap);
+  } else {
+    const content = document.createElement("span");
+    content.textContent = opts.label;
+    btn.appendChild(content);
+  }
 
   if (opts.kbd) {
     const kbd = document.createElement("kbd");

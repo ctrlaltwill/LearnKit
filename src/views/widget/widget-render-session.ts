@@ -30,6 +30,7 @@ import { MarkdownView } from "obsidian";
 import { getTtsService } from "../../platform/integrations/tts/tts-service";
 import { shouldSkipBackAutoplay } from "../../platform/integrations/tts/autoplay-policy";
 import { t } from "../../platform/translations/translator";
+import { getRatingIntervalPreview } from "../../platform/core/grade-intervals";
 
 const tx = (
   view: WidgetViewLike,
@@ -861,6 +862,22 @@ function renderScheduledFooter(view: WidgetViewLike, footer: HTMLElement, card: 
   if (!graded) {
     if ((card.type === "basic" || card.type === "reversed" || card.type === "reversed-child" || isClozeLike(card) || ioLike) && view.showAnswer) {
       const fourButton = !!view.plugin.settings.study.fourButtonMode;
+      const showIntervals = !!view.plugin.settings.study.showGradeIntervals;
+      const previewNow = Date.now();
+      const previewState = showIntervals
+        ? view.plugin.store.ensureState(String(card.id), previewNow)
+        : null;
+      const getSubtitle = (rating: ReviewRating): string | undefined => {
+        if (!previewState || !showIntervals) return undefined;
+        return (
+          getRatingIntervalPreview({
+            state: previewState,
+            rating,
+            now: previewNow,
+            scheduling: view.plugin.settings.scheduling,
+          }) ?? undefined
+        );
+      };
       let gradingGrid: HTMLElement;
       if (fourButton) {
         gradingGrid = el("div", "bc grid grid-cols-2 gap-2");
@@ -871,6 +888,7 @@ function renderScheduledFooter(view: WidgetViewLike, footer: HTMLElement, card: 
       // Always show Again
       const againBtn = makeTextButton({
         label: tx(view, "ui.widget.grade.again", "Again"),
+        subtitle: getSubtitle("again"),
         title: tx(view, "ui.widget.grade.againTooltip", "Grade question as again (1)"),
         className: fourButton ? "bc btn-outline w-full" : "bc btn-outline flex-1",
         onClick: () => {
@@ -887,6 +905,7 @@ function renderScheduledFooter(view: WidgetViewLike, footer: HTMLElement, card: 
       if (fourButton) {
         const hardBtn = makeTextButton({
           label: tx(view, "ui.widget.grade.hard", "Hard"),
+          subtitle: getSubtitle("hard"),
           title: tx(view, "ui.widget.grade.hardTooltip", "Grade question as hard (2)"),
           className: "bc btn-outline w-full",
           onClick: () => {
@@ -904,6 +923,7 @@ function renderScheduledFooter(view: WidgetViewLike, footer: HTMLElement, card: 
       // Always show Good
       const goodBtn = makeTextButton({
         label: tx(view, "ui.widget.grade.good", "Good"),
+        subtitle: getSubtitle("good"),
         title: fourButton
           ? tx(view, "ui.widget.grade.goodTooltipFour", "Grade question as good (3)")
           : tx(view, "ui.widget.grade.goodTooltipTwo", "Grade question as good (2)"),
@@ -922,6 +942,7 @@ function renderScheduledFooter(view: WidgetViewLike, footer: HTMLElement, card: 
       if (fourButton) {
         const easyBtn = makeTextButton({
           label: tx(view, "ui.widget.grade.easy", "Easy"),
+          subtitle: getSubtitle("easy"),
           title: tx(view, "ui.widget.grade.easyTooltip", "Grade question as easy (4)"),
           className: "bc btn-outline w-full",
           onClick: () => {

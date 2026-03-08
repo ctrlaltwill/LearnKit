@@ -39,9 +39,8 @@ export const IO_EDITOR_STYLES = `
   }
 
   .sprout-io-btn {
-    width: 28px;
     height: 28px;
-    border-radius: 6px;
+    border-radius: var(--button-radius);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -69,6 +68,32 @@ export const IO_EDITOR_STYLES = `
   .sprout-io-btn svg {
     width: 17px;
     height: 17px;
+  }
+
+  .sprout-io-btn-text {
+    width: auto;
+    min-width: 28px;
+    padding: 0 8px;
+    column-gap: 6px;
+    gap: 6px;
+  }
+
+  .sprout-io-btn-label {
+    font-size: 12px;
+    line-height: 1;
+    font-weight: 500;
+  }
+
+  .sprout-io-btn-hotkeys {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .sprout-io-btn-hotkeys .kbd {
+    font-size: 10px;
+    line-height: 1;
+    padding: 1px 4px;
   }
 
   .sprout-io-field {

@@ -37,6 +37,7 @@ import {
   buildFooter,
   buildImageLimitDialog,
 } from "../../platform/image-occlusion/io-modal-ui";
+import { autoDetectTextMasks } from "../../platform/image-occlusion/io-ocr";
 
 import {
   resolveImageFile as resolveIoImageFile,
@@ -95,10 +96,10 @@ export class ImageOcclusionCreatorModal extends Modal {
   private placeholderEl?: HTMLElement;
   private canvasContainerEl?: HTMLDivElement;
   private btnRectTool?: HTMLButtonElement;
-  private btnCircleTool?: HTMLButtonElement;
   private btnTransform?: HTMLButtonElement;
   private btnUndo?: HTMLButtonElement;
   private btnRedo?: HTMLButtonElement;
+  private btnAutoMask?: HTMLButtonElement;
   private btnCrop?: HTMLButtonElement;
   private btnText?: HTMLButtonElement;
   private imageLimitDialog?: HTMLDialogElement;
@@ -133,6 +134,7 @@ export class ImageOcclusionCreatorModal extends Modal {
   private textDrawing = false;
   private textStart: { x: number; y: number } | null = null;
   private textPreviewEl: HTMLElement | null = null;
+  private autoMaskBusy = false;
   private onDocPaste?: (ev: ClipboardEvent) => void;
   private onDocKeyDown?: (ev: KeyboardEvent) => void;
   private fitRetryRaf: number | null = null;
@@ -165,8 +167,24 @@ export class ImageOcclusionCreatorModal extends Modal {
     this.modalEl.addClass("bc", "sprout-modals", "sprout-io-creator", "sprout-io-creator-modal");
     this.contentEl.addClass("bc", "sprout-io-creator-content");
 
-    // Escape key closes modal
-    this.scope.register([], "Escape", () => { this.close(); return false; });
+    // Escape key behavior: first exits focused input, second closes the modal.
+    this.scope.register([], "Escape", () => {
+      const activeEl = document.activeElement as HTMLElement | null;
+      const isInsideModal = !!activeEl && this.modalEl.contains(activeEl);
+      const isEditable =
+        !!activeEl &&
+        (activeEl.matches("input,textarea,select") ||
+          activeEl.isContentEditable ||
+          activeEl.getAttribute("contenteditable") === "true");
+
+      if (isInsideModal && isEditable) {
+        activeEl.blur();
+        return false;
+      }
+
+      this.close();
+      return false;
+    });
 
     const { contentEl } = this;
     contentEl.empty();
@@ -213,14 +231,15 @@ export class ImageOcclusionCreatorModal extends Modal {
       },
       onUndo: () => this.undo(),
       onRedo: () => this.redo(),
+      onAutoMask: () => void this.runAutoMask(),
       onSetTool: (tool) => this.setTool(tool),
       onRotate: (dir) => void this.rotateImage(dir),
     });
     this.btnUndo = toolbarRefs.btnUndo;
     this.btnRedo = toolbarRefs.btnRedo;
+    this.btnAutoMask = toolbarRefs.btnAutoMask;
     this.btnTransform = toolbarRefs.btnTransform;
     this.btnRectTool = toolbarRefs.btnRectTool;
-    this.btnCircleTool = toolbarRefs.btnCircleTool;
     this.btnCrop = toolbarRefs.btnCrop;
 
     // Set initial tool highlight
@@ -282,6 +301,7 @@ export class ImageOcclusionCreatorModal extends Modal {
 
     this.updatePlaceholderVisibility();
     this.updateUndoRedoState();
+    this.updateAutoMaskButtonState();
 
     // ── Extra information field ──────────────────────────────────────────────
     const infoField = body.createDiv({ cls: "bc flex flex-col gap-1" });
@@ -434,7 +454,6 @@ export class ImageOcclusionCreatorModal extends Modal {
     };
 
     setActive(this.btnRectTool ?? undefined, tool === "occlusion-rect");
-    setActive(this.btnCircleTool ?? undefined, tool === "occlusion-circle");
     setActive(this.btnTransform ?? undefined, tool === "transform");
     setActive(this.btnText ?? undefined, tool === "text");
     setActive(this.btnCrop ?? undefined, tool === "crop");
@@ -514,6 +533,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     this.renderRects();
     this.updatePlaceholderVisibility();
     this.updateUndoRedoState();
+    this.updateAutoMaskButtonState();
     if (this.imageLimitDialog?.open) this.imageLimitDialog.close();
 
   }
@@ -548,6 +568,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     this.updatePlaceholderVisibility();
     this.seedHistoryFromImage();
     this.fitToViewportWhenReady();
+    this.updateAutoMaskButtonState();
 
   }
 
@@ -675,6 +696,13 @@ export class ImageOcclusionCreatorModal extends Modal {
 
     // Keyboard shortcuts
     const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "f") {
+        e.preventDefault();
+        e.stopPropagation();
+        void this.runAutoMask();
+        return;
+      }
+
       const activeEl = document.activeElement as HTMLElement | null;
       if (activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA")) return;
 
@@ -1160,6 +1188,7 @@ export class ImageOcclusionCreatorModal extends Modal {
       this.updatePlaceholderVisibility();
     }
     this.updateUndoRedoState();
+    this.updateAutoMaskButtonState();
   }
 
   private redo() {
@@ -1178,6 +1207,7 @@ export class ImageOcclusionCreatorModal extends Modal {
       this.updatePlaceholderVisibility();
     }
     this.updateUndoRedoState();
+    this.updateAutoMaskButtonState();
   }
 
   private updateUndoRedoState() {
@@ -1192,6 +1222,54 @@ export class ImageOcclusionCreatorModal extends Modal {
     };
     setBtnState(this.btnUndo, canUndo);
     setBtnState(this.btnRedo, canRedo);
+  }
+
+  private updateAutoMaskButtonState() {
+    const btn = this.btnAutoMask;
+    if (!btn) return;
+    const enabled = !!this.ioImageData && !this.autoMaskBusy;
+    btn.disabled = !enabled;
+    btn.setAttribute("aria-disabled", enabled ? "false" : "true");
+    btn.classList.toggle("sprout-opacity-35", !enabled);
+    btn.classList.toggle("sprout-pointer-none", !enabled);
+  }
+
+  private async runAutoMask() {
+    if (this.autoMaskBusy) return;
+    if (!this.ioImageData) {
+      new Notice("Add an image first.");
+      return;
+    }
+    this.autoMaskBusy = true;
+    this.updateAutoMaskButtonState();
+
+    try {
+      const existing = this.rects.map((r) => ({ ...r }));
+      const masks = await autoDetectTextMasks(this.ioImageData, {
+        stageW: this.stageW,
+        stageH: this.stageH,
+        existingRects: existing,
+        startGroupNumber: this.nextGroupNum,
+      });
+
+      if (!masks.length) {
+        new Notice("No text regions detected. Try a clearer image.");
+        return;
+      }
+
+      this.rects.push(...masks);
+      this.nextGroupNum += masks.length;
+      this.selectedRectId = null;
+      this.selectedTextId = null;
+      this.saveHistory();
+      this.renderRects();
+      new Notice(`Added ${masks.length} auto masks.`);
+    } catch (e: unknown) {
+      new Notice(`Auto-detect failed (${e instanceof Error ? e.message : String(e)})`);
+    } finally {
+      this.autoMaskBusy = false;
+      this.updateAutoMaskButtonState();
+    }
   }
 
   /** Rotate the image 90° clockwise or counter-clockwise. */
@@ -1212,6 +1290,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     this.selectedTextId = null;
     this.saveHistory();
     await this.loadImageToCanvas();
+    this.updateAutoMaskButtonState();
   }
 
   /** Crop the image to the specified stage-coordinate rectangle. */
@@ -1232,6 +1311,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     this.selectedTextId = null;
     this.saveHistory();
     await this.loadImageToCanvas();
+    this.updateAutoMaskButtonState();
   }
 
   // ── Zoom ──────────────────────────────────────────────────────────────────
@@ -1304,6 +1384,12 @@ export class ImageOcclusionCreatorModal extends Modal {
         },
         saveHistory: () => this.saveHistory(),
         rerender: () => this.renderRects(),
+        deleteRect: (id) => {
+          this.rects = this.rects.filter((r) => r.rectId !== id);
+          if (this.selectedRectId === id) this.selectedRectId = null;
+          this.saveHistory();
+          this.renderRects();
+        },
         editTextBox: (textBox) => {
           this.selectedTextId = textBox.textId;
           this.selectedRectId = null;
