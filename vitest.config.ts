@@ -4,6 +4,7 @@ import path from "path";
 export default defineConfig({
   test: {
     include: ["**/*.test.ts"],
+    setupFiles: ["tests/setup-vitest.ts"],
     exclude: ["**/node_modules/**", "**/dist/**", "**/release/**", "**/coverage/**"],
     coverage: {
       provider: "v8",
