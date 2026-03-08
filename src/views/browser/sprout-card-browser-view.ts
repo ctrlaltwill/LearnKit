@@ -17,7 +17,7 @@ import { ItemView, Notice, TFile, type WorkspaceLeaf, setIcon } from "obsidian";
 import type SproutPlugin from "../../main";
 import { MAX_CONTENT_WIDTH_PX, VIEW_TYPE_ANALYTICS, VIEW_TYPE_BROWSER, VIEW_TYPE_REVIEWER, VIEW_TYPE_WIDGET } from "../../platform/core/constants";
 import type { CardRecord } from "../../platform/core/store";
-import { syncOneFile } from "../../platform/integrations/sync/sync-engine";
+import { persistEditedCardAndSiblings } from "../../platform/core/targeted-card-persist";
 import { unsuspendCard, suspendCard } from "../../engine/scheduler/scheduler";
 import { ImageOcclusionCreatorModal } from "../../platform/modals/image-occlusion-creator-modal";
 import { refreshAOS } from "../../platform/core/aos-loader";
@@ -470,13 +470,8 @@ export class SproutCardBrowserView extends ItemView {
 
     await this.app.vault.modify(file, lines.join("\n"));
 
-    const res = await syncOneFile(this.plugin, file);
-
-    if (res.quarantinedCount > 0) {
-      new Notice(this._tx("ui.browser.notice.savedWithQuarantine", "Saved changes to flashcards (but {count} card(s) quarantined).", { count: res.quarantinedCount }));
-    } else {
-      new Notice(this._tx("ui.browser.notice.saved", "Saved changes to flashcards"));
-    }
+    await persistEditedCardAndSiblings(this.plugin, card);
+    new Notice(this._tx("ui.browser.notice.saved", "Saved changes to flashcards"));
 
     this.refreshTable();
 

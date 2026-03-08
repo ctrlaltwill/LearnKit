@@ -14,7 +14,7 @@ import type { CardRecord } from "../../platform/core/store";
 import { normalizeCardOptions } from "../../platform/core/store";
 import { queryFirst } from "../../platform/core/ui";
 import { setModalTitle, scopeModalToWorkspace } from "../../platform/modals/modal-utils";
-import { syncOneFile } from "../../platform/integrations/sync/sync-engine";
+import { persistEditedCardAndSiblings } from "../../platform/core/targeted-card-persist";
 import { log } from "../../platform/core/logger";
 import { escapeDelimiterRe } from "../../platform/core/delimiter";
 import { findCardBlockRangeById } from "./markdown-block";
@@ -729,9 +729,34 @@ export async function saveCardEdits(
 
   await plugin.app.vault.modify(af, out);
 
-  // Resync that note so store + rendered card reflect changes
-  const res = await syncOneFile(plugin, af);
-  new Notice(
-    `Synced after edit — ${res.newCount} new; ${res.updatedCount} updated; ${res.sameCount} unchanged; ${res.idsInserted} IDs inserted.`,
-  );
+  const updatedCard: CardRecord = {
+    ...card,
+    title: norm(payload.title) || null,
+    info: norm(payload.info) || null,
+  };
+
+  if (type === "basic" || type === "reversed") {
+    updatedCard.q = norm(payload.q) || null;
+    updatedCard.a = norm(payload.a) || null;
+  } else if (type === "cloze") {
+    updatedCard.clozeText = norm(payload.clozeText) || null;
+  } else if (type === "mcq") {
+    const options = (Array.isArray(payload.options) ? payload.options : [])
+      .map((x) => String(x || "").trim())
+      .filter(Boolean);
+    const correctIndex = Number.isFinite(payload.correctIndex) ? Number(payload.correctIndex) : -1;
+    const correctIndices = correctIndex >= 0 && correctIndex < options.length ? [correctIndex] : [];
+    updatedCard.stem = norm(payload.stem) || null;
+    updatedCard.options = options;
+    updatedCard.correctIndex = correctIndices.length ? correctIndices[0] : null;
+    updatedCard.correctIndices = correctIndices;
+  } else if (type === "oq") {
+    updatedCard.q = norm(payload.q) || null;
+    updatedCard.oqSteps = (Array.isArray(payload.oqSteps) ? payload.oqSteps : [])
+      .map((x) => String(x || "").trim())
+      .filter(Boolean);
+  }
+
+  await persistEditedCardAndSiblings(plugin, updatedCard);
+  new Notice(tx("ui.reviewer.notice.saved", "Saved changes to flashcard"));
 }

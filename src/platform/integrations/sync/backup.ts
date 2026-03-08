@@ -24,6 +24,15 @@
 
 import type SproutPlugin from "../../../main";
 import type { DataAdapter } from "obsidian";
+import { isParentCard } from "../../core/card-utils";
+import type { CardRecord } from "../../types/card";
+import {
+  SqliteStore,
+  getFlashcardsDbPath,
+  isSqliteDatabasePresent,
+  readStoreDataFromSqliteBuffer,
+} from "../../core/sqlite-store";
+import { getSqlJs } from "../anki/anki-sql";
 
 const MS_HOUR = 60 * 60 * 1000;
 const MS_DAY = 24 * MS_HOUR;
@@ -36,6 +45,8 @@ const MS_DAY = 24 * MS_HOUR;
 type AdapterLike = Partial<Pick<DataAdapter, "read" | "write" | "exists" | "remove" | "rename" | "list" | "stat" | "mkdir">>;
 
 const BACKUP_SUBFOLDER = "backups";
+const DAILY_SQLITE_BACKUP = "daily-backup.db";
+const SQLITE_MANUAL_PREFIX = "manual-backup-";
 
 type BackupManifest = {
   schemaVersion: number;
@@ -402,6 +413,55 @@ async function safeStatSize(adapter: AdapterLike | null, path: string): Promise<
   return 0;
 }
 
+async function readBinaryFile(adapter: AdapterLike | null, path: string): Promise<Uint8Array | null> {
+  try {
+    const binaryAdapter = adapter as AdapterLike & { readBinary?: (p: string) => Promise<ArrayBuffer> };
+    if (binaryAdapter?.readBinary) {
+      const buff = await binaryAdapter.readBinary(path);
+      return new Uint8Array(buff);
+    }
+    if (adapter?.read) {
+      const text = await adapter.read(path);
+      const raw = atob(String(text ?? ""));
+      const out = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+      return out;
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+async function writeBinaryFile(adapter: AdapterLike | null, path: string, bytes: Uint8Array): Promise<boolean> {
+  try {
+    const binaryAdapter = adapter as AdapterLike & { writeBinary?: (p: string, d: ArrayBuffer) => Promise<void> };
+    if (binaryAdapter?.writeBinary) {
+      const output = bytes.slice().buffer;
+      await binaryAdapter.writeBinary(path, output);
+      return true;
+    }
+    if (adapter?.write) {
+      let out = "";
+      const chunk = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunk) {
+        out += String.fromCharCode(...bytes.subarray(i, i + chunk));
+      }
+      await adapter.write(path, btoa(out));
+      return true;
+    }
+  } catch {
+    // ignore
+  }
+  return false;
+}
+
+function isSqliteBackupFileName(name: string): boolean {
+  const s = String(name ?? "");
+  if (s === DAILY_SQLITE_BACKUP) return true;
+  return /^manual-backup-\d{4}-\d{8}\.db$/i.test(s);
+}
+
 /** Deletes a file using the adapter's `remove()` or `trash()`. */
 async function safeRemoveFile(adapter: AdapterLike | null, path: string): Promise<boolean> {
   try {
@@ -659,8 +719,28 @@ function computeSchedulingStats(states: unknown, now: number) {
     if (stage === "review") out.review += 1;
     const stability = Number(entry.stabilityDays ?? 0);
     if (stage === "review" && Number.isFinite(stability) && stability >= 30) out.mature += 1;
+
+    const buriedUntil = Number(entry.buriedUntil ?? 0);
+    if (Number.isFinite(buriedUntil) && buriedUntil > now) continue;
+
     const due = Number(entry.due ?? 0);
-    if (stage !== "suspended" && Number.isFinite(due) && due > 0 && due <= now) out.due += 1;
+    const dueEligibleStage = stage === "learning" || stage === "relearning" || stage === "review";
+    if (dueEligibleStage && Number.isFinite(due) && due > 0 && due <= now) out.due += 1;
+  }
+  return out;
+}
+
+function collectReviewableCardIds(cards: unknown, quarantine: unknown): Set<string> {
+  const out = new Set<string>();
+  if (!isPlainObject(cards)) return out;
+  const quarantined = isPlainObject(quarantine) ? quarantine : {};
+  for (const [id, rawCard] of Object.entries(cards)) {
+    if (!id) continue;
+    if (Object.prototype.hasOwnProperty.call(quarantined, id)) continue;
+    if (!rawCard || typeof rawCard !== "object") continue;
+    const card = rawCard as CardRecord;
+    if (isParentCard(card)) continue;
+    out.add(id);
   }
   return out;
 }
@@ -719,6 +799,26 @@ export async function listDataJsonBackups(plugin: SproutPlugin): Promise<DataJso
   const folder = getPluginFolder(plugin);
   if (!adapter || !folder) return [];
 
+  if (await isSqliteDatabasePresent(plugin)) {
+    const backupFolder = getPreferredBackupFolder(plugin);
+    if (!backupFolder) return [];
+    const files = await safeListFiles(adapter, backupFolder);
+    const out: DataJsonBackupEntry[] = [];
+    for (const p of files) {
+      const path = String(p);
+      const name = path.split("/").pop() || path;
+      if (!isSqliteBackupFileName(name)) continue;
+      out.push({
+        path,
+        name,
+        mtime: await safeStatMtime(adapter, path),
+        size: await safeStatSize(adapter, path),
+      });
+    }
+    out.sort((a, b) => b.mtime - a.mtime || b.size - a.size || a.name.localeCompare(b.name));
+    return out;
+  }
+
   const backupFolder = getPreferredBackupFolder(plugin);
   const rootFiles = await safeListFiles(adapter, folder);
   const nestedFiles = backupFolder ? await safeListFiles(adapter, backupFolder) : [];
@@ -761,6 +861,33 @@ export async function verifyDataJsonBackupIntegrity(
 ): Promise<{ ok: boolean; verified: boolean; reason?: string }> {
   const adapter = plugin.app?.vault?.adapter as AdapterLike | null;
   if (!adapter || !backupPath) return { ok: false, verified: false, reason: "Missing adapter or backup path." };
+
+  if (await isSqliteDatabasePresent(plugin)) {
+    const bytes = await readBinaryFile(adapter, backupPath);
+    if (!bytes || bytes.byteLength === 0) {
+      return { ok: false, verified: true, reason: "Backup DB is missing or unreadable." };
+    }
+    try {
+      const SQL = await getSqlJs();
+      const db = new SQL.Database(bytes);
+      try {
+        const stmt = db.prepare("PRAGMA integrity_check;");
+        try {
+          if (!stmt.step()) return { ok: false, verified: true, reason: "integrity_check returned no rows." };
+          const row = stmt.getAsObject() as { integrity_check?: unknown };
+          const result = String(row.integrity_check ?? "").toLowerCase();
+          if (result === "ok") return { ok: true, verified: true };
+          return { ok: false, verified: true, reason: result || "integrity_check failed." };
+        } finally {
+          stmt.free();
+        }
+      } finally {
+        db.close();
+      }
+    } catch {
+      return { ok: false, verified: true, reason: "Failed to open SQLite backup." };
+    }
+  }
 
   const text = await readBackupRawText(plugin, backupPath);
   if (!text) return { ok: false, verified: false, reason: "Backup file is missing or unreadable." };
@@ -832,7 +959,14 @@ export async function getDataJsonBackupStats(plugin: SproutPlugin, path: string)
   const adapter = plugin.app?.vault?.adapter;
   if (!adapter || !path) return null;
 
-  const obj = await tryReadJson(adapter, path);
+  let obj: unknown;
+  if (await isSqliteDatabasePresent(plugin)) {
+    const bytes = await readBinaryFile(adapter, path);
+    if (!bytes) return null;
+    obj = await readStoreDataFromSqliteBuffer(bytes);
+  } else {
+    obj = await tryReadJson(adapter, path);
+  }
   const root = getStoreLikeRoot(obj);
   if (!root) return null;
 
@@ -844,9 +978,18 @@ export async function getDataJsonBackupStats(plugin: SproutPlugin, path: string)
 
   const cardCount = countObjectKeys(cards);
   const stateKeys = isPlainObject(states) ? Object.keys(states) : [];
-  const stateCount = stateKeys.length;
+  const reviewableIds = collectReviewableCardIds(cards, quarantine);
+  const liveStateKeys = stateKeys.filter((id) => reviewableIds.has(id));
+  const stateCount = liveStateKeys.length;
   const sproutishStateKeys = stateKeys.reduce((acc, k) => acc + (likelySproutStateKey(k) ? 1 : 0), 0);
-  const sched = computeSchedulingStats(states, Date.now());
+  const liveStates: Record<string, unknown> = {};
+  if (isPlainObject(states)) {
+    for (const key of liveStateKeys) {
+      const entry = states[key];
+      if (entry && typeof entry === "object") liveStates[key] = entry;
+    }
+  }
+  const sched = computeSchedulingStats(liveStates, Date.now());
 
   const reviewCount = Array.isArray(reviewLog) ? reviewLog.length : 0;
   const quarantineCount = countObjectKeys(quarantine);
@@ -901,6 +1044,31 @@ export async function createDataJsonBackupNow(plugin: SproutPlugin, label?: stri
   const adapter = plugin.app?.vault?.adapter;
   const pluginFolder = getPluginFolder(plugin);
   if (!adapter || !pluginFolder) return null;
+
+  if (await isSqliteDatabasePresent(plugin)) {
+    const backupFolder = getPreferredBackupFolder(plugin);
+    if (!backupFolder) return null;
+    await ensureFolder(adapter as AdapterLike, backupFolder);
+
+    const srcPath = getFlashcardsDbPath(plugin);
+    const bytes = await readBinaryFile(adapter as AdapterLike, srcPath);
+    if (!bytes || bytes.byteLength === 0) return null;
+
+    const kind = String(label ?? "").toLowerCase().includes("manual") ? "manual" : "daily";
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mm = String(now.getMinutes()).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+    const mon = String(now.getMonth() + 1).padStart(2, "0");
+    const yyyy = String(now.getFullYear());
+    const dstName = kind === "manual"
+      ? `${SQLITE_MANUAL_PREFIX}${hh}${mm}-${dd}${mon}${yyyy}.db`
+      : DAILY_SQLITE_BACKUP;
+    const dstPath = joinPath(backupFolder, dstName);
+
+    const ok = await writeBinaryFile(adapter as AdapterLike, dstPath, bytes);
+    return ok ? dstPath : null;
+  }
 
   if (typeof adapter.write !== "function") return null;
 
@@ -999,6 +1167,43 @@ export async function restoreFromDataJsonBackup(
   if (!adapter) return { ok: false, message: "No vault adapter available." };
   if (!backupPath) return { ok: false, message: "No backup path provided." };
 
+  if (await isSqliteDatabasePresent(plugin)) {
+    try {
+      if (opts.makeSafetyBackup) {
+        await createDataJsonBackupNow(plugin, "manual-before-restore");
+      }
+
+      const integrity = await verifyDataJsonBackupIntegrity(plugin, backupPath);
+      if (!integrity.ok) {
+        return { ok: false, message: integrity.reason || "Backup integrity check failed." };
+      }
+
+      const bytes = await readBinaryFile(adapter as AdapterLike, backupPath);
+      if (!bytes || bytes.byteLength === 0) {
+        return { ok: false, message: "Backup DB is unreadable." };
+      }
+
+      const dbPath = getFlashcardsDbPath(plugin);
+      const written = await writeBinaryFile(adapter as AdapterLike, dbPath, bytes);
+      if (!written) {
+        return { ok: false, message: "Failed to write flashcards.db." };
+      }
+
+      if (plugin.store instanceof SqliteStore) {
+        await plugin.store.reloadFromDisk();
+        const check = await plugin.store.runIntegrityCheck();
+        if (!check.ok) {
+          return { ok: false, message: `Restore completed but integrity check failed: ${check.message}` };
+        }
+      }
+
+      return { ok: true, message: "Restore completed." };
+    } catch (e: unknown) {
+      const errMsg = e instanceof Error ? e.message : String(e ?? "unknown error");
+      return { ok: false, message: `Restore failed: ${errMsg}` };
+    }
+  }
+
   try {
     if (opts.makeSafetyBackup) {
       await createDataJsonBackupNow(plugin, "before-restore");
@@ -1059,6 +1264,20 @@ export async function ensureRoutineBackupIfNeeded(plugin: SproutPlugin): Promise
   const now = Date.now();
   if (now - lastRoutineBackupCheck < ROUTINE_CHECK_COOLDOWN_MS) return;
   lastRoutineBackupCheck = now;
+
+  if (await isSqliteDatabasePresent(plugin)) {
+    const rollingEnabled =
+      (plugin.settings as { storage?: { backups?: { rollingDailyEnabled?: boolean } } })
+        ?.storage?.backups?.rollingDailyEnabled ?? true;
+    if (!rollingEnabled) return;
+
+    const entries = await listDataJsonBackups(plugin);
+    const daily = entries.find((e) => e.name === DAILY_SQLITE_BACKUP);
+    if (!daily || now - Number(daily.mtime || 0) >= MS_DAY) {
+      await createDataJsonBackupNow(plugin, "daily");
+    }
+    return;
+  }
 
   const policy = getBackupPolicy(plugin);
   const routineIntervalMs = Math.max(1, policy.recentIntervalHours) * MS_HOUR;

@@ -117,6 +117,7 @@ export class SproutAssistantPopup {
   private suggestions: StudyAssistantSuggestion[] = [];
   private insertingSuggestionKey: string | null = null;
   private isInsertingSuggestion = false;
+  private _lastAnchoredResponseKeyByMode: Partial<Record<AssistantMode, string>> = {};
 
   // Bound handlers for cleanup
   private _onClickOutside: ((e: MouseEvent) => void) | null = null;
@@ -1434,9 +1435,9 @@ export class SproutAssistantPopup {
       const validationError = this.validateGeneratedCardBlock(file, preparedSuggestion, text);
       if (validationError) throw new Error(validationError);
       await insertTextAtCursorOrAppend(this.plugin.app, file, text, true, true);
-      await syncOneFile(this.plugin, file);
+      await syncOneFile(this.plugin, file, { pruneGlobalOrphans: false });
       this.suggestions = this.suggestions.filter((_, i) => i !== idx);
-      new Notice(this._tx("ui.studyAssistant.generator.inserted", "Inserted generated card into {path}", { path: file.path }));
+      new Notice(this._tx("ui.studyAssistant.generator.flashcardAdded", "Flashcard added"));
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       new Notice(this._tx("ui.studyAssistant.generator.insertFailed", "Failed to insert card: {msg}", { msg }));
@@ -1724,13 +1725,31 @@ export class SproutAssistantPopup {
     }
     const noteContent = await this.readActiveMarkdown(file);
     const match = this.findBestSuggestionRange(noteContent, suggestion);
-    const leaf = this.plugin.app.workspace.getLeaf(false);
-    await leaf.setViewState({ type: "markdown", state: { file: file.path, mode: "source" }, active: true }, { focus: true });
+    const preferredLeaf = this._getHostLeaf();
+    const leaf = preferredLeaf ?? this.plugin.app.workspace.getLeaf(false);
+    const preferredMode = preferredLeaf?.view instanceof MarkdownView ? preferredLeaf.view.getMode() : "preview";
+    await leaf.setViewState(
+      { type: "markdown", state: { file: file.path, mode: preferredMode }, active: true },
+      { focus: true },
+    );
     const view = leaf.view;
     if (!(view instanceof MarkdownView)) return;
+
+    const snippetFromMatch = match
+      ? noteContent.slice(match.start, Math.max(match.start + 1, match.end))
+      : this.buildSuggestionMarkdownLines(suggestion).join(" ");
+
+    if (view.getMode() === "preview") {
+      const ok = this.highlightPreviewSuggestionContext(view, snippetFromMatch);
+      if (!ok) {
+        new Notice(this._tx("ui.studyAssistant.generator.sourceNotFound", "Opened note, but could not find a precise source snippet for this card."));
+      }
+      return;
+    }
+
     const waitForEditor = async () => {
       for (let i = 0; i < 30; i++) {
-          const editor = view.editor;
+        const editor = view.editor;
         if (editor) return editor;
         await new Promise((resolve) => setTimeout(resolve, 25));
       }
@@ -1750,6 +1769,64 @@ export class SproutAssistantPopup {
     editor.setSelection(from, to);
     editor.scrollIntoView({ from, to }, true);
     editor.focus();
+  }
+
+  private highlightPreviewSuggestionContext(view: MarkdownView, rawSnippet: string): boolean {
+    const host = view.containerEl;
+    if (!host) return false;
+
+    const root = host.querySelector<HTMLElement>(
+      ".markdown-reading-view, .markdown-preview-view, .markdown-rendered, .markdown-preview-sizer, .markdown-preview-section",
+    ) ?? host;
+
+    const snippet = String(rawSnippet || "").replace(/\s+/g, " ").trim().toLowerCase();
+    const tokens = Array.from(
+      new Set(
+        snippet
+          .split(/[^a-z0-9]+/g)
+          .filter((token) => token.length >= 4 && !SOURCE_TOKEN_STOP_WORDS.has(token)),
+      ),
+    );
+
+    if (!tokens.length) return false;
+
+    const candidates = Array.from(
+      root.querySelectorAll<HTMLElement>("p, li, blockquote, h1, h2, h3, h4, h5, h6, td, th, pre, code"),
+    );
+    if (!candidates.length) return false;
+
+    let best: HTMLElement | null = null;
+    let bestScore = 0;
+
+    for (const el of candidates) {
+      const text = String(el.textContent || "").replace(/\s+/g, " ").trim().toLowerCase();
+      if (!text) continue;
+      let score = 0;
+      for (const token of tokens) {
+        if (text.includes(token)) score += 1;
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        best = el;
+      }
+    }
+
+    if (!best || bestScore < 2) return false;
+
+    best.scrollIntoView({ block: "center", behavior: "smooth" });
+    const prevTransition = best.style.transition;
+    const prevBg = best.style.backgroundColor;
+    const prevOutline = best.style.outline;
+    best.style.transition = "background-color 180ms ease, outline-color 180ms ease";
+    best.style.backgroundColor = "var(--text-highlight-bg, rgba(255, 230, 120, 0.35))";
+    best.style.outline = "2px solid var(--interactive-accent)";
+    window.setTimeout(() => {
+      best.style.backgroundColor = prevBg;
+      best.style.outline = prevOutline;
+      best.style.transition = prevTransition;
+    }, 1600);
+
+    return true;
   }
 
   // ---------------------------------------------------------------------------
@@ -2088,10 +2165,13 @@ export class SproutAssistantPopup {
         ].join("\n"),
       );
     } else {
-      for (const msg of messages) {
+      for (let i = 0; i < messages.length; i += 1) {
+        const msg = messages[i];
         const row = chatWrap.createDiv({
           cls: `sprout-assistant-popup-message-row ${msg.role === "user" ? "is-user" : "is-assistant"}`,
         });
+        row.setAttr("data-msg-idx", String(i));
+        row.setAttr("data-msg-role", msg.role);
         if (msg.role === "assistant") {
           this.createAssistantAvatar(row);
         }
@@ -2119,9 +2199,7 @@ export class SproutAssistantPopup {
     }
 
     if (this.chatError) this.renderAssistantErrorBubble(chatWrap, this.chatError);
-
-    // Auto-scroll to bottom
-    requestAnimationFrame(() => { chatWrap.scrollTop = chatWrap.scrollHeight; });
+    this.anchorToNewestAssistantMessage(chatWrap, messages, "assistant", this.isSendingChat);
 
     // ---- Composer ----
     const composer = parent.createDiv({ cls: "sprout-assistant-popup-composer" });
@@ -2188,8 +2266,11 @@ export class SproutAssistantPopup {
       comprehensiveBtn.disabled = this.isReviewingNote;
       comprehensiveBtn.addEventListener("click", () => void this.sendReviewMessage(this._tx("ui.studyAssistant.review.depth.comprehensiveReview", "Comprehensive review"), "comprehensive"));
     } else {
-      for (const msg of this.reviewMessages) {
+      for (let i = 0; i < this.reviewMessages.length; i += 1) {
+        const msg = this.reviewMessages[i];
         const row = chatWrap.createDiv({ cls: `sprout-assistant-popup-message-row ${msg.role === "user" ? "is-user" : "is-assistant"}` });
+        row.setAttr("data-msg-idx", String(i));
+        row.setAttr("data-msg-role", msg.role);
         if (msg.role === "assistant") {
           this.createAssistantAvatar(row);
         }
@@ -2213,8 +2294,7 @@ export class SproutAssistantPopup {
     }
 
     if (this.reviewError) this.renderAssistantErrorBubble(chatWrap, this.reviewError);
-
-    requestAnimationFrame(() => { chatWrap.scrollTop = chatWrap.scrollHeight; });
+    this.anchorToNewestAssistantMessage(chatWrap, this.reviewMessages, "review", this.isReviewingNote);
 
     const composer = parent.createDiv({ cls: "sprout-assistant-popup-composer" });
     const shell = composer.createDiv({ cls: "sprout-assistant-popup-composer-shell" });
@@ -2335,6 +2415,8 @@ export class SproutAssistantPopup {
       for (let i = 0; i < this.generateMessages.length; i += 1) {
         const msg = this.generateMessages[i];
         const row = chatWrap.createDiv({ cls: `sprout-assistant-popup-message-row ${msg.role === "user" ? "is-user" : "is-assistant"}` });
+        row.setAttr("data-msg-idx", String(i));
+        row.setAttr("data-msg-role", msg.role);
         if (msg.role === "assistant") this.createAssistantAvatar(row);
         const bubble = row.createDiv({ cls: `sprout-assistant-popup-message-bubble ${msg.role === "user" ? "is-user" : "is-assistant"}` });
         this.renderMarkdownMessage(bubble, msg.text);
@@ -2395,8 +2477,7 @@ export class SproutAssistantPopup {
     }
 
     if (this.generatorError) this.renderAssistantErrorBubble(chatWrap, this.generatorError);
-
-    requestAnimationFrame(() => { chatWrap.scrollTop = chatWrap.scrollHeight; });
+    this.anchorToNewestAssistantMessage(chatWrap, this.generateMessages, "generate", this.isGenerating);
 
     const composer = parent.createDiv({ cls: "sprout-assistant-popup-composer" });
     const shell = composer.createDiv({ cls: "sprout-assistant-popup-composer-shell" });
@@ -2426,5 +2507,57 @@ export class SproutAssistantPopup {
     sendBtn.addEventListener("click", () => void this.sendGenerateMessage());
 
     requestAnimationFrame(() => input.focus());
+  }
+
+  private anchorToNewestAssistantMessage(
+    chatWrap: HTMLElement,
+    messages: ChatMessage[],
+    mode: AssistantMode,
+    fallbackToBottom = false,
+  ): void {
+    let lastAssistantIdx = -1;
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      if (messages[i]?.role === "assistant") {
+        lastAssistantIdx = i;
+        break;
+      }
+    }
+
+    if (lastAssistantIdx < 0) {
+      if (fallbackToBottom) {
+        requestAnimationFrame(() => {
+          chatWrap.scrollTop = chatWrap.scrollHeight;
+        });
+      }
+      return;
+    }
+
+    const msg = messages[lastAssistantIdx];
+    const key = `${lastAssistantIdx}:${String(msg?.text || "").slice(0, 80)}:${String(msg?.text || "").length}`;
+    if (this._lastAnchoredResponseKeyByMode[mode] === key) {
+      if (fallbackToBottom) {
+        requestAnimationFrame(() => {
+          chatWrap.scrollTop = chatWrap.scrollHeight;
+        });
+      }
+      return;
+    }
+    this._lastAnchoredResponseKeyByMode[mode] = key;
+
+    const target = chatWrap.querySelector<HTMLElement>(
+      `.sprout-assistant-popup-message-row[data-msg-idx="${lastAssistantIdx}"][data-msg-role="assistant"]`,
+    );
+    if (!target) {
+      if (fallbackToBottom) {
+        requestAnimationFrame(() => {
+          chatWrap.scrollTop = chatWrap.scrollHeight;
+        });
+      }
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      target.scrollIntoView({ block: "start", behavior: "auto" });
+    });
   }
 }

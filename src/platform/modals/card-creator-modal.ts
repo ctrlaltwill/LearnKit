@@ -15,7 +15,7 @@
  *  - Type selection (Basic / Cloze / MCQ)
  *  - Image-paste into question/answer/info fields
  *  - IO image paste + launch of IO editor
- *  - Post-save sync to update the question bank
+ *  - Post-save insertion into the current note
  * ---------------------------------------------------------------------------
  */
 
@@ -24,7 +24,6 @@ import type SproutPlugin from "../../main";
 import { log } from "../core/logger";
 import { placePopover, queryFirst, setCssProps } from "../core/ui";
 import type { CardType } from "../card-editor/card-editor";
-import { syncOneFile } from "../../platform/integrations/sync/sync-engine";
 
 import {
   normaliseVaultPath,
@@ -729,18 +728,7 @@ export class CardCreatorModal extends Modal {
 
         await insertTextAtCursorOrAppend(active, finalContent, true);
         this.close();
-
-        try {
-          const res = await syncOneFile(this.plugin, active);
-          new Notice(
-            `Added + synced — ${res.newCount} new; ${res.updatedCount} updated; ${res.sameCount} unchanged; ${res.idsInserted} IDs inserted.`,
-          );
-        } catch (e: unknown) {
-          log.error("sync failed", e);
-          new Notice(this.tx("ui.cardCreator.notice.syncFailed", "Sync failed ({message})", {
-            message: e instanceof Error ? e.message : String(e),
-          }));
-        }
+        new Notice(this.tx("ui.cardCreator.notice.flashcardAdded", "Flashcard added"));
       } catch (e: unknown) {
         log.error("add failed", e);
         new Notice(this.tx("ui.cardCreator.notice.addFailed", "Add failed ({message})", {

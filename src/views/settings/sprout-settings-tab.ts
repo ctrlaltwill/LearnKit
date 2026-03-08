@@ -17,10 +17,12 @@ import {
 import type SproutPlugin from "../../main";
 import type { SproutSettings } from "../../platform/types/settings";
 import type { CardState } from "../../platform/types/scheduler";
+import type { CardRecord } from "../../platform/types/card";
 import { log } from "../../platform/core/logger";
 import { placePopover, setCssProps } from "../../platform/core/ui";
 import { DEFAULT_SETTINGS, VIEW_TYPE_WIDGET } from "../../platform/core/constants";
 import { DELIMITER_OPTIONS, setDelimiter, type DelimiterChar } from "../../platform/core/delimiter";
+import { isParentCard } from "../../platform/core/card-utils";
 import { renderReadingViewPreviewCard, syncReadingViewStyles } from "../reading/reading-view";
 import type { SproutCard } from "../reading/reading-helpers";
 import {
@@ -367,11 +369,29 @@ export class SproutSettingsTab extends PluginSettingTab {
     io: number;
   } {
     const data = this.plugin.store.data;
-    const cards = data?.cards && typeof data.cards === "object" ? Object.keys(data.cards).length : 0;
-    const states = data?.states && typeof data.states === "object" ? Object.keys(data.states).length : 0;
-    const sched = this.computeSchedulingStats(data?.states ?? {}, Date.now());
+    const cardsObj = data?.cards && typeof data.cards === "object" ? data.cards as Record<string, CardRecord> : {};
+    const quarantineObj = data?.quarantine && typeof data.quarantine === "object" ? data.quarantine as Record<string, unknown> : {};
+    const reviewableIds = new Set<string>();
+    for (const [id, card] of Object.entries(cardsObj)) {
+      if (!id) continue;
+      if (Object.prototype.hasOwnProperty.call(quarantineObj, id)) continue;
+      if (!card || typeof card !== "object") continue;
+      if (isParentCard(card)) continue;
+      reviewableIds.add(id);
+    }
+
+    const rawStates = data?.states && typeof data.states === "object" ? data.states : {};
+    const liveStates: Record<string, CardState> = {};
+    for (const [id, st] of Object.entries(rawStates)) {
+      if (!reviewableIds.has(id)) continue;
+      liveStates[id] = st as CardState;
+    }
+
+    const cards = reviewableIds.size;
+    const states = Object.keys(liveStates).length;
+    const sched = this.computeSchedulingStats(liveStates, Date.now());
     const reviewLog = Array.isArray(data?.reviewLog) ? data.reviewLog.length : 0;
-    const quarantine = data?.quarantine && typeof data.quarantine === "object" ? Object.keys(data.quarantine).length : 0;
+    const quarantine = Object.keys(quarantineObj).length;
     const io = data?.io && typeof data.io === "object" ? Object.keys(data.io).length : 0;
     return { cards, states, due: sched.due, learning: sched.learning, review: sched.review, mature: sched.mature, reviewLog, quarantine, io };
   }
@@ -393,8 +413,13 @@ export class SproutSettingsTab extends PluginSettingTab {
       if (stage === "review") out.review += 1;
       const stability = Number(st.stabilityDays ?? 0);
       if (stage === "review" && Number.isFinite(stability) && stability >= 30) out.mature += 1;
+
+      const buriedUntil = Number(st.buriedUntil ?? 0);
+      if (Number.isFinite(buriedUntil) && buriedUntil > now) continue;
+
       const due = Number(st.due ?? 0);
-      if (stage !== "suspended" && Number.isFinite(due) && due > 0 && due <= now) out.due += 1;
+      const dueEligibleStage = stage === "learning" || stage === "relearning" || stage === "review";
+      if (dueEligibleStage && Number.isFinite(due) && due > 0 && due <= now) out.due += 1;
     }
     return out;
   }
@@ -412,132 +437,36 @@ export class SproutSettingsTab extends PluginSettingTab {
     this.plugin.settings.storage ??= clonePlain(DEFAULT_SETTINGS.storage);
     this.plugin.settings.storage.backups ??= clonePlain(DEFAULT_SETTINGS.storage.backups);
     const backupCfg = this.plugin.settings.storage.backups;
-
-    const updateBackupCfg = async (
-      key: keyof typeof backupCfg,
-      raw: string,
-      fallback: number,
-      min: number,
-      max: number,
-    ) => {
-      const next = clamp(toNonNegInt(raw, fallback), min, max);
-      backupCfg[key] = next;
-      await this.plugin.saveAll();
-    };
+    if (typeof backupCfg.rollingDailyEnabled !== "boolean") {
+      backupCfg.rollingDailyEnabled = true;
+    }
 
     new Setting(wrapper)
-      .setName(this._tx("ui.settings.backups.retentionPolicy.name", "Backup retention policy"))
-      .setDesc(this._tx("ui.settings.backups.retentionPolicy.desc", "Configure how many backups to keep per tier and how often each tier is sampled."));
-
-    new Setting(wrapper)
-      .setName(this._tx("ui.settings.backups.recentBackups.name", "Recent backups"))
-      .setDesc(this._tx("ui.settings.backups.recentBackups.desc", "Snapshots from the most recent period."))
-      .addText((t) => {
-        t.setPlaceholder(this._tx("ui.settings.backups.recentBackups.placeholder", "8"))
-          .setValue(String(backupCfg.recentCount))
-          .onChange(async (v) => {
-            await updateBackupCfg("recentCount", v, 8, 0, 100);
-          });
-      });
-
-    new Setting(wrapper)
-      .setName(this._tx("ui.settings.backups.recentIntervalHours.name", "Recent interval (hours)"))
-      .setDesc(this._tx("ui.settings.backups.recentIntervalHours.desc", "Minimum spacing between recent backups and routine auto-backups."))
-      .addText((t) => {
-        t.setPlaceholder(this._tx("ui.settings.backups.recentIntervalHours.placeholder", "6"))
-          .setValue(String(backupCfg.recentIntervalHours))
-          .onChange(async (v) => {
-            await updateBackupCfg("recentIntervalHours", v, 6, 1, 168);
-          });
-      });
-
-    new Setting(wrapper)
-      .setName(this._tx("ui.settings.backups.dailyBackups.name", "Daily backups"))
-      .setDesc(this._tx("ui.settings.backups.dailyBackups.desc", "Longer safety net for day-to-day recovery."))
-      .addText((t) => {
-        t.setPlaceholder(this._tx("ui.settings.backups.dailyBackups.placeholder", "7"))
-          .setValue(String(backupCfg.dailyCount))
-          .onChange(async (v) => {
-            await updateBackupCfg("dailyCount", v, 7, 0, 100);
-          });
-      });
-
-    new Setting(wrapper)
-      .setName(this._tx("ui.settings.backups.dailyIntervalDays.name", "Daily interval (days)"))
-      .setDesc(this._tx("ui.settings.backups.dailyIntervalDays.desc", "Minimum spacing between daily-tier backups."))
-      .addText((t) => {
-        t.setPlaceholder(this._tx("ui.settings.backups.dailyIntervalDays.placeholder", "1"))
-          .setValue(String(backupCfg.dailyIntervalDays))
-          .onChange(async (v) => {
-            await updateBackupCfg("dailyIntervalDays", v, 1, 1, 365);
-          });
-      });
-
-    new Setting(wrapper)
-      .setName(this._tx("ui.settings.backups.weeklyBackups.name", "Weekly backups"))
-      .setDesc(this._tx("ui.settings.backups.weeklyBackups.desc", "Mid-term recovery points."))
-      .addText((t) => {
-        t.setPlaceholder(this._tx("ui.settings.backups.weeklyBackups.placeholder", "4"))
-          .setValue(String(backupCfg.weeklyCount))
-          .onChange(async (v) => {
-            await updateBackupCfg("weeklyCount", v, 4, 0, 100);
-          });
-      });
-
-    new Setting(wrapper)
-      .setName(this._tx("ui.settings.backups.weeklyIntervalDays.name", "Weekly interval (days)"))
-      .setDesc(this._tx("ui.settings.backups.weeklyIntervalDays.desc", "Minimum spacing between weekly-tier backups."))
-      .addText((t) => {
-        t.setPlaceholder(this._tx("ui.settings.backups.weeklyIntervalDays.placeholder", "7"))
-          .setValue(String(backupCfg.weeklyIntervalDays))
-          .onChange(async (v) => {
-            await updateBackupCfg("weeklyIntervalDays", v, 7, 1, 365);
-          });
-      });
-
-    new Setting(wrapper)
-      .setName(this._tx("ui.settings.backups.monthlyBackups.name", "Monthly backups"))
-      .setDesc(this._tx("ui.settings.backups.monthlyBackups.desc", "Long-term recovery points."))
-      .addText((t) => {
-        t.setPlaceholder(this._tx("ui.settings.backups.monthlyBackups.placeholder", "1"))
-          .setValue(String(backupCfg.monthlyCount))
-          .onChange(async (v) => {
-            await updateBackupCfg("monthlyCount", v, 1, 0, 100);
-          });
-      });
-
-    new Setting(wrapper)
-      .setName(this._tx("ui.settings.backups.monthlyIntervalDays.name", "Monthly interval (days)"))
-      .setDesc(this._tx("ui.settings.backups.monthlyIntervalDays.desc", "Minimum spacing between monthly-tier backups."))
-      .addText((t) => {
-        t.setPlaceholder(this._tx("ui.settings.backups.monthlyIntervalDays.placeholder", "30"))
-          .setValue(String(backupCfg.monthlyIntervalDays))
-          .onChange(async (v) => {
-            await updateBackupCfg("monthlyIntervalDays", v, 30, 1, 730);
-          });
-      });
-
-    new Setting(wrapper)
-      .setName(this._tx("ui.settings.backups.sizeCapMb.name", "Backup size cap (megabytes)"))
-      .setDesc(this._tx("ui.settings.backups.sizeCapMb.desc", "Prune oldest tier entries first when total backup size exceeds this cap."))
-      .addText((t) => {
-        t.setPlaceholder(this._tx("ui.settings.backups.sizeCapMb.placeholder", "250"))
-          .setValue(String(backupCfg.maxTotalSizeMb))
-          .onChange(async (v) => {
-            await updateBackupCfg("maxTotalSizeMb", v, 250, 25, 5000);
-          });
-      });
+      .setName(this._tx("ui.settings.backups.rollingDaily.name", "Enable rolling daily backup"))
+      .setDesc(this._tx("ui.settings.backups.rollingDaily.desc", "Keep one automatic daily backup (daily-backup.db). Manual backups are never auto-deleted."))
+      .addToggle((t) =>
+        t.setValue(backupCfg.rollingDailyEnabled).onChange(async (v) => {
+          backupCfg.rollingDailyEnabled = v;
+          await this.plugin.saveAll();
+          this.queueSettingsNotice(
+            "storage.backups.rollingDailyEnabled",
+            this._tx("ui.settings.backups.rollingDaily.notice", "Rolling daily backup: {state}", {
+              state: v ? this._tx("ui.common.on", "On") : this._tx("ui.common.off", "Off"),
+            }),
+          );
+        }),
+      );
 
     {
       const createItem = wrapper.createDiv({ cls: "setting-item" });
       const createInfo = createItem.createDiv({ cls: "setting-item-info" });
-      createInfo.createDiv({ cls: "setting-item-name", text: this._tx("ui.settings.backups.createBackup.name", "Create backup") });
+      createInfo.createDiv({ cls: "setting-item-name", text: this._tx("ui.settings.backups.createBackup.name", "Create manual backup") });
       createInfo.createDiv({
         cls: "setting-item-description",
-        text: this._tx("ui.settings.backups.createBackup.desc", "Save a snapshot of your data (scheduling + analytics, including review history). Use this to recover if data is corrupted or lost during an update. Automatic backups follow the retention policy above."),
+        text: this._tx("ui.settings.backups.createBackup.desc", "Save a manual restore point. Use this before risky edits or migrations."),
       });
       const createControl = createItem.createDiv({ cls: "setting-item-control" });
-      const btnCreate = createControl.createEl("button", { text: this._tx("ui.settings.backups.createBackup.button", "Create backup now") });
+      const btnCreate = createControl.createEl("button", { text: this._tx("ui.settings.backups.createBackup.button", "Create manual backup") });
 
       const tableItem = wrapper.createDiv({ cls: "setting-item" });
       const tableControl = tableItem.createDiv({ cls: "setting-item-control sprout-settings-backup-control" });
@@ -575,6 +504,12 @@ export class SproutSettingsTab extends PluginSettingTab {
        */
       const describeBackup = (name: string) => {
         const raw = String(name ?? "");
+        if (raw === "daily-backup.db") {
+          return this._tx("ui.settings.backups.label.dailyRolling", "Daily rolling backup");
+        }
+        if (/^manual-backup-\d{4}-\d{8}\.db$/i.test(raw)) {
+          return this._tx("ui.settings.backups.label.manual", "Manual backup");
+        }
         const zMatch = /^data\\.json\\.bak-([0-9T-]+Z)(?:-(.+))?$/.exec(raw);
         const labelRaw = zMatch?.[2] ? String(zMatch[2]) : "";
         const label = labelRaw.replace(/[-_]+/g, " ").trim();
@@ -610,7 +545,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
         const filtered = rows.filter((r) => r.stats?.name !== "data.json");
         if (!filtered.length) {
-          renderEmpty(this._tx("ui.settings.backups.empty.noBackups", "No scheduling data backups found. Click \u201CCreate backup now\u201D to create one."));
+          renderEmpty(this._tx("ui.settings.backups.empty.noBackups", "No backups found. Click \u201CCreate manual backup\u201D to create one."));
           return;
         }
 

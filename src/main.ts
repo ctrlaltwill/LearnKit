@@ -52,6 +52,9 @@ import { initButtonTooltipDefaults } from "./platform/core/tooltip-defaults";
 import { initMobileKeyboardHandler, cleanupMobileKeyboardHandler } from "./platform/core/mobile-keyboard-handler";
 
 import { JsonStore } from "./platform/core/store";
+import type { IStore } from "./platform/core/store-interface";
+import { SqliteStore, isSqliteDatabasePresent } from "./platform/core/sqlite-store";
+import { migrateJsonToSqlite } from "./platform/core/migration";
 import { queryFirst } from "./platform/core/ui";
 import { SproutReviewerView } from "./views/reviewer/review-view";
 import { SproutWidgetView } from "./views/widget/sprout-widget-view";
@@ -61,7 +64,7 @@ import { SproutAnalyticsView } from "./views/analytics/analytics-view";
 import { SproutHomeView } from "./views/home/sprout-home-view";
 import { SproutSettingsTab } from "./views/settings/sprout-settings-tab";
 import { SproutSettingsView } from "./views/settings/sprout-settings-view";
-import { formatSyncNotice, syncQuestionBank } from "./platform/integrations/sync/sync-engine";
+import { formatSyncNotice, syncOneFile, syncQuestionBank } from "./platform/integrations/sync/sync-engine";
 import { joinPath, safeStatMtime, createDataJsonBackupNow } from "./platform/integrations/sync/backup";
 import { CardCreatorModal } from "./platform/modals/card-creator-modal";
 import { ImageOcclusionCreatorModal } from "./platform/modals/image-occlusion-creator-modal";
@@ -108,7 +111,7 @@ const SETTINGS_CONFIG_FILES: ReadonlyArray<{
 
 export default class SproutPlugin extends Plugin {
   settings!: SproutSettings;
-  store!: JsonStore;
+  store!: IStore;
   _bc: unknown;
 
   private _basecoatStarted = false;
@@ -174,7 +177,8 @@ export default class SproutPlugin extends Plugin {
   }
 
   private _registerCommands() {
-    this._addCommand("sync-flashcards", "Sync flashcards", async () => this._runSync());
+    this._addCommand("sync-flashcards-current-note", "Sync flashcards from current note", async () => this._runSyncCurrentNote());
+    this._addCommand("sync-flashcards", "Sync all flashcards from the vault", async () => this._runSync());
     this._addCommand("open", "Open home", async () => this.openHomeTab());
     this._addCommand("open-widget", "Open Study Widget", async () => this.openWidgetSafe());
     this._addCommand("open-analytics", "Open analytics", async () => this.openAnalyticsTab());
@@ -418,15 +422,36 @@ export default class SproutPlugin extends Plugin {
       // Activate the user's chosen delimiter before any parsing occurs
       setDelimiter(this.settings.indexing.delimiter ?? "|");
 
-      this.store = new JsonStore(this);
-      this.store.load(rootObj);
+      const hasSqlite = await isSqliteDatabasePresent(this);
+      const hasLegacyStore = isPlainObject(rootObj.store);
+
+      if (hasSqlite) {
+        const sqliteStore = new SqliteStore(this);
+        await sqliteStore.open();
+        this.store = sqliteStore;
+      } else if (hasLegacyStore) {
+        const migrated = await migrateJsonToSqlite(this, rootObj);
+        if (migrated) {
+          const sqliteStore = new SqliteStore(this);
+          await sqliteStore.open();
+          this.store = sqliteStore;
+        } else {
+          this.store = new JsonStore(this);
+          this.store.load(rootObj);
+        }
+      } else {
+        const sqliteStore = new SqliteStore(this);
+        await sqliteStore.open();
+        this.store = sqliteStore;
+      }
+
       this._reminderEngine = new ReminderEngine(this);
       this._registerReminderDevConsoleCommands();
 
       // Load version tracking from data.json
       loadVersionTracking(rootObj);
 
-      if (!this.store.loadedFromDisk && isPlainObject(root)) {
+      if (!(this.store instanceof SqliteStore) && !this.store.loadedFromDisk && isPlainObject(root)) {
         log.warn(
           "data.json existed but contained no .store — " +
           "initial save will be guarded by assessPersistSafety.",
@@ -523,6 +548,10 @@ export default class SproutPlugin extends Plugin {
     void pending
       .then(() => this._doSave())
       .catch((e) => log.swallow("save all on unload", e));
+
+    if (this.store instanceof SqliteStore) {
+      void this.store.close().catch((e) => log.swallow("close sqlite store", e));
+    }
 
     this._bc = null;
     this._destroyRibbonIcons();
@@ -859,6 +888,35 @@ export default class SproutPlugin extends Plugin {
     // Do not refresh or update views; sync runs in background and only shows notice when done.
   }
 
+  private _formatCurrentNoteSyncNotice(pageTitle: string, res: { newCount?: number; updatedCount?: number; removed?: number }): string {
+    const updated = Number(res.updatedCount ?? 0);
+    const created = Number(res.newCount ?? 0);
+    const deleted = Number(res.removed ?? 0);
+    const parts: string[] = [];
+
+    if (updated > 0) parts.push(`${updated} updated`);
+    if (created > 0) parts.push(`${created} new`);
+    if (deleted > 0) parts.push(`${deleted} deleted`);
+
+    if (parts.length === 0) return `Flashcards updated for page: ${pageTitle}: no changes.`;
+    return `Flashcards updated for page: ${pageTitle}: ${parts.join(", ")}.`;
+  }
+
+  async _runSyncCurrentNote() {
+    const file = this._getActiveMarkdownFile();
+    if (!(file instanceof TFile)) {
+      new Notice("No note is open.");
+      return;
+    }
+
+    const res = await syncOneFile(this, file, { pruneGlobalOrphans: false });
+    new Notice(this._formatCurrentNoteSyncNotice(file.basename, res));
+
+    if (res.quarantinedCount > 0) {
+      new ParseErrorModal(this.app, this, res.quarantinedIds).open();
+    }
+  }
+
   async saveAll() {
     // Queue through mutex to prevent concurrent read-modify-write races
     while (this._saving) await this._saving;
@@ -1055,6 +1113,43 @@ export default class SproutPlugin extends Plugin {
   }
 
   private async _doSave() {
+    if (this.store instanceof SqliteStore) {
+      const root: Record<string, unknown> = ((await this.loadData()) || {}) as Record<string, unknown>;
+
+      this.settings.studyAssistant.apiKeys = this._normaliseApiKeys(this.settings.studyAssistant.apiKeys);
+      const writtenKeys = await this._persistSettingsToConfigFiles();
+      const apiKeyWriteOk = await this._persistApiKeysToDedicatedFile(this.settings.studyAssistant.apiKeys);
+
+      const fallbackSettings: Record<string, unknown> = {};
+      const allKeys: (keyof SproutSettings)[] = [
+        "general", "study", "studyAssistant", "reminders", "scheduling",
+        "indexing", "cards", "imageOcclusion", "readingView", "storage", "audio",
+      ];
+      for (const key of allKeys) {
+        if (!writtenKeys.has(key)) {
+          fallbackSettings[key] = clonePlain((this.settings as Record<string, unknown>)[key]);
+        }
+      }
+
+      if (!apiKeyWriteOk && this._hasAnyApiKey(this.settings.studyAssistant.apiKeys)) {
+        log.error("API key dedicated file write failed; keys were NOT persisted this save.");
+        new Notice("Sprout: failed to save API keys securely. Please check file permissions.", 8000);
+      }
+
+      if (fallbackSettings.studyAssistant && isPlainObject(fallbackSettings.studyAssistant)) {
+        fallbackSettings.studyAssistant.apiKeys =
+          { ...DEFAULT_SETTINGS.studyAssistant.apiKeys };
+      }
+
+      root.settings = Object.keys(fallbackSettings).length > 0 ? fallbackSettings : undefined;
+      delete root.store;
+      root.versionTracking = getVersionTrackingData();
+
+      await this.saveData(root);
+      await this.store.persist();
+      return;
+    }
+
     const adapter = this.app?.vault?.adapter ?? null;
     const dataPath = this._getDataJsonPath();
     const canStat = !!(adapter && dataPath);

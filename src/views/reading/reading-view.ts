@@ -13,6 +13,7 @@ import { escapeDelimiterRe } from "../../platform/core/delimiter";
 import { openBulkEditModalForCards } from "../../platform/modals/bulk-edit";
 import { ImageOcclusionCreatorModal } from "../../platform/modals/image-occlusion-creator-modal";
 import { buildCardBlockMarkdown, findCardBlockRangeById } from "../reviewer/markdown-block";
+import { persistEditedCardAndSiblings } from "../../platform/core/targeted-card-persist";
 import type { CardRecord } from "../../platform/core/store";
 import type SproutPlugin from "../../main";
 import { queryFirst, replaceChildrenWithHTML, setCssProps } from "../../platform/core/ui";
@@ -2553,10 +2554,8 @@ function enhanceCardElement(
 
           await plugin.app.vault.modify(file, lines.join("\n"));
 
-          // Resync database + refresh views
-          if (typeof plugin.syncBank === "function") {
-            await plugin.syncBank();
-          }
+          // Persist only this edited card (plus required siblings), avoiding full bank sync.
+          await persistEditedCardAndSiblings(plugin as unknown as SproutPlugin, updatedCard);
           if (typeof plugin.refreshAllViews === "function") {
             plugin.refreshAllViews();
           }

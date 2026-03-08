@@ -19,7 +19,7 @@ import { gradeFromRating } from "../../engine/scheduler/scheduler";
 import { deepClone, clampInt } from "../reviewer/utilities";
 import { openBulkEditModalForCards } from "../../platform/modals/bulk-edit";
 import { findCardBlockRangeById, buildCardBlockMarkdown } from "../reviewer/markdown-block";
-import { syncOneFile } from "../../platform/integrations/sync/sync-engine";
+import { persistEditedCardAndSiblings } from "../../platform/core/targeted-card-persist";
 
 import type { UndoFrame, WidgetViewLike, ReviewMeta } from "./widget-helpers";
 import type { CardRecord } from "../../platform/types/card";
@@ -451,14 +451,8 @@ export function openEditModalForCurrentCard(view: WidgetViewLike): void {
 
       await view.app.vault.modify(file, lines.join("\n"));
 
-      // Sync the file to update store
-      const res = await syncOneFile(view.plugin as unknown as SproutPlugin, file);
-
-      if (res.quarantinedCount > 0) {
-        new Notice(tx(view, "ui.widget.notice.savedWithQuarantine", "Saved changes to flashcard (but {count} card(s) quarantined).", { count: res.quarantinedCount }));
-      } else {
-        new Notice(tx(view, "ui.widget.notice.saved", "Saved changes to flashcard"));
-      }
+      await persistEditedCardAndSiblings(view.plugin as unknown as SproutPlugin, updatedCard);
+      new Notice(tx(view, "ui.widget.notice.saved", "Saved changes to flashcard"));
 
       // If we edited a cloze or reversed parent, refresh the current child from the store
       if (view.session && (cardType === "cloze-child" || cardType === "reversed-child")) {

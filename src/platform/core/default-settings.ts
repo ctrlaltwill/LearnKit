@@ -328,6 +328,7 @@ export const DEFAULT_SETTINGS: SproutSettings = {
     deleteOrphanedImages: true,
     cardAttachmentFolderPath: "Attachments/Cards/",
     backups: {
+      rollingDailyEnabled: true,
       recentCount: 8,
       dailyCount: 7,
       weeklyCount: 4,

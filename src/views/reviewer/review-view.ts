@@ -19,6 +19,7 @@ import { log } from "../../platform/core/logger";
 import { queryFirst, setCssProps } from "../../platform/core/ui";
 import { gradeFromRating } from "../../engine/scheduler/scheduler";
 import { syncOneFile } from "../../platform/integrations/sync/sync-engine";
+import { persistEditedCardAndSiblings } from "../../platform/core/targeted-card-persist";
 import { ParseErrorModal } from "../../platform/modals/parse-error-modal";
 import { openBulkEditModalForCards } from "../../platform/modals/bulk-edit";
 import type SproutPlugin from "../../main";
@@ -908,14 +909,9 @@ export class SproutReviewerView extends ItemView {
 
         await this.app.vault.modify(file, lines.join("\n"));
 
-        // Sync the file to update store
-        const res = await syncOneFile(this.plugin, file);
-
-        if (res.quarantinedCount > 0) {
-          new Notice(this.tx("ui.reviewer.notice.savedWithQuarantine", "Saved changes to flashcard (but {count} card(s) quarantined).", { count: res.quarantinedCount }));
-        } else {
-          new Notice(this.tx("ui.reviewer.notice.saved", "Saved changes to flashcard"));
-        }
+        // Persist only this edited card (and required siblings), no full file sync.
+        await persistEditedCardAndSiblings(this.plugin, updatedCard);
+        new Notice(this.tx("ui.reviewer.notice.saved", "Saved changes to flashcard"));
 
         // If we edited a cloze or reversed parent, refresh the current child from the store so session stays in sync
         if (this.session && (cardType === "cloze-child" || cardType === "reversed-child")) {

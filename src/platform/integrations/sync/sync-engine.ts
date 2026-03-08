@@ -625,6 +625,27 @@ function pruneStaleChildren(plugin: SproutPlugin, existingChildren: CardRecord[]
   }
 }
 
+/**
+ * Removes scheduling states that no longer correspond to any live card or quarantine entry.
+ * This keeps backup/state counts aligned with studyable data and prevents stale carry-over.
+ */
+function sanitizeOrphanStates(plugin: SproutPlugin): number {
+  const states = plugin.store.data.states || {};
+  const liveIds = new Set<string>([
+    ...Object.keys(plugin.store.data.cards || {}),
+    ...Object.keys(plugin.store.data.quarantine || {}),
+  ]);
+
+  let removed = 0;
+  for (const id of Object.keys(states)) {
+    if (liveIds.has(id)) continue;
+    delete states[id];
+    removed += 1;
+  }
+
+  return removed;
+}
+
 // Convenience wrappers (preserve call-site readability)
 function deleteIoChildren(plugin: SproutPlugin, parentId: string): number { return deleteChildrenByType(plugin, parentId, "io-child"); }
 function deleteClozeChildren(plugin: SproutPlugin, parentId: string): number { return deleteChildrenByType(plugin, parentId, "cloze-child"); }
@@ -1078,7 +1099,11 @@ function inferIoIdFromCard(c: ParsedCard): string | null {
  *  6. Removes stale cards no longer in the file
  *  7. Manages IO / cloze child records
  */
-export async function syncOneFile(plugin: SproutPlugin, file: TFile) {
+export async function syncOneFile(
+  plugin: SproutPlugin,
+  file: TFile,
+  options?: { pruneGlobalOrphans?: boolean },
+) {
   return withFileSyncLock(file.path, async () => {
     const vault = plugin.app.vault;
     const now = Date.now();
@@ -1093,6 +1118,7 @@ export async function syncOneFile(plugin: SproutPlugin, file: TFile) {
 
     const originalText = await vault.read(file);
     const lines = originalText.split(/\r?\n/);
+    const pruneGlobalOrphans = options?.pruneGlobalOrphans ?? true;
 
     const parseText = normaliseTextForParsing(originalText);
     const { cards } = parseCardsFromText(file.path, parseText, plugin.settings.indexing.ignoreInCodeFences);
@@ -1357,9 +1383,15 @@ export async function syncOneFile(plugin: SproutPlugin, file: TFile) {
       }
     }
 
-    removed += deleteOrphanIoChildren(plugin);
-    removed += deleteOrphanClozeChildren(plugin);
-    removed += deleteOrphanReversedChildren(plugin);
+    if (pruneGlobalOrphans) {
+      removed += deleteOrphanIoChildren(plugin);
+      removed += deleteOrphanClozeChildren(plugin);
+      removed += deleteOrphanReversedChildren(plugin);
+      const sanitizedStates = sanitizeOrphanStates(plugin);
+      if (sanitizedStates > 0) {
+        log.info(`syncOneFile: pruned ${sanitizedStates} orphaned scheduling state(s)`);
+      }
+    }
 
     const groupsAfter = collectGroupKeys(plugin.store.data.cards || {});
     const tagsDeleted = countRemovedGroups(groupsBefore, groupsAfter);
@@ -1704,6 +1736,10 @@ export async function syncQuestionBank(plugin: SproutPlugin) {
     removed += deleteOrphanIoChildren(plugin);
     removed += deleteOrphanClozeChildren(plugin);
     removed += deleteOrphanReversedChildren(plugin);
+    const sanitizedStates = sanitizeOrphanStates(plugin);
+    if (sanitizedStates > 0) {
+      log.info(`syncQuestionBank: pruned ${sanitizedStates} orphaned scheduling state(s)`);
+    }
 
     const groupsAfter = collectGroupKeys(plugin.store.data.cards || {});
     const tagsDeleted = countRemovedGroups(groupsBefore, groupsAfter);

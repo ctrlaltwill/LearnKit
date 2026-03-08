@@ -420,6 +420,9 @@ export type SproutSettings = {
 
     /** Automatic backup retention and cadence policy. */
     backups: {
+      /** When true, keep one rolling daily backup in addition to manual backups. */
+      rollingDailyEnabled: boolean;
+
       /** Number of recent backups to keep. */
       recentCount: number;
       /** Number of daily backups to keep. */

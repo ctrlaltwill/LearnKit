@@ -172,7 +172,7 @@ export function getWidgetMcqDisplayOrder(
 /* ------------------------------------------------------------------ */
 
 import type { App, TFile } from "obsidian";
-import type { JsonStore } from "../../platform/core/store";
+import type { IStore } from "../../platform/core/store-interface";
 import type { SproutSettings } from "../../platform/types/settings";
 
 /**
@@ -182,7 +182,7 @@ import type { SproutSettings } from "../../platform/types/settings";
  */
 export interface WidgetViewLike {
   app: App;
-  plugin: { store: JsonStore; settings: SproutSettings };
+  plugin: { store: IStore; settings: SproutSettings };
   containerEl: HTMLElement;
   activeFile: TFile | null;
 
