@@ -13,6 +13,7 @@ import {
   type App,
   Notice,
   setIcon,
+  requestUrl,
 } from "obsidian";
 import type SproutPlugin from "../../main";
 import type { SproutSettings } from "../../platform/types/settings";
@@ -64,6 +65,22 @@ import {
   fuzzyFolderMatches,
 } from "./settings-utils";
 
+type StudyAssistantProvider = SproutSettings["studyAssistant"]["provider"];
+
+type StudyAssistantModelOption = {
+  value: string;
+  label: string;
+  description?: string;
+  section?: string;
+};
+
+type OpenRouterModel = {
+  id: string;
+  name: string;
+  provider: string;
+  isFree: boolean;
+};
+
 // ────────────────────────────────────────────
 // SproutSettingsTab
 // ────────────────────────────────────────────
@@ -72,6 +89,9 @@ export class SproutSettingsTab extends PluginSettingTab {
   plugin: SproutPlugin;
   private _audioAdvancedOptionsExpanded = false;
   private _readingCustomCssSaveTimer: number | null = null;
+  private _openRouterModelsCache: OpenRouterModel[] | null = null;
+  private _openRouterModelsLoading = false;
+  private _openRouterModelsError: string | null = null;
   private static readonly TRANSLATIONS_GUIDE_URL = "https://github.com/ctrlaltwill/Sprout/blob/main/CONTRIBUTING.md#translation-policy";
 
   private _tx(token: string, fallback: string, vars?: Record<string, string | number>) {
@@ -3078,15 +3098,46 @@ export class SproutSettingsTab extends PluginSettingTab {
       ].some((token) => model.includes(token));
     };
 
-    const modelDefaults: Record<typeof provider, string[]> = {
-      // OpenAI requires exact model IDs, not display names.
-      openai: ["gpt-5", "gpt-5-mini", "gpt-5-nano", "gpt-4.1", "gpt-4.1-mini"],
-      deepseek: ["deepseek-chat", "deepseek-reasoner"],
-      // Anthropic requires Claude model IDs.
-      anthropic: ["claude-opus-4-1", "claude-sonnet-4-5", "claude-3-5-haiku-latest"],
-      // Groq requires Groq model IDs (not xAI Grok names).
-      groq: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "deepseek-r1-distill-llama-70b"],
-      custom: [],
+    const staticModelOptions: Record<Exclude<StudyAssistantProvider, "openrouter" | "custom">, StudyAssistantModelOption[]> = {
+      openai: [
+        { value: "gpt-5", label: "GPT-5" },
+        { value: "gpt-5-mini", label: "GPT-5 Mini" },
+        { value: "gpt-5-nano", label: "GPT-5 Nano" },
+        { value: "gpt-4.1", label: "GPT-4.1" },
+        { value: "gpt-4.1-mini", label: "GPT-4.1 Mini" },
+      ],
+      deepseek: [
+        { value: "deepseek-chat", label: "DeepSeek Chat" },
+        { value: "deepseek-reasoner", label: "DeepSeek Reasoner" },
+      ],
+      anthropic: [
+        { value: "claude-opus-4-1", label: "Claude Opus 4.1" },
+        { value: "claude-sonnet-4-5", label: "Claude Sonnet 4.5" },
+        { value: "claude-3-5-haiku-latest", label: "Claude 3.5 Haiku" },
+      ],
+      xai: [
+        { value: "grok-4-0709", label: "Grok 4" },
+        { value: "grok-3", label: "Grok 3" },
+        { value: "grok-3-mini", label: "Grok 3 Mini" },
+      ],
+      google: [
+        { value: "gemini-2.5-pro", label: "Gemini 2.5 Pro" },
+        { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash" },
+        { value: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite" },
+      ],
+      perplexity: [
+        { value: "sonar", label: "Sonar" },
+        { value: "sonar-pro", label: "Sonar Pro" },
+        { value: "sonar-reasoning", label: "Sonar Reasoning" },
+        { value: "sonar-reasoning-pro", label: "Sonar Reasoning Pro" },
+      ],
+    };
+    const getProviderModelOptions = (selectedProvider: StudyAssistantProvider): StudyAssistantModelOption[] => {
+      if (selectedProvider === "custom") return [];
+      if (selectedProvider === "openrouter") {
+        return this._getOpenRouterModelOptions(this.plugin.settings.studyAssistant.openRouterTier);
+      }
+      return staticModelOptions[selectedProvider];
     };
 
     const withDependentSetting = (setting: Setting): Setting => {
@@ -3130,8 +3181,11 @@ export class SproutSettingsTab extends PluginSettingTab {
     const standardProviderOptions: Array<{ value: typeof provider; label: string }> = [
       { value: "anthropic", label: "Anthropic" },
       { value: "deepseek", label: "DeepSeek" },
-      { value: "groq", label: "Groq" },
+      { value: "google", label: "Google" },
+      { value: "xai", label: "xAI" },
+      { value: "openrouter", label: "OpenRouter" },
       { value: "openai", label: "OpenAI" },
+      { value: "perplexity", label: "Perplexity" },
     ].sort((a, b) => a.label.localeCompare(b.label));
 
     const providerOptions: Array<{ value: typeof provider; label: string }> = [
@@ -3149,7 +3203,7 @@ export class SproutSettingsTab extends PluginSettingTab {
             value: this.plugin.settings.studyAssistant.provider,
             separatorAfterIndex: standardProviderOptions.length - 1,
             onChange: (value) => {
-              const next = value === "openai" || value === "deepseek" || value === "anthropic" || value === "groq" || value === "custom"
+              const next = value === "openai" || value === "deepseek" || value === "anthropic" || value === "xai" || value === "google" || value === "perplexity" || value === "openrouter" || value === "custom"
                 ? value
                 : "openai";
               const previousProvider = this.plugin.settings.studyAssistant.provider;
@@ -3157,12 +3211,13 @@ export class SproutSettingsTab extends PluginSettingTab {
               this.plugin.settings.studyAssistant.provider = next;
 
               if (next !== "custom") {
-                const nextProviderModels = [...modelDefaults[next]].sort((a, b) => a.localeCompare(b));
+                const nextProviderModels = getProviderModelOptions(next);
+                const nextValues = nextProviderModels.map((m) => m.value);
                 if (!previousModel || previousProvider !== next) {
-                  this.plugin.settings.studyAssistant.model = nextProviderModels[0] || "";
+                  this.plugin.settings.studyAssistant.model = nextValues[0] || "";
                 }
-                if (this.plugin.settings.studyAssistant.model && !nextProviderModels.includes(this.plugin.settings.studyAssistant.model)) {
-                  this.plugin.settings.studyAssistant.model = nextProviderModels[0] || this.plugin.settings.studyAssistant.model;
+                if (this.plugin.settings.studyAssistant.model && !nextValues.includes(this.plugin.settings.studyAssistant.model)) {
+                  this.plugin.settings.studyAssistant.model = nextValues[0] || this.plugin.settings.studyAssistant.model;
                 }
               }
 
@@ -3172,6 +3227,36 @@ export class SproutSettingsTab extends PluginSettingTab {
           });
         }),
     );
+
+    if (provider === "openrouter") {
+      withDependentSetting(
+        new Setting(wrapper)
+          .setName(this._tx("ui.settings.studyAssistant.openrouter.tier.name", "OpenRouter model access"))
+          .setDesc(this._tx("ui.settings.studyAssistant.openrouter.tier.desc", "Choose whether to browse Free models (25 options) or Paid models (full catalog)."))
+          .then((setting) => {
+            this._addSimpleSelect(setting.controlEl, {
+              options: [
+                { value: "free", label: "Free" },
+                { value: "paid", label: "Paid" },
+              ],
+              value: this.plugin.settings.studyAssistant.openRouterTier,
+              onChange: (value) => {
+                this.plugin.settings.studyAssistant.openRouterTier = value === "paid" ? "paid" : "free";
+                const available = this._getOpenRouterModelOptions(this.plugin.settings.studyAssistant.openRouterTier);
+                if (!available.some((model) => model.value === this.plugin.settings.studyAssistant.model)) {
+                  this.plugin.settings.studyAssistant.model = available[0]?.value || "";
+                }
+                void this.plugin.saveAll();
+                this._softRerender();
+              },
+            });
+          }),
+      );
+
+      if (!this._openRouterModelsCache && !this._openRouterModelsLoading) {
+        void this._loadOpenRouterModels();
+      }
+    }
 
     withDependentSetting(
       new Setting(wrapper)
@@ -3190,17 +3275,62 @@ export class SproutSettingsTab extends PluginSettingTab {
             return;
           }
 
-          const models = [...modelDefaults[provider]].sort((a, b) => a.localeCompare(b));
+          const models = getProviderModelOptions(provider);
+          const sortedModels = [...models].sort((a, b) => a.label.localeCompare(b.label));
           const currentModel = String(this.plugin.settings.studyAssistant.model || "").trim();
-          const modelOptions = models.map((model) => ({ value: model, label: model }));
-          if (currentModel && !models.includes(currentModel)) {
-            modelOptions.push({ value: currentModel, label: `${currentModel} (custom)` });
+          const modelOptions = [...sortedModels];
+          if (currentModel && !sortedModels.some((model) => model.value === currentModel)) {
+            modelOptions.push({
+              value: currentModel,
+              label: `${this._formatModelLabel(currentModel)} (custom)`,
+            });
             modelOptions.sort((a, b) => a.label.localeCompare(b.label));
+          }
+
+          if (provider === "openrouter") {
+            if (!modelOptions.length) {
+              setting.setDesc(
+                this._openRouterModelsLoading
+                  ? this._tx("ui.settings.studyAssistant.openrouter.loading", "Loading OpenRouter models. You can still enter a model ID manually.")
+                  : this._openRouterModelsError
+                    ? this._tx("ui.settings.studyAssistant.openrouter.loadError", "Could not load OpenRouter models right now. Enter a model ID manually.")
+                    : this._tx("ui.settings.studyAssistant.openrouter.model.desc", "Select an OpenRouter model. Display names are user-friendly while IDs remain API-correct."),
+              );
+              setting.controlEl.empty();
+              setting.addText((text) => {
+                text.setValue(currentModel);
+                text.setPlaceholder("OpenRouter model ID (e.g., openai/gpt-4o-mini)");
+                text.onChange(async (value) => {
+                  this.plugin.settings.studyAssistant.model = String(value || "").trim();
+                  await this.plugin.saveAll();
+                });
+              });
+              return;
+            }
+
+            const modelAnchor = setting.settingEl;
+            this._addSearchablePopover(wrapper, {
+              name: this._tx("ui.settings.studyAssistant.model.name", "Model"),
+              description: this._tx("ui.settings.studyAssistant.openrouter.model.desc", "Select an OpenRouter model. Display names are user-friendly while IDs remain API-correct."),
+              options: modelOptions,
+              value: currentModel || modelOptions[0]?.value || "",
+              onChange: (value) => {
+                this.plugin.settings.studyAssistant.model = String(value || "").trim();
+                void this.plugin.saveAll();
+              },
+            });
+
+            const inserted = wrapper.lastElementChild;
+            if (inserted && inserted !== modelAnchor) {
+              wrapper.insertBefore(inserted, modelAnchor.nextSibling);
+            }
+            modelAnchor.remove();
+            return;
           }
 
           this._addSimpleSelect(setting.controlEl, {
             options: modelOptions,
-            value: currentModel || models[0] || "",
+            value: currentModel || modelOptions[0]?.value || "",
             onChange: (value) => {
               this.plugin.settings.studyAssistant.model = String(value || "").trim();
               void this.plugin.saveAll();
@@ -3228,7 +3358,10 @@ export class SproutSettingsTab extends PluginSettingTab {
       openai: { key: "openai", label: "OpenAI API key", placeholder: "sk-..." },
       deepseek: { key: "deepseek", label: "DeepSeek API key", placeholder: "sk-..." },
       anthropic: { key: "anthropic", label: "Anthropic API key", placeholder: "sk-ant-..." },
-      groq: { key: "groq", label: "Groq API key", placeholder: "gsk_..." },
+      xai: { key: "xai", label: "xAI API key", placeholder: "xai-..." },
+      google: { key: "google", label: "Google API key", placeholder: "AIza..." },
+      perplexity: { key: "perplexity", label: "Perplexity API key", placeholder: "pplx-..." },
+      openrouter: { key: "openrouter", label: "OpenRouter API key", placeholder: "sk-or-..." },
       custom: { key: "custom", label: "Custom API key", placeholder: "sk-..." },
     };
 
@@ -3456,6 +3589,155 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     const enabled = !!this.plugin.settings.studyAssistant.enabled;
     for (const setting of dependentSettings) setting.setDisabled(!enabled);
+  }
+
+  private _formatModelLabel(rawModel: string): string {
+    const input = String(rawModel || "").trim();
+    if (!input) return "";
+    const base = input.includes("/") ? input.split("/").slice(1).join("/") : input;
+    const clean = base.replace(/:free$/i, "");
+    const parts = clean.split(/[\s._:/-]+/g).filter(Boolean);
+    const acronyms = new Map<string, string>([
+      ["gpt", "GPT"],
+      ["ai", "AI"],
+      ["api", "API"],
+      ["r1", "R1"],
+      ["vl", "VL"],
+      ["llama", "Llama"],
+      ["qwen", "Qwen"],
+      ["sonnet", "Sonnet"],
+      ["opus", "Opus"],
+      ["haiku", "Haiku"],
+      ["gemini", "Gemini"],
+      ["deepseek", "DeepSeek"],
+    ]);
+    return parts
+      .map((part) => {
+        const lower = part.toLowerCase();
+        const mapped = acronyms.get(lower);
+        if (mapped) return mapped;
+        if (/^[0-9]+[a-z]?$/i.test(part)) return part.toUpperCase();
+        return lower.charAt(0).toUpperCase() + lower.slice(1);
+      })
+      .join(" ");
+  }
+
+  private _normaliseOpenRouterProviderLabel(rawProvider: string): string {
+    const value = String(rawProvider || "").trim().toLowerCase();
+    if (value === "openai") return "OpenAI";
+    if (value === "anthropic") return "Anthropic";
+    if (value === "meta-llama" || value === "meta") return "Meta";
+    if (value === "google") return "Google";
+    if (value === "deepseek") return "DeepSeek";
+    if (value === "mistralai" || value === "mistral") return "Mistral";
+    if (value === "qwen") return "Qwen";
+    if (value === "x-ai" || value === "xai") return "xAI";
+    return this._formatModelLabel(value);
+  }
+
+  private _getOpenRouterModelOptions(tier: "free" | "paid"): StudyAssistantModelOption[] {
+    const models = this._openRouterModelsCache ?? [];
+    if (!models.length) return [];
+
+    const filtered = models
+      .filter((model) => (tier === "free" ? model.isFree : !model.isFree))
+      .sort((a, b) => (a.provider === b.provider ? a.name.localeCompare(b.name) : a.provider.localeCompare(b.provider)));
+
+    const limited = tier === "free" ? filtered.slice(0, 25) : filtered;
+    return limited.map((model) => ({
+      value: model.id,
+      label: this._cleanOpenRouterModelDisplayName(model.name || this._formatModelLabel(model.id)),
+      description: model.id,
+      section: this._normaliseOpenRouterProviderLabel(model.provider),
+    }));
+  }
+
+  private _cleanOpenRouterModelDisplayName(name: string): string {
+    return String(name || "")
+      .replace(/\s*\(free\)\s*$/i, "")
+      .replace(/:free\s*$/i, "")
+      .trim();
+  }
+
+  private async _loadOpenRouterModels(): Promise<void> {
+    if (this._openRouterModelsLoading) return;
+    this._openRouterModelsLoading = true;
+    this._openRouterModelsError = null;
+
+    try {
+      const res = await requestUrl({
+        url: "https://openrouter.ai/api/v1/models",
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+
+      if (res.status < 200 || res.status >= 300) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
+      const root = res.json as { data?: unknown };
+      const rawModels = Array.isArray(root?.data) ? root.data : [];
+      const parsed: OpenRouterModel[] = [];
+
+      for (const entry of rawModels) {
+        if (!entry || typeof entry !== "object") continue;
+        const model = entry as Record<string, unknown>;
+        const idRaw = model.id;
+        const id = typeof idRaw === "string"
+          ? idRaw.trim()
+          : typeof idRaw === "number"
+            ? String(idRaw)
+            : "";
+        if (!id) continue;
+
+        const pricing = model.pricing && typeof model.pricing === "object"
+          ? model.pricing as Record<string, unknown>
+          : {};
+        const promptRaw = pricing.prompt;
+        const completionRaw = pricing.completion;
+        const promptPrice = Number.parseFloat(
+          typeof promptRaw === "string" || typeof promptRaw === "number" ? String(promptRaw) : "0",
+        );
+        const completionPrice = Number.parseFloat(
+          typeof completionRaw === "string" || typeof completionRaw === "number" ? String(completionRaw) : "0",
+        );
+        const isFreeByPrice = Number.isFinite(promptPrice) && Number.isFinite(completionPrice) && promptPrice <= 0 && completionPrice <= 0;
+        const isFree = isFreeByPrice || /:free$/i.test(id);
+        const provider = id.includes("/") ? id.split("/")[0] : "openrouter";
+        const nameRaw = model.name;
+        const displayNameSource = typeof nameRaw === "string" && nameRaw.trim().length > 0
+          ? nameRaw
+          : this._formatModelLabel(id);
+        const displayName = this._cleanOpenRouterModelDisplayName(displayNameSource.trim());
+
+        parsed.push({
+          id,
+          name: displayName,
+          provider,
+          isFree,
+        });
+      }
+
+      const deduped = Array.from(new Map(parsed.map((model) => [model.id, model])).values());
+      this._openRouterModelsCache = deduped;
+
+      if (this.plugin.settings.studyAssistant.provider === "openrouter") {
+        const options = this._getOpenRouterModelOptions(this.plugin.settings.studyAssistant.openRouterTier);
+        if (options.length && !options.some((opt) => opt.value === this.plugin.settings.studyAssistant.model)) {
+          this.plugin.settings.studyAssistant.model = options[0].value;
+          await this.plugin.saveAll();
+        }
+      }
+    } catch (error) {
+      this._openRouterModelsError = error instanceof Error
+        ? error.message
+        : typeof error === "string"
+          ? error
+          : "Unknown error";
+    } finally {
+      this._openRouterModelsLoading = false;
+      this._softRerender();
+    }
   }
 
   private renderSchedulingSection(wrapper: HTMLElement): void {
@@ -4490,7 +4772,7 @@ export class SproutSettingsTab extends PluginSettingTab {
     args: {
       name: string;
       description: string;
-      options: { value: string; label: string; description?: string; flagCode?: string }[];
+      options: { value: string; label: string; description?: string; flagCode?: string; section?: string }[];
       value: string;
       onChange: (value: string) => void;
     },
@@ -4595,14 +4877,31 @@ export class SproutSettingsTab extends PluginSettingTab {
     emptyMsg.hidden = true;
     panel.appendChild(emptyMsg);
 
-    type ItemEntry = { value: string; label: string; el: HTMLElement; lower: string };
+    type ItemEntry = { value: string; label: string; el: HTMLElement; lower: string; sectionKey: string };
+    type SectionEntry = { titleEl: HTMLElement; separatorEl: HTMLElement | null; visibleCount: number };
     const items: ItemEntry[] = [];
+    const sections = new Map<string, SectionEntry>();
 
     const buildItems = () => {
       listbox.replaceChildren();
       items.length = 0;
+      sections.clear();
+
+      let previousSection = "";
 
       for (const opt of args.options) {
+        const sectionKey = String(opt.section || "").trim();
+        if (sectionKey && sectionKey !== previousSection) {
+          const separatorEl = listbox.children.length
+            ? listbox.createDiv({ cls: "sprout-ss-separator" })
+            : null;
+          if (separatorEl) separatorEl.setAttribute("role", "separator");
+
+          const titleEl = listbox.createDiv({ cls: "sprout-ss-section-title", text: sectionKey });
+          sections.set(sectionKey, { titleEl, separatorEl, visibleCount: 0 });
+          previousSection = sectionKey;
+        }
+
         const item = document.createElement("div");
         item.setAttribute("role", "option");
         item.setAttribute("aria-selected", opt.value === current ? "true" : "false");
@@ -4665,7 +4964,8 @@ export class SproutSettingsTab extends PluginSettingTab {
           value: opt.value,
           label: opt.label,
           el: item,
-          lower: `${opt.label} ${opt.description ?? ""}`.toLowerCase(),
+          sectionKey,
+          lower: `${opt.label} ${opt.description ?? ""} ${opt.value} ${sectionKey}`.toLowerCase(),
         });
       }
     };
@@ -4674,11 +4974,29 @@ export class SproutSettingsTab extends PluginSettingTab {
     const applyFilter = () => {
       const q = searchInput?.value.toLowerCase().trim() ?? "";
       let visible = 0;
+
+      for (const section of sections.values()) {
+        section.visibleCount = 0;
+      }
+
       for (const it of items) {
         const show = !q || it.lower.includes(q);
         it.el.hidden = !show;
-        if (show) visible++;
+        if (show) {
+          visible++;
+          if (it.sectionKey) {
+            const section = sections.get(it.sectionKey);
+            if (section) section.visibleCount += 1;
+          }
+        }
       }
+
+      for (const section of sections.values()) {
+        const hasMatches = section.visibleCount > 0;
+        section.titleEl.hidden = !hasMatches;
+        if (section.separatorEl) section.separatorEl.hidden = !hasMatches;
+      }
+
       emptyMsg.hidden = visible !== 0;
     };
 
