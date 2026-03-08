@@ -62,11 +62,7 @@ Sprig is your AI learning companion within Sprout. It can:
 
 Sprig is currently in _beta_. It helps you understand notes faster, improve them with clear feedback, and turn them into ready-to-study flashcards in one flow.
 
-Watch Sprig in action:
-
-<a href="https://youtu.be/fe1htR7hjvY" target="_blank" rel="noopener noreferrer">
-   <img src="https://img.youtube.com/vi/fe1htR7hjvY/maxresdefault.jpg" alt="Sprig Demo video" width="100%" />
-</a>
+🎥 Watch Sprig in action: **[Sprig Demo →](https://youtu.be/fe1htR7hjvY)**
 
 You **bring your own API key**, so cost depends on the provider/model you choose. Sprig currently supports providers with free tiers (e.g. Google, OpenRouter) as well as premium platforms (e.g. Anthropic, OpenAI, Perplexity). Sprout adds no subscription fees or API markups.
 
