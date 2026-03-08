@@ -22,6 +22,7 @@ import { syncOneFile } from "../../platform/integrations/sync/sync-engine";
 import { persistEditedCardAndSiblings } from "../../platform/core/targeted-card-persist";
 import { ParseErrorModal } from "../../platform/modals/parse-error-modal";
 import { openBulkEditModalForCards } from "../../platform/modals/bulk-edit";
+import { ImageOcclusionCreatorModal } from "../../platform/modals/image-occlusion-creator-modal";
 import type SproutPlugin from "../../main";
 
 import type { Scope, Session, Rating } from "./types";
@@ -859,7 +860,15 @@ export class SproutReviewerView extends ItemView {
         new Notice(this.tx("ui.reviewer.notice.editIoMissingParent", "Cannot edit image occlusion card: missing parent card."));
         return;
       }
-      IO.ImageOcclusionEditorModal.openForParent(this.plugin, parentId);
+      ImageOcclusionCreatorModal.openForParent(this.plugin, String(parentId), {
+        onClose: () => {
+          if (typeof this.plugin.refreshAllViews === "function") {
+            this.plugin.refreshAllViews();
+          } else {
+            this.render();
+          }
+        },
+      });
       return;
     }
 

@@ -20,6 +20,7 @@ export type AutoMaskOptions = {
   minConfidence?: number;
   minAreaPercent?: number;
   verticalMergeFactor?: number;
+  maskBufferPx?: number;
 };
 
 type PxRect = { x: number; y: number; w: number; h: number };
@@ -42,6 +43,7 @@ type RecognizeFn = (
 const DEFAULT_MIN_CONFIDENCE = 48;
 const DEFAULT_MIN_AREA_PERCENT = 0.00008;
 const DEFAULT_VERTICAL_MERGE_FACTOR = 0.65;
+const DEFAULT_MASK_BUFFER_PX = 4;
 
 function normalizeChannelValue(value: number, minLum: number, maxLum: number): number {
   const denom = Math.max(1, maxLum - minLum);
@@ -288,11 +290,27 @@ function normToPxRect(rect: IORect, stageW: number, stageH: number): PxRect {
   };
 }
 
+function expandRect(rect: PxRect, bufferPx: number, stageW: number, stageH: number): PxRect {
+  const safeBuffer = Math.max(0, Number(bufferPx) || 0);
+  const x = Math.max(0, rect.x - safeBuffer);
+  const y = Math.max(0, rect.y - safeBuffer);
+  const maxX = Math.min(stageW, rect.x + rect.w + safeBuffer);
+  const maxY = Math.min(stageH, rect.y + rect.h + safeBuffer);
+
+  return {
+    x,
+    y,
+    w: Math.max(0, maxX - x),
+    h: Math.max(0, maxY - y),
+  };
+}
+
 export const __test = {
   toPxRectFromWord,
   lineMerge,
   verticalMerge,
   iou,
+  expandRect,
   preprocessRgbaInPlace,
 };
 
@@ -333,6 +351,7 @@ export async function autoDetectTextMasks(imageData: ClipboardImage, opts: AutoM
   const verticalMergeFactor = Number.isFinite(opts.verticalMergeFactor)
     ? Number(opts.verticalMergeFactor)
     : DEFAULT_VERTICAL_MERGE_FACTOR;
+  const maskBufferPx = Number.isFinite(opts.maskBufferPx) ? Number(opts.maskBufferPx) : DEFAULT_MASK_BUFFER_PX;
   const language = String(opts.language || "eng").trim() || "eng";
 
   const words = await runTesseractWords(imageData, language);
@@ -351,17 +370,18 @@ export async function autoDetectTextMasks(imageData: ClipboardImage, opts: AutoM
   const accepted: PxRect[] = [];
 
   for (const rect of mergedRects) {
-    if (rect.w < 5 || rect.h < 5) continue;
-    const areaPct = rectArea(rect) / imageArea;
+    const bufferedRect = expandRect(rect, maskBufferPx, stageW, stageH);
+    if (bufferedRect.w < 5 || bufferedRect.h < 5) continue;
+    const areaPct = rectArea(bufferedRect) / imageArea;
     if (areaPct < minAreaPercent) continue;
 
-    const collidesExisting = existingPx.some((existing) => iou(existing, rect) >= 0.5);
+    const collidesExisting = existingPx.some((existing) => iou(existing, bufferedRect) >= 0.5);
     if (collidesExisting) continue;
 
-    const collidesAccepted = accepted.some((existing) => iou(existing, rect) >= 0.5);
+    const collidesAccepted = accepted.some((existing) => iou(existing, bufferedRect) >= 0.5);
     if (collidesAccepted) continue;
 
-    accepted.push(rect);
+    accepted.push(bufferedRect);
   }
 
   const startGroup = Math.max(1, Number(opts.startGroupNumber ?? 1));

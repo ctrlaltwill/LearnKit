@@ -100,6 +100,7 @@ export class ImageOcclusionCreatorModal extends Modal {
   private btnUndo?: HTMLButtonElement;
   private btnRedo?: HTMLButtonElement;
   private btnAutoMask?: HTMLButtonElement;
+  private btnResetMasks?: HTMLButtonElement;
   private btnCrop?: HTMLButtonElement;
   private btnText?: HTMLButtonElement;
   private imageLimitDialog?: HTMLDialogElement;
@@ -232,12 +233,14 @@ export class ImageOcclusionCreatorModal extends Modal {
       onUndo: () => this.undo(),
       onRedo: () => this.redo(),
       onAutoMask: () => void this.runAutoMask(),
+      onResetMasks: () => this.resetMasks(),
       onSetTool: (tool) => this.setTool(tool),
       onRotate: (dir) => void this.rotateImage(dir),
     });
     this.btnUndo = toolbarRefs.btnUndo;
     this.btnRedo = toolbarRefs.btnRedo;
     this.btnAutoMask = toolbarRefs.btnAutoMask;
+    this.btnResetMasks = toolbarRefs.btnResetMasks;
     this.btnTransform = toolbarRefs.btnTransform;
     this.btnRectTool = toolbarRefs.btnRectTool;
     this.btnCrop = toolbarRefs.btnCrop;
@@ -302,6 +305,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     this.updatePlaceholderVisibility();
     this.updateUndoRedoState();
     this.updateAutoMaskButtonState();
+    this.updateResetMasksButtonState();
 
     // ── Extra information field ──────────────────────────────────────────────
     const infoField = body.createDiv({ cls: "bc flex flex-col gap-1" });
@@ -534,6 +538,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     this.updatePlaceholderVisibility();
     this.updateUndoRedoState();
     this.updateAutoMaskButtonState();
+    this.updateResetMasksButtonState();
     if (this.imageLimitDialog?.open) this.imageLimitDialog.close();
 
   }
@@ -569,6 +574,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     this.seedHistoryFromImage();
     this.fitToViewportWhenReady();
     this.updateAutoMaskButtonState();
+    this.updateResetMasksButtonState();
 
   }
 
@@ -1189,6 +1195,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     }
     this.updateUndoRedoState();
     this.updateAutoMaskButtonState();
+    this.updateResetMasksButtonState();
   }
 
   private redo() {
@@ -1208,6 +1215,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     }
     this.updateUndoRedoState();
     this.updateAutoMaskButtonState();
+    this.updateResetMasksButtonState();
   }
 
   private updateUndoRedoState() {
@@ -1234,6 +1242,25 @@ export class ImageOcclusionCreatorModal extends Modal {
     btn.classList.toggle("sprout-pointer-none", !enabled);
   }
 
+  private updateResetMasksButtonState() {
+    const btn = this.btnResetMasks;
+    if (!btn) return;
+    const enabled = this.rects.length > 0;
+    btn.disabled = !enabled;
+    btn.setAttribute("aria-disabled", enabled ? "false" : "true");
+    btn.classList.toggle("sprout-opacity-35", !enabled);
+    btn.classList.toggle("sprout-pointer-none", !enabled);
+  }
+
+  private resetMasks() {
+    if (this.rects.length === 0) return;
+    this.rects = [];
+    this.selectedRectId = null;
+    this.saveHistory();
+    this.renderRects();
+    this.updateResetMasksButtonState();
+  }
+
   private async runAutoMask() {
     if (this.autoMaskBusy) return;
     if (!this.ioImageData) {
@@ -1242,6 +1269,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     }
     this.autoMaskBusy = true;
     this.updateAutoMaskButtonState();
+    this.updateResetMasksButtonState();
 
     try {
       const existing = this.rects.map((r) => ({ ...r }));
@@ -1263,12 +1291,14 @@ export class ImageOcclusionCreatorModal extends Modal {
       this.selectedTextId = null;
       this.saveHistory();
       this.renderRects();
+      this.updateResetMasksButtonState();
       new Notice(`Added ${masks.length} auto masks.`);
     } catch (e: unknown) {
       new Notice(`Auto-detect failed (${e instanceof Error ? e.message : String(e)})`);
     } finally {
       this.autoMaskBusy = false;
       this.updateAutoMaskButtonState();
+      this.updateResetMasksButtonState();
     }
   }
 
@@ -1291,6 +1321,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     this.saveHistory();
     await this.loadImageToCanvas();
     this.updateAutoMaskButtonState();
+    this.updateResetMasksButtonState();
   }
 
   /** Crop the image to the specified stage-coordinate rectangle. */
@@ -1312,6 +1343,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     this.saveHistory();
     await this.loadImageToCanvas();
     this.updateAutoMaskButtonState();
+    this.updateResetMasksButtonState();
   }
 
   // ── Zoom ──────────────────────────────────────────────────────────────────
@@ -1351,6 +1383,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     }
     this.saveHistory();
     this.renderRects();
+    this.updateResetMasksButtonState();
   }
 
   // ── Render overlay (rects + text boxes – delegated to io-overlay-renderer) ─
@@ -1389,6 +1422,7 @@ export class ImageOcclusionCreatorModal extends Modal {
           if (this.selectedRectId === id) this.selectedRectId = null;
           this.saveHistory();
           this.renderRects();
+          this.updateResetMasksButtonState();
         },
         editTextBox: (textBox) => {
           this.selectedTextId = textBox.textId;

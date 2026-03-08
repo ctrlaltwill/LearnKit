@@ -38,6 +38,7 @@ export interface ToolbarRefs {
   btnUndo: HTMLButtonElement;
   btnRedo: HTMLButtonElement;
   btnAutoMask: HTMLButtonElement;
+  btnResetMasks: HTMLButtonElement;
   btnTransform: HTMLButtonElement;
   btnRectTool: HTMLButtonElement;
   btnCrop: HTMLButtonElement;
@@ -50,6 +51,7 @@ export interface ToolbarCallbacks {
   onUndo(): void;
   onRedo(): void;
   onAutoMask(): void;
+  onResetMasks(): void;
   onSetTool(tool: "occlusion-rect" | "occlusion-circle" | "transform" | "text" | "crop"): void;
   onRotate(dir: "cw" | "ccw"): void;
 }
@@ -143,6 +145,13 @@ export function buildToolbar(parent: HTMLElement, cb: ToolbarCallbacks): Toolbar
     () => cb.onAutoMask(),
     { label: "Auto-Mask" },
   );
+  const btnResetMasks = createIconBtn(
+    toolbarGroup,
+    "eraser",
+    "Reset Masks",
+    () => cb.onResetMasks(),
+    { label: "Reset Masks", disabled: true },
+  );
 
   fileInput.addEventListener("change", (e) => {
     const file = (e.target as HTMLInputElement).files?.[0];
@@ -156,6 +165,7 @@ export function buildToolbar(parent: HTMLElement, cb: ToolbarCallbacks): Toolbar
     btnUndo,
     btnRedo,
     btnAutoMask,
+    btnResetMasks,
     btnTransform,
     btnRectTool,
     btnCrop,

@@ -750,15 +750,16 @@ mjx-container[jax="CHTML"][display="true"] {
   display: block !important;
   max-width: 100% !important;
   height: auto !important;
+  margin: 0 !important;
   border-radius: var(--radius-s) !important;
 }
 
 .sprout-pretty-card .sprout-io-reading-overlay {
   position: absolute !important;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
+  left: var(--sprout-border-width, 1px);
+  top: var(--sprout-border-width, 1px);
+  width: calc(100% - (2 * var(--sprout-border-width, 1px)));
+  height: calc(100% - (2 * var(--sprout-border-width, 1px)));
   overflow: hidden !important;
   pointer-events: none !important;
   z-index: 2 !important;
@@ -769,6 +770,7 @@ mjx-container[jax="CHTML"][display="true"] {
   pointer-events: none !important;
   z-index: 1 !important;
   display: flex !important;
+  box-sizing: border-box !important;
   align-items: center !important;
   justify-content: center !important;
 }

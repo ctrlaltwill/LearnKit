@@ -46,6 +46,14 @@ describe("io ocr post-processing", () => {
     expect(val).toBeCloseTo(25 / 175, 5);
   });
 
+  it("expands OCR mask rectangles with boundary clamping", () => {
+    const expanded = __test.expandRect({ x: 5, y: 6, w: 10, h: 8 }, 2, 100, 100);
+    expect(expanded).toMatchObject({ x: 3, y: 4, w: 14, h: 12 });
+
+    const clamped = __test.expandRect({ x: 1, y: 1, w: 5, h: 5 }, 4, 8, 8);
+    expect(clamped).toMatchObject({ x: 0, y: 0, w: 8, h: 8 });
+  });
+
   it("preprocesses pixels into higher-contrast grayscale", () => {
     const pixels = new Uint8ClampedArray([
       40,

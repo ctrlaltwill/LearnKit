@@ -1707,12 +1707,12 @@ export class SproutSettingsTab extends PluginSettingTab {
         .setName(this._tx("ui.settings.cards.imageOcclusion.maskIcon.name", "Mask icon"))
         .setDesc(this._tx("ui.settings.cards.imageOcclusion.maskIcon.desc", "Icon shown on the target mask during review."));
 
-      const currentIcon = this.plugin.settings.imageOcclusion?.maskIcon ?? "circle-help";
-      type IconChoice = "circle-help" | "eye-off" | "custom" | "none";
+      const currentIcon = String(this.plugin.settings.imageOcclusion?.maskIcon ?? "question-circle").trim();
+      type IconChoice = "question-circle" | "eye" | "custom" | "none";
       let activeChoice: IconChoice =
         currentIcon === "" ? "none"
-        : currentIcon === "circle-help" ? "circle-help"
-        : currentIcon === "eye-off" ? "eye-off"
+        : currentIcon === "question-circle" || currentIcon === "circle-help" ? "question-circle"
+        : currentIcon === "eye" || currentIcon === "eye-off" ? "eye"
         : "custom";
       let customText = activeChoice === "custom" ? currentIcon : "";
 
@@ -1721,8 +1721,8 @@ export class SproutSettingsTab extends PluginSettingTab {
       controlEl.classList.add("sprout-io-icon-picker");
 
       const choices: { key: IconChoice; icon?: string; label: string }[] = [
-        { key: "circle-help", icon: "circle-help", label: "" },
-        { key: "eye-off", icon: "eye-off", label: "" },
+        { key: "question-circle", icon: "circle-help", label: "" },
+        { key: "eye", icon: "eye", label: "" },
         { key: "none", label: this._tx("ui.settings.cards.imageOcclusion.maskIcon.option.none", "None") },
         { key: "custom", label: this._tx("ui.settings.cards.imageOcclusion.maskIcon.option.custom", "Custom") },
       ];
@@ -1732,7 +1732,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
       const saveIcon = async () => {
         let val = "";
-        if (activeChoice === "circle-help" || activeChoice === "eye-off") val = activeChoice;
+        if (activeChoice === "question-circle" || activeChoice === "eye") val = activeChoice;
         else if (activeChoice === "custom") val = customText;
         this.plugin.settings.imageOcclusion.maskIcon = val;
         await this.plugin.saveAll();

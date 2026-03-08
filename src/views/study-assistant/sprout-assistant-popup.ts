@@ -28,6 +28,7 @@ import type {
   StudyAssistantReviewDepth,
   StudyAssistantSuggestion,
 } from "../../platform/integrations/ai/study-assistant-types";
+import { getTtsService } from "../../platform/integrations/tts/tts-service";
 import { t } from "../../platform/translations/translator";
 
 type AssistantMode = "assistant" | "review" | "generate";
@@ -46,6 +47,42 @@ type IoSuggestionRect = {
   h?: number;
   groupKey?: string;
   shape?: "rect" | "circle";
+};
+
+type SpeechRecognitionAlternativeLike = {
+  transcript: string;
+};
+
+type SpeechRecognitionResultLike = {
+  isFinal: boolean;
+  0: SpeechRecognitionAlternativeLike;
+};
+
+type SpeechRecognitionResultEventLike = {
+  resultIndex: number;
+  results: ArrayLike<SpeechRecognitionResultLike>;
+};
+
+type SpeechRecognitionErrorEventLike = {
+  error?: string;
+};
+
+type SpeechRecognitionLike = {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  processLocally?: boolean;
+  onresult: ((event: SpeechRecognitionResultEventLike) => void) | null;
+  onend: (() => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null;
+  start(): void;
+  stop(): void;
+};
+
+type SpeechRecognitionConstructorLike = {
+  new (): SpeechRecognitionLike;
+  available?: (langs: string[]) => Promise<"available" | "downloadable" | "downloading" | "unavailable">;
+  install?: (langs: string[]) => Promise<boolean>;
 };
 
 type AssistantLeafSession = {
@@ -131,6 +168,20 @@ export class SproutAssistantPopup {
   private _suppressToggleUntil = 0;
   private _maxObservedPopupHeight = 0;
   private _popupHeightFrame: number | null = null;
+
+  // Voice chat state
+  private _isListening = false;
+  private _isTranscribing = false;
+  private _mediaRecorder: MediaRecorder | null = null;
+  private _audioChunks: Blob[] = [];
+  private _voiceSilenceTimer: ReturnType<typeof setTimeout> | null = null;
+  private _voiceMeterStream: MediaStream | null = null;
+  private _voiceMeterAudioContext: AudioContext | null = null;
+  private _voiceMeterAnalyser: AnalyserNode | null = null;
+  private _voiceMeterFrame: number | null = null;
+  private _voiceAutoStopTimer: ReturnType<typeof setTimeout> | null = null;
+  private _voiceStopRequested = false;
+  private _recognition: SpeechRecognitionLike | null = null;
 
   // Per-leaf session state
   private _activeSessionLeaf: WorkspaceLeaf | null = null;
@@ -988,6 +1039,283 @@ export class SproutAssistantPopup {
   //  Chat (Ask mode)
   // ---------------------------------------------------------------------------
 
+  /** Whether the Web Speech Recognition API is available. */
+  private get _speechRecognitionSupported(): boolean {
+    return typeof window !== "undefined"
+      && ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
+  }
+
+  /** Start listening for voice input via Web Speech API. */
+  private async _startVoiceInput(): Promise<void> {
+    if (this._isListening || !this._speechRecognitionSupported) return;
+
+    const recognitionCtorSource = (window as unknown as Record<string, unknown>).SpeechRecognition
+      ?? (window as unknown as Record<string, unknown>).webkitSpeechRecognition;
+    if (typeof recognitionCtorSource !== "function") return;
+    const speechRecognitionCtor = recognitionCtorSource as SpeechRecognitionConstructorLike;
+
+    const recognition = new speechRecognitionCtor();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = navigator.language || "en-US";
+
+    // Prefer on-device dictation where the runtime supports it.
+    const localReady = await this._configureLocalDictation(speechRecognitionCtor, recognition, recognition.lang);
+    if (!localReady) {
+      this.chatError = this._tx(
+        "ui.studyAssistant.chat.voiceLocalUnavailable",
+        "On-device dictation is not available in this runtime. Falling back to browser speech service.",
+      );
+    }
+
+    this._voiceStopRequested = false;
+    this._clearVoiceAutoStopTimer();
+    this._recognition = recognition;
+    this._isListening = true;
+    this.render();
+    void this._startVoiceMeter();
+
+    let finalTranscript = "";
+    let shouldRetryNetwork = false;
+    let networkRetryCount = 0;
+
+    recognition.onresult = (event: SpeechRecognitionResultEventLike) => {
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          finalTranscript += result[0].transcript;
+        } else {
+          interim += result[0].transcript;
+        }
+      }
+      // Show interim results in the draft
+      this._setLiveAssistantDraft(finalTranscript + interim);
+      this._armVoiceAutoStopTimer();
+    };
+
+    // If no voice is detected quickly, auto-stop after a short delay.
+    this._armVoiceAutoStopTimer();
+
+    recognition.onend = () => {
+      if (shouldRetryNetwork && networkRetryCount < 1) {
+        shouldRetryNetwork = false;
+        networkRetryCount += 1;
+        try {
+          recognition.start();
+          this.chatError = "";
+          this.render();
+          return;
+        } catch {
+          // Fall through and show a user-facing error message below.
+        }
+      }
+
+      if (!this._voiceStopRequested) {
+        // SpeechRecognition often ends naturally; keep it running until user stops or silence timer fires.
+        try {
+          recognition.start();
+          return;
+        } catch {
+          // If restart fails, finalize below.
+        }
+      }
+
+      this._isListening = false;
+      this._recognition = null;
+      this._clearVoiceAutoStopTimer();
+      this._stopVoiceMeter();
+      if (finalTranscript.trim()) {
+        this._setLiveAssistantDraft(finalTranscript.trim());
+        // Dictation-only mode: keep transcript in the input and let user send manually.
+        this.render();
+      } else {
+        this.render();
+      }
+    };
+
+    recognition.onerror = (event: SpeechRecognitionErrorEventLike) => {
+      const code = String(event?.error || "unknown");
+      if (code === "network" && networkRetryCount < 1) {
+        shouldRetryNetwork = true;
+        this.chatError = this._tx(
+          "ui.studyAssistant.chat.voiceRetrying",
+          "Voice service disconnected. Retrying once...",
+        );
+        this.render();
+        return;
+      }
+
+      this._isListening = false;
+      this._recognition = null;
+      this._clearVoiceAutoStopTimer();
+      this._stopVoiceMeter();
+      if (code !== "no-speech" && code !== "aborted") {
+        this._voiceStopRequested = true;
+        this.chatError = this._formatVoiceInputError(code);
+      }
+      this.render();
+    };
+
+    recognition.start();
+  }
+
+  /** Stop listening for voice input. */
+  private _stopVoiceInput(): void {
+    this._voiceStopRequested = true;
+    this._clearVoiceAutoStopTimer();
+    this._stopVoiceMeter();
+    if (this._recognition) {
+      this._recognition.stop();
+    }
+  }
+
+  private async _startVoiceMeter(): Promise<void> {
+    if (this._voiceMeterAnalyser || !navigator.mediaDevices?.getUserMedia) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const audioContext = new AudioContext();
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.82;
+
+      const source = audioContext.createMediaStreamSource(stream);
+      source.connect(analyser);
+
+      this._voiceMeterStream = stream;
+      this._voiceMeterAudioContext = audioContext;
+      this._voiceMeterAnalyser = analyser;
+      this._tickVoiceMeter();
+    } catch {
+      // Speech recognition may still work via browser backend even if getUserMedia is blocked.
+    }
+  }
+
+  private _tickVoiceMeter(): void {
+    if (!this._voiceMeterAnalyser || !this._isListening) return;
+    const data = new Uint8Array(this._voiceMeterAnalyser.frequencyBinCount);
+    this._voiceMeterAnalyser.getByteTimeDomainData(data);
+
+    let sumSquares = 0;
+    for (let i = 0; i < data.length; i += 1) {
+      const centered = (data[i] - 128) / 128;
+      sumSquares += centered * centered;
+    }
+    const rms = Math.sqrt(sumSquares / data.length);
+    const level = Math.max(0, Math.min(1, rms * 3));
+    this._applyVoiceMeterLevel(level);
+
+    this._voiceMeterFrame = requestAnimationFrame(() => this._tickVoiceMeter());
+  }
+
+  private _applyVoiceMeterLevel(level: number): void {
+    const bars = this.popupEl?.querySelectorAll(".sprout-assistant-popup-voice-meter-bar");
+    if (!bars?.length) return;
+    const now = performance.now() / 220;
+    const multipliers = [0.65, 0.92, 1.12, 0.84];
+    bars.forEach((bar, idx) => {
+      const pulse = 0.45 + 0.55 * Math.abs(Math.sin(now + idx));
+      const height = 4 + Math.round((level * multipliers[idx] * pulse) * 16);
+      setCssProps(bar as HTMLElement, "height", `${Math.max(4, Math.min(20, height))}px`);
+    });
+  }
+
+  private _stopVoiceMeter(): void {
+    if (this._voiceMeterFrame != null) {
+      cancelAnimationFrame(this._voiceMeterFrame);
+      this._voiceMeterFrame = null;
+    }
+    if (this._voiceMeterStream) {
+      this._voiceMeterStream.getTracks().forEach((track) => track.stop());
+      this._voiceMeterStream = null;
+    }
+    if (this._voiceMeterAudioContext) {
+      void this._voiceMeterAudioContext.close();
+      this._voiceMeterAudioContext = null;
+    }
+    this._voiceMeterAnalyser = null;
+  }
+
+  private _armVoiceAutoStopTimer(): void {
+    this._clearVoiceAutoStopTimer();
+    this._voiceAutoStopTimer = setTimeout(() => {
+      if (!this._isListening) return;
+      this._voiceStopRequested = true;
+      this._stopVoiceInput();
+    }, 2000);
+  }
+
+  private _clearVoiceAutoStopTimer(): void {
+    if (this._voiceAutoStopTimer != null) {
+      clearTimeout(this._voiceAutoStopTimer);
+      this._voiceAutoStopTimer = null;
+    }
+  }
+
+  /** Keep the Ask textarea in sync while dictation is streaming interim text. */
+  private _setLiveAssistantDraft(value: string): void {
+    this.chatDraft = value;
+    const input = this.popupEl?.querySelector(".sprout-assistant-popup-input") as HTMLTextAreaElement | null;
+    if (!input) return;
+    input.value = value;
+    setCssProps(input, "height", "auto");
+    setCssProps(input, "height", `${Math.min(input.scrollHeight, 120)}px`);
+  }
+
+  private _formatVoiceInputError(code: string): string {
+    if (code === "network") {
+      return this._tx(
+        "ui.studyAssistant.chat.voiceNetworkError",
+        "Voice dictation backend is unreachable. In this runtime, speech recognition may require an online service. If available, use OS Dictation as fallback.",
+      );
+    }
+    if (code === "not-allowed" || code === "service-not-allowed") {
+      return this._tx(
+        "ui.studyAssistant.chat.voicePermissionError",
+        "Microphone access is blocked. Allow microphone access for Obsidian in macOS System Settings.",
+      );
+    }
+    return this._tx(
+      "ui.studyAssistant.chat.voiceGenericError",
+      "Voice input failed ({code}).",
+      { code },
+    );
+  }
+
+  private async _configureLocalDictation(
+    speechCtor: SpeechRecognitionConstructorLike,
+    recognition: SpeechRecognitionLike,
+    lang: string,
+  ): Promise<boolean> {
+    if (!("processLocally" in recognition)) {
+      return false;
+    }
+
+    recognition.processLocally = true;
+    if (!speechCtor.available) return true;
+
+    try {
+      const status = await speechCtor.available([lang]);
+      if (status === "available") return true;
+      if (status === "downloadable" && speechCtor.install) {
+        return await speechCtor.install([lang]);
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
+  /** Speak the assistant reply using TTS (if voice chat is enabled). */
+  private _speakReply(text: string): void {
+    if (!this.plugin.settings.studyAssistant.voiceChat) return;
+    const tts = getTtsService();
+    if (!tts.isSupported) return;
+    const audioSettings = this.plugin.settings.audio;
+    // Speak with TTS, bypassing the audio.enabled check since voice chat has its own toggle
+    tts.speak(text, audioSettings.defaultLanguage || "en-US", audioSettings, true, true);
+  }
+
   private async sendChatMessage(): Promise<void> {
     if (this.isSendingChat) return;
     const draft = this.chatDraft.trim();
@@ -1032,6 +1360,7 @@ export class SproutAssistantPopup {
         "No response returned.",
       );
       this.chatMessages.push({ role: "assistant", text: reply });
+      this._speakReply(reply);
     } catch (e) {
       this.chatError = this._formatAssistantError(e);
     } finally {
@@ -2029,6 +2358,42 @@ export class SproutAssistantPopup {
       void this.plugin.openSettingsTab(false, "assistant");
     });
 
+    // Voice chat toggle (only shown when speech recognition is available)
+    if (this._speechRecognitionSupported) {
+      const voiceEnabled = !!this.plugin.settings.studyAssistant.voiceChat;
+      const voiceToggle = menuList.createDiv({ cls: "sprout-assistant-popup-header-menu-item" });
+      voiceToggle.setAttribute("role", "menuitemcheckbox");
+      voiceToggle.setAttribute("aria-checked", voiceEnabled ? "true" : "false");
+      voiceToggle.setAttribute("tabindex", "0");
+      const voiceIcon = voiceToggle.createSpan({ cls: "sprout-assistant-popup-header-menu-icon" });
+      voiceIcon.setAttribute("aria-hidden", "true");
+      setIcon(voiceIcon, voiceEnabled ? "mic" : "mic-off");
+      voiceToggle.createSpan({
+        text: voiceEnabled
+          ? this._tx("ui.studyAssistant.chat.voiceDisable", "Disable voice chat")
+          : this._tx("ui.studyAssistant.chat.voiceEnable", "Enable voice chat"),
+      });
+      const toggleVoice = () => {
+        this.plugin.settings.studyAssistant.voiceChat = !voiceEnabled;
+        void this.plugin.saveAll();
+        this._headerMenuOpen = false;
+        if (!this.plugin.settings.studyAssistant.voiceChat && this._isListening) {
+          this._stopVoiceInput();
+        }
+        this.render();
+      };
+      voiceToggle.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleVoice();
+      });
+      voiceToggle.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        e.preventDefault();
+        toggleVoice();
+      });
+    }
+
     const menuDivider = menuList.createDiv({ cls: "sprout-assistant-popup-header-menu-divider" });
     menuDivider.setAttribute("role", "separator");
 
@@ -2231,6 +2596,32 @@ export class SproutAssistantPopup {
     sendBtn.setAttribute("aria-label", "Send");
     setIcon(sendBtn, this.isSendingChat ? "loader-2" : "arrow-up");
     sendBtn.addEventListener("click", () => void this.sendChatMessage());
+
+    // Voice chat mic button (only when enabled + supported)
+    if (this.plugin.settings.studyAssistant.voiceChat && this._speechRecognitionSupported) {
+      const micBtn = shell.createEl("button", {
+        cls: `sprout-assistant-popup-mic${this._isListening ? " is-listening" : ""}`,
+      });
+      micBtn.type = "button";
+      micBtn.disabled = this.isSendingChat;
+      micBtn.setAttribute("aria-label", this._isListening ? "Stop listening" : "Voice input");
+      micBtn.setAttribute("data-tooltip-position", "top");
+      setIcon(micBtn, this._isListening ? "x" : "mic");
+      micBtn.addEventListener("click", () => {
+        if (this._isListening) {
+          this._stopVoiceInput();
+        } else {
+          void this._startVoiceInput();
+        }
+      });
+
+      if (this._isListening) {
+        const meter = shell.createDiv({ cls: "sprout-assistant-popup-voice-meter" });
+        meter.createDiv({ cls: "sprout-assistant-popup-voice-meter-label", text: "Listening" });
+        const bars = meter.createDiv({ cls: "sprout-assistant-popup-voice-meter-bars" });
+        for (let i = 0; i < 4; i += 1) bars.createSpan({ cls: "sprout-assistant-popup-voice-meter-bar" });
+      }
+    }
 
     // Focus input when opening
     requestAnimationFrame(() => input.focus());
