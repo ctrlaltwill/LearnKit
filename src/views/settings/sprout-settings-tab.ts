@@ -17,7 +17,6 @@ import {
 import type SproutPlugin from "../../main";
 import type { SproutSettings } from "../../platform/types/settings";
 import type { CardState } from "../../platform/types/scheduler";
-import type { CardRecord } from "../../platform/types/card";
 import { log } from "../../platform/core/logger";
 import { placePopover, setCssProps } from "../../platform/core/ui";
 import { DEFAULT_SETTINGS, VIEW_TYPE_WIDGET } from "../../platform/core/constants";
@@ -369,8 +368,8 @@ export class SproutSettingsTab extends PluginSettingTab {
     io: number;
   } {
     const data = this.plugin.store.data;
-    const cardsObj = data?.cards && typeof data.cards === "object" ? data.cards as Record<string, CardRecord> : {};
-    const quarantineObj = data?.quarantine && typeof data.quarantine === "object" ? data.quarantine as Record<string, unknown> : {};
+    const cardsObj = data?.cards && typeof data.cards === "object" ? data.cards : {};
+    const quarantineObj = data?.quarantine && typeof data.quarantine === "object" ? data.quarantine : {};
     const reviewableIds = new Set<string>();
     for (const [id, card] of Object.entries(cardsObj)) {
       if (!id) continue;
@@ -384,7 +383,7 @@ export class SproutSettingsTab extends PluginSettingTab {
     const liveStates: Record<string, CardState> = {};
     for (const [id, st] of Object.entries(rawStates)) {
       if (!reviewableIds.has(id)) continue;
-      liveStates[id] = st as CardState;
+      liveStates[id] = st;
     }
 
     const cards = reviewableIds.size;

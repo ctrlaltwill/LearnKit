@@ -875,7 +875,13 @@ export async function verifyDataJsonBackupIntegrity(
         try {
           if (!stmt.step()) return { ok: false, verified: true, reason: "integrity_check returned no rows." };
           const row = stmt.getAsObject() as { integrity_check?: unknown };
-          const result = String(row.integrity_check ?? "").toLowerCase();
+          const raw = row.integrity_check;
+          const result =
+            typeof raw === "string"
+              ? raw.toLowerCase()
+              : raw == null
+                ? ""
+                : JSON.stringify(raw).toLowerCase();
           if (result === "ok") return { ok: true, verified: true };
           return { ok: false, verified: true, reason: result || "integrity_check failed." };
         } finally {
@@ -1199,7 +1205,7 @@ export async function restoreFromDataJsonBackup(
 
       return { ok: true, message: "Restore completed." };
     } catch (e: unknown) {
-      const errMsg = e instanceof Error ? e.message : String(e ?? "unknown error");
+      const errMsg = e instanceof Error ? e.message : typeof e === "string" ? e : "unknown error";
       return { ok: false, message: `Restore failed: ${errMsg}` };
     }
   }

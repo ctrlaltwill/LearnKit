@@ -1,6 +1,5 @@
 import type SproutPlugin from "../../main";
 import type { CardRecord } from "./store";
-import type { CardState } from "../types/scheduler";
 import { normaliseGroupKey, stableIoChildId } from "../image-occlusion/mask-tool";
 
 type PersistEditedCardOptions = {
@@ -140,7 +139,7 @@ function syncReversedChildren(plugin: SproutPlugin, parent: CardRecord, now: num
       if (dir === "forward" && hasState(plugin, parentId)) {
         const st = plugin.store.data.states?.[parentId];
         if (st && typeof st === "object") {
-          plugin.store.upsertState({ ...(st as CardState), id: childId });
+          plugin.store.upsertState({ ...st, id: childId });
           if (plugin.store.data.states) delete plugin.store.data.states[parentId];
         }
       } else {
@@ -254,7 +253,7 @@ export async function persistEditedCardAndSiblings(
       const fwdChildId = `${id}::reversed::forward`;
       const fwdState = plugin.store.data.states?.[fwdChildId];
       if (fwdState && typeof fwdState === "object") {
-        plugin.store.upsertState({ ...(fwdState as CardState), id });
+          plugin.store.upsertState({ ...fwdState, id });
       } else {
         ensureStateIfMissing(plugin, id, now);
       }

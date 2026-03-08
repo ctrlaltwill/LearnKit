@@ -236,7 +236,13 @@ export class SqliteStore extends JsonStore {
       try {
         if (!stmt.step()) return { ok: false, message: "integrity_check returned no rows" };
         const row = stmt.getAsObject() as { integrity_check?: unknown };
-        const result = String(row.integrity_check ?? "").toLowerCase();
+        const raw = row.integrity_check;
+        const result =
+          typeof raw === "string"
+            ? raw.toLowerCase()
+            : raw == null
+              ? ""
+              : JSON.stringify(raw).toLowerCase();
         if (result === "ok") return { ok: true, message: "ok" };
         return { ok: false, message: result || "integrity check failed" };
       } finally {

@@ -491,13 +491,13 @@ export class SproutStudyAssistantView extends ItemView {
     const prevTransition = best.style.transition;
     const prevBg = best.style.backgroundColor;
     const prevOutline = best.style.outline;
-    best.style.transition = "background-color 180ms ease, outline-color 180ms ease";
-    best.style.backgroundColor = "var(--text-highlight-bg, rgba(255, 230, 120, 0.35))";
-    best.style.outline = "2px solid var(--interactive-accent)";
+    setCssProps(best, "transition", "background-color 180ms ease, outline-color 180ms ease");
+    setCssProps(best, "background-color", "var(--text-highlight-bg, rgba(255, 230, 120, 0.35))");
+    setCssProps(best, "outline", "2px solid var(--interactive-accent)");
     window.setTimeout(() => {
-      best.style.backgroundColor = prevBg;
-      best.style.outline = prevOutline;
-      best.style.transition = prevTransition;
+      setCssProps(best, "background-color", prevBg);
+      setCssProps(best, "outline", prevOutline);
+      setCssProps(best, "transition", prevTransition);
     }, 1600);
 
     return true;

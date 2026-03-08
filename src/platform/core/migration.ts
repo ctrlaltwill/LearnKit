@@ -36,7 +36,7 @@ export async function migrateJsonToSqlite(
   try {
     if (await isSqliteDatabasePresent(plugin)) return true;
 
-    const loaded = rootData ?? (await plugin.loadData());
+    const loaded = rootData ?? ((await plugin.loadData()) as unknown);
     const root = isPlainObject(loaded) ? loaded : {};
 
     if (!hasLegacyStoreData(root)) return true;
@@ -74,7 +74,7 @@ export async function migrateJsonToSqlite(
     delete root.store;
     await plugin.saveData(root);
 
-    new Notice("Sprout upgraded scheduling storage to SQLite.");
+    new Notice("Sprout upgraded scheduling storage to sqlite.");
     log.info(`Migrated scheduling store to SQLite at ${getSchedulingDirPath(plugin)}`);
     return true;
   } catch (e) {
