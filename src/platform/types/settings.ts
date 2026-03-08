@@ -75,14 +75,18 @@ export type SproutSettings = {
   // Study Assistant — AI providers, prompts, and generation preferences
   studyAssistant: {
     enabled: boolean;
-    provider: "openai" | "anthropic" | "deepseek" | "groq" | "custom";
+    provider: "openai" | "anthropic" | "deepseek" | "xai" | "google" | "perplexity" | "openrouter" | "custom";
+    openRouterTier: "free" | "paid";
     model: string;
     endpointOverride: string;
     apiKeys: {
       openai: string;
       anthropic: string;
       deepseek: string;
-      groq: string;
+      xai: string;
+      google: string;
+      perplexity: string;
+      openrouter: string;
       custom: string;
     };
     prompts: {

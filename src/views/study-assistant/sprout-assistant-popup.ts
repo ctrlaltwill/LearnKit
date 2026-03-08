@@ -681,7 +681,10 @@ export class SproutAssistantPopup {
     if (provider === "openai") return "OpenAI";
     if (provider === "anthropic") return "Anthropic";
     if (provider === "deepseek") return "DeepSeek";
-    if (provider === "groq") return "Groq";
+    if (provider === "xai") return "xAI";
+    if (provider === "google") return "Google";
+    if (provider === "perplexity") return "Perplexity";
+    if (provider === "openrouter") return "OpenRouter";
     if (provider === "custom") return "Custom provider";
     if (!provider) return this._tx("ui.studyAssistant.provider.unknown", "AI provider");
     return provider.charAt(0).toUpperCase() + provider.slice(1);
@@ -2484,7 +2487,7 @@ export class SproutAssistantPopup {
     const input = shell.createEl("textarea", { cls: "sprout-assistant-popup-input" });
     input.rows = 1;
     input.value = this.generateDraft;
-    input.placeholder = this._tx("ui.studyAssistant.generator.askPlaceholder", "Ask for flashcards on a specific topic in this note...");
+    input.placeholder = this._tx("ui.studyAssistant.generator.askPlaceholder", "Generate flashcards for this note...");
     input.disabled = this.isGenerating;
     input.addEventListener("input", () => {
       this.generateDraft = input.value;

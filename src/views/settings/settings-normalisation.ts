@@ -30,10 +30,9 @@ export function normaliseSettingsInPlace(s: SproutSettings): void {
     "sonnet 4.6": "claude-sonnet-4-5",
     "haiku 4.5": "claude-3-5-haiku-latest",
   };
-  const LEGACY_GROQ_MODEL_MAP: Record<string, string> = {
-    "grok-4-0709": "llama-3.3-70b-versatile",
-    "grok-4-1-fast-reasoning": "deepseek-r1-distill-llama-70b",
-    "grok-4-1-fast-non-reasoning": "llama-3.1-8b-instant",
+  const LEGACY_XAI_MODEL_MAP: Record<string, string> = {
+    "grok-4-1-fast-reasoning": "grok-4-0709",
+    "grok-4-1-fast-non-reasoning": "grok-3-mini",
   };
 
   s.scheduling ??= {} as SproutSettings["scheduling"];
@@ -55,9 +54,13 @@ export function normaliseSettingsInPlace(s: SproutSettings): void {
   s.studyAssistant.enabled ??= DEFAULT_SETTINGS.studyAssistant.enabled;
   const provider = String(s.studyAssistant.provider ?? DEFAULT_SETTINGS.studyAssistant.provider);
   s.studyAssistant.provider =
-    provider === "openai" || provider === "anthropic" || provider === "deepseek" || provider === "groq" || provider === "custom"
+    provider === "openai" || provider === "anthropic" || provider === "deepseek" || provider === "xai" || provider === "google" || provider === "perplexity" || provider === "openrouter" || provider === "custom"
       ? provider
-      : DEFAULT_SETTINGS.studyAssistant.provider;
+      : provider === "groq"
+        ? "xai"
+        : DEFAULT_SETTINGS.studyAssistant.provider;
+  const openRouterTier = String(s.studyAssistant.openRouterTier ?? DEFAULT_SETTINGS.studyAssistant.openRouterTier).toLowerCase();
+  s.studyAssistant.openRouterTier = openRouterTier === "paid" ? "paid" : "free";
   s.studyAssistant.model = String(s.studyAssistant.model ?? DEFAULT_SETTINGS.studyAssistant.model).trim();
   if (s.studyAssistant.provider === "openai") {
     const mapped = LEGACY_OPENAI_MODEL_MAP[s.studyAssistant.model.toLowerCase()];
@@ -65,8 +68,8 @@ export function normaliseSettingsInPlace(s: SproutSettings): void {
   } else if (s.studyAssistant.provider === "anthropic") {
     const mapped = LEGACY_ANTHROPIC_MODEL_MAP[s.studyAssistant.model.toLowerCase()];
     if (mapped) s.studyAssistant.model = mapped;
-  } else if (s.studyAssistant.provider === "groq") {
-    const mapped = LEGACY_GROQ_MODEL_MAP[s.studyAssistant.model.toLowerCase()];
+  } else if (s.studyAssistant.provider === "xai") {
+    const mapped = LEGACY_XAI_MODEL_MAP[s.studyAssistant.model.toLowerCase()];
     if (mapped) s.studyAssistant.model = mapped;
   }
   s.studyAssistant.endpointOverride = String(
@@ -86,8 +89,17 @@ export function normaliseSettingsInPlace(s: SproutSettings): void {
   s.studyAssistant.apiKeys.deepseek = String(
     s.studyAssistant.apiKeys.deepseek ?? DEFAULT_SETTINGS.studyAssistant.apiKeys.deepseek,
   );
-  s.studyAssistant.apiKeys.groq = String(
-    s.studyAssistant.apiKeys.groq ?? DEFAULT_SETTINGS.studyAssistant.apiKeys.groq,
+  s.studyAssistant.apiKeys.xai = String(
+    s.studyAssistant.apiKeys.xai ?? (s.studyAssistant.apiKeys as Record<string, unknown>).groq ?? DEFAULT_SETTINGS.studyAssistant.apiKeys.xai,
+  );
+  s.studyAssistant.apiKeys.google = String(
+    s.studyAssistant.apiKeys.google ?? DEFAULT_SETTINGS.studyAssistant.apiKeys.google,
+  );
+  s.studyAssistant.apiKeys.perplexity = String(
+    s.studyAssistant.apiKeys.perplexity ?? DEFAULT_SETTINGS.studyAssistant.apiKeys.perplexity,
+  );
+  s.studyAssistant.apiKeys.openrouter = String(
+    s.studyAssistant.apiKeys.openrouter ?? DEFAULT_SETTINGS.studyAssistant.apiKeys.openrouter,
   );
   s.studyAssistant.apiKeys.custom = String(
     s.studyAssistant.apiKeys.custom ?? DEFAULT_SETTINGS.studyAssistant.apiKeys.custom,

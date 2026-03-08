@@ -31,7 +31,11 @@ function providerBaseUrl(settings: SproutSettings["studyAssistant"]): string {
   if (settings.provider === "openai") return "https://api.openai.com/v1";
   if (settings.provider === "anthropic") return "https://api.anthropic.com/v1";
   if (settings.provider === "deepseek") return "https://api.deepseek.com/v1";
-  return "https://api.groq.com/openai/v1";
+  if (settings.provider === "xai") return "https://api.x.ai/v1";
+  if (settings.provider === "google") return "https://generativelanguage.googleapis.com/v1beta/openai";
+  if (settings.provider === "perplexity") return "https://api.perplexity.ai";
+  if (settings.provider === "openrouter") return "https://openrouter.ai/api/v1";
+  return "";
 }
 
 function providerApiKey(
@@ -41,7 +45,10 @@ function providerApiKey(
   if (provider === "openai") return String(apiKeys.openai || "").trim();
   if (provider === "anthropic") return String(apiKeys.anthropic || "").trim();
   if (provider === "deepseek") return String(apiKeys.deepseek || "").trim();
-  if (provider === "groq") return String(apiKeys.groq || "").trim();
+  if (provider === "xai") return String(apiKeys.xai || "").trim();
+  if (provider === "google") return String(apiKeys.google || "").trim();
+  if (provider === "perplexity") return String(apiKeys.perplexity || "").trim();
+  if (provider === "openrouter") return String(apiKeys.openrouter || "").trim();
   return String(apiKeys.custom || "").trim();
 }
 

@@ -44,7 +44,7 @@ export const DEFAULT_SETTINGS: SproutSettings = {
 
     // DEFAULT = two-button
     fourButtonMode: false,
-    showGradeIntervals: false,
+    showGradeIntervals: true,
 
     enableSkipButton: false,
     randomizeMcqOptions: true,
@@ -58,13 +58,17 @@ export const DEFAULT_SETTINGS: SproutSettings = {
   studyAssistant: {
     enabled: false,
     provider: "openai",
+    openRouterTier: "free",
     model: "gpt-4.1-mini",
     endpointOverride: "",
     apiKeys: {
       openai: "",
       anthropic: "",
       deepseek: "",
-      groq: "",
+      xai: "",
+      google: "",
+      perplexity: "",
+      openrouter: "",
       custom: "",
     },
     prompts: {

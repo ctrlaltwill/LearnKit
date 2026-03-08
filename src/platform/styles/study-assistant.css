@@ -435,7 +435,7 @@
   right: 24px;
   width: 400px;
   height: auto;
-  min-height: 400px;;
+  min-height: 400px;
   max-height: min(700px, 60vh);
   border-radius: 16px;
   border: 1px solid var(--background-modifier-border, rgba(0, 0, 0, 0.1));
@@ -1012,6 +1012,13 @@
   justify-content: center;
   padding: 2px 10px !important;
   transition: background 0.12s ease, transform 0.1s ease;
+}
+
+/* Guard against global button reset rules in Sprout core styles. */
+.sprout .sprout-assistant-popup-send {
+  height: 32px !important;
+  min-height: 32px !important;
+  line-height: 0 !important;
 }
 
 .sprout-assistant-popup-send:hover:not(:disabled) {

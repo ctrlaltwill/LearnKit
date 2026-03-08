@@ -960,7 +960,10 @@ export default class SproutPlugin extends Plugin {
       openai: asApiKey(obj.openai),
       anthropic: asApiKey(obj.anthropic),
       deepseek: asApiKey(obj.deepseek),
-      groq: asApiKey(obj.groq),
+      xai: asApiKey(obj.xai ?? obj.groq),
+      google: asApiKey(obj.google),
+      perplexity: asApiKey(obj.perplexity),
+      openrouter: asApiKey(obj.openrouter),
       custom: asApiKey(obj.custom),
     };
   }

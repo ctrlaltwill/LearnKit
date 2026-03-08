@@ -332,6 +332,8 @@ export class SproutSettingsView extends ItemView {
 
     // Save scroll position
     const prevScroll = container.scrollTop;
+    const previousInnerScroller = container.querySelector<HTMLElement>(".sprout-guide-content-inner--snap");
+    const prevInnerScroll = previousInnerScroller?.scrollTop ?? 0;
 
     // Clear
     while (container.firstChild) container.removeChild(container.firstChild);
@@ -589,6 +591,8 @@ export class SproutSettingsView extends ItemView {
 
     // Restore scroll position (or reset to top for fresh tab switch)
     requestAnimationFrame(() => {
+      const nextInnerScroller = container.querySelector<HTMLElement>(".sprout-guide-content-inner--snap");
+      if (nextInnerScroller) nextInnerScroller.scrollTop = prevInnerScroll;
       container.scrollTop = prevScroll;
       this._clearInnerAOS(container);
     });
