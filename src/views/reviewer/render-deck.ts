@@ -405,7 +405,7 @@ export function renderDeckMode(args: Args) {
     icon: "plus",
     label: "Expand all",
     title: "Expand all folders",
-    className: "btn-outline h-9 flex items-center gap-2 equal-height-btn",
+    className: "btn-outline h-9 flex items-center gap-2 equal-height-btn sprout-deck-control-btn",
     labelClassName: "",
     iconClassName: "sprout-deck-control-icon",
     onClick: () => {
@@ -424,7 +424,7 @@ export function renderDeckMode(args: Args) {
     icon: "minus",
     label: "Collapse all",
     title: "Collapse all folders",
-    className: "btn-outline h-9 flex items-center gap-2 equal-height-btn",
+    className: "btn-outline h-9 flex items-center gap-2 equal-height-btn sprout-deck-control-btn",
     labelClassName: "",
     iconClassName: "sprout-deck-control-icon",
     onClick: () => {

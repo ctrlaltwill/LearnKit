@@ -12,8 +12,8 @@ import type {
 
 function clampDifficulty(value: unknown): number {
   const n = Number(value);
-  if (!Number.isFinite(n)) return 3;
-  return Math.max(1, Math.min(5, Math.round(n)));
+  if (!Number.isFinite(n)) return 2;
+  return Math.max(1, Math.min(3, Math.round(n)));
 }
 
 function extractFirstJsonObject(text: string): string {
@@ -832,7 +832,7 @@ function buildSystemPrompt(customInstructions: string, canUseVisionForIo: boolea
     "Return strictly valid JSON only with exactly one top-level object: {\"suggestions\":[...]}",
     "Do not output markdown, code fences, explanations, or extra keys outside the documented schema.",
     "Return valid JSON matching this schema:",
-    '{"suggestions":[{"type":"basic|reversed|cloze|mcq|oq|io","difficulty":1-5,"sourceOrigin":"note|external","title":"optional","question":"optional","answer":"optional","clozeText":"optional","options":["..."],"correctOptionIndexes":[0],"steps":["..."],"ioSrc":"optional","ioOcclusions":[{"rectId":"r1","x":0.1,"y":0.2,"w":0.2,"h":0.08,"groupKey":"1","shape":"rect"}],"ioMaskMode":"solo|all","info":"optional","groups":["optional/group"],"noteRows":["KIND | value |"],"rationale":"optional"}]}',
+    '{"suggestions":[{"type":"basic|reversed|cloze|mcq|oq|io","difficulty":1-3,"sourceOrigin":"note|external","title":"optional","question":"optional","answer":"optional","clozeText":"optional","options":["..."],"correctOptionIndexes":[0],"steps":["..."],"ioSrc":"optional","ioOcclusions":[{"rectId":"r1","x":0.1,"y":0.2,"w":0.2,"h":0.08,"groupKey":"1","shape":"rect"}],"ioMaskMode":"solo|all","info":"optional","groups":["optional/group"],"noteRows":["KIND | value |"],"rationale":"optional"}]}',
     "Each suggestion must include parser-safe noteRows using Sprout row syntax.",
     'Set sourceOrigin to "note" when the card tests content present in the note.',
     'Only use sourceOrigin "external" if the user explicitly asks for external/background knowledge.',
@@ -840,6 +840,8 @@ function buildSystemPrompt(customInstructions: string, canUseVisionForIo: boolea
     "OQ noteRows format (use numbered rows for ordered steps, NEVER A/O rows): [\"OQ | question prompt |\", \"1 | first step |\", \"2 | second step |\", \"3 | third step |\"]",
     "MCQ uses A/O rows only. OQ uses numbered rows only. Do NOT mix these formats.",
     "For type=cloze, every card must include at least one valid {{cN::...}} deletion and use CQ rows (never Q/A rows).",
+    "Cloze rows may contain multiple deletions in a single CQ line (e.g. {{c1::...}}, {{c2::...}}, {{c3::...}}).",
+    "Grouped/shared cloze indices are allowed (e.g. {{c1::A}} and {{c1::B}} in the same card).",
     "Never label a question-answer fact card as type=cloze unless it contains explicit cloze deletion markup.",
     "IO rows must include embedded image syntax in IO | ... |.",
     "For IO, include O row with occlusions JSON and C row with mask mode (solo/all).",
@@ -852,12 +854,19 @@ function buildSystemPrompt(customInstructions: string, canUseVisionForIo: boolea
       : "Vision input is unavailable for this run, so do not emit IO suggestions or guessed occlusion coordinates.",
     "Use reversed cards only when both sides form a short, unambiguous two-way mapping; otherwise use basic cards.",
     "Flashcard quality rules (apply strictly):",
-    "- One concept per card: if information has multiple enumerable items (e.g. 5 symptom clusters, 3 criteria, 4 mechanisms), prefer one cloze card per item over a single basic card listing all items on the back.",
-    "- For any list of N named items that must be memorised atomically, generate N cloze cards each occluding one item, rather than one basic card with all N items as the answer.",
+    "- One concept per card: each card should test a single, clear idea.",
+    "- For tightly grouped lists of related items (e.g. 5 symptom clusters, 4 score components, 3 diagnostic criteria), prefer ONE cloze card with multiple deletions ({{c1::...}}, {{c2::...}}, etc.) so the learner sees full context. Only split into separate single-cloze cards if the list is large (>6 items) or cognitively heavy.",
+    "- Each cloze deletion should be 1–4 words. Up to ~6 words is acceptable for multi-word technical terms. Never delete an entire sentence or long phrase.",
+    "- For longer definitions or factual prompts, use basic (Q/A) cards rather than cloze.",
     "- Keep answers short and recognisable at a glance: a single term, phrase, or tight list of ≤3 items. Avoid full paragraphs on the answer side.",
     "- Make the tested concept immediately obvious from the question stem — the answer should feel like a clean retrieval, not a summary essay.",
-    "- Do not overcrowd: split multi-part answers into separate cards rather than stacking facts.",
-    "- Prioritise high-yield, testable facts: mechanisms, criteria, classifications, key values, and named steps over background narrative.",
+    "- Do not overcrowd: split multi-part answers into separate cards rather than stacking unrelated facts.",
+    "- Prioritise high-yield, exam-worthy content: diagnostic criteria, mechanisms, treatment principles, management steps, classifications, prognosis, key values/thresholds, and named processes. De-prioritise low-yield trivia such as historical dates, version numbers, or author names unless the user specifically requests them.",
+    "- Distribute cards across different sections and topics of the note rather than clustering on one area, unless the user specifies a particular topic.",
+    "- Choose card type by learning objective: CQ for in-context recall and grouped lists, Q for definitions and stemmed questions, RQ for bidirectional associations and language pairs, MCQ for exam-style discrimination, OQ for ordered sequences/steps only.",
+    "- Language flag tokens ({{es}}, {{en}}, etc.) are ONLY for language-learning cards. Do not add them to medical, science, history, or general knowledge cards.",
+    "- Do not include markdown formatting (bold, italic, etc.) in card content. Use plain text only.",
+    "- Always include a rationale field explaining why you chose this card type and what learning objective it serves.",
     "Do not include markdown code fences.",
     "Avoid duplicate cards.",
   ];
@@ -960,7 +969,7 @@ function buildUserPrompt(input: StudyAssistantGeneratorInput, canUseVisionForIo:
     exactTarget != null
       ? `Generate exactly ${target} high-quality flashcard suggestions from this note.`
       : `Generate approximately ${target} high-quality flashcard suggestions from this note (allowed range: ${minCount}-${maxCount}).`,
-    "Sort by difficulty descending.",
+    "Sort by difficulty descending (1 = easy recall, 2 = moderate recall, 3 = hard recall).",
     "Respect enabledTypes and generationOptions exactly.",
     "Output must be strictly valid JSON and parse successfully with no non-JSON text.",
     allowRepeatTopics
@@ -970,6 +979,7 @@ function buildUserPrompt(input: StudyAssistantGeneratorInput, canUseVisionForIo:
       ? "For IO cards, use provided image inputs for precise occlusion placement. Emit one IO suggestion per image with multiple masks as needed; do not split one image into multiple single-mask IO suggestions."
       : "Do not generate IO cards in this run because image vision input is unavailable.",
     "For cloze requests, return only true cloze cards with {{cN::...}} deletions and CQ rows.",
+    "When the user asks for a single cloze card with multiple deletions, return one CQ row containing all requested deletions, and grouped/shared indices are allowed.",
     "Keep LaTeX and language flags (e.g. {{es}}) unchanged.",
     'Use note content as the default source of truth for all suggestions.',
     'Use sourceOrigin "external" only when the user explicitly asks for external/background knowledge; otherwise use "note".',

@@ -30,15 +30,17 @@ export class SproutStudyAssistantView extends ItemView {
     return "sprout-widget-assistant";
   }
 
-  async onOpen(): Promise<void> {
+  onOpen(): Promise<void> {
     this.contentEl.empty();
     this.contentEl.addClass("sprout", "sprout-study-assistant-root");
     this.popup.mountEmbedded(this.contentEl);
     this.popup.onFileOpen(this.app.workspace.getActiveFile());
+    return Promise.resolve();
   }
 
-  async onClose(): Promise<void> {
+  onClose(): Promise<void> {
     this.popup.unmountEmbedded();
+    return Promise.resolve();
   }
 
   onRefresh(): void {

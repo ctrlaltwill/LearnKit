@@ -428,6 +428,25 @@
   height: 20px;
 }
 
+.sprout-assistant-trigger-pending-badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: #e5484d;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  padding: 0 4px;
+  border: 1px solid var(--background-primary, #fff);
+  pointer-events: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.28);
+}
+
 .sprout-assistant-trigger.is-hidden {
   display: none !important;
 }
@@ -443,6 +462,25 @@
   opacity: 1;
   transform: scale(1);
   pointer-events: auto;
+}
+
+.sprout-assistant-trigger.is-reply-bounce {
+  animation: sprout-assistant-trigger-reply-bounce 0.64s cubic-bezier(0.2, 0.85, 0.35, 1) 0s 3;
+}
+
+@keyframes sprout-assistant-trigger-reply-bounce {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.12);
+  }
+  70% {
+    transform: scale(0.97);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .sprout-assistant-trigger-hotzone {
@@ -476,6 +514,11 @@
   flex-direction: column;
   overflow: hidden;
   animation: sprout-popup-in 0.18s ease-out;
+}
+
+.sprout-assistant-popup.is-closing {
+  animation: sprout-popup-out 0.18s ease-in;
+  pointer-events: none;
 }
 
 /* Guard popup surface against broad `.sprout` reset selectors in view containers. */
@@ -563,6 +606,17 @@
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes sprout-popup-out {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.92) translateY(12px);
   }
 }
 
@@ -751,6 +805,7 @@
 }
 
 .sprout-assistant-popup-mode-btn {
+  position: relative;
   flex: 1;
   display: flex;
   align-items: center;
@@ -803,6 +858,25 @@
 .sprout-assistant-popup-mode-btn .svg-icon {
   width: 14px;
   height: 14px;
+}
+
+.sprout-assistant-popup-mode-btn-pending-badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: #e5484d;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  padding: 0 4px;
+  border: 1px solid var(--background-primary, #fff);
+  pointer-events: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.28);
 }
 
 /* ---- Content area ---- */

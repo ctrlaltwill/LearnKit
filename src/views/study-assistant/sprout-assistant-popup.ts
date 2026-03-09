@@ -48,7 +48,13 @@ type GenerateSuggestionBatch = {
   suggestions: StudyAssistantSuggestion[];
 };
 
+type SuggestionValidationResult = {
+  validSuggestions: StudyAssistantSuggestion[];
+  rejectedReasons: string[];
+};
+
 type ModeConversationRefs = Partial<Record<AssistantMode, StudyAssistantConversationRef>>;
+type PendingReplyByMode = Partial<Record<AssistantMode, boolean>>;
 
 type IoSuggestionRect = {
   rectId?: string;
@@ -111,6 +117,7 @@ type AssistantLeafSession = {
   generateMessages: ChatMessage[];
   generateDraft: string;
   generateSuggestionBatches: GenerateSuggestionBatch[];
+  pendingReplyByMode: PendingReplyByMode;
   remoteConversationsByMode: ModeConversationRefs;
   generatorError: string;
   insertingSuggestionKey: string | null;
@@ -178,6 +185,7 @@ export class SproutAssistantPopup {
   private generateDraft = "";
   private generatorError = "";
   private generateSuggestionBatches: GenerateSuggestionBatch[] = [];
+  private pendingReplyByMode: PendingReplyByMode = {};
   private remoteConversationsByMode: ModeConversationRefs = {};
   private insertingSuggestionKey: string | null = null;
   private isInsertingSuggestion = false;
@@ -195,7 +203,11 @@ export class SproutAssistantPopup {
   private _suppressToggleUntil = 0;
   private _maxObservedPopupHeight = 0;
   private _popupHeightFrame: number | null = null;
+  private _popupCloseTimer: ReturnType<typeof setTimeout> | null = null;
   private _suspendPopupAutoClose = false;
+  private _isTriggerReplyNotificationActive = false;
+  private _triggerReplyRevealTimer: ReturnType<typeof setTimeout> | null = null;
+  private _triggerReplyBounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   // Voice chat state
   private _isListening = false;
@@ -440,6 +452,7 @@ export class SproutAssistantPopup {
     this.generateDraft = "";
     this.generatorError = "";
     this.generateSuggestionBatches = [];
+    this.pendingReplyByMode = {};
     this.remoteConversationsByMode = {};
     this.insertingSuggestionKey = null;
   }
@@ -774,6 +787,18 @@ export class SproutAssistantPopup {
       cancelAnimationFrame(this._popupHeightFrame);
       this._popupHeightFrame = null;
     }
+    if (this._popupCloseTimer != null) {
+      clearTimeout(this._popupCloseTimer);
+      this._popupCloseTimer = null;
+    }
+    if (this._triggerReplyRevealTimer != null) {
+      clearTimeout(this._triggerReplyRevealTimer);
+      this._triggerReplyRevealTimer = null;
+    }
+    if (this._triggerReplyBounceTimer != null) {
+      clearTimeout(this._triggerReplyBounceTimer);
+      this._triggerReplyBounceTimer = null;
+    }
     if (this._onClickOutside) {
       document.removeEventListener("mousedown", this._onClickOutside, true);
       this._onClickOutside = null;
@@ -791,6 +816,7 @@ export class SproutAssistantPopup {
     this.triggerHotzone?.remove();
     this.triggerHotzone = null;
     this._isTriggerButtonHovered = false;
+    this._isTriggerReplyNotificationActive = false;
     this.isOpen = false;
   }
 
@@ -926,6 +952,13 @@ export class SproutAssistantPopup {
       this.popupEl?.style.removeProperty("height");
     }
     this.isOpen = true;
+    if (this._popupCloseTimer != null) {
+      clearTimeout(this._popupCloseTimer);
+      this._popupCloseTimer = null;
+    }
+    this.popupEl?.removeClass("is-closing");
+    this.popupEl?.removeClass("is-hidden");
+    this._clearPendingReplyForMode(this.mode);
     if (this.activeFile?.path) this._openStateByFilePath.set(this.activeFile.path, true);
     this.triggerBtn?.addClass("is-open");
     this.ensurePopup();
@@ -934,6 +967,7 @@ export class SproutAssistantPopup {
       void this._loadChatForFile(this.activeFile).then(() => this.render());
     }
     this.render();
+    this.popupEl!.removeClass("is-closing");
     this.popupEl!.removeClass("is-hidden");
     this._applyPresentationState();
   }
@@ -981,7 +1015,20 @@ export class SproutAssistantPopup {
     this.isOpen = false;
     if (this.activeFile?.path) this._openStateByFilePath.set(this.activeFile.path, false);
     this.triggerBtn?.removeClass("is-open");
-    this.popupEl?.addClass("is-hidden");
+    if (this._popupCloseTimer != null) {
+      clearTimeout(this._popupCloseTimer);
+      this._popupCloseTimer = null;
+    }
+    if (this.popupEl) {
+      this.popupEl.removeClass("is-hidden");
+      this.popupEl.addClass("is-closing");
+      this._popupCloseTimer = setTimeout(() => {
+        this._popupCloseTimer = null;
+        this.popupEl?.removeClass("is-closing");
+        this.popupEl?.addClass("is-hidden");
+        this._applyPresentationState();
+      }, 180);
+    }
     // Persist closed state before syncing leaves so we don't resurrect stale open state.
     this._captureCurrentLeafSession();
     this._syncSessionForActiveLeaf();
@@ -1013,8 +1060,43 @@ export class SproutAssistantPopup {
 
   private _refreshTriggerIcon(): void {
     if (!this.triggerBtn) return;
+    this.triggerBtn.empty();
     const isModalOpen = this._isAssistantEnabled() && this._getAssistantLocation() === "modal" && this.isOpen;
     setIcon(this.triggerBtn, isModalOpen ? "chevron-down" : "sprout-brand");
+    const pendingTabs = this._getPendingReplyTabCount();
+    if (pendingTabs > 0) {
+      this.triggerBtn.createSpan({
+        cls: "sprout-assistant-trigger-pending-badge",
+        text: String(Math.min(3, pendingTabs)),
+      });
+    }
+  }
+
+  private _hasPendingReplyForMode(mode: AssistantMode): boolean {
+    return !!this.pendingReplyByMode[mode];
+  }
+
+  private _getPendingReplyTabCount(): number {
+    const modes: AssistantMode[] = ["assistant", "review", "generate"];
+    return modes.reduce((count, mode) => count + (this._hasPendingReplyForMode(mode) ? 1 : 0), 0);
+  }
+
+  private _setPendingReplyForMode(mode: AssistantMode): void {
+    if (this._hasPendingReplyForMode(mode)) return;
+    this.pendingReplyByMode[mode] = true;
+    this._isTriggerReplyNotificationActive = true;
+    this._refreshTriggerIcon();
+    this._applyPresentationState();
+  }
+
+  private _clearPendingReplyForMode(mode: AssistantMode): void {
+    if (!this._hasPendingReplyForMode(mode)) return;
+    delete this.pendingReplyByMode[mode];
+    if (this._getPendingReplyTabCount() === 0) {
+      this._isTriggerReplyNotificationActive = false;
+    }
+    this._refreshTriggerIcon();
+    this._applyPresentationState();
   }
 
   private _applyPresentationState(): void {
@@ -1031,7 +1113,12 @@ export class SproutAssistantPopup {
     const modalButtonVisibility = this._getModalButtonVisibility();
     const shouldHideTrigger = modalButtonVisibility === "hidden";
     const shouldUseHover = this._getModalButtonVisibility() === "hover" && !Platform.isMobileApp;
-    const shouldShowHoverTrigger = this._isTriggerHotzoneActive || this._isTriggerButtonHovered || this.isOpen;
+    const shouldShowHoverTrigger = this._isTriggerHotzoneActive
+      || this._isTriggerButtonHovered
+      || this.isOpen
+      || this.popupEl?.hasClass("is-closing") === true
+      || this._getPendingReplyTabCount() > 0
+      || this._isTriggerReplyNotificationActive;
 
     this.triggerBtn?.toggleClass("is-hidden", !enabled || isWidgetLocation || shouldHideTrigger);
     this.triggerBtn?.toggleClass("is-hover-only", enabled && !isWidgetLocation && shouldUseHover);
@@ -1065,7 +1152,36 @@ export class SproutAssistantPopup {
       return;
     }
 
-    if (!this.isOpen) this.popupEl?.addClass("is-hidden");
+    if (!this.isOpen && !this.popupEl?.hasClass("is-closing")) this.popupEl?.addClass("is-hidden");
+  }
+
+  private _notifyIncomingAssistantReply(mode: AssistantMode): void {
+    const isModeAlreadyVisible = this.isOpen && this.mode === mode;
+    if (isModeAlreadyVisible) {
+      this._clearPendingReplyForMode(mode);
+    } else {
+      this._setPendingReplyForMode(mode);
+    }
+
+    if (this.isEmbeddedMode || this.isOpen) {
+      this._applyPresentationState();
+      return;
+    }
+    if (!this._isAssistantEnabled() || this._getAssistantLocation() !== "modal") return;
+    const trigger = this.triggerBtn;
+    if (!trigger) return;
+
+    this._isTriggerReplyNotificationActive = true;
+    this._applyPresentationState();
+
+    trigger.removeClass("is-reply-bounce");
+    void trigger.offsetWidth;
+    trigger.addClass("is-reply-bounce");
+    if (this._triggerReplyBounceTimer != null) clearTimeout(this._triggerReplyBounceTimer);
+    this._triggerReplyBounceTimer = setTimeout(() => {
+      this._triggerReplyBounceTimer = null;
+      this.triggerBtn?.removeClass("is-reply-bounce");
+    }, 2050);
   }
 
   private _isFlashcardRequest(text: string): boolean {
@@ -1149,6 +1265,7 @@ export class SproutAssistantPopup {
     btn.addEventListener("click", () => {
       this.reviewDepthMenuOpen = false;
       this.mode = "generate";
+      this._clearPendingReplyForMode("generate");
       this.render();
     });
   }
@@ -1165,6 +1282,7 @@ export class SproutAssistantPopup {
     btn.addEventListener("click", () => {
       this.reviewDepthMenuOpen = false;
       this.mode = "assistant";
+      this._clearPendingReplyForMode("assistant");
       this.render();
     });
   }
@@ -1310,6 +1428,7 @@ export class SproutAssistantPopup {
       generateMessages: [],
       generateDraft: "",
       generateSuggestionBatches: [],
+      pendingReplyByMode: {},
       remoteConversationsByMode: {},
       generatorError: "",
       insertingSuggestionKey: null,
@@ -1335,6 +1454,7 @@ export class SproutAssistantPopup {
         assistantMessageIndex: batch.assistantMessageIndex,
         suggestions: [...batch.suggestions],
       })),
+      pendingReplyByMode: { ...this.pendingReplyByMode },
       remoteConversationsByMode: { ...this.remoteConversationsByMode },
       generatorError: this.generatorError,
       insertingSuggestionKey: this.insertingSuggestionKey,
@@ -1359,6 +1479,7 @@ export class SproutAssistantPopup {
       assistantMessageIndex: batch.assistantMessageIndex,
       suggestions: [...batch.suggestions],
     }));
+    this.pendingReplyByMode = { ...snapshot.pendingReplyByMode };
     this.remoteConversationsByMode = { ...snapshot.remoteConversationsByMode };
     this.generatorError = snapshot.generatorError;
     this.insertingSuggestionKey = snapshot.insertingSuggestionKey;
@@ -2283,6 +2404,7 @@ export class SproutAssistantPopup {
       );
       this._setRemoteConversationForMode("assistant", result.conversationId);
       this.chatMessages.push({ role: "assistant", text: reply });
+      this._notifyIncomingAssistantReply("assistant");
       this._speakReply(reply, this.chatMessages.length - 1);
     } catch (e) {
       const userMessage = this._formatAssistantError(e);
@@ -2348,6 +2470,7 @@ export class SproutAssistantPopup {
       );
       this._setRemoteConversationForMode("review", result.conversationId);
       this.reviewMessages.push({ role: "assistant", text: reply });
+      this._notifyIncomingAssistantReply("review");
     } catch (e) {
       const userMessage = this._formatAssistantError(e);
       this._logAssistantRequestError("review", e, userMessage);
@@ -2677,6 +2800,26 @@ export class SproutAssistantPopup {
     return null;
   }
 
+  private validateSuggestionsForDisplay(file: TFile, suggestions: StudyAssistantSuggestion[]): SuggestionValidationResult {
+    const validSuggestions: StudyAssistantSuggestion[] = [];
+    const rejectedReasons: string[] = [];
+
+    for (const suggestion of suggestions) {
+      const text = this.formatInsertBlock(this.buildSuggestionMarkdownLines(suggestion).join("\n"));
+      const validationError = this.validateGeneratedCardBlock(file, suggestion, text);
+      if (validationError) {
+        rejectedReasons.push(validationError);
+        continue;
+      }
+      validSuggestions.push(suggestion);
+    }
+
+    return {
+      validSuggestions,
+      rejectedReasons,
+    };
+  }
+
   private async insertSuggestion(
     suggestion: StudyAssistantSuggestion,
     assistantMessageIndex: number,
@@ -2709,6 +2852,13 @@ export class SproutAssistantPopup {
         if (!batch.suggestions.length) {
           this.generateSuggestionBatches = this.generateSuggestionBatches
             .filter((item) => item.assistantMessageIndex !== assistantMessageIndex);
+          const summaryMessage = this.generateMessages[assistantMessageIndex];
+          if (summaryMessage?.role === "assistant") {
+            summaryMessage.text = this._tx(
+              "ui.studyAssistant.generator.allInserted",
+              "All flashcards inserted into the note.",
+            );
+          }
         }
       }
       this._scheduleSave();
@@ -2761,35 +2911,104 @@ export class SproutAssistantPopup {
           )
           : "",
       ].filter(Boolean).join("\n\n");
-      const result = await generateStudyAssistantSuggestions({
+      const generationInputBase = {
+        notePath: file.path,
+        noteContent,
+        imageRefs,
+        imageDataUrls,
+        includeImages,
+        enabledTypes,
+        targetSuggestionCount,
+        includeTitle: !!settings.generatorOutput.includeTitle,
+        includeInfo: !!settings.generatorOutput.includeInfo,
+        includeGroups: !!settings.generatorOutput.includeGroups,
+        userRequestText: extraRequest,
+      };
+
+      const invalidRetryThreshold = 0.5;
+
+      let result = await generateStudyAssistantSuggestions({
         settings,
         input: {
-          notePath: file.path,
-          noteContent,
-          imageRefs,
-          imageDataUrls,
-          includeImages,
-          enabledTypes,
-          targetSuggestionCount,
-          includeTitle: !!settings.generatorOutput.includeTitle,
-          includeInfo: !!settings.generatorOutput.includeInfo,
-          includeGroups: !!settings.generatorOutput.includeGroups,
+          ...generationInputBase,
           customInstructions,
-          userRequestText: extraRequest,
           conversationId,
         },
       });
       this._setRemoteConversationForMode("generate", result.conversationId);
-      const generatedSuggestions = Array.isArray(result.suggestions) ? result.suggestions : [];
+
+      let generatedSuggestionsRaw = Array.isArray(result.suggestions) ? result.suggestions : [];
+      let { validSuggestions: generatedSuggestions, rejectedReasons } = this.validateSuggestionsForDisplay(file, generatedSuggestionsRaw);
+
+      const firstAttemptTotal = generatedSuggestionsRaw.length;
+      const firstAttemptRejected = rejectedReasons.length;
+      const firstAttemptInvalidRatio = firstAttemptTotal > 0 ? firstAttemptRejected / firstAttemptTotal : 0;
+      const shouldRetryForFormat = firstAttemptTotal > 0 && firstAttemptInvalidRatio > invalidRetryThreshold;
+
+      if (shouldRetryForFormat) {
+        const retryStatus = this._tx(
+          "ui.studyAssistant.generator.retryingFormat",
+          "AI returned too many formatting errors, retrying with stricter card formatting. This may take a little longer.",
+        );
+        this.generateMessages.push({ role: "assistant", text: retryStatus });
+        this._scheduleSave();
+        this.render();
+
+        const reasonLines = rejectedReasons
+          .slice(0, 5)
+          .map((reason, idx) => `${idx + 1}. ${reason}`)
+          .join("\n");
+
+        const retryInstructions = [
+          customInstructions,
+          "Retry mode: the previous output failed parser validation too often. Return only parser-valid noteRows.",
+          "Strict format reminders:",
+          "- MCQ: use MCQ | question | plus A | correct | and O | wrong | rows only.",
+          "- OQ: use OQ | question | plus numbered step rows (1 | ... |, 2 | ... |).",
+          "- Cloze: use CQ rows with at least one {{cN::...}} deletion.",
+          "- Do not mix card-type row formats.",
+          reasonLines
+            ? `Previous parser validation errors to avoid:\n${reasonLines}`
+            : "",
+        ].filter(Boolean).join("\n\n");
+
+        result = await generateStudyAssistantSuggestions({
+          settings,
+          input: {
+            ...generationInputBase,
+            customInstructions: retryInstructions,
+            conversationId: result.conversationId,
+          },
+        });
+        this._setRemoteConversationForMode("generate", result.conversationId);
+
+        generatedSuggestionsRaw = Array.isArray(result.suggestions) ? result.suggestions : [];
+        ({ validSuggestions: generatedSuggestions, rejectedReasons } = this.validateSuggestionsForDisplay(file, generatedSuggestionsRaw));
+      }
+
       const generatedCount = generatedSuggestions.length;
+      const rejectedCount = rejectedReasons.length;
       const beVerb = generatedCount === 1 ? "is" : "are";
       const flashcardLabel = generatedCount === 1 ? "flashcard" : "flashcards";
+      const filteredSummary = rejectedCount > 0
+        ? ` ${this._tx(
+          "ui.studyAssistant.generator.filteredCount",
+          "Filtered out {count} invalid suggestion(s) before display.",
+          { count: rejectedCount },
+        )}`
+        : "";
       const assistantSummary = this._tx(
         "ui.studyAssistant.generator.generatedCount",
-        "Here {be} {count} generated {label}:",
-        { be: beVerb, count: generatedCount, label: flashcardLabel },
+        "Here {be} {count} generated {label}:{filtered}",
+        {
+          be: beVerb,
+          count: generatedCount,
+          label: flashcardLabel,
+          filtered: filteredSummary,
+        },
       );
       this.generateMessages.push({ role: "assistant", text: assistantSummary });
+      this._notifyIncomingAssistantReply("generate");
       const assistantMessageIndex = this.generateMessages.length - 1;
       if (generatedSuggestions.length) {
         this.generateSuggestionBatches.push({
@@ -2798,8 +3017,26 @@ export class SproutAssistantPopup {
         });
       }
       if (!generatedSuggestions.length) {
-        this.generatorError = this._tx("ui.studyAssistant.generator.empty", "No valid suggestions were returned. Try adjusting your model, prompt, or enabled card types.");
+        this.generatorError = rejectedCount > 0
+          ? this._tx(
+            "ui.studyAssistant.generator.emptyAfterValidation",
+            "No parser-valid suggestions were returned. {count} suggestion(s) were filtered before display. Try adjusting your model, prompt, or enabled card types.",
+            { count: rejectedCount },
+          )
+          : this._tx("ui.studyAssistant.generator.empty", "No valid suggestions were returned. Try adjusting your model, prompt, or enabled card types.");
       }
+
+      if (rejectedCount) {
+        const sampleReasons = rejectedReasons.slice(0, 3).join(" | ");
+        log.warn(`[study-assistant] Filtered ${rejectedCount} invalid generated suggestion(s) before display. ${sampleReasons}`);
+      }
+
+      if (shouldRetryForFormat) {
+        log.warn(
+          `[study-assistant] Triggered format retry after first-pass invalid ratio ${(firstAttemptInvalidRatio * 100).toFixed(0)}% (${firstAttemptRejected}/${firstAttemptTotal}).`,
+        );
+      }
+
       this._scheduleSave();
     } catch (e) {
       const userMessage = this._formatAssistantError(e);
@@ -3266,12 +3503,18 @@ export class SproutAssistantPopup {
   private _buildModeButton(parent: HTMLElement, mode: AssistantMode, label: string, icon: string): void {
     const btn = parent.createEl("button", { cls: "sprout-assistant-popup-mode-btn" });
     btn.type = "button";
+    btn.setAttribute("aria-label", label);
+    btn.setAttribute("data-tooltip-position", "top");
     btn.toggleClass("is-active", this.mode === mode);
     setIcon(btn, icon);
     btn.createSpan({ text: label });
+    if (this._hasPendingReplyForMode(mode)) {
+      btn.createSpan({ cls: "sprout-assistant-popup-mode-btn-pending-badge", text: "1" });
+    }
     btn.addEventListener("click", () => {
       this.reviewDepthMenuOpen = false;
       this.mode = mode;
+      this._clearPendingReplyForMode(mode);
       this.render();
     });
   }
