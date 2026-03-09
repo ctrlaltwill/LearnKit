@@ -56,15 +56,17 @@ And now with Sprig, your AI-powered learning companion, reviewing your notes and
 ### Sprig
 
 Sprig is your AI learning companion within Sprout. It can:
-- Answer questions about your current note 
-- Review your notes and suggest improvements or changes
+- Answer questions about your current note
+- Review your notes and suggest improvements
 - Generate flashcards from your note content
 
-Sprig is currently in _beta_. It helps you understand notes faster, improve them with clear feedback, and turn them into ready-to-study flashcards in one flow.
+Sprig is currently in _beta_. It helps you understand notes faster, improve them with clear feedback, and turn them into ready-to-study flashcards in one workflow.
+
+To try Sprig, download the latest build from `dist` (`main.js`, `styles.css`, and `manifest.json`) and install it manually. This beta feature will be included in the next release.
 
 🎥 Watch Sprig in action: **[Sprig Demo →](https://youtu.be/fe1htR7hjvY)**
 
-You **bring your own API key**, so cost depends on the provider/model you choose. Sprig currently supports providers with free tiers (e.g. Google, OpenRouter) as well as premium platforms (e.g. Anthropic, OpenAI, Perplexity). Sprout adds no subscription fees or API markups.
+You **bring your own API key**, so cost depends on the provider and model you choose. Sprig supports providers with free tiers (e.g., Google, OpenRouter) as well as premium platforms (e.g., Anthropic, OpenAI, Perplexity). Sprout adds no subscription fees or API markups. If you want to try it for free, we recommend using Auto Router via OpenRouter.
 
 ## Feature highlights
 
