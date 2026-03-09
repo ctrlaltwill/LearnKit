@@ -6,7 +6,7 @@
  *          three tabbed modes: Ask, Review, and Generate.
  */
 
-import { MarkdownView, Modal, Notice, Setting, TFile, WorkspaceLeaf, setIcon } from "obsidian";
+import { MarkdownView, Modal, Notice, Platform, Setting, TFile, WorkspaceLeaf, setIcon } from "obsidian";
 import { marked } from "marked";
 import { parseCardsFromText } from "../../engine/parser/parser";
 import { log } from "../../platform/core/logger";
@@ -18,6 +18,7 @@ import { mimeFromExt, resolveImageFile } from "../../platform/image-occlusion/io
 import { insertTextAtCursorOrAppend } from "../../platform/image-occlusion/io-save";
 import { syncOneFile } from "../../platform/integrations/sync/sync-engine";
 import { bestEffortAttachmentPath, normaliseVaultPath, writeBinaryToVault } from "../../platform/modals/modal-utils";
+import type { SproutSettings } from "../../platform/types/settings";
 import {
   generateStudyAssistantChatReply,
   generateStudyAssistantSuggestions,
@@ -34,6 +35,8 @@ import { getTtsService } from "../../platform/integrations/tts/tts-service";
 import { t } from "../../platform/translations/translator";
 
 type AssistantMode = "assistant" | "review" | "generate";
+type StudyAssistantLocation = SproutSettings["studyAssistant"]["location"];
+type StudyAssistantModalButtonVisibility = SproutSettings["studyAssistant"]["modalButtonVisibility"];
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -114,6 +117,11 @@ type AssistantLeafSession = {
   isInsertingSuggestion: boolean;
 };
 
+type ChatLogSyncEventDetail = {
+  sourceId: string;
+  filePath: string;
+};
+
 // ---------------------------------------------------------------------------
 //  Token stop words for fuzzy source matching
 // ---------------------------------------------------------------------------
@@ -131,13 +139,21 @@ const SOURCE_TOKEN_STOP_WORDS = new Set([
 //  SproutAssistantPopup
 // ---------------------------------------------------------------------------
 export class SproutAssistantPopup {
+  private static readonly _chatLogSyncEventName = "sprout-study-assistant-chatlog-synced";
+
   plugin: SproutPlugin;
   activeFile: TFile | null = null;
+  private readonly _instanceId = `assistant-popup-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
   // DOM nodes
   private triggerBtn: HTMLButtonElement | null = null;
+  private triggerHotzone: HTMLDivElement | null = null;
   private popupEl: HTMLDivElement | null = null;
+  private embeddedHost: HTMLElement | null = null;
+  private isEmbeddedMode = false;
   private isOpen = false;
+  private _isTriggerHotzoneActive = false;
+  private _isTriggerButtonHovered = false;
 
   // Mode
   private mode: AssistantMode = "assistant";
@@ -212,9 +228,55 @@ export class SproutAssistantPopup {
   private _activeSessionLeaf: WorkspaceLeaf | null = null;
   private _leafSessions = new WeakMap<WorkspaceLeaf, AssistantLeafSession>();
   private _openStateByFilePath = new Map<string, boolean>();
+  private _onChatLogSynced: ((e: Event) => void) | null = null;
 
   constructor(plugin: SproutPlugin) {
     this.plugin = plugin;
+  }
+
+  private _registerChatLogSyncListener(): void {
+    if (this._onChatLogSynced) return;
+    this._onChatLogSynced = (event: Event) => {
+      const custom = event as CustomEvent<ChatLogSyncEventDetail>;
+      const detail = custom?.detail;
+      if (!detail || detail.sourceId === this._instanceId) return;
+      const file = this.activeFile;
+      if (!file || detail.filePath !== file.path) return;
+      void this._loadChatForFile(file, { preserveDrafts: true }).then(() => {
+        this._captureCurrentLeafSession();
+        if (this.isOpen) this.render();
+      });
+    };
+    window.addEventListener(
+      SproutAssistantPopup._chatLogSyncEventName,
+      this._onChatLogSynced as EventListener,
+    );
+  }
+
+  private _unregisterChatLogSyncListener(): void {
+    if (!this._onChatLogSynced) return;
+    window.removeEventListener(
+      SproutAssistantPopup._chatLogSyncEventName,
+      this._onChatLogSynced as EventListener,
+    );
+    this._onChatLogSynced = null;
+  }
+
+  private _emitChatLogSynced(filePath: string): void {
+    window.dispatchEvent(new CustomEvent<ChatLogSyncEventDetail>(
+      SproutAssistantPopup._chatLogSyncEventName,
+      {
+        detail: {
+          sourceId: this._instanceId,
+          filePath,
+        },
+      },
+    ));
+  }
+
+  refresh(): void {
+    if (!this.popupEl) return;
+    this.render();
   }
 
   // ---------------------------------------------------------------------------
@@ -247,11 +309,14 @@ export class SproutAssistantPopup {
   }
 
   /** Load persisted chat state for the given note (if any). */
-  private async _loadChatForFile(file: TFile): Promise<void> {
+  private async _loadChatForFile(file: TFile, options?: { preserveDrafts?: boolean }): Promise<void> {
     if (!this.plugin.settings?.studyAssistant?.privacy?.saveChatHistory) return;
     const adapter = this.plugin.app?.vault?.adapter;
     const chatPath = this._getChatFilePath(file);
     if (!adapter || !chatPath) return;
+    const preserveDrafts = !!options?.preserveDrafts;
+    const localReviewDraft = this.reviewDraft;
+    const localGenerateDraft = this.generateDraft;
     try {
       if (await adapter.exists(chatPath)) {
         const raw = await adapter.read(chatPath);
@@ -269,9 +334,13 @@ export class SproutAssistantPopup {
         };
         this.chatMessages = Array.isArray(data.messages) ? data.messages : [];
         this.reviewMessages = Array.isArray(data.reviewMessages) ? data.reviewMessages : [];
-        this.reviewDraft = typeof data.reviewDraft === "string" ? data.reviewDraft : "";
+        this.reviewDraft = preserveDrafts
+          ? localReviewDraft
+          : typeof data.reviewDraft === "string" ? data.reviewDraft : "";
         this.generateMessages = Array.isArray(data.generateMessages) ? data.generateMessages : [];
-        this.generateDraft = typeof data.generateDraft === "string" ? data.generateDraft : "";
+        this.generateDraft = preserveDrafts
+          ? localGenerateDraft
+          : typeof data.generateDraft === "string" ? data.generateDraft : "";
         const normalizedBatches = this._normalizeSuggestionBatches(data.generateSuggestionBatches, this.generateMessages);
         if (normalizedBatches.length) {
           this.generateSuggestionBatches = normalizedBatches;
@@ -287,6 +356,16 @@ export class SproutAssistantPopup {
         }
         if (data.reviewDepth === "quick" || data.reviewDepth === "standard" || data.reviewDepth === "comprehensive") {
           this.reviewDepth = data.reviewDepth;
+        }
+      } else {
+        this.chatMessages = [];
+        this.reviewMessages = [];
+        this.generateMessages = [];
+        this.generateSuggestionBatches = [];
+        this.remoteConversationsByMode = {};
+        if (!preserveDrafts) {
+          this.reviewDraft = "";
+          this.generateDraft = "";
         }
       }
     } catch (e) {
@@ -319,7 +398,10 @@ export class SproutAssistantPopup {
     if (!hasData) {
       // Remove stale file if nothing to save
       try {
-        if (await adapter.exists(chatPath)) await adapter.remove(chatPath);
+        if (await adapter.exists(chatPath)) {
+          await adapter.remove(chatPath);
+          this._emitChatLogSynced(file.path);
+        }
       } catch (e) { log.swallow("remove empty chat file", e); }
       return;
     }
@@ -341,6 +423,7 @@ export class SproutAssistantPopup {
         reviewDepth: this.reviewDepth,
       };
       await adapter.write(chatPath, JSON.stringify(data, null, 2));
+      this._emitChatLogSynced(file.path);
     } catch (e) {
       log.swallow("save chat for file", e);
     }
@@ -550,9 +633,11 @@ export class SproutAssistantPopup {
 
   /** Mount the floating trigger button into the document body. */
   mount(): void {
+    if (this.isEmbeddedMode) return;
     if (this.triggerBtn) return;
 
     this._syncSessionForActiveLeaf();
+    this._registerChatLogSyncListener();
 
     // Trigger button
     const btn = document.createElement("button");
@@ -560,6 +645,11 @@ export class SproutAssistantPopup {
     btn.setAttribute("aria-label", "Study assistant");
     setIcon(btn, "sprout-brand");
     btn.addEventListener("click", (e) => {
+      if (!this._isAssistantEnabled() || this._getAssistantLocation() !== "modal") {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
       if (Date.now() < this._suppressToggleUntil) {
         e.preventDefault();
         e.stopPropagation();
@@ -570,23 +660,43 @@ export class SproutAssistantPopup {
       this._syncHosts();
       this.toggle();
     });
+    btn.addEventListener("mouseenter", () => {
+      this._isTriggerButtonHovered = true;
+      this._applyPresentationState();
+    });
+    btn.addEventListener("mouseleave", () => {
+      this._isTriggerButtonHovered = false;
+      this._applyPresentationState();
+    });
     this._attachToBestHost(btn);
     this.triggerBtn = btn;
 
-    // Click-outside handler
+    this.triggerHotzone = this._buildTriggerHotzone();
+    this._attachHotzoneToBestHost();
+
+    this._applyPresentationState();
+
+    // Keep popup persistent while editing the note behind it.
+    // Clicking outside should only collapse popup sub-menus, not close the popup.
     this._onClickOutside = (e: MouseEvent) => {
       if (!this.isOpen) return;
+      if (this._getAssistantLocation() !== "modal") return;
       if (this._suspendPopupAutoClose) return;
       const target = e.target as Node;
       if (this.popupEl?.contains(target)) return;
       if (this.triggerBtn?.contains(target)) return;
-      this.close();
+      if (this._headerMenuOpen || this.reviewDepthMenuOpen) {
+        this._headerMenuOpen = false;
+        this.reviewDepthMenuOpen = false;
+        this.render();
+      }
     };
     document.addEventListener("mousedown", this._onClickOutside, true);
 
     // Escape handler
     this._onKeydown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && this.isOpen) {
+        if (this._getAssistantLocation() !== "modal") return;
         if (this._suspendPopupAutoClose) return;
         if (this._headerMenuOpen) {
           e.preventDefault();
@@ -600,10 +710,52 @@ export class SproutAssistantPopup {
           this.render();
           return;
         }
-        this.close();
+        // Do not close the popup on Escape; keep close behavior explicit
+        // via the trigger button or header close button.
       }
     };
     document.addEventListener("keydown", this._onKeydown, true);
+  }
+
+  mountEmbedded(host: HTMLElement): void {
+    this.isEmbeddedMode = true;
+    this.embeddedHost = host;
+    this._syncSessionForActiveLeaf();
+    this._registerChatLogSyncListener();
+
+    this.triggerBtn?.remove();
+    this.triggerBtn = null;
+    this.triggerHotzone?.remove();
+    this.triggerHotzone = null;
+    this._isTriggerButtonHovered = false;
+
+    if (!this.popupEl) {
+      const popup = document.createElement("div");
+      popup.className = "sprout sprout-assistant-popup sprout-assistant-popup-embedded";
+      host.appendChild(popup);
+      this.popupEl = popup as unknown as HTMLDivElement;
+    } else if (this.popupEl.parentElement !== host) {
+      host.appendChild(this.popupEl);
+    }
+
+    this.isOpen = true;
+    this.activeFile = this.plugin.app.workspace.getActiveFile();
+    this.popupEl?.removeClass("is-hidden");
+
+    if (this.activeFile) {
+      void this._loadChatForFile(this.activeFile).then(() => this.render());
+    }
+    this.render();
+  }
+
+  unmountEmbedded(): void {
+    if (!this.isEmbeddedMode) return;
+    this._captureCurrentLeafSession();
+    this.popupEl?.remove();
+    this.popupEl = null;
+    this.isEmbeddedMode = false;
+    this.embeddedHost = null;
+    this.isOpen = false;
   }
 
   /** Clean up all DOM and event listeners. */
@@ -631,10 +783,14 @@ export class SproutAssistantPopup {
       this._onKeydown = null;
     }
     this._captureCurrentLeafSession();
+    this._unregisterChatLogSyncListener();
     this.popupEl?.remove();
     this.popupEl = null;
     this.triggerBtn?.remove();
     this.triggerBtn = null;
+    this.triggerHotzone?.remove();
+    this.triggerHotzone = null;
+    this._isTriggerButtonHovered = false;
     this.isOpen = false;
   }
 
@@ -644,7 +800,12 @@ export class SproutAssistantPopup {
 
   onFileOpen(file: TFile | null): void {
     this._syncSessionForActiveLeaf();
-    this._syncHosts();
+    if (!this.isEmbeddedMode) this._syncHosts();
+    if (!this._isAssistantEnabled()) {
+      this.isOpen = false;
+      this._applyPresentationState();
+      return;
+    }
     if (!this._isActiveMarkdownNoteContext()) {
       this.popupEl?.addClass("is-hidden");
       this.triggerBtn?.removeClass("is-open");
@@ -674,7 +835,11 @@ export class SproutAssistantPopup {
       this.popupEl?.style.removeProperty("height");
       this.activeFile = file || null;
       // Load incoming note's persisted chat
-      if (file) void this._loadChatForFile(file).then(() => { if (this.isOpen) this.render(); });
+      if (file) {
+        void this._loadChatForFile(file).then(() => {
+          if (this.isOpen) this.render();
+        });
+      }
     } else {
       this.activeFile = file || null;
     }
@@ -687,11 +852,17 @@ export class SproutAssistantPopup {
       this.popupEl?.addClass("is-hidden");
       this.triggerBtn?.removeClass("is-open");
     }
+    this._applyPresentationState();
   }
 
   onActiveLeafChange(): void {
     this._syncSessionForActiveLeaf();
-    this._syncHosts();
+    if (!this.isEmbeddedMode) this._syncHosts();
+    if (!this._isAssistantEnabled()) {
+      this.isOpen = false;
+      this._applyPresentationState();
+      return;
+    }
     if (!this._isActiveMarkdownNoteContext()) {
       this.popupEl?.addClass("is-hidden");
       this.triggerBtn?.removeClass("is-open");
@@ -708,6 +879,7 @@ export class SproutAssistantPopup {
       this.popupEl?.addClass("is-hidden");
       this.triggerBtn?.removeClass("is-open");
     }
+    this._applyPresentationState();
   }
 
   // ---------------------------------------------------------------------------
@@ -720,6 +892,25 @@ export class SproutAssistantPopup {
   }
 
   open(): void {
+    if (this.isEmbeddedMode) {
+      this.isOpen = true;
+      this.popupEl?.removeClass("is-hidden");
+      this._applyPresentationState();
+      this.render();
+      return;
+    }
+
+    if (!this._isAssistantEnabled()) {
+      this.isOpen = false;
+      this._applyPresentationState();
+      return;
+    }
+    if (this._getAssistantLocation() !== "modal") {
+      this.isOpen = false;
+      this.popupEl?.addClass("is-hidden");
+      this._applyPresentationState();
+      return;
+    }
     if (this.isOpen) return;
     this._syncSessionForActiveLeaf();
     this._syncHosts();
@@ -744,9 +935,20 @@ export class SproutAssistantPopup {
     }
     this.render();
     this.popupEl!.removeClass("is-hidden");
+    this._applyPresentationState();
   }
 
-  close(): void {
+  close(force = false): void {
+    if (this.isEmbeddedMode && !force) {
+      this.isOpen = true;
+      this.popupEl?.removeClass("is-hidden");
+      return;
+    }
+
+    if (!force && this._isAssistantEnabled() && this._getAssistantLocation() !== "modal") {
+      this._applyPresentationState();
+      return;
+    }
     if (!this.isOpen) return;
     this._headerMenuOpen = false;
     this._headerMenuAbort?.abort();
@@ -784,6 +986,7 @@ export class SproutAssistantPopup {
     this._captureCurrentLeafSession();
     this._syncSessionForActiveLeaf();
     this._captureCurrentLeafSession();
+    this._applyPresentationState();
   }
 
   // ---------------------------------------------------------------------------
@@ -792,6 +995,77 @@ export class SproutAssistantPopup {
 
   private _tx(token: string, fallback: string, vars?: Record<string, string | number>): string {
     return t(this.plugin.settings?.general?.interfaceLanguage, token, fallback, vars);
+  }
+
+  private _isAssistantEnabled(): boolean {
+    return !!this.plugin.settings?.studyAssistant?.enabled;
+  }
+
+  private _getAssistantLocation(): StudyAssistantLocation {
+    return "modal";
+  }
+
+  private _getModalButtonVisibility(): StudyAssistantModalButtonVisibility {
+    const visibility = this.plugin.settings?.studyAssistant?.modalButtonVisibility;
+    if (visibility === "hidden" || visibility === "hover") return visibility;
+    return "always";
+  }
+
+  private _refreshTriggerIcon(): void {
+    if (!this.triggerBtn) return;
+    const isModalOpen = this._isAssistantEnabled() && this._getAssistantLocation() === "modal" && this.isOpen;
+    setIcon(this.triggerBtn, isModalOpen ? "chevron-down" : "sprout-brand");
+  }
+
+  private _applyPresentationState(): void {
+    if (this.isEmbeddedMode) {
+      this.popupEl?.addClass("sprout-assistant-popup-embedded");
+      this.popupEl?.removeClass("is-hidden");
+      this.isOpen = true;
+      this._refreshTriggerIcon();
+      return;
+    }
+
+    const enabled = this._isAssistantEnabled();
+    const isWidgetLocation = this._getAssistantLocation() === "widget";
+    const modalButtonVisibility = this._getModalButtonVisibility();
+    const shouldHideTrigger = modalButtonVisibility === "hidden";
+    const shouldUseHover = this._getModalButtonVisibility() === "hover" && !Platform.isMobileApp;
+    const shouldShowHoverTrigger = this._isTriggerHotzoneActive || this._isTriggerButtonHovered || this.isOpen;
+
+    this.triggerBtn?.toggleClass("is-hidden", !enabled || isWidgetLocation || shouldHideTrigger);
+    this.triggerBtn?.toggleClass("is-hover-only", enabled && !isWidgetLocation && shouldUseHover);
+    this.triggerBtn?.toggleClass("is-hover-active", enabled && !isWidgetLocation && shouldUseHover && shouldShowHoverTrigger);
+    this.triggerBtn?.toggleClass("is-open", enabled && !isWidgetLocation && this.isOpen);
+    this._refreshTriggerIcon();
+
+    this.triggerHotzone?.toggleClass("is-hidden", !enabled || isWidgetLocation || shouldHideTrigger || !shouldUseHover || this.isOpen);
+
+    if (this.popupEl) {
+      this.popupEl.toggleClass("is-widget-location", enabled && isWidgetLocation);
+      this.popupEl.toggleClass("is-modal-location", !isWidgetLocation);
+    }
+
+    if (!enabled) {
+      if (this.isOpen) {
+        this.close(true);
+        return;
+      }
+      this.isOpen = false;
+      this.popupEl?.addClass("is-hidden");
+      return;
+    }
+
+    if (isWidgetLocation) {
+      if (this.isOpen) {
+        this.close(true);
+        return;
+      }
+      this.popupEl?.addClass("is-hidden");
+      return;
+    }
+
+    if (!this.isOpen) this.popupEl?.addClass("is-hidden");
   }
 
   private _isFlashcardRequest(text: string): boolean {
@@ -1263,6 +1537,16 @@ export class SproutAssistantPopup {
   }
 
   private _attachToBestHost(el: HTMLElement): boolean {
+    if (this.isEmbeddedMode) {
+      const host = this.embeddedHost;
+      if (!host || !host.isConnected) {
+        el.remove();
+        return false;
+      }
+      if (el.parentElement !== host) host.appendChild(el);
+      return true;
+    }
+
     const host = this._getHostElement();
     if (!host) {
       el.remove();
@@ -1272,14 +1556,37 @@ export class SproutAssistantPopup {
     return true;
   }
 
+  private _attachHotzoneToBestHost(): boolean {
+    if (!this.triggerHotzone) return false;
+    return this._attachToBestHost(this.triggerHotzone);
+  }
+
+  private _buildTriggerHotzone(): HTMLDivElement {
+    const zone = document.createElement("div");
+    zone.className = "sprout-assistant-trigger-hotzone";
+    zone.setAttribute("aria-hidden", "true");
+    zone.addEventListener("mouseenter", () => {
+      this._isTriggerHotzoneActive = true;
+      this._applyPresentationState();
+    });
+    zone.addEventListener("mouseleave", () => {
+      if (!this._isTriggerButtonHovered) this._isTriggerHotzoneActive = false;
+      this._applyPresentationState();
+    });
+    return zone;
+  }
+
   private _syncHosts(): void {
+    if (this.isEmbeddedMode) return;
+    const hasHotzoneHost = this._attachHotzoneToBestHost();
     const hasHost = this.triggerBtn ? this._attachToBestHost(this.triggerBtn) : false;
-    if (!hasHost) {
+    if (!hasHost || (this.triggerHotzone && !hasHotzoneHost)) {
       this.popupEl?.addClass("is-hidden");
       this.triggerBtn?.removeClass("is-open");
       return;
     }
     if (this.popupEl) this._attachToBestHost(this.popupEl);
+    this._applyPresentationState();
   }
 
   private getActiveNoteDisplayName(): string | null {
@@ -1608,6 +1915,29 @@ export class SproutAssistantPopup {
     input.value = value;
     setCssProps(input, "height", "auto");
     setCssProps(input, "height", `${Math.min(input.scrollHeight, 120)}px`);
+  }
+
+  /**
+   * Only focus the composer input when the user explicitly clicks the composer area.
+   * This avoids stealing focus from unrelated clicks in the popup.
+   */
+  private _bindComposerFocusOnExplicitClick(
+    composer: HTMLElement,
+    shell: HTMLElement,
+    input: HTMLTextAreaElement,
+  ): void {
+    composer.addEventListener("mousedown", (event: MouseEvent) => {
+      if (input.disabled) return;
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+      if (target.closest(".sprout-assistant-popup-send")) return;
+      const isInputTarget = target === input || !!target.closest(".sprout-assistant-popup-input");
+      const isComposerTarget = target === composer
+        || target === shell
+        || !!target.closest(".sprout-assistant-popup-composer-shell");
+      if (!isInputTarget && !isComposerTarget) return;
+      requestAnimationFrame(() => input.focus());
+    });
   }
 
   private _formatVoiceInputError(code: string): string {
@@ -2372,6 +2702,7 @@ export class SproutAssistantPopup {
       if (validationError) throw new Error(validationError);
       await insertTextAtCursorOrAppend(this.plugin.app, file, text, true, true);
       await syncOneFile(this.plugin, file, { pruneGlobalOrphans: false });
+      this.plugin.notifyWidgetCardsSynced();
       const batch = this._getSuggestionBatchForAssistantIndex(assistantMessageIndex);
       if (batch) {
         batch.suggestions = batch.suggestions.filter((_, i) => i !== suggestionIndex);
@@ -2904,6 +3235,7 @@ export class SproutAssistantPopup {
     popup.className = "sprout sprout-assistant-popup is-hidden";
     this._attachToBestHost(popup);
     this.popupEl = popup as unknown as HTMLDivElement;
+    this._applyPresentationState();
   }
 
   private _schedulePopupHeightSync(): void {
@@ -2965,7 +3297,7 @@ export class SproutAssistantPopup {
     // ---- Header ----
     const header = root.createDiv({ cls: "sprout-assistant-popup-header" });
     const headerLeft = header.createDiv({ cls: "sprout-assistant-popup-header-left" });
-    headerLeft.createDiv({ cls: "sprout-assistant-popup-header-title", text: "Sprig" });
+    headerLeft.createDiv({ cls: "sprout-assistant-popup-header-title", text: "Sprig – Learning Assistant" });
 
     const noteName = this.getActiveNoteDisplayName();
     if (noteName) {
@@ -3147,30 +3479,32 @@ export class SproutAssistantPopup {
       }, { signal: controller.signal });
     }
 
-    const closeBtn = headerActions.createEl("button", { cls: "sprout-assistant-popup-close" });
-    closeBtn.type = "button";
-    closeBtn.setAttribute("aria-label", "Close");
-    closeBtn.setAttribute("data-tooltip-position", "top");
-    setIcon(closeBtn, "x");
-    const closePopup = (e?: Event): void => {
-      if (e) {
-        e.stopPropagation();
-        e.preventDefault();
-      }
-      // Guard against the same pointer sequence toggling the trigger underneath.
-      this._suppressToggleUntil = Date.now() + 260;
-      this.close();
-    };
-    closeBtn.addEventListener("pointerdown", (e) => {
-      closePopup(e);
-    });
-    closeBtn.addEventListener("click", (e) => {
-      closePopup(e);
-    });
-    closeBtn.addEventListener("keydown", (e: KeyboardEvent) => {
-      if (e.key !== "Enter" && e.key !== " ") return;
-      closePopup(e);
-    });
+    if (!this.isEmbeddedMode) {
+      const closeBtn = headerActions.createEl("button", { cls: "sprout-assistant-popup-close" });
+      closeBtn.type = "button";
+      closeBtn.setAttribute("aria-label", "Close");
+      closeBtn.setAttribute("data-tooltip-position", "top");
+      setIcon(closeBtn, "x");
+      const closePopup = (e?: Event): void => {
+        if (e) {
+          e.stopPropagation();
+          e.preventDefault();
+        }
+        // Guard against the same pointer sequence toggling the trigger underneath.
+        this._suppressToggleUntil = Date.now() + 260;
+        this.close();
+      };
+      closeBtn.addEventListener("pointerdown", (e) => {
+        closePopup(e);
+      });
+      closeBtn.addEventListener("click", (e) => {
+        closePopup(e);
+      });
+      closeBtn.addEventListener("keydown", (e: KeyboardEvent) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        closePopup(e);
+      });
+    }
 
     // ---- Mode toolbar ----
     const toolbar = root.createDiv({ cls: "sprout-assistant-popup-toolbar" });
@@ -3319,12 +3653,8 @@ export class SproutAssistantPopup {
     setIcon(sendBtn, this.isSendingChat ? "loader-2" : "arrow-up");
     sendBtn.addEventListener("click", () => void this.sendChatMessage());
 
-    // Focus input when opening, but avoid stealing focus during TTS control renders/end transitions.
-    if (this._suppressAssistantComposerFocusOnce) {
-      this._suppressAssistantComposerFocusOnce = false;
-    } else if (!this._isTtsSpeaking && this._pendingTtsMessageIndex == null) {
-      requestAnimationFrame(() => input.focus());
-    }
+    this._bindComposerFocusOnExplicitClick(composer, shell, input);
+    this._suppressAssistantComposerFocusOnce = false;
 
     if (this._isTtsSpeaking) {
       this._animateTtsWaveform();
@@ -3429,7 +3759,7 @@ export class SproutAssistantPopup {
       void this.sendReviewMessage(draft);
     });
 
-    requestAnimationFrame(() => input.focus());
+    this._bindComposerFocusOnExplicitClick(composer, shell, input);
   }
 
   private createAssistantAvatar(parent: HTMLElement): HTMLDivElement {
@@ -3608,7 +3938,7 @@ export class SproutAssistantPopup {
     setIcon(sendBtn, this.isGenerating ? "loader-2" : "arrow-up");
     sendBtn.addEventListener("click", () => void this.sendGenerateMessage());
 
-    requestAnimationFrame(() => input.focus());
+    this._bindComposerFocusOnExplicitClick(composer, shell, input);
   }
 
   private anchorToNewestAssistantMessage(

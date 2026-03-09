@@ -30,6 +30,7 @@ import {
 import {
   VIEW_TYPE_REVIEWER,
   VIEW_TYPE_WIDGET,
+  VIEW_TYPE_STUDY_ASSISTANT,
   VIEW_TYPE_BROWSER,
   VIEW_TYPE_ANALYTICS,
   VIEW_TYPE_HOME,
@@ -59,6 +60,7 @@ import { queryFirst } from "./platform/core/ui";
 import { SproutReviewerView } from "./views/reviewer/review-view";
 import { SproutWidgetView } from "./views/widget/sprout-widget-view";
 import { SproutAssistantPopup } from "./views/study-assistant/sprout-assistant-popup";
+import { SproutStudyAssistantView } from "./views/study-assistant/sprout-study-assistant-view";
 import { SproutCardBrowserView } from "./views/browser/sprout-card-browser-view";
 import { SproutAnalyticsView } from "./views/analytics/analytics-view";
 import { SproutHomeView } from "./views/home/sprout-home-view";
@@ -84,6 +86,11 @@ import { t } from "./platform/translations/translator";
 
 const SPROUT_RIBBON_BRAND_ICON = `<svg viewBox="0 0 1536 1536" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g transform="matrix(13.970297,0,0,13.970297,-11267.410891,-2326.950495)"><path fill="currentColor" d="M857.924,173.62C857.924,173.606 857.924,173.591 857.924,173.576C857.924,171.603 859.526,170 861.5,170C863.474,170 865.076,171.603 865.076,173.576C865.076,173.591 865.076,173.606 865.076,173.62L864.621,210.894L886.162,180.471C886.171,180.459 886.179,180.448 886.188,180.436C887.348,178.839 889.586,178.484 891.183,179.645C892.78,180.805 893.135,183.043 891.974,184.64C891.966,184.652 891.957,184.664 891.948,184.675L869.671,214.563L904.98,202.612C904.994,202.608 905.008,202.603 905.022,202.598C906.899,201.988 908.918,203.017 909.528,204.895C910.138,206.772 909.109,208.791 907.232,209.401C907.218,209.406 907.204,209.41 907.191,209.414L871.6,220.5L907.191,231.586C907.204,231.59 907.218,231.594 907.232,231.599C909.109,232.209 910.138,234.228 909.528,236.105C908.918,237.983 906.899,239.012 905.022,238.402C905.008,238.397 904.994,238.392 904.98,238.388L869.671,226.437L891.948,256.325C891.957,256.336 891.966,256.348 891.974,256.36C893.135,257.957 892.78,260.195 891.183,261.355C889.586,262.516 887.348,262.161 886.188,260.564C886.179,260.552 886.171,260.541 886.162,260.529L864.621,230.106L865.076,267.38C865.076,267.394 865.076,267.409 865.076,267.424C865.076,269.397 863.474,271 861.5,271C859.526,271 857.924,269.397 857.924,267.424C857.924,267.409 857.924,267.394 857.924,267.38L858.379,230.106L836.838,260.529C836.829,260.541 836.821,260.552 836.812,260.564C835.652,262.161 833.414,262.516 831.817,261.355C830.22,260.195 829.865,257.957 831.026,256.36C831.034,256.348 831.043,256.336 831.052,256.325L853.329,226.437L818.02,238.388C818.006,238.392 817.992,238.397 817.978,238.402C816.101,239.012 814.082,237.983 813.472,236.105C812.862,234.228 813.891,232.209 815.768,231.599C815.782,231.594 815.796,231.59 815.809,231.586L851.4,220.5L815.809,209.414C815.796,209.41 815.782,209.406 815.768,209.401C813.891,208.791 812.862,206.772 813.472,204.895C814.082,203.017 816.101,201.988 817.978,202.598C817.992,202.603 818.006,202.608 818.02,202.612L853.329,214.563L831.052,184.675C831.043,184.664 831.034,184.652 831.026,184.64C829.865,183.043 830.22,180.805 831.817,179.645C833.414,178.484 835.652,178.839 836.812,180.436C836.821,180.448 836.829,180.459 836.838,180.471L858.379,210.894L857.924,173.62Z"/></g></svg>`;
 const SPROUT_BRAND_ICON_KEY = "sprout-brand";
+const SPROUT_WIDGET_STUDY_ICON_KEY = "sprout-widget-study";
+const SPROUT_WIDGET_ASSISTANT_ICON_KEY = "sprout-widget-assistant";
+
+const SPROUT_STUDY_WIDGET_ICON = `<svg width="100%" height="100%" viewBox="0 0 1536 1536" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" fill="currentColor" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g transform="matrix(0.751074,0,0,0.767541,191.175419,189.658048)"><path d="M1354.471,475.629L1216.426,1222.622C1187.458,1379.373 1036.678,1483.116 879.927,1454.149L413.056,1367.87C256.305,1338.903 152.561,1188.122 181.529,1031.371L319.574,284.378C348.542,127.627 499.322,23.883 656.073,52.851L1122.944,139.13C1279.695,168.097 1383.439,318.878 1354.471,475.629ZM1253.316,456.935C1271.966,356.013 1205.172,258.935 1104.25,240.285L637.38,154.007C536.458,135.356 439.38,202.15 420.73,303.072L282.684,1050.065C264.034,1150.987 330.828,1248.064 431.75,1266.715L898.62,1352.993C999.542,1371.644 1096.62,1304.85 1115.27,1203.928L1253.316,456.935ZM462.176,778.988L462.875,805.567L460.897,796.724L460.681,787.684L462.176,778.988Z"/></g><g transform="matrix(0.653494,0,0,0.653494,266.116393,275.592048)"><path d="M557.822,584.808L558.31,585.081L558.46,585.163L673.145,650.736L615.411,528.644L614.94,527.643L614.612,526.911L611.748,518.568L610.561,509.804L611.046,501.161L613.099,492.854L616.651,485.058L621.662,477.967L628.088,471.829L635.811,466.957L644.396,463.73L653.283,462.344L662.108,462.762L670.581,464.893L678.462,468.638L685.515,473.899L691.481,480.558L695.93,488.084L696.316,488.919L750.406,610.807L773.492,477.073L773.59,476.534L776.089,467.851L780.128,459.991L785.499,453.161L792.013,447.511L799.511,443.183L807.83,440.344L816.752,439.195L825.95,439.919L834.799,442.53L842.721,446.792L849.477,452.416L854.933,459.139L858.997,466.744L861.572,475.042L862.535,483.826L861.766,492.83L861.665,493.368L835.429,626.521L929.51,532.013L929.9,531.631L929.992,531.55L937.014,525.932L944.966,521.846L953.433,519.453L962.132,518.772L970.807,519.81L979.199,522.574L987.003,527.044L993.868,533.127L999.34,540.437L1003.148,548.466L1005.293,556.88L1005.824,565.43L1004.773,573.923L1002.136,582.168L997.896,589.929L992.239,596.697L991.671,597.264L990.874,598.03L893.318,691.424L1023.863,671.171L1024.033,671.146L1024.586,671.067L1033.797,670.713L1042.682,672.233L1050.907,675.443L1058.241,680.144L1064.504,686.155L1069.528,693.312L1073.125,701.433L1075.103,710.276L1075.319,719.316L1073.824,728.012L1070.773,736.113L1066.309,743.437L1060.543,749.822L1053.566,755.075L1045.506,758.952L1036.663,761.16L1036.039,761.253L903.141,778.474L1021.029,842.014L1021.657,842.366L1029.126,847.588L1035.268,854.09L1039.907,861.489L1043.01,869.513L1044.561,877.948L1044.516,886.605L1042.804,895.261L1039.372,903.626L1034.364,911.179L1028.102,917.478L1020.852,922.367L1012.854,925.742L1004.325,927.512L995.495,927.57L986.654,925.814L978.178,922.192L977.69,921.919L977.54,921.837L862.855,856.264L920.589,978.356L921.06,979.357L921.388,980.089L924.252,988.432L925.439,997.196L924.954,1005.839L922.901,1014.146L919.349,1021.942L914.338,1029.033L907.912,1035.171L900.189,1040.043L891.604,1043.27L882.717,1044.656L873.892,1044.238L865.419,1042.107L857.538,1038.362L850.485,1033.101L844.519,1026.442L840.07,1018.916L839.684,1018.081L785.593,896.193L762.508,1029.927L762.41,1030.466L759.911,1039.149L755.872,1047.009L750.501,1053.839L743.987,1059.489L736.489,1063.817L728.169,1066.656L719.247,1067.805L710.05,1067.081L701.201,1064.47L693.279,1060.208L686.523,1054.584L681.067,1047.861L677.003,1040.256L674.428,1031.958L673.465,1023.174L674.234,1014.17L674.335,1013.632L700.571,880.479L606.49,974.987L606.1,975.369L606.008,975.45L598.986,981.068L591.034,985.154L582.567,987.547L573.868,988.228L565.193,987.189L556.801,984.426L548.997,979.956L542.132,973.873L536.66,966.563L532.852,958.534L530.707,950.12L530.176,941.57L531.227,933.077L533.863,924.832L538.104,917.071L543.761,910.303L544.328,909.736L545.126,908.97L642.682,815.576L512.137,835.829L511.967,835.854L511.414,835.933L502.203,836.287L493.318,834.767L485.093,831.557L477.759,826.856L471.496,820.845L466.472,813.688L462.875,805.567L460.897,796.724L460.681,787.684L462.176,778.988L465.227,770.887L469.691,763.563L475.457,757.178L482.434,751.925L490.494,748.048L499.336,745.84L499.961,745.747L632.859,728.526L514.971,664.986L514.343,664.634L506.874,659.412L500.732,652.91L496.093,645.511L492.99,637.487L491.438,629.052L491.484,620.395L493.196,611.739L496.628,603.374L501.636,595.821L507.898,589.522L515.148,584.633L523.146,581.258L531.675,579.488L540.505,579.43L549.346,581.186L557.822,584.808Z"/></g></svg>`;
+const SPROUT_ASSISTANT_WIDGET_ICON = `<svg width="100%" height="100%" viewBox="0 0 1536 1536" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" fill="currentColor" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;"><g transform="matrix(0.699379,0,0,0.699379,257.301657,241.017995)"><path d="M557.822,584.808L558.31,585.081L558.46,585.163L673.145,650.736L615.411,528.644L614.94,527.643L614.612,526.911L611.748,518.568L610.561,509.804L611.046,501.161L613.099,492.854L616.651,485.058L621.662,477.967L628.088,471.829L635.811,466.957L644.396,463.73L653.283,462.344L662.108,462.762L670.581,464.893L678.462,468.638L685.515,473.899L691.481,480.558L695.93,488.084L696.316,488.919L750.406,610.807L773.492,477.073L773.59,476.534L776.089,467.851L780.128,459.991L785.499,453.161L792.013,447.511L799.511,443.183L807.83,440.344L816.752,439.195L825.95,439.919L834.799,442.53L842.721,446.792L849.477,452.416L854.933,459.139L858.997,466.744L861.572,475.042L862.535,483.826L861.766,492.83L861.665,493.368L835.429,626.521L929.51,532.013L929.9,531.631L929.992,531.55L937.014,525.932L944.966,521.846L953.433,519.453L962.132,518.772L970.807,519.81L979.199,522.574L987.003,527.044L993.868,533.127L999.34,540.437L1003.148,548.466L1005.293,556.88L1005.824,565.43L1004.773,573.923L1002.136,582.168L997.896,589.929L992.239,596.697L991.671,597.264L990.874,598.03L893.318,691.424L1023.863,671.171L1024.033,671.146L1024.586,671.067L1033.797,670.713L1042.682,672.233L1050.907,675.443L1058.241,680.144L1064.504,686.155L1069.528,693.312L1073.125,701.433L1075.103,710.276L1075.319,719.316L1073.824,728.012L1070.773,736.113L1066.309,743.437L1060.543,749.822L1053.566,755.075L1045.506,758.952L1036.663,761.16L1036.039,761.253L903.141,778.474L1021.029,842.014L1021.657,842.366L1029.126,847.588L1035.268,854.09L1039.907,861.489L1043.01,869.513L1044.561,877.948L1044.516,886.605L1042.804,895.261L1039.372,903.626L1034.364,911.179L1028.102,917.478L1020.852,922.367L1012.854,925.742L1004.325,927.512L995.495,927.57L986.654,925.814L978.178,922.192L977.69,921.919L977.54,921.837L862.855,856.264L920.589,978.356L921.06,979.357L921.388,980.089L924.252,988.432L925.439,997.196L924.954,1005.839L922.901,1014.146L919.349,1021.942L914.338,1029.033L907.912,1035.171L900.189,1040.043L891.604,1043.27L882.717,1044.656L873.892,1044.238L865.419,1042.107L857.538,1038.362L850.485,1033.101L844.519,1026.442L840.07,1018.916L839.684,1018.081L785.593,896.193L762.508,1029.927L762.41,1030.466L759.911,1039.149L755.872,1047.009L750.501,1053.839L743.987,1059.489L736.489,1063.817L728.169,1066.656L719.247,1067.805L710.05,1067.081L701.201,1064.47L693.279,1060.208L686.523,1054.584L681.067,1047.861L677.003,1040.256L674.428,1031.958L673.465,1023.174L674.234,1014.17L674.335,1013.632L700.571,880.479L606.49,974.987L606.1,975.369L606.008,975.45L598.986,981.068L591.034,985.154L582.567,987.547L573.868,988.228L565.193,987.189L556.801,984.426L548.997,979.956L542.132,973.873L536.66,966.563L532.852,958.534L530.707,950.12L530.176,941.57L531.227,933.077L533.863,924.832L538.104,917.071L543.761,910.303L544.328,909.736L545.126,908.97L642.682,815.576L512.137,835.829L511.967,835.854L511.414,835.933L502.203,836.287L493.318,834.767L485.093,831.557L477.759,826.856L471.496,820.845L466.472,813.688L462.875,805.567L460.897,796.724L460.681,787.684L462.176,778.988L465.227,770.887L469.691,763.563L475.457,757.178L482.434,751.925L490.494,748.048L499.336,745.84L499.961,745.747L632.859,728.526L514.971,664.986L514.343,664.634L506.874,659.412L500.732,652.91L496.093,645.511L492.99,637.487L491.438,629.052L491.484,620.395L493.196,611.739L496.628,603.374L501.636,595.821L507.898,589.522L515.148,584.633L523.146,581.258L531.675,579.488L540.505,579.43L549.346,581.186L557.822,584.808Z"/></g><g transform="matrix(43.963361,0,0,43.963361,266.850304,240.422628)"><path d="M2.073,16.738C1.367,15.258 1,13.64 1,12C1,5.966 5.966,1 12,1C18.035,1 23,5.966 23,12C23,18.035 18.035,23 12,23C10.407,23 8.833,22.654 7.38,21.984C7.227,21.932 7.064,21.918 6.901,21.943L3.538,22.927L3.514,22.934L3,23C1.903,23 1,22.098 1,21C1,20.865 1.014,20.73 1.042,20.598C1.049,20.562 1.058,20.526 1.07,20.491L2.118,17.25C2.148,17.078 2.132,16.901 2.073,16.738ZM3.892,15.906C3.892,15.907 3.893,15.907 3.893,15.908C3.903,15.929 3.913,15.951 3.922,15.973C3.922,15.974 3.922,15.975 3.923,15.976C4.142,16.532 4.191,17.14 4.063,17.724C4.056,17.755 4.047,17.786 4.037,17.817L3.01,20.991C3.019,20.991 3.024,20.992 3.02,20.994L6.389,20.009C6.418,20.001 6.446,19.994 6.475,19.988C7.027,19.879 7.598,19.927 8.124,20.126C8.147,20.135 8.17,20.144 8.192,20.155C9.384,20.712 10.684,21 12,21C16.938,21 21,16.938 21,12C21,7.063 16.938,3 12,3C7.063,3 3,7.063 3,12C3,13.353 3.305,14.688 3.892,15.906Z"/></g></svg>`;
 
 type StudyAssistantApiKeys = SproutSettings["studyAssistant"]["apiKeys"];
 
@@ -176,11 +183,41 @@ export default class SproutPlugin extends Plugin {
     return t(this.settings?.general?.interfaceLanguage, token, fallback, vars);
   }
 
+  refreshAssistantPopupFromSettings(): void {
+    const activeFile = this.app.workspace.getActiveFile();
+    this._assistantPopup?.onActiveLeafChange();
+    this._assistantPopup?.onFileOpen(activeFile);
+    if (!this.settings?.studyAssistant?.enabled) {
+      this._closeAllAssistantWidgetInstances();
+    }
+  }
+
+  private _closeAllAssistantWidgetInstances(): void {
+    this.app.workspace
+      .getLeavesOfType(VIEW_TYPE_STUDY_ASSISTANT)
+      .forEach((leaf) => {
+        try {
+          leaf.detach();
+        } catch (e) {
+          log.swallow("close assistant widget leaf", e);
+        }
+      });
+  }
+
   private _registerCommands() {
     this._addCommand("sync-flashcards-current-note", "Sync flashcards from current note", async () => this._runSyncCurrentNote());
     this._addCommand("sync-flashcards", "Sync all flashcards from the vault", async () => this._runSync());
     this._addCommand("open", "Open home", async () => this.openHomeTab());
-    this._addCommand("open-widget", "Open Study Widget", async () => this.openWidgetSafe());
+    this._addCommand("open-widget", "Open flashcard study widget", async () => this.openWidgetSafe());
+    this.addCommand({
+      id: "open-assistant-widget",
+      name: "Open learning assistant widget",
+      checkCallback: (checking) => {
+        if (!this.settings?.studyAssistant?.enabled) return false;
+        if (!checking) void this.openAssistantWidgetSafe();
+        return true;
+      },
+    });
     this._addCommand("open-analytics", "Open analytics", async () => this.openAnalyticsTab());
     this._addCommand("open-settings", "Open plugin settings", () => this.openPluginSettingsInObsidian());
     this._addCommand("open-guide", "Open guide", async () => this.openSettingsTab(false, "guide"));
@@ -462,6 +499,7 @@ export default class SproutPlugin extends Plugin {
 
       this.registerView(VIEW_TYPE_REVIEWER, (leaf) => new SproutReviewerView(leaf, this));
       this.registerView(VIEW_TYPE_WIDGET, (leaf) => new SproutWidgetView(leaf, this));
+      this.registerView(VIEW_TYPE_STUDY_ASSISTANT, (leaf) => new SproutStudyAssistantView(leaf, this));
       this.registerView(VIEW_TYPE_BROWSER, (leaf) => new SproutCardBrowserView(leaf, this));
       this.registerView(VIEW_TYPE_ANALYTICS, (leaf) => new SproutAnalyticsView(leaf, this));
       this.registerView(VIEW_TYPE_HOME, (leaf) => new SproutHomeView(leaf, this));
@@ -474,6 +512,8 @@ export default class SproutPlugin extends Plugin {
 
       // Register custom branded ribbon icon from site/branding/Sprout Icon.svg artwork.
       addIcon(SPROUT_BRAND_ICON_KEY, SPROUT_RIBBON_BRAND_ICON);
+      addIcon(SPROUT_WIDGET_STUDY_ICON_KEY, SPROUT_STUDY_WIDGET_ICON);
+      addIcon(SPROUT_WIDGET_ASSISTANT_ICON_KEY, SPROUT_ASSISTANT_WIDGET_ICON);
 
       // Replace dropdown with separate ribbon icons (desktop + mobile)
       this._registerRibbonIcons();
@@ -495,6 +535,9 @@ export default class SproutPlugin extends Plugin {
           this.app.workspace
             .getLeavesOfType(VIEW_TYPE_WIDGET)
             .forEach((leaf) => (leaf.view as { onFileOpen?(f: TFile | null): void })?.onFileOpen?.(f));
+          this.app.workspace
+            .getLeavesOfType(VIEW_TYPE_STUDY_ASSISTANT)
+            .forEach((leaf) => (leaf.view as { onFileOpen?(f: TFile | null): void })?.onFileOpen?.(f));
         }),
       );
 
@@ -511,15 +554,6 @@ export default class SproutPlugin extends Plugin {
         // Ensure status bar class matches the active view after layout settles
         this._updateStatusBarVisibility(null);
 
-        // Remove any legacy sidebar assistant leaves from previous versions.
-        this.app.workspace.getLeavesOfType("sprout-study-assistant").forEach((leaf) => {
-          try {
-            leaf.detach();
-          } catch (e) {
-            log.swallow("detach legacy study assistant leaf", e);
-          }
-        });
-        
         // Check for version upgrades and show What's New modal if needed
         this._checkAndShowWhatsNewModal();
 
@@ -527,6 +561,7 @@ export default class SproutPlugin extends Plugin {
         this._assistantPopup = new SproutAssistantPopup(this);
         this._assistantPopup.mount();
         this._assistantPopup.onActiveLeafChange();
+        this.refreshAssistantPopupFromSettings();
 
         this._reminderEngine?.start();
       });
@@ -816,6 +851,17 @@ export default class SproutPlugin extends Plugin {
     this._refreshOpenViews();
   }
 
+  public notifyWidgetCardsSynced(): void {
+    this.app.workspace.getLeavesOfType(VIEW_TYPE_WIDGET).forEach((leaf) => {
+      const view = leaf.view as ItemView & { onCardsSynced?(): void; onRefresh?(): void };
+      if (typeof view.onCardsSynced === "function") {
+        view.onCardsSynced();
+        return;
+      }
+      view.onRefresh?.();
+    });
+  }
+
   public refreshReadingViewMarkdownLeaves(): void {
     const leaves = this.app.workspace.getLeavesOfType("markdown");
     for (const leaf of leaves) {
@@ -885,7 +931,7 @@ export default class SproutPlugin extends Plugin {
     if (res.quarantinedCount > 0) {
       new ParseErrorModal(this.app, this, res.quarantinedIds).open();
     }
-    // Do not refresh or update views; sync runs in background and only shows notice when done.
+    this.notifyWidgetCardsSynced();
   }
 
   private _formatCurrentNoteSyncNotice(pageTitle: string, res: { newCount?: number; updatedCount?: number; removed?: number }): string {
@@ -915,6 +961,8 @@ export default class SproutPlugin extends Plugin {
     if (res.quarantinedCount > 0) {
       new ParseErrorModal(this.app, this, res.quarantinedIds).open();
     }
+
+    this.notifyWidgetCardsSynced();
   }
 
   async saveAll() {
@@ -1491,6 +1539,33 @@ export default class SproutPlugin extends Plugin {
     if (!leaf) return;
 
     await leaf.setViewState({ type: VIEW_TYPE_WIDGET, active: true, state: {} });
+    void ws.revealLeaf(leaf);
+  }
+
+  private async openAssistantWidgetSafe(): Promise<void> {
+    try {
+      await this.openAssistantWidget();
+    } catch (e) {
+      log.error("failed to open assistant widget", e);
+      new Notice(this._tx("ui.main.notice.assistantWidgetOpenFailed", "Failed to open assistant widget. See console for details."));
+    }
+  }
+
+  async openAssistantWidget(): Promise<void> {
+    const ws = this.app.workspace;
+    let leaf: WorkspaceLeaf | null = ws.getRightLeaf(false);
+
+    if (leaf) {
+      ws.setActiveLeaf(leaf, { focus: false });
+      leaf = ws.getLeaf(false) ?? leaf;
+    } else {
+      leaf = ws.getRightLeaf(true);
+      if (leaf) ws.setActiveLeaf(leaf, { focus: false });
+    }
+
+    if (!leaf) return;
+
+    await leaf.setViewState({ type: VIEW_TYPE_STUDY_ASSISTANT, active: true, state: {} });
     void ws.revealLeaf(leaf);
   }
 

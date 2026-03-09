@@ -56,7 +56,9 @@ export const DEFAULT_SETTINGS: SproutSettings = {
   },
 
   studyAssistant: {
-    enabled: false,
+    enabled: true,
+    location: "modal",
+    modalButtonVisibility: "hover",
     voiceChat: false,
     provider: "openai",
     openRouterTier: "free",

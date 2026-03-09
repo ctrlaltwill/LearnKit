@@ -3189,7 +3189,7 @@ export class SproutSettingsTab extends PluginSettingTab {
       cls: "setting-item-description",
       text: this._tx(
         "ui.settings.studyAssistant.info.desc",
-        "Sprig uses a bring-your-own-API-key (BYOK) model: you provide your own API key, and usage is billed directly by your selected AI provider. Many AI tools work similarly behind the scenes but bundle API costs into their subscription pricing; Sprig presents this model transparently. API keys are kept in your local plugin settings and sent directly to the provider you choose for each request, and Sprout does not share them with a separate Sprout service. AI output can still be incorrect or hallucinated, so verify important answers before relying on them.",
+        "You bring your own API key, so cost depends on the provider and model you choose. Sprig supports providers with free tiers (for example, Google and OpenRouter) as well as premium platforms (for example, Anthropic, OpenAI, and Perplexity). Sprout adds no subscription fees or API markups. If you want a free option, we recommend Auto Router via OpenRouter.",
       ),
     });
 
@@ -3202,6 +3202,7 @@ export class SproutSettingsTab extends PluginSettingTab {
         toggle.setValue(!!this.plugin.settings.studyAssistant.enabled).onChange(async (value) => {
           this.plugin.settings.studyAssistant.enabled = !!value;
           await this.plugin.saveAll();
+          this.plugin.refreshAssistantPopupFromSettings();
           this.queueSettingsNotice(
             "studyAssistant.enabled",
             this._tx("ui.settings.studyAssistant.notice.enabled", "Sprig: {state}", {
@@ -3211,6 +3212,34 @@ export class SproutSettingsTab extends PluginSettingTab {
           this.onRequestRerender?.();
         }),
       );
+
+    new Setting(wrapper)
+      .setName(this._tx("ui.settings.studyAssistant.modalButtonVisibility.name", "Modal widget - button visibility"))
+      .setDesc(this._tx(
+        "ui.settings.studyAssistant.modalButtonVisibility.desc",
+        "Controls the Sprig trigger shown in the bottom-right corner of note workspaces. Default is On hover.",
+      ))
+      .then((setting) => {
+        this._addSimpleSelect(setting.controlEl, {
+          options: [
+            { value: "hidden", label: this._tx("ui.settings.studyAssistant.modalButtonVisibility.hidden", "Always hidden") },
+            { value: "hover", label: this._tx("ui.settings.studyAssistant.modalButtonVisibility.hover", "On hover") },
+            { value: "always", label: this._tx("ui.settings.studyAssistant.modalButtonVisibility.always", "Always visible") },
+          ],
+          value: this.plugin.settings.studyAssistant.modalButtonVisibility,
+          onChange: (value) => {
+            this.plugin.settings.studyAssistant.modalButtonVisibility = value === "hidden" || value === "hover" ? value : "always";
+            void this.plugin.saveAll().then(() => this.plugin.refreshAssistantPopupFromSettings());
+          },
+        });
+      });
+
+    new Setting(wrapper)
+      .setName(this._tx("ui.settings.studyAssistant.sidebarWidgetInfo.name", "Sidebar widget"))
+      .setDesc(this._tx(
+        "ui.settings.studyAssistant.widgetLaunchInfo.desc",
+        "If you prefer Sprig in the sidebar, launch the Study Assistant Widget from the command palette.",
+      ));
 
     new Setting(wrapper).setName(this._tx("ui.settings.studyAssistant.sections.provider", "AI Provider")).setHeading();
 

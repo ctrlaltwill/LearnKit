@@ -374,6 +374,7 @@ export async function importFromApkg(
       // Sync the file to register cards in the store
       try {
         await syncOneFile(plugin, file);
+        plugin.notifyWidgetCardsSynced();
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         result.warnings.push(`Sync failed for ${filePath}: ${msg}`);

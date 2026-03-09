@@ -1760,7 +1760,7 @@ export class SproutReviewerView extends ItemView {
     if (res.quarantinedCount > 0)
       new ParseErrorModal(this.plugin.app, this.plugin, res.quarantinedIds).open();
 
-    this.plugin.refreshAllViews();
+    this.plugin.notifyWidgetCardsSynced();
   }
 
   private extractInfoField(card: CardRecord | null): string | null {

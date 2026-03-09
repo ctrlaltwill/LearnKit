@@ -52,6 +52,13 @@ export function normaliseSettingsInPlace(s: SproutSettings): void {
 
   s.studyAssistant ??= {} as SproutSettings["studyAssistant"];
   s.studyAssistant.enabled ??= DEFAULT_SETTINGS.studyAssistant.enabled;
+  s.studyAssistant.location = "modal";
+  const modalButtonVisibility = String(
+    s.studyAssistant.modalButtonVisibility ?? DEFAULT_SETTINGS.studyAssistant.modalButtonVisibility,
+  ).toLowerCase();
+  s.studyAssistant.modalButtonVisibility = modalButtonVisibility === "hidden" || modalButtonVisibility === "hover"
+    ? modalButtonVisibility
+    : "always";
   s.studyAssistant.voiceChat ??= DEFAULT_SETTINGS.studyAssistant.voiceChat;
   const provider = String(s.studyAssistant.provider ?? DEFAULT_SETTINGS.studyAssistant.provider);
   s.studyAssistant.provider =

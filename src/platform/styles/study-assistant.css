@@ -400,7 +400,7 @@
   justify-content: center;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
   z-index: var(--layer-popover, 50);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
   padding: 0;
 }
 
@@ -428,6 +428,36 @@
   height: 20px;
 }
 
+.sprout-assistant-trigger.is-hidden {
+  display: none !important;
+}
+
+.sprout-assistant-trigger.is-hover-only {
+  opacity: 0;
+  transform: translateY(8px) scale(0.96);
+  pointer-events: none;
+}
+
+.sprout-assistant-trigger.is-hover-only.is-hover-active,
+.sprout-assistant-trigger.is-hover-only.is-open {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+.sprout-assistant-trigger-hotzone {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 200px;
+  height: 200px;
+  z-index: calc(var(--layer-popover, 50) - 1);
+}
+
+.sprout-assistant-trigger-hotzone.is-hidden {
+  display: none !important;
+}
+
 /* ---- Popup panel ---- */
 .sprout-assistant-popup {
   position: absolute;
@@ -449,9 +479,9 @@
 }
 
 /* Guard popup surface against broad `.sprout` reset selectors in view containers. */
-.view-content .sprout.sprout-assistant-popup,
-.workspace-leaf .sprout.sprout-assistant-popup,
-.workspace-leaf-content .sprout.sprout-assistant-popup {
+.view-content .sprout.sprout-assistant-popup:not(.sprout-assistant-popup-embedded),
+.workspace-leaf .sprout.sprout-assistant-popup:not(.sprout-assistant-popup-embedded),
+.workspace-leaf-content .sprout.sprout-assistant-popup:not(.sprout-assistant-popup-embedded) {
   border-radius: 16px !important;
   background: var(--background-primary, #fff) !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.06) !important;
@@ -461,6 +491,68 @@
 
 .sprout-assistant-popup.is-hidden {
   display: none !important;
+}
+
+.sprout-assistant-popup.sprout-assistant-popup-embedded {
+  position: relative;
+  right: auto;
+  bottom: auto;
+  width: 100%;
+  max-width: 100%;
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  animation: none;
+}
+
+/* Widget-only: remove section divider lines while keeping modal styling intact. */
+.sprout-assistant-popup.sprout-assistant-popup-embedded .sprout-assistant-popup-header,
+.sprout-assistant-popup.sprout-assistant-popup-embedded .sprout-assistant-popup-toolbar,
+.sprout-assistant-popup.sprout-assistant-popup-embedded .sprout-assistant-popup-composer {
+  border: none;
+}
+
+.sprout-assistant-popup.sprout-assistant-popup-embedded .sprout-assistant-popup-header-title {
+  font-size: 0.9rem;
+}
+
+.sprout-assistant-popup.sprout-assistant-popup-embedded .sprout-assistant-popup-header-left {
+  gap: 8px;
+}
+
+.sprout-assistant-popup.sprout-assistant-popup-embedded .sprout-assistant-popup-header-note {
+  font-size: var(--sprout-widget-font-summary-count);
+  color: var(--foreground);
+  font-weight: 400;
+}
+
+/* Widget-only: align chat bubbles with teaser card surface styling. */
+.sprout-assistant-popup.sprout-assistant-popup-embedded .sprout-assistant-popup-message-bubble.is-assistant,
+.sprout-assistant-popup.sprout-assistant-popup-embedded .sprout-assistant-popup-message-bubble.is-user {
+  background: var(--background) !important;
+  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
+}
+
+/* Widget-only: make header action buttons match teaser card surface. */
+.sprout-assistant-popup.sprout-assistant-popup-embedded .sprout-assistant-popup-overflow,
+.sprout-assistant-popup.sprout-assistant-popup-embedded .sprout-assistant-popup-close {
+  background: var(--background) !important;
+  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
+}
+
+/* Custom widget tab icon sizing overrides. */
+.workspace-tab-header .svg-icon.sprout-widget-study {
+  width: 1.6em;
+  height: 1.6em;
+}
+
+.workspace-tab-header .svg-icon.sprout-widget-assistant {
+  width: 1.4em;
+  height: 1.4em;
 }
 
 @keyframes sprout-popup-in {

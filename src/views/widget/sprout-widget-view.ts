@@ -89,7 +89,7 @@ export class SproutWidgetView extends ItemView {
   }
 
   getIcon() {
-    return "sprout-brand";
+    return "sprout-widget-study";
   }
 
   async onOpen() {
@@ -110,6 +110,50 @@ export class SproutWidgetView extends ItemView {
 
   onRefresh() {
     this.render();
+  }
+
+  /**
+   * Called after card sync operations complete.
+   * Summary mode rerenders immediately; session mode updates the upcoming queue
+   * while keeping the current card stable to avoid visible resets.
+   */
+  onCardsSynced() {
+    if (this.mode !== "session" || !this.session) {
+      this.render();
+      return;
+    }
+
+    const previousSession = this.session;
+    const previousQueue = Array.isArray(previousSession.queue) ? previousSession.queue : [];
+    const previousIndex = Math.max(0, Math.min(previousSession.index, previousQueue.length));
+    const completedPrefix = previousQueue.slice(0, previousIndex);
+    const currentCard = previousQueue[previousIndex] ?? null;
+
+    const rebuilt = previousSession.mode === "practice"
+      ? this.buildPracticeSessionForActiveNote()
+      : this.buildSessionForActiveNote();
+    if (!rebuilt) return;
+
+    const completedIds = new Set(completedPrefix.map((card) => String(card?.id ?? "")));
+    const currentId = String(currentCard?.id ?? "");
+    const upcoming = (rebuilt.queue || []).filter((card) => {
+      const id = String(card?.id ?? "");
+      if (!id) return true;
+      if (completedIds.has(id)) return false;
+      if (currentCard && id === currentId) return false;
+      return true;
+    });
+
+    const mergedQueue = currentCard
+      ? [...completedPrefix, currentCard, ...upcoming]
+      : [...completedPrefix, ...upcoming];
+
+    previousSession.queue = mergedQueue;
+    previousSession.index = Math.min(previousIndex, mergedQueue.length);
+    if (previousSession.stats) {
+      previousSession.stats.total = mergedQueue.length;
+      previousSession.stats.done = Math.min(previousSession.stats.done, mergedQueue.length);
+    }
   }
 
   onFileOpen(file: TFile | null) {

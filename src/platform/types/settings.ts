@@ -75,6 +75,8 @@ export type SproutSettings = {
   // Study Assistant — AI providers, prompts, and generation preferences
   studyAssistant: {
     enabled: boolean;
+    location: "widget" | "modal";
+    modalButtonVisibility: "hidden" | "always" | "hover";
     voiceChat: boolean;
     provider: "openai" | "anthropic" | "deepseek" | "xai" | "google" | "perplexity" | "openrouter" | "custom";
     openRouterTier: "free" | "paid";
