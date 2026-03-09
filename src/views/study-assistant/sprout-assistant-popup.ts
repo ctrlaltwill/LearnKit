@@ -168,6 +168,7 @@ export class SproutAssistantPopup {
   private _suppressToggleUntil = 0;
   private _maxObservedPopupHeight = 0;
   private _popupHeightFrame: number | null = null;
+  private _suspendPopupAutoClose = false;
 
   // Voice chat state
   private _isListening = false;
@@ -183,9 +184,23 @@ export class SproutAssistantPopup {
   private _voiceStopRequested = false;
   private _recognition: SpeechRecognitionLike | null = null;
 
+  // TTS playback state (inline per assistant reply)
+  private _isTtsSpeaking = false;
+  private _ttsPaused = false;
+  private _activeTtsMessageIndex: number | null = null;
+  private _ttsPollTimer: ReturnType<typeof setTimeout> | null = null;
+  private _ttsStartDelayTimer: ReturnType<typeof setTimeout> | null = null;
+  private _ttsCollapseTimer: ReturnType<typeof setTimeout> | null = null;
+  private _ttsFinishInteractionCleanup: (() => void) | null = null;
+  private _pendingTtsMessageIndex: number | null = null;
+  private _ttsStartGraceUntil = 0;
+  private _ttsWaveformFrame: number | null = null;
+  private _suppressAssistantComposerFocusOnce = false;
+
   // Per-leaf session state
   private _activeSessionLeaf: WorkspaceLeaf | null = null;
   private _leafSessions = new WeakMap<WorkspaceLeaf, AssistantLeafSession>();
+  private _openStateByFilePath = new Map<string, boolean>();
 
   constructor(plugin: SproutPlugin) {
     this.plugin = plugin;
@@ -338,6 +353,7 @@ export class SproutAssistantPopup {
       "Clear all Sprig chats? This permanently deletes all saved chat logs and resets current AI context.",
     );
 
+    this._suspendPopupAutoClose = true;
     return await new Promise<boolean>((resolve) => {
       const modal = new Modal(this.plugin.app);
       let settled = false;
@@ -345,6 +361,7 @@ export class SproutAssistantPopup {
       const finish = (confirmed: boolean): void => {
         if (settled) return;
         settled = true;
+        this._suspendPopupAutoClose = false;
         resolve(confirmed);
         modal.close();
       };
@@ -363,6 +380,7 @@ export class SproutAssistantPopup {
         });
 
       modal.onClose = () => {
+        this._suspendPopupAutoClose = false;
         if (settled) return;
         settled = true;
         resolve(false);
@@ -495,6 +513,7 @@ export class SproutAssistantPopup {
     // Click-outside handler
     this._onClickOutside = (e: MouseEvent) => {
       if (!this.isOpen) return;
+      if (this._suspendPopupAutoClose) return;
       const target = e.target as Node;
       if (this.popupEl?.contains(target)) return;
       if (this.triggerBtn?.contains(target)) return;
@@ -505,6 +524,7 @@ export class SproutAssistantPopup {
     // Escape handler
     this._onKeydown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && this.isOpen) {
+        if (this._suspendPopupAutoClose) return;
         if (this._headerMenuOpen) {
           e.preventDefault();
           this._headerMenuOpen = false;
@@ -569,7 +589,12 @@ export class SproutAssistantPopup {
     }
     const previousPath = this.activeFile?.path || "";
     const nextPath = file?.path || "";
+    if (previousPath) {
+      this._openStateByFilePath.set(previousPath, this.isOpen);
+    }
     if (previousPath !== nextPath) {
+      const nextOpenState = nextPath ? (this._openStateByFilePath.get(nextPath) ?? false) : false;
+      this.isOpen = nextOpenState;
       // Save outgoing note's chat before switching
       if (this.activeFile) this._scheduleSave();
       this.chatMessages = [];
@@ -647,6 +672,7 @@ export class SproutAssistantPopup {
       this.popupEl?.style.removeProperty("height");
     }
     this.isOpen = true;
+    if (this.activeFile?.path) this._openStateByFilePath.set(this.activeFile.path, true);
     this.triggerBtn?.addClass("is-open");
     this.ensurePopup();
     this._syncHosts();
@@ -669,7 +695,26 @@ export class SproutAssistantPopup {
       cancelAnimationFrame(this._popupHeightFrame);
       this._popupHeightFrame = null;
     }
+    if (this._ttsPollTimer != null) {
+      clearTimeout(this._ttsPollTimer);
+      this._ttsPollTimer = null;
+    }
+    if (this._ttsStartDelayTimer != null) {
+      clearTimeout(this._ttsStartDelayTimer);
+      this._ttsStartDelayTimer = null;
+      this._pendingTtsMessageIndex = null;
+    }
+    if (this._ttsCollapseTimer != null) {
+      clearTimeout(this._ttsCollapseTimer);
+      this._ttsCollapseTimer = null;
+    }
+    this._teardownTtsFinishInteraction();
+    // Stop any active TTS playback
+    if (this._isTtsSpeaking || this._pendingTtsMessageIndex != null) {
+      this._stopTts();
+    }
     this.isOpen = false;
+    if (this.activeFile?.path) this._openStateByFilePath.set(this.activeFile.path, false);
     this.triggerBtn?.removeClass("is-open");
     this.popupEl?.addClass("is-hidden");
     // Persist closed state before syncing leaves so we don't resurrect stale open state.
@@ -741,6 +786,44 @@ export class SproutAssistantPopup {
     return provider.charAt(0).toUpperCase() + provider.slice(1);
   }
 
+  private _assistantConsoleErrorDetails(error: unknown): Record<string, unknown> {
+    const details: Record<string, unknown> = {};
+    if (error instanceof Error) {
+      details.name = error.name;
+      details.message = error.message;
+      if (error.stack) details.stack = error.stack;
+    }
+
+    if (error && typeof error === "object") {
+      const map = error as Record<string, unknown>;
+      const keys = [
+        "provider",
+        "status",
+        "detail",
+        "endpoint",
+        "responseText",
+        "responseJson",
+        "originalError",
+      ];
+      for (const key of keys) {
+        if (map[key] !== undefined) details[key] = map[key];
+      }
+    }
+
+    return details;
+  }
+
+  private _logAssistantRequestError(context: "ask" | "review" | "generate", error: unknown, userMessage: string): void {
+    log.error(
+      `[Study Assistant] ${context} request failed`,
+      error,
+      {
+        userMessage,
+        ...this._assistantConsoleErrorDetails(error),
+      },
+    );
+  }
+
   private _formatAssistantError(error: unknown): string {
     const raw = this._safeText(error instanceof Error ? error.message : error)
       .replace(/^error:\s*/i, "")
@@ -778,12 +861,23 @@ export class SproutAssistantPopup {
 
     const httpFailure = raw.match(/^([a-z0-9_-]+) request failed \((\d{3})\)$/i);
     if (httpFailure?.[1] && httpFailure?.[2]) {
+      const provider = this._providerLabel(httpFailure[1]);
+      const status = httpFailure[2];
+
+      if (status === "402") {
+        return this._tx(
+          "ui.studyAssistant.error.http402",
+          "Error: AI request failed ({provider}, HTTP 402). Check credits/billing and model access.",
+          { provider },
+        );
+      }
+
       return this._tx(
         "ui.studyAssistant.error.http",
         "Error: AI request failed ({provider}, HTTP {status}). Check API key, model, and endpoint.",
         {
-          provider: this._providerLabel(httpFailure[1]),
-          status: httpFailure[2],
+          provider,
+          status,
         },
       );
     }
@@ -1306,14 +1400,256 @@ export class SproutAssistantPopup {
     }
   }
 
-  /** Speak the assistant reply using TTS (if voice chat is enabled). */
-  private _speakReply(text: string): void {
+  /** Speak an assistant reply using TTS (if read-aloud is enabled). */
+  private _speakReply(text: string, messageIndex: number): void {
     if (!this.plugin.settings.studyAssistant.voiceChat) return;
     const tts = getTtsService();
     if (!tts.isSupported) return;
     const audioSettings = this.plugin.settings.audio;
     // Speak with TTS, bypassing the audio.enabled check since voice chat has its own toggle
     tts.speak(text, audioSettings.defaultLanguage || "en-US", audioSettings, true, true);
+    this._isTtsSpeaking = true;
+    this._ttsPaused = false;
+    this._activeTtsMessageIndex = messageIndex;
+    // Web Speech can report speaking=false briefly right after speak().
+    // Keep UI active for a short grace period so controls/waveform don't flicker off.
+    this._ttsStartGraceUntil = Date.now() + 1500;
+    this.render();
+    this._pollTtsEnd();
+    this._animateTtsWaveform();
+  }
+
+  /** Toggle playback for a specific assistant reply bubble. */
+  private _toggleReplyAudio(text: string, messageIndex: number): void {
+    if (!this.plugin.settings.studyAssistant.voiceChat) return;
+
+    // Second click during delay cancels pending start.
+    if (this._pendingTtsMessageIndex === messageIndex) {
+      if (this._ttsStartDelayTimer != null) {
+        clearTimeout(this._ttsStartDelayTimer);
+        this._ttsStartDelayTimer = null;
+      }
+      this._pendingTtsMessageIndex = null;
+      return;
+    }
+
+    if (this._isTtsSpeaking && this._activeTtsMessageIndex === messageIndex) {
+      this._toggleTtsPause();
+      return;
+    }
+
+    if (this._ttsStartDelayTimer != null) {
+      clearTimeout(this._ttsStartDelayTimer);
+      this._ttsStartDelayTimer = null;
+    }
+
+    this._pendingTtsMessageIndex = messageIndex;
+    this._ttsStartDelayTimer = setTimeout(() => {
+      this._ttsStartDelayTimer = null;
+      if (this._pendingTtsMessageIndex !== messageIndex) return;
+      this._pendingTtsMessageIndex = null;
+      this._speakReply(text, messageIndex);
+    }, 250);
+  }
+
+  /** Stop TTS playback and reset inline playback state. */
+  private _stopTts(): void {
+    const tts = getTtsService();
+    tts.stop();
+    this._collapseActiveReplyAudioControl();
+    this._resetTtsPlaybackState();
+    this._suppressAssistantComposerFocusOnce = true;
+    this.render();
+  }
+
+  /** Toggle pause/resume on TTS playback. */
+  private _toggleTtsPause(): void {
+    if (!window.speechSynthesis) return;
+    if (this._ttsPaused) {
+      window.speechSynthesis.resume();
+      this._ttsPaused = false;
+    } else {
+      window.speechSynthesis.pause();
+      this._ttsPaused = true;
+    }
+    this._syncActiveReplyAudioControlUI();
+  }
+
+  /** Update icon/classes for the currently active reply audio control without full rerender. */
+  private _syncActiveReplyAudioControlUI(): void {
+    if (this._activeTtsMessageIndex == null) return;
+    const row = this.popupEl?.querySelector(
+      `.sprout-assistant-popup-message-row[data-msg-idx="${this._activeTtsMessageIndex}"]`,
+    );
+    if (!row) return;
+    const audioBar = row.querySelector(".sprout-assistant-reply-audio");
+    if (!audioBar) return;
+
+    audioBar.addClass("is-active");
+    audioBar.toggleClass("is-paused", this._ttsPaused);
+
+    const btn = audioBar.querySelector(".sprout-assistant-reply-audio-btn");
+    if (!btn) return;
+    const isPlaying = !this._ttsPaused;
+    btn.setAttribute("aria-label", isPlaying ? "Pause reply audio" : "Play reply audio");
+    this._setReplyAudioButtonIcon(btn, isPlaying);
+  }
+
+  /** Reset TTS playback state and timers/animations. */
+  private _resetTtsPlaybackState(preserveFinishTransition = false): void {
+    this._isTtsSpeaking = false;
+    this._ttsPaused = false;
+    this._activeTtsMessageIndex = null;
+    this._pendingTtsMessageIndex = null;
+    this._ttsStartGraceUntil = 0;
+    if (this._ttsPollTimer != null) {
+      clearTimeout(this._ttsPollTimer);
+      this._ttsPollTimer = null;
+    }
+    if (this._ttsStartDelayTimer != null) {
+      clearTimeout(this._ttsStartDelayTimer);
+      this._ttsStartDelayTimer = null;
+    }
+    if (!preserveFinishTransition) {
+      if (this._ttsCollapseTimer != null) {
+        clearTimeout(this._ttsCollapseTimer);
+        this._ttsCollapseTimer = null;
+      }
+      this._teardownTtsFinishInteraction();
+    }
+    if (this._ttsWaveformFrame != null) {
+      cancelAnimationFrame(this._ttsWaveformFrame);
+      this._ttsWaveformFrame = null;
+    }
+  }
+
+  /** Clear any active finish-transition interaction listeners. */
+  private _teardownTtsFinishInteraction(): void {
+    if (!this._ttsFinishInteractionCleanup) return;
+    this._ttsFinishInteractionCleanup();
+    this._ttsFinishInteractionCleanup = null;
+  }
+
+  /** Remove active/paused classes so inline controls can animate closed smoothly. */
+  private _collapseActiveReplyAudioControl(): void {
+    if (this._activeTtsMessageIndex == null) return;
+    const row = this.popupEl?.querySelector(
+      `.sprout-assistant-popup-message-row[data-msg-idx="${this._activeTtsMessageIndex}"]`,
+    );
+    if (!row) return;
+    const audioBar = row.querySelector(".sprout-assistant-reply-audio");
+    if (!audioBar) return;
+    audioBar.removeClass("is-active");
+    audioBar.removeClass("is-paused");
+    const btn = audioBar.querySelector(".sprout-assistant-reply-audio-btn");
+    if (btn) this._setReplyAudioButtonIcon(btn, false);
+  }
+
+  /** Force close animation at playback end, even while row is hovered. */
+  private _startReplyAudioFinishTransition(): void {
+    if (this._activeTtsMessageIndex == null) return;
+    const row = this.popupEl?.querySelector(
+      `.sprout-assistant-popup-message-row[data-msg-idx="${this._activeTtsMessageIndex}"]`,
+    ) as HTMLElement | null;
+    if (!row) return;
+    const audioBar = row.querySelector(".sprout-assistant-reply-audio");
+    if (!audioBar) return;
+
+    this._teardownTtsFinishInteraction();
+    if (this._ttsCollapseTimer != null) {
+      clearTimeout(this._ttsCollapseTimer);
+      this._ttsCollapseTimer = null;
+    }
+
+    audioBar.addClass("is-finishing");
+    audioBar.removeClass("is-active");
+    audioBar.removeClass("is-paused");
+    const btn = audioBar.querySelector(".sprout-assistant-reply-audio-btn");
+    if (btn) this._setReplyAudioButtonIcon(btn, false);
+
+    const releaseFinishClass = () => {
+      audioBar.removeClass("is-finishing");
+      this._teardownTtsFinishInteraction();
+    };
+
+    const isHovering = row.matches(":hover") || audioBar.matches(":hover");
+    if (!isHovering) {
+      this._ttsCollapseTimer = setTimeout(() => {
+        this._ttsCollapseTimer = null;
+        releaseFinishClass();
+      }, 230);
+      return;
+    }
+
+    const onMouseMove = () => {
+      releaseFinishClass();
+    };
+    const onMouseLeave = () => {
+      releaseFinishClass();
+    };
+
+    row.addEventListener("mousemove", onMouseMove, { passive: true });
+    row.addEventListener("mouseleave", onMouseLeave, { passive: true });
+    this._ttsFinishInteractionCleanup = () => {
+      row.removeEventListener("mousemove", onMouseMove);
+      row.removeEventListener("mouseleave", onMouseLeave);
+    };
+  }
+
+  /** Poll speechSynthesis.speaking to detect when TTS finishes. */
+  private _pollTtsEnd(): void {
+    if (!this._isTtsSpeaking) return;
+    const speaking = !!window.speechSynthesis.speaking;
+    const pending = !!window.speechSynthesis.pending;
+    if (!speaking && !pending) {
+      // Ignore transient startup window before synthesis engine flips to speaking/pending.
+      if (Date.now() < this._ttsStartGraceUntil) {
+        this._ttsPollTimer = setTimeout(() => this._pollTtsEnd(), 120);
+        return;
+      }
+      this._startReplyAudioFinishTransition();
+      this._resetTtsPlaybackState(true);
+      return;
+    }
+    // Once we see active synthesis, grace no longer needed.
+    this._ttsStartGraceUntil = 0;
+    this._ttsPollTimer = setTimeout(() => this._pollTtsEnd(), 250);
+  }
+
+  /** Animate waveform bars for the currently playing assistant reply. */
+  private _animateTtsWaveform(): void {
+    if (!this._isTtsSpeaking) return;
+    if (this._ttsWaveformFrame != null) {
+      cancelAnimationFrame(this._ttsWaveformFrame);
+      this._ttsWaveformFrame = null;
+    }
+    if (this._activeTtsMessageIndex == null) return;
+    const bars = this.popupEl?.querySelectorAll(
+      `.sprout-assistant-popup-message-row[data-msg-idx="${this._activeTtsMessageIndex}"] .sprout-assistant-reply-audio-wave-bar`,
+    );
+    if (!bars?.length) return;
+
+    const tick = () => {
+      if (!this._isTtsSpeaking) return;
+      const now = performance.now() / 200;
+      const heights = [0.7, 1.0, 0.6, 0.9, 0.75];
+      bars.forEach((bar, i) => {
+        const phase = now + i * 0.8;
+        const level = this._ttsPaused ? 0.2 : 0.3 + 0.7 * Math.abs(Math.sin(phase));
+        const h = 3 + Math.round(level * heights[i] * 10);
+        setCssProps(bar as HTMLElement, "height", `${h}px`);
+      });
+      this._ttsWaveformFrame = requestAnimationFrame(tick);
+    };
+    this._ttsWaveformFrame = requestAnimationFrame(tick);
+  }
+
+  /** Render solid play/pause icon for the assistant reply audio button. */
+  private _setReplyAudioButtonIcon(btn: HTMLElement, isPlaying: boolean): void {
+    const iconSvg = isPlaying
+      ? '<svg viewBox="0 0 320 512" xmlns="http://www.w3.org/2000/svg" class="sprout-assistant-reply-audio-solid-icon is-pause" aria-hidden="true"><path fill="currentColor" d="M48 64C21.5 64 0 85.5 0 112V400c0 26.5 21.5 48 48 48H80c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H48zm192 0c-26.5 0-48 21.5-48 48V400c0 26.5 21.5 48 48 48h32c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H240z"></path></svg>'
+      : '<svg viewBox="0 0 384 512" xmlns="http://www.w3.org/2000/svg" class="sprout-assistant-reply-audio-solid-icon is-play" aria-hidden="true"><path fill="currentColor" d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"></path></svg>';
+    replaceChildrenWithHTML(btn, iconSvg);
   }
 
   private async sendChatMessage(): Promise<void> {
@@ -1360,9 +1696,11 @@ export class SproutAssistantPopup {
         "No response returned.",
       );
       this.chatMessages.push({ role: "assistant", text: reply });
-      this._speakReply(reply);
+      this._speakReply(reply, this.chatMessages.length - 1);
     } catch (e) {
-      this.chatError = this._formatAssistantError(e);
+      const userMessage = this._formatAssistantError(e);
+      this._logAssistantRequestError("ask", e, userMessage);
+      this.chatError = userMessage;
     } finally {
       this.isSendingChat = false;
       this._scheduleSave();
@@ -1421,7 +1759,9 @@ export class SproutAssistantPopup {
       );
       this.reviewMessages.push({ role: "assistant", text: reply });
     } catch (e) {
-      this.reviewError = this._formatAssistantError(e);
+      const userMessage = this._formatAssistantError(e);
+      this._logAssistantRequestError("review", e, userMessage);
+      this.reviewError = userMessage;
     } finally {
       this.isReviewingNote = false;
       this._scheduleSave();
@@ -1847,7 +2187,9 @@ export class SproutAssistantPopup {
         this.generatorError = this._tx("ui.studyAssistant.generator.empty", "No valid suggestions were returned. Try adjusting your model, prompt, or enabled card types.");
       }
     } catch (e) {
-      this.generatorError = this._formatAssistantError(e);
+      const userMessage = this._formatAssistantError(e);
+      this._logAssistantRequestError("generate", e, userMessage);
+      this.generatorError = userMessage;
     } finally {
       this.isGenerating = false;
       this.render();
@@ -2277,6 +2619,9 @@ export class SproutAssistantPopup {
     this._headerMenuAbort = null;
 
     const root = this.popupEl;
+    const preservedAssistantScrollTop = this.mode === "assistant"
+      ? (root.querySelector(".sprout-assistant-popup-chat-wrap"))?.scrollTop ?? null
+      : null;
     root.empty();
 
     // ---- Header ----
@@ -2367,18 +2712,25 @@ export class SproutAssistantPopup {
       voiceToggle.setAttribute("tabindex", "0");
       const voiceIcon = voiceToggle.createSpan({ cls: "sprout-assistant-popup-header-menu-icon" });
       voiceIcon.setAttribute("aria-hidden", "true");
-      setIcon(voiceIcon, voiceEnabled ? "mic" : "mic-off");
+      setIcon(voiceIcon, voiceEnabled ? "volume-2" : "volume-x");
       voiceToggle.createSpan({
         text: voiceEnabled
-          ? this._tx("ui.studyAssistant.chat.voiceDisable", "Disable voice chat")
-          : this._tx("ui.studyAssistant.chat.voiceEnable", "Enable voice chat"),
+          ? this._tx("ui.studyAssistant.chat.voiceDisable", "Disable audio playback")
+          : this._tx("ui.studyAssistant.chat.voiceEnable", "Enable audio playback"),
       });
       const toggleVoice = () => {
         this.plugin.settings.studyAssistant.voiceChat = !voiceEnabled;
         void this.plugin.saveAll();
         this._headerMenuOpen = false;
-        if (!this.plugin.settings.studyAssistant.voiceChat && this._isListening) {
-          this._stopVoiceInput();
+        if (!this.plugin.settings.studyAssistant.voiceChat) {
+          if (this._isListening) {
+            this._stopVoiceInput();
+          }
+          if (this._isTtsSpeaking || this._pendingTtsMessageIndex != null) {
+            getTtsService().stop();
+            this._resetTtsPlaybackState();
+          }
+          this._suppressAssistantComposerFocusOnce = true;
         }
         this.render();
       };
@@ -2492,7 +2844,7 @@ export class SproutAssistantPopup {
     const content = root.createDiv({ cls: "sprout-assistant-popup-content" });
 
     if (this.mode === "assistant") {
-      this.renderAssistantMode(content);
+      this.renderAssistantMode(content, preservedAssistantScrollTop);
     } else if (this.mode === "review") {
       this.renderReviewMode(content);
     } else {
@@ -2506,7 +2858,7 @@ export class SproutAssistantPopup {
   //  Ask mode
   // ---------------------------------------------------------------------------
 
-  private renderAssistantMode(parent: HTMLElement): void {
+  private renderAssistantMode(parent: HTMLElement, preservedScrollTop: number | null = null): void {
     const chatWrap = parent.createDiv({ cls: "sprout-assistant-popup-chat-wrap" });
     const userInitial = this.getUserAvatarInitial();
 
@@ -2547,7 +2899,34 @@ export class SproutAssistantPopup {
         const bubble = row.createDiv({
           cls: `sprout-assistant-popup-message-bubble ${msg.role === "user" ? "is-user" : "is-assistant"}`,
         });
-        this.renderMarkdownMessage(bubble, msg.text);
+
+        const bubbleContent = bubble.createDiv({ cls: "sprout-assistant-popup-message-content" });
+
+        if (msg.role === "assistant" && this.plugin.settings.studyAssistant.voiceChat) {
+          const isActiveTts = this._isTtsSpeaking && this._activeTtsMessageIndex === i;
+          const audioBar = bubble.createDiv({
+            cls: `sprout-assistant-reply-audio${isActiveTts ? " is-active" : ""}${this._ttsPaused ? " is-paused" : ""}`,
+          });
+          const audioBtn = audioBar.createEl("button", { cls: "sprout-assistant-reply-audio-btn", type: "button" });
+          audioBtn.setAttribute("aria-label", isActiveTts && !this._ttsPaused ? "Pause reply audio" : "Play reply audio");
+          audioBtn.setAttribute("data-tooltip-position", "top");
+          this._setReplyAudioButtonIcon(audioBtn, isActiveTts && !this._ttsPaused);
+          audioBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this._toggleReplyAudio(msg.text, i);
+          });
+
+          const wave = audioBar.createDiv({ cls: "sprout-assistant-reply-audio-wave" });
+          for (let j = 0; j < 5; j += 1) {
+            wave.createSpan({ cls: "sprout-assistant-reply-audio-wave-bar" });
+          }
+
+          // Keep controls at the top of assistant replies.
+          bubble.prepend(audioBar);
+        }
+
+        this.renderMarkdownMessage(bubbleContent, msg.text);
 
         if (msg.role === "user" && userInitial) {
           this.createUserAvatar(row, userInitial);
@@ -2567,7 +2946,12 @@ export class SproutAssistantPopup {
     }
 
     if (this.chatError) this.renderAssistantErrorBubble(chatWrap, this.chatError);
-    this.anchorToNewestAssistantMessage(chatWrap, messages, "assistant", this.isSendingChat);
+    const anchoredToNewest = this.anchorToNewestAssistantMessage(chatWrap, messages, "assistant", this.isSendingChat);
+    if (!anchoredToNewest && preservedScrollTop != null) {
+      requestAnimationFrame(() => {
+        chatWrap.scrollTop = preservedScrollTop;
+      });
+    }
 
     // ---- Composer ----
     const composer = parent.createDiv({ cls: "sprout-assistant-popup-composer" });
@@ -2597,34 +2981,16 @@ export class SproutAssistantPopup {
     setIcon(sendBtn, this.isSendingChat ? "loader-2" : "arrow-up");
     sendBtn.addEventListener("click", () => void this.sendChatMessage());
 
-    // Voice chat mic button (only when enabled + supported)
-    if (this.plugin.settings.studyAssistant.voiceChat && this._speechRecognitionSupported) {
-      const micBtn = shell.createEl("button", {
-        cls: `sprout-assistant-popup-mic${this._isListening ? " is-listening" : ""}`,
-      });
-      micBtn.type = "button";
-      micBtn.disabled = this.isSendingChat;
-      micBtn.setAttribute("aria-label", this._isListening ? "Stop listening" : "Voice input");
-      micBtn.setAttribute("data-tooltip-position", "top");
-      setIcon(micBtn, this._isListening ? "x" : "mic");
-      micBtn.addEventListener("click", () => {
-        if (this._isListening) {
-          this._stopVoiceInput();
-        } else {
-          void this._startVoiceInput();
-        }
-      });
-
-      if (this._isListening) {
-        const meter = shell.createDiv({ cls: "sprout-assistant-popup-voice-meter" });
-        meter.createDiv({ cls: "sprout-assistant-popup-voice-meter-label", text: "Listening" });
-        const bars = meter.createDiv({ cls: "sprout-assistant-popup-voice-meter-bars" });
-        for (let i = 0; i < 4; i += 1) bars.createSpan({ cls: "sprout-assistant-popup-voice-meter-bar" });
-      }
+    // Focus input when opening, but avoid stealing focus during TTS control renders/end transitions.
+    if (this._suppressAssistantComposerFocusOnce) {
+      this._suppressAssistantComposerFocusOnce = false;
+    } else if (!this._isTtsSpeaking && this._pendingTtsMessageIndex == null) {
+      requestAnimationFrame(() => input.focus());
     }
 
-    // Focus input when opening
-    requestAnimationFrame(() => input.focus());
+    if (this._isTtsSpeaking) {
+      this._animateTtsWaveform();
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -2908,7 +3274,7 @@ export class SproutAssistantPopup {
     messages: ChatMessage[],
     mode: AssistantMode,
     fallbackToBottom = false,
-  ): void {
+  ): boolean {
     let lastAssistantIdx = -1;
     for (let i = messages.length - 1; i >= 0; i -= 1) {
       if (messages[i]?.role === "assistant") {
@@ -2922,8 +3288,9 @@ export class SproutAssistantPopup {
         requestAnimationFrame(() => {
           chatWrap.scrollTop = chatWrap.scrollHeight;
         });
+        return true;
       }
-      return;
+      return false;
     }
 
     const msg = messages[lastAssistantIdx];
@@ -2933,8 +3300,9 @@ export class SproutAssistantPopup {
         requestAnimationFrame(() => {
           chatWrap.scrollTop = chatWrap.scrollHeight;
         });
+        return true;
       }
-      return;
+      return false;
     }
     this._lastAnchoredResponseKeyByMode[mode] = key;
 
@@ -2946,12 +3314,20 @@ export class SproutAssistantPopup {
         requestAnimationFrame(() => {
           chatWrap.scrollTop = chatWrap.scrollHeight;
         });
+        return true;
       }
-      return;
+      return false;
     }
 
     requestAnimationFrame(() => {
-      target.scrollIntoView({ block: "start", behavior: "auto" });
+      // Keep anchoring scoped to the chat viewport; scrollIntoView can choose broader ancestors.
+      const wrapRect = chatWrap.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+      const deltaToTop = targetRect.top - wrapRect.top;
+      const maxScrollTop = Math.max(0, chatWrap.scrollHeight - chatWrap.clientHeight);
+      const nextScrollTop = Math.min(maxScrollTop, Math.max(0, chatWrap.scrollTop + deltaToTop));
+      chatWrap.scrollTop = nextScrollTop;
     });
+    return true;
   }
 }

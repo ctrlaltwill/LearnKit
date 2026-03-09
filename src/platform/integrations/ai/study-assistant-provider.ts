@@ -4,6 +4,16 @@ import type { StudyAssistantProvider } from "./study-assistant-types";
 
 type CompletionMode = "text" | "json";
 
+type ProviderRequestError = Error & {
+  provider?: StudyAssistantProvider;
+  status?: number;
+  detail?: string;
+  endpoint?: string;
+  responseText?: string;
+  responseJson?: unknown;
+  originalError?: unknown;
+};
+
 function trimTrailingSlash(value: string): string {
   return value.replace(/\/+$/, "");
 }
@@ -19,7 +29,7 @@ function isValidHttpUrl(value: string): boolean {
 
 function providerBaseUrl(settings: SproutSettings["studyAssistant"]): string {
   const override = String(settings.endpointOverride || "").trim();
-  if (override) {
+  if (settings.provider === "custom" && override) {
     if (!isValidHttpUrl(override)) {
       throw new Error(`Invalid endpoint URL: must start with https:// or http://`);
     }
@@ -64,6 +74,12 @@ function shouldOmitTemperature(provider: StudyAssistantProvider, model: string):
   return m.startsWith("gpt-5") || m.startsWith("o1") || m.startsWith("o3") || m.startsWith("o4");
 }
 
+function openRouterAlternateModelId(model: string): string {
+  const value = String(model || "").trim();
+  if (!value) return "";
+  return /:free$/i.test(value) ? value.replace(/:free$/i, "") : `${value}:free`;
+}
+
 function providerErrorDetail(res: { json?: unknown; text?: string }): string {
   const json = parseJsonFromUnknown(res.json);
   const err = parseJsonFromUnknown(json?.error);
@@ -71,6 +87,80 @@ function providerErrorDetail(res: { json?: unknown; text?: string }): string {
   if (message) return message;
   const rawText = typeof res.text === "string" ? res.text.trim() : "";
   return rawText;
+}
+
+function recordFromUnknown(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object") return null;
+  return value as Record<string, unknown>;
+}
+
+function statusFromUnknownError(err: unknown): number | null {
+  const obj = recordFromUnknown(err);
+  const statusRaw = obj?.status;
+  const status = typeof statusRaw === "number" ? statusRaw : Number(statusRaw);
+  if (Number.isFinite(status) && status >= 100 && status <= 599) return Math.floor(status);
+
+  const message = err instanceof Error ? err.message : typeof err === "string" ? err : "";
+  const fromMessage = message.match(/status\s+(\d{3})/i)?.[1];
+  if (fromMessage) {
+    const parsed = Number(fromMessage);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+
+function responseTextFromUnknownError(err: unknown): string {
+  const obj = recordFromUnknown(err);
+  const candidates: unknown[] = [
+    obj?.text,
+    recordFromUnknown(obj?.response)?.text,
+    obj?.body,
+    recordFromUnknown(obj?.response)?.body,
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === "string" && candidate.trim()) return candidate.trim();
+  }
+
+  return "";
+}
+
+function responseJsonFromUnknownError(err: unknown): unknown {
+  const obj = recordFromUnknown(err);
+  const direct = obj?.json;
+  if (direct !== undefined) return direct;
+
+  const responseObj = recordFromUnknown(obj?.response);
+  if (responseObj?.json !== undefined) return responseObj.json;
+
+  const rawText = responseTextFromUnknownError(err);
+  if (!rawText) return undefined;
+  try {
+    return JSON.parse(rawText);
+  } catch {
+    return undefined;
+  }
+}
+
+function buildProviderRequestError(args: {
+  provider: StudyAssistantProvider;
+  endpoint: string;
+  status: number;
+  detail?: string;
+  responseText?: string;
+  responseJson?: unknown;
+  originalError?: unknown;
+}): ProviderRequestError {
+  const { provider, endpoint, status, detail = "", responseText = "", responseJson, originalError } = args;
+  const err = new Error(`${provider} request failed (${status})`) as ProviderRequestError;
+  err.provider = provider;
+  err.endpoint = endpoint;
+  err.status = status;
+  if (detail) err.detail = detail;
+  if (responseText) err.responseText = responseText;
+  if (responseJson !== undefined) err.responseJson = responseJson;
+  if (originalError !== undefined) err.originalError = originalError;
+  return err;
 }
 
 function extractTextFromOpenAiLikeResponse(json: Record<string, unknown>): string {
@@ -136,53 +226,82 @@ export async function requestStudyAssistantCompletion(params: {
     .filter((url) => /^data:image\/[a-z0-9.+-]+;base64,[a-z0-9+/=]+$/i.test(url));
 
   if (settings.provider === "anthropic") {
-    const res = await requestUrl({
-      url: `${base}/messages`,
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: 2500,
-        system: systemPrompt,
-        messages: [{
-          role: "user",
-          content: usableImageDataUrls.length
-            ? [
-                { type: "text", text: userPrompt },
-                ...usableImageDataUrls.map((url) => {
-                  const match = url.match(/^data:(image\/[a-z0-9.+-]+);base64,(.+)$/i);
-                  if (!match) {
+    const endpoint = `${base}/messages`;
+    let res: Awaited<ReturnType<typeof requestUrl>>;
+    try {
+      res = await requestUrl({
+        url: endpoint,
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model,
+          max_tokens: 2500,
+          system: systemPrompt,
+          messages: [{
+            role: "user",
+            content: usableImageDataUrls.length
+              ? [
+                  { type: "text", text: userPrompt },
+                  ...usableImageDataUrls.map((url) => {
+                    const match = url.match(/^data:(image\/[a-z0-9.+-]+);base64,(.+)$/i);
+                    if (!match) {
+                      return {
+                        type: "image",
+                        source: {
+                          type: "base64",
+                          media_type: "image/png",
+                          data: "",
+                        },
+                      };
+                    }
                     return {
                       type: "image",
                       source: {
                         type: "base64",
-                        media_type: "image/png",
-                        data: "",
+                        media_type: match[1],
+                        data: match[2],
                       },
                     };
-                  }
-                  return {
-                    type: "image",
-                    source: {
-                      type: "base64",
-                      media_type: match[1],
-                      data: match[2],
-                    },
-                  };
-                }).filter((block) => block.source.data),
-              ]
-            : userPrompt,
-        }],
-      }),
-    });
+                  }).filter((block) => block.source.data),
+                ]
+              : userPrompt,
+          }],
+        }),
+      });
+    } catch (err) {
+      const status = statusFromUnknownError(err) ?? 0;
+      if (status > 0) {
+        const responseText = responseTextFromUnknownError(err);
+        const responseJson = responseJsonFromUnknownError(err);
+        const detail = providerErrorDetail({ json: responseJson, text: responseText });
+        throw buildProviderRequestError({
+          provider: settings.provider,
+          endpoint,
+          status,
+          detail,
+          responseText,
+          responseJson,
+          originalError: err,
+        });
+      }
+      throw err;
+    }
 
     if (res.status < 200 || res.status >= 300) {
-      throw new Error(`Anthropic request failed (${res.status})`);
+      const detail = providerErrorDetail(res);
+      throw buildProviderRequestError({
+        provider: settings.provider,
+        endpoint,
+        status: res.status,
+        detail,
+        responseText: typeof res.text === "string" ? res.text : "",
+        responseJson: res.json,
+      });
     }
 
     const json = parseJsonFromUnknown(res.json);
@@ -191,43 +310,88 @@ export async function requestStudyAssistantCompletion(params: {
     return text;
   }
 
-  const res = await requestUrl({
-    url: `${base}/chat/completions`,
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: "system", content: systemPrompt },
-        {
-          role: "user",
-          content: usableImageDataUrls.length
-            ? [
-                { type: "text", text: userPrompt },
-                ...usableImageDataUrls.map((url) => ({
-                  type: "image_url",
-                  image_url: { url },
-                })),
-              ]
-            : userPrompt,
-        },
-      ],
-      ...(shouldOmitTemperature(settings.provider, model) ? {} : { temperature: 0.4 }),
-      ...(mode === "json" ? { response_format: { type: "json_object" } } : {}),
-    }),
-  });
+  const endpoint = `${base}/chat/completions`;
+  const shouldUseStructuredJsonResponse = mode === "json" && settings.provider !== "openrouter";
 
-  if (res.status < 200 || res.status >= 300) {
-    const detail = providerErrorDetail(res);
-    throw new Error(
-      detail
-        ? `${settings.provider} request failed (${res.status}): ${detail}`
-        : `${settings.provider} request failed (${res.status})`,
-    );
+  const requestOpenAiLike = async (requestModel: string): Promise<Awaited<ReturnType<typeof requestUrl>>> => {
+    try {
+      return await requestUrl({
+        url: endpoint,
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: requestModel,
+          messages: [
+            { role: "system", content: systemPrompt },
+            {
+              role: "user",
+              content: usableImageDataUrls.length
+                ? [
+                    { type: "text", text: userPrompt },
+                    ...usableImageDataUrls.map((url) => ({
+                      type: "image_url",
+                      image_url: { url },
+                    })),
+                  ]
+                : userPrompt,
+            },
+          ],
+          ...(shouldOmitTemperature(settings.provider, requestModel) ? {} : { temperature: 0.4 }),
+          ...(shouldUseStructuredJsonResponse ? { response_format: { type: "json_object" } } : {}),
+        }),
+      });
+    } catch (err) {
+      const status = statusFromUnknownError(err) ?? 0;
+      if (status > 0) {
+        const responseText = responseTextFromUnknownError(err);
+        const responseJson = responseJsonFromUnknownError(err);
+        const detail = providerErrorDetail({ json: responseJson, text: responseText });
+        throw buildProviderRequestError({
+          provider: settings.provider,
+          endpoint,
+          status,
+          detail,
+          responseText,
+          responseJson,
+          originalError: err,
+        });
+      }
+      throw err;
+    }
+  };
+
+  const assertOkOrThrow = (response: Awaited<ReturnType<typeof requestUrl>>): void => {
+    if (response.status < 200 || response.status >= 300) {
+      const detail = providerErrorDetail(response);
+      throw buildProviderRequestError({
+        provider: settings.provider,
+        endpoint,
+        status: response.status,
+        detail,
+        responseText: typeof response.text === "string" ? response.text : "",
+        responseJson: response.json,
+      });
+    }
+  };
+
+  let res: Awaited<ReturnType<typeof requestUrl>>;
+  try {
+    res = await requestOpenAiLike(model);
+    assertOkOrThrow(res);
+  } catch (err) {
+    const status = statusFromUnknownError(err) ?? (recordFromUnknown(err)?.status as number | undefined) ?? 0;
+    const canRetryOpenRouterModelAlias = settings.provider === "openrouter" && status === 404;
+    if (!canRetryOpenRouterModelAlias) throw err;
+
+    const alternateModel = openRouterAlternateModelId(model);
+    if (!alternateModel || alternateModel.toLowerCase() === model.toLowerCase()) throw err;
+
+    res = await requestOpenAiLike(alternateModel);
+    assertOkOrThrow(res);
   }
 
   const json = parseJsonFromUnknown(res.json);

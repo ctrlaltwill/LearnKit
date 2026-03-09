@@ -225,17 +225,51 @@ export class SproutSettingsTab extends PluginSettingTab {
    */
   onRequestRerender?: () => void;
 
+  private _getSettingsScrollContainer(): HTMLElement | null {
+    const local = this.containerEl;
+    const localStyle = window.getComputedStyle(local);
+    const localScrollable = /(auto|scroll)/.test(localStyle.overflowY) && local.scrollHeight > local.clientHeight;
+    if (localScrollable) return local;
+
+    const nativeSettings = local.closest(".vertical-tab-content-container");
+    if (nativeSettings) return nativeSettings;
+
+    let node: HTMLElement | null = local.parentElement;
+    while (node) {
+      const style = window.getComputedStyle(node);
+      if (/(auto|scroll)/.test(style.overflowY) && node.scrollHeight > node.clientHeight) return node;
+      node = node.parentElement;
+    }
+    return null;
+  }
+
+  private _restoreScrollPosition(container: HTMLElement | null, top: number): void {
+    if (!container) return;
+    requestAnimationFrame(() => {
+      container.scrollTop = top;
+      // Some host layouts settle after one frame; apply once more to avoid jumps.
+      requestAnimationFrame(() => {
+        container.scrollTop = top;
+      });
+    });
+  }
+
   /**
    * Re-render the current tab content.  Uses the external callback when
    * available (workspace view), otherwise falls back to the built-in
    * `display()` which re-renders the entire native settings modal.
    */
   private _softRerender() {
+    const scrollContainer = this._getSettingsScrollContainer();
+    const previousTop = scrollContainer?.scrollTop ?? 0;
+
     if (this.onRequestRerender) {
       this.onRequestRerender();
     } else {
       this.display();
     }
+
+    this._restoreScrollPosition(scrollContainer, previousTop);
   }
 
   /**
@@ -3118,7 +3152,7 @@ export class SproutSettingsTab extends PluginSettingTab {
         { value: "claude-3-5-haiku-latest", label: "Claude 3.5 Haiku" },
       ],
       xai: [
-        { value: "grok-4-0709", label: "Grok 4" },
+        { value: "grok-4", label: "Grok 4" },
         { value: "grok-3", label: "Grok 3" },
         { value: "grok-3-mini", label: "Grok 3 Mini" },
       ],
@@ -3180,7 +3214,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper).setName(this._tx("ui.settings.studyAssistant.sections.provider", "AI Provider")).setHeading();
 
-    const standardProviderOptions: Array<{ value: typeof provider; label: string }> = [
+    const standardProviderOptionsUnsorted = [
       { value: "anthropic", label: "Anthropic" },
       { value: "deepseek", label: "DeepSeek" },
       { value: "google", label: "Google" },
@@ -3188,9 +3222,12 @@ export class SproutSettingsTab extends PluginSettingTab {
       { value: "openrouter", label: "OpenRouter" },
       { value: "openai", label: "OpenAI" },
       { value: "perplexity", label: "Perplexity" },
-    ].sort((a, b) => a.label.localeCompare(b.label));
+    ] satisfies Array<{ value: StudyAssistantProvider; label: string }>;
 
-    const providerOptions: Array<{ value: typeof provider; label: string }> = [
+    const standardProviderOptions: Array<{ value: StudyAssistantProvider; label: string }> = [...standardProviderOptionsUnsorted]
+      .sort((a, b) => a.label.localeCompare(b.label));
+
+    const providerOptions: Array<{ value: StudyAssistantProvider; label: string }> = [
       ...standardProviderOptions,
       { value: "custom", label: "Custom" },
     ];
@@ -3234,7 +3271,7 @@ export class SproutSettingsTab extends PluginSettingTab {
       withDependentSetting(
         new Setting(wrapper)
           .setName(this._tx("ui.settings.studyAssistant.openrouter.tier.name", "OpenRouter model access"))
-          .setDesc(this._tx("ui.settings.studyAssistant.openrouter.tier.desc", "Choose whether to browse Free models (25 options) or Paid models (full catalog)."))
+          .setDesc(this._tx("ui.settings.studyAssistant.openrouter.tier.desc", "Choose Free or Paid catalog filtering. Router options remain pinned at the top."))
           .then((setting) => {
             this._addSimpleSelect(setting.controlEl, {
               options: [
@@ -3278,7 +3315,9 @@ export class SproutSettingsTab extends PluginSettingTab {
           }
 
           const models = getProviderModelOptions(provider);
-          const sortedModels = [...models].sort((a, b) => a.label.localeCompare(b.label));
+          const sortedModels = provider === "openrouter"
+            ? [...models]
+            : [...models].sort((a, b) => a.label.localeCompare(b.label));
           const currentModel = String(this.plugin.settings.studyAssistant.model || "").trim();
           const modelOptions = [...sortedModels];
           if (currentModel && !sortedModels.some((model) => model.value === currentModel)) {
@@ -3520,7 +3559,8 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     withDependentSetting(new Setting(wrapper).setName(this._tx("ui.settings.studyAssistant.sections.generatorTypes", "What flashcard types to generate")).setHeading());
 
-    const cardTypes: Array<{ key: keyof typeof this.plugin.settings.studyAssistant.generatorTypes; label: string }> = [
+    type StudyAssistantGeneratorTypeKey = keyof SproutSettings["studyAssistant"]["generatorTypes"];
+    const cardTypes: Array<{ key: StudyAssistantGeneratorTypeKey; label: string }> = [
       { key: "basic", label: "Basic" },
       { key: "reversed", label: "Basic (reversed)" },
       { key: "cloze", label: "Cloze" },
@@ -3645,17 +3685,63 @@ export class SproutSettingsTab extends PluginSettingTab {
     const models = this._openRouterModelsCache ?? [];
     if (!models.length) return [];
 
+    const ROUTER_FREE_ID = "openrouter/free";
+    const ROUTER_AUTO_ID = "openrouter/auto";
+    const ROUTER_SWITCHPOINT_ID = "switchpoint/router";
+    const ROUTER_BODYBUILDER_ID = "openrouter/bodybuilder";
+    const byId = new Map(models.map((model) => [model.id, model]));
+
+    const routerIds = tier === "free"
+      ? [ROUTER_FREE_ID, ROUTER_AUTO_ID, ROUTER_BODYBUILDER_ID]
+      : [ROUTER_AUTO_ID, ROUTER_SWITCHPOINT_ID, ROUTER_BODYBUILDER_ID];
+
+    const routerOptions: StudyAssistantModelOption[] = [];
+    if (routerIds.includes(ROUTER_FREE_ID) && byId.has(ROUTER_FREE_ID)) {
+      routerOptions.push({
+        value: ROUTER_FREE_ID,
+        label: "Free Models Router",
+        description: "Routes across currently available free models",
+        section: "Router",
+      });
+    }
+    if (routerIds.includes(ROUTER_AUTO_ID) && byId.has(ROUTER_AUTO_ID)) {
+      routerOptions.push({
+        value: ROUTER_AUTO_ID,
+        label: "Auto Router",
+        description: "Automated model selection",
+        section: "Router",
+      });
+    }
+    if (routerIds.includes(ROUTER_SWITCHPOINT_ID) && byId.has(ROUTER_SWITCHPOINT_ID)) {
+      routerOptions.push({
+        value: ROUTER_SWITCHPOINT_ID,
+        label: "Switchpoint Router",
+        description: "Flat-rate external routing engine",
+        section: "Router",
+      });
+    }
+    if (routerIds.includes(ROUTER_BODYBUILDER_ID) && byId.has(ROUTER_BODYBUILDER_ID)) {
+      routerOptions.push({
+        value: ROUTER_BODYBUILDER_ID,
+        label: "Body Builder (beta)",
+        description: "Natural language to OpenRouter request builder",
+        section: "Router",
+      });
+    }
+
     const filtered = models
       .filter((model) => (tier === "free" ? model.isFree : !model.isFree))
+      .filter((model) => !routerIds.includes(model.id))
       .sort((a, b) => (a.provider === b.provider ? a.name.localeCompare(b.name) : a.provider.localeCompare(b.provider)));
 
-    const limited = tier === "free" ? filtered.slice(0, 25) : filtered;
-    return limited.map((model) => ({
+    const dynamicOptions = filtered.map((model) => ({
       value: model.id,
       label: this._cleanOpenRouterModelDisplayName(model.name || this._formatModelLabel(model.id)),
       description: model.id,
       section: this._normaliseOpenRouterProviderLabel(model.provider),
     }));
+
+    return [...routerOptions, ...dynamicOptions];
   }
 
   private _cleanOpenRouterModelDisplayName(name: string): string {
@@ -4988,6 +5074,7 @@ export class SproutSettingsTab extends PluginSettingTab {
       for (const it of items) {
         const show = !q || it.lower.includes(q);
         it.el.hidden = !show;
+        it.el.style.display = show ? "" : "none";
         if (show) {
           visible++;
           if (it.sectionKey) {
@@ -5000,10 +5087,15 @@ export class SproutSettingsTab extends PluginSettingTab {
       for (const section of sections.values()) {
         const hasMatches = section.visibleCount > 0;
         section.titleEl.hidden = !hasMatches;
-        if (section.separatorEl) section.separatorEl.hidden = !hasMatches;
+        section.titleEl.style.display = hasMatches ? "" : "none";
+        if (section.separatorEl) {
+          section.separatorEl.hidden = !hasMatches;
+          section.separatorEl.style.display = hasMatches ? "" : "none";
+        }
       }
 
       emptyMsg.hidden = visible !== 0;
+      emptyMsg.style.display = visible === 0 ? "" : "none";
     };
 
     if (searchInput) {
