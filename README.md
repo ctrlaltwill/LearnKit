@@ -43,15 +43,15 @@ With rich card types, FSRS scheduling, Anki import/export, study analytics, and 
 
 ## Key features
 
-- FSRS-based scheduler for optimised spaced repetition 
-- Card types: cloze, basic, multiple choice, image occlusion and more
-- Built-in text-to-speech for language learning and audio playback of cards
-- Anki import/export _(experimental)_ with scheduling data and media support
-- Analytics dashboard with charts and heatmaps
-- Inline editor, card browser, and bulk edit tools
-- Markdown-first workflow with note-linked cards
-- Reading view customisation to keep your notes clean
-- Sprig, an AI learning companion (currently in _beta_)
+- FSRS scheduler for optimised spaced repetition and fewer unnecessary reviews.
+- Flexible card types: cloze, basic, multiple choice, image occlusion, and more.
+- Built-in text-to-speech and audio playback for language and listening practice.
+- Anki import/export _(experimental)_ with scheduling data and media support.
+- Analytics dashboard with charts and heatmaps for study and retention trends.
+- Inline editor, card browser, and bulk edits for faster card management.
+- Markdown-first workflow with note-linked cards in your Obsidian vault.
+- Reading view customisation to keep notes clean and distraction-free.
+- AI learning companion (currently in _beta_) for understanding and quick flashcard generation.Study reminders + Gatekeeper (an optional lock on your Vault that blocks distractions until you review) nudges you to keep study habits consistent.
 
 ### Sprig
 
