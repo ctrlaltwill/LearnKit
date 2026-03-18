@@ -8,11 +8,11 @@
 
 ![LearnKit Banner One - Welcome](site/branding/Banner%20One%20-%20Welcome.png)
 
-LearnKit is a full-featured flashcard and spaced-repetition system built natively for Obsidian, with AI-powered study workflows that help you learn faster from your own notes. 
+LearnKit brings flashcards, spaced repetition, and AI-powered study tools natively into Obsidian — so you can learn faster from the notes you already write.
 
-Flashcards are at the heart of LearnKit, but the goal is bigger: to be the memory layer for your vault - connecting note-taking, review, and long-term retention in one low-friction workflow. LearnKit now includes a range of beta-features that go beyond flashcards: note review, generated tests and study plans.
+Flashcards are at its core, but the vision is bigger: a memory layer for your vault that ties note-taking, review, and long-term retention into one seamless workflow.
 
-With rich card types, FSRS scheduling, Anki import/export, study analytics, and built-in AI assistance for understanding and card creation, LearnKit helps you spend less time managing and more time remembering.
+Rich card types, FSRS scheduling, Anki compatibility, study analytics, and a built-in AI assistant — less managing, more remembering.
 
 ## Getting started
 
@@ -42,33 +42,31 @@ With rich card types, FSRS scheduling, Anki import/export, study analytics, and 
 
 ## Key features
 
-- FSRS scheduler for optimised spaced repetition and fewer unnecessary reviews.
-- Flexible card types: cloze, basic, multiple choice, image occlusion, and more.
-- Built-in text-to-speech and audio playback for language and listening practice.
-- Anki import/export with scheduling data and media support.
-- Analytics dashboard with charts and heatmaps for study and retention trends.
-- Inline editor, card browser, and bulk edits for faster card management.
-- Markdown-first workflow with note-linked cards in your Obsidian vault.
-- Reading view customisation to keep notes clean and distraction-free.
-- AI learning companion for understanding and quick flashcard generation.
-- Note review for spaced repetition of whole notes and chapters of your vault.
-- Coach, an exam-planning tool to support and guide you as you prepare for your next big exam!
+- **FSRS scheduling** — adaptive spaced repetition so every review counts.
+- **Rich card types** — cloze, basic, reversed, multiple choice, image occlusion, and more.
+- **Text-to-speech & audio** — built-in playback for language learning and listening practice.
+- **Anki import/export** — bring your decks, scheduling data, and media in or out.
+- **Study analytics** — charts, heatmaps, and retention trends at a glance.
+- **Card browser & bulk edits** — inline editor and fast search across large collections.
+- **Markdown-first** — cards live inside your notes, linked to the knowledge they came from.
+- **Reading view customisation** — keep notes clean and distraction-free while studying.
+- **Note review mode** — spaced repetition for your notes, not just cards.
+- **Study Coach** _(beta)_ — personalised study plans and coaching for your exams.
+- **Test mode** — auto-generated quizzes straight from your notes.
 
-### LearnKit Companion
+### Companion — AI learning assistant
 
-Companion is your AI learning assistant inside LearnKit. It can:
-- Answer questions about your current note
-- Review your notes and suggest improvements
-- Generate flashcards from your note content (and external context)
-- Generate tests and assessments based on your note and folder contents
+Companion is your AI study partner, built right into LearnKit:
 
-Companion is currently in _beta_. It helps you understand notes faster, improve them with clear feedback, and turn them into ready-to-study flashcards in one workflow.
+- **Ask** — get answers about the note you’re reading.
+- **Review** — receive clear, actionable feedback on your notes.
+- **Generate** — turn note content into flashcards in seconds.
 
-To try Companion, download the latest release from [Releases](https://github.com/ctrlaltwill/LearnKit/releases) and install it manually.
+Understand faster, write better, and create study-ready cards without leaving Obsidian.
 
-🎥 Watch Companion in action: **[Companion Demo →](https://youtu.be/fe1htR7hjvY)**
+🎥 **[Watch Companion in action →](https://youtu.be/fe1htR7hjvY)**
 
-You **bring your own API key**, so cost depends on the provider and model you choose. Companion supports providers with free tiers (e.g., Google, OpenRouter) as well as premium platforms (e.g., Anthropic, OpenAI, Perplexity). LearnKit adds no subscription fees or API markups. If you want to try it for free, we recommend using Auto Router via OpenRouter.
+You **bring your own API key** — zero subscriptions, zero markups. Works with free-tier providers (Google, OpenRouter) and premium platforms (Anthropic, OpenAI, Perplexity). To start for free, try Auto Router via OpenRouter.
 
 ## Feature highlights
 
@@ -95,6 +93,6 @@ This project also uses Circle Flags assets from [HatScripts/circle-flags](https:
 
 See [here](NOTICES.md) for additional third-party attributions and license notices.
 
-### Our Commitment 
+### Our Commitment
 
-LearnKit is proudly open source and will always remain free. We firmly believe learning tools shouldn’t lock your knowledge behind subscriptions. That’s why your notes and your data will always remain entirely under your control.
+LearnKit is open source and always free. Your notes, your data, your control — no paywalls, no lock-in.
