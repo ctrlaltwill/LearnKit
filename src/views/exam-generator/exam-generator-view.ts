@@ -135,7 +135,7 @@ export class SproutExamGeneratorView extends ItemView {
     await this._testsDb.open();
     this._savedTests = this._testsDb.listTests(25);
 
-    await this._reloadNotes();
+    this._reloadNotes();
     this._applyMaxWidth();
     this._render();
   }
@@ -155,10 +155,9 @@ export class SproutExamGeneratorView extends ItemView {
   }
 
   onRefresh(): void {
-    void this._reloadNotes().then(() => {
-      this._savedTests = this._testsDb?.listTests(25) ?? [];
-      this._render();
-    });
+    this._reloadNotes();
+    this._savedTests = this._testsDb?.listTests(25) ?? [];
+    this._render();
   }
 
   setCoachScope(scope: Scope | null): void {
@@ -178,7 +177,7 @@ export class SproutExamGeneratorView extends ItemView {
   }
 
   private async _applyCoachScope(scope: Scope): Promise<void> {
-    await this._reloadNotes();
+    this._reloadNotes();
 
     this._mode = "setup";
     this._setupStage = "source";
@@ -234,7 +233,7 @@ export class SproutExamGeneratorView extends ItemView {
     this._render();
   }
 
-  private async _reloadNotes(): Promise<void> {
+  private _reloadNotes(): void {
     const files = this.app.vault.getMarkdownFiles();
     this._notes = [...files].sort((a, b) => a.path.localeCompare(b.path));
     const folderSet = new Set<string>();

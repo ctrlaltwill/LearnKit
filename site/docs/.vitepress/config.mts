@@ -1,5 +1,7 @@
 import { defineConfig } from "vitepress";
 
+const DEFAULT_BASE = "/LearnKit/";
+
 const titleOverrides = new Map<string, string>([
   ["Home", "Overview"],
   ["Support-LearnKit", "About LearnKit"],
@@ -9,6 +11,11 @@ const titleOverrides = new Map<string, string>([
   ["Guide-for-Free-Usage", "Guide for Free Usage"],
   ["Companion-Setting-Up", "Setting Up"],
   ["Companion-Usage", "Usage"],
+  ["Anki-Export-&-Import", "Anki Import Export"],
+  ["Cards", "Cards Overview"],
+  ["Language-Settings", "Language Options"],
+  ["Backups", "Back Up"],
+  ["Flag-Codes", "Flag Codes"],
 ]);
 
 function toPath(page: string): string {
@@ -19,8 +26,20 @@ function toTitle(page: string): string {
   return titleOverrides.get(page) ?? page.replace(/-/g, " ");
 }
 
-function iconText(icon: string, label: string): string {
-  return `${icon} ${label}`;
+function normalizeBase(base: string): string {
+  if (!base) return DEFAULT_BASE;
+  const withLeadingSlash = base.startsWith("/") ? base : `/${base}`;
+  return withLeadingSlash.endsWith("/") ? withLeadingSlash : `${withLeadingSlash}/`;
+}
+
+function resolveDocsBase(): string {
+  const envBase = process.env.VITEPRESS_BASE?.trim();
+  if (envBase) return normalizeBase(envBase);
+
+  const repoName = process.env.GITHUB_REPOSITORY?.split("/")[1]?.trim();
+  if (repoName) return normalizeBase(`/${repoName}/`);
+
+  return DEFAULT_BASE;
 }
 
 function escapeMustache(content: string): string {
@@ -32,7 +51,7 @@ function escapeMustache(content: string): string {
 export default defineConfig({
   title: "LearnKit",
   description: "LearnKit documentation and user guides",
-  base: "/LearnKit/",
+  base: resolveDocsBase(),
   cleanUrls: true,
   lastUpdated: true,
   markdown: {
@@ -72,141 +91,141 @@ export default defineConfig({
     },
     sidebar: [
       {
-        text: iconText("🏠", "Home"),
+        text: "Home",
         items: [
-          { text: iconText("🏠", toTitle("Home")), link: toPath("Home") },
-          { text: iconText("🌲", toTitle("Wiki-Tree")), link: toPath("Wiki-Tree") },
+          { text: toTitle("Home"), link: toPath("Home") },
+          { text: toTitle("Wiki-Tree"), link: toPath("Wiki-Tree") },
         ],
       },
       {
-        text: iconText("🚀", "Getting Started"),
+        text: "Getting Started",
         items: [
-          { text: iconText("🧭", toTitle("Getting-Started")), link: toPath("Getting-Started") },
-          { text: iconText("⬇️", toTitle("Installation")), link: toPath("Installation") },
-          { text: iconText("🔄", toTitle("Syncing")), link: toPath("Syncing") },
-          { text: iconText("📦", toTitle("Anki-Export-&-Import")), link: toPath("Anki-Export-&-Import") },
+          { text: toTitle("Getting-Started"), link: toPath("Getting-Started") },
+          { text: toTitle("Installation"), link: toPath("Installation") },
+          { text: toTitle("Syncing"), link: toPath("Syncing") },
+          { text: toTitle("Anki-Export-&-Import"), link: toPath("Anki-Export-&-Import") },
         ],
       },
       {
-        text: iconText("🧠", "Workflows"),
+        text: "Workflows",
         items: [
-          { text: iconText("🗂️", toTitle("Flashcards")), link: toPath("Flashcards") },
-          { text: iconText("📝", toTitle("Notes")), link: toPath("Notes") },
-          { text: iconText("🧑‍🏫", toTitle("Coach")), link: toPath("Coach") },
-          { text: iconText("✅", toTitle("Tests")), link: toPath("Tests") },
+          { text: toTitle("Flashcards"), link: toPath("Flashcards") },
+          { text: toTitle("Notes"), link: toPath("Notes") },
+          { text: toTitle("Coach"), link: toPath("Coach") },
+          { text: toTitle("Tests"), link: toPath("Tests") },
         ],
       },
       {
-        text: iconText("🃏", "Cards"),
+        text: "Cards",
         items: [
-          { text: iconText("🧱", toTitle("Cards")), link: toPath("Cards") },
-          { text: iconText("➕", toTitle("Creating-Cards")), link: toPath("Creating-Cards") },
-          { text: iconText("✏️", toTitle("Editing-Cards")), link: toPath("Editing-Cards") },
-          { text: iconText("🧩", toTitle("Card-Formatting")), link: toPath("Card-Formatting") },
-          { text: iconText("📋", toTitle("Card-Browser")), link: toPath("Card-Browser") },
+          { text: toTitle("Cards"), link: toPath("Cards") },
+          { text: toTitle("Creating-Cards"), link: toPath("Creating-Cards") },
+          { text: toTitle("Editing-Cards"), link: toPath("Editing-Cards") },
+          { text: toTitle("Card-Formatting"), link: toPath("Card-Formatting") },
+          { text: toTitle("Card-Browser"), link: toPath("Card-Browser") },
           {
-            text: iconText("🧬", "Card Types"),
+            text: "Card Types",
             items: [
-              { text: iconText("🔁", toTitle("Basic-&-Reversed-Cards")), link: toPath("Basic-&-Reversed-Cards") },
-              { text: iconText("🫥", toTitle("Cloze-Cards")), link: toPath("Cloze-Cards") },
-              { text: iconText("🖼️", toTitle("Image-Occlusion")), link: toPath("Image-Occlusion") },
-              { text: iconText("☑️", toTitle("Multiple-Choice-Questions")), link: toPath("Multiple-Choice-Questions") },
-              { text: iconText("🔢", toTitle("Ordered-Questions")), link: toPath("Ordered-Questions") },
+              { text: toTitle("Basic-&-Reversed-Cards"), link: toPath("Basic-&-Reversed-Cards") },
+              { text: toTitle("Cloze-Cards"), link: toPath("Cloze-Cards") },
+              { text: toTitle("Image-Occlusion"), link: toPath("Image-Occlusion") },
+              { text: toTitle("Multiple-Choice-Questions"), link: toPath("Multiple-Choice-Questions") },
+              { text: toTitle("Ordered-Questions"), link: toPath("Ordered-Questions") },
             ],
           },
           {
-            text: iconText("🚩", "Flags"),
+            text: "Flags",
             items: [
-              { text: iconText("🚩", toTitle("Flags")), link: toPath("Flags") },
-              { text: iconText("📑", toTitle("Flag-Codes")), link: toPath("Flag-Codes") },
-            ],
-          },
-        ],
-      },
-      {
-        text: iconText("🎓", "Study"),
-        items: [
-          {
-            text: iconText("🔁", "Review Flow"),
-            items: [
-              { text: iconText("📚", toTitle("Study-Sessions")), link: toPath("Study-Sessions") },
-              { text: iconText("✅", toTitle("Grading")), link: toPath("Grading") },
-              { text: iconText("🗓️", toTitle("Scheduling")), link: toPath("Scheduling") },
-            ],
-          },
-          {
-            text: iconText("🧷", "Card State"),
-            items: [
-              { text: iconText("📦", toTitle("Burying-Cards")), link: toPath("Burying-Cards") },
-              { text: iconText("⏸️", toTitle("Suspending-Cards")), link: toPath("Suspending-Cards") },
-            ],
-          },
-          {
-            text: iconText("🧭", "Scope"),
-            items: [{ text: iconText("🧩", toTitle("Widget")), link: toPath("Widget") }],
-          },
-          {
-            text: iconText("📖", "Reading View"),
-            items: [
-              { text: iconText("📖", toTitle("Reading-View")), link: toPath("Reading-View") },
-              { text: iconText("🎨", toTitle("Reading-View-Styles")), link: toPath("Reading-View-Styles") },
-              { text: iconText("🖌️", toTitle("Custom-Reading-Styles")), link: toPath("Custom-Reading-Styles") },
+              { text: toTitle("Flags"), link: toPath("Flags") },
+              { text: toTitle("Flag-Codes"), link: toPath("Flag-Codes") },
             ],
           },
         ],
       },
       {
-        text: iconText("✨", "Companion"),
+        text: "Study",
         items: [
-          { text: iconText("✨", toTitle("Companion-Features")), link: toPath("Companion-Features") },
-          { text: iconText("⚙️", toTitle("Companion-Configuration")), link: toPath("Companion-Configuration") },
-          { text: iconText("🔧", toTitle("Companion-Setting-Up")), link: toPath("Companion-Setting-Up") },
-          { text: iconText("💬", toTitle("Companion-Usage")), link: toPath("Companion-Usage") },
-          { text: iconText("💸", toTitle("Guide-for-Free-Usage")), link: toPath("Guide-for-Free-Usage") },
+          {
+            text: "Review Flow",
+            items: [
+              { text: toTitle("Study-Sessions"), link: toPath("Study-Sessions") },
+              { text: toTitle("Grading"), link: toPath("Grading") },
+              { text: toTitle("Scheduling"), link: toPath("Scheduling") },
+            ],
+          },
+          {
+            text: "Card State",
+            items: [
+              { text: toTitle("Burying-Cards"), link: toPath("Burying-Cards") },
+              { text: toTitle("Suspending-Cards"), link: toPath("Suspending-Cards") },
+            ],
+          },
+          {
+            text: "Scope",
+            items: [{ text: toTitle("Widget"), link: toPath("Widget") }],
+          },
+          {
+            text: "Reading View",
+            items: [
+              { text: toTitle("Reading-View"), link: toPath("Reading-View") },
+              { text: toTitle("Reading-View-Styles"), link: toPath("Reading-View-Styles") },
+              { text: toTitle("Custom-Reading-Styles"), link: toPath("Custom-Reading-Styles") },
+            ],
+          },
         ],
       },
       {
-        text: iconText("🔊", "Audio"),
+        text: "Companion",
         items: [
-          { text: iconText("🗣️", toTitle("Text-to-Speech")), link: toPath("Text-to-Speech") },
-          { text: iconText("🌐", toTitle("Language-Settings")), link: toPath("Language-Settings") },
+          { text: toTitle("Companion-Features"), link: toPath("Companion-Features") },
+          { text: toTitle("Companion-Configuration"), link: toPath("Companion-Configuration") },
+          { text: toTitle("Companion-Setting-Up"), link: toPath("Companion-Setting-Up") },
+          { text: toTitle("Companion-Usage"), link: toPath("Companion-Usage") },
+          { text: toTitle("Guide-for-Free-Usage"), link: toPath("Guide-for-Free-Usage") },
         ],
       },
       {
-        text: iconText("📊", "Analytics"),
+        text: "Audio",
         items: [
-          { text: iconText("📊", toTitle("Analytics")), link: toPath("Analytics") },
-          { text: iconText("📈", toTitle("Charts")), link: toPath("Charts") },
+          { text: toTitle("Text-to-Speech"), link: toPath("Text-to-Speech") },
+          { text: toTitle("Language-Settings"), link: toPath("Language-Settings") },
         ],
       },
       {
-        text: iconText("⚙️", "Settings"),
+        text: "Analytics",
         items: [
-          { text: iconText("🧭", toTitle("Settings-Explained")), link: toPath("Settings-Explained") },
-          { text: iconText("⚙️", toTitle("Settings")), link: toPath("Settings") },
-          { text: iconText("🔔", toTitle("Reminders")), link: toPath("Reminders") },
-          { text: iconText("⌨️", toTitle("Keyboard-Shortcuts")), link: toPath("Keyboard-Shortcuts") },
-          { text: iconText("🧱", toTitle("Custom-Delimiters")), link: toPath("Custom-Delimiters") },
-          { text: iconText("🛡️", toTitle("Gatekeeper")), link: toPath("Gatekeeper") },
+          { text: toTitle("Analytics"), link: toPath("Analytics") },
+          { text: toTitle("Charts"), link: toPath("Charts") },
         ],
       },
       {
-        text: iconText("🛠️", "Maintenance"),
+        text: "Settings",
         items: [
-          { text: iconText("💾", toTitle("Backups")), link: toPath("Backups") },
-          { text: iconText("🌍", toTitle("Localization-Debt")), link: toPath("Localization-Debt") },
+          { text: toTitle("Settings-Explained"), link: toPath("Settings-Explained") },
+          { text: toTitle("Settings"), link: toPath("Settings") },
+          { text: toTitle("Reminders"), link: toPath("Reminders") },
+          { text: toTitle("Keyboard-Shortcuts"), link: toPath("Keyboard-Shortcuts") },
+          { text: toTitle("Custom-Delimiters"), link: toPath("Custom-Delimiters") },
+          { text: toTitle("Gatekeeper"), link: toPath("Gatekeeper") },
         ],
       },
       {
-        text: iconText("🛡️", "Policies"),
+        text: "Maintenance",
         items: [
-          { text: iconText("🛡️", toTitle("AI-Usage-Policy")), link: toPath("AI-Usage-Policy") },
+          { text: toTitle("Backups"), link: toPath("Backups") },
+          { text: toTitle("Localization-Debt"), link: toPath("Localization-Debt") },
         ],
       },
       {
-        text: iconText("📚", "Reference"),
+        text: "Policies",
         items: [
-          { text: iconText("🧾", toTitle("Support-LearnKit")), link: toPath("Support-LearnKit") },
+          { text: toTitle("AI-Usage-Policy"), link: toPath("AI-Usage-Policy") },
+        ],
+      },
+      {
+        text: "Reference",
+        items: [
+          { text: toTitle("Support-LearnKit"), link: toPath("Support-LearnKit") },
         ],
       },
     ],

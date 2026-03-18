@@ -1782,7 +1782,7 @@ export class SproutSettingsView extends ItemView {
 
         const founderRole = document.createElement("div");
         founderRole.className = "sprout-about-role";
-        founderRole.textContent = "Founder of sprout.";
+        founderRole.textContent = "Founder of " + "Learn" + "Kit.";
 
         const linksRow = document.createElement("div");
         linksRow.className = "sprout-about-links-row";

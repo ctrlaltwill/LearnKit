@@ -1379,7 +1379,7 @@ body:not(.is-mobile) .sprout-guide-body pre button.copy-code-button.sprout-guide
 .sprout-about-linkedin {
   font-size: var(--sprout-font-xs);
   font-weight: 600;
-  color: var(--interactive-accent);
+  color: var(--theme-base-95);
   text-decoration: none;
   cursor: pointer;
   display: inline-flex;
@@ -1389,7 +1389,7 @@ body:not(.is-mobile) .sprout-guide-body pre button.copy-code-button.sprout-guide
 }
 
 .sprout-about-linkedin:hover {
-  color: var(--interactive-accent-hover);
+  color: var(--theme-base-95);
   text-decoration: underline;
 }
 
@@ -1542,6 +1542,7 @@ body:not(.is-mobile) .sprout-guide-body pre button.copy-code-button.sprout-guide
 .sprout .sprout-about-buttons .sprout-about-btn {
   text-decoration: none;
   margin: 0;
+  color: var(--theme-base-95) !important;
 }
 
 .sprout .sprout-about-buttons .sprout-about-btn--feature.sprout-btn-accent,

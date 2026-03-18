@@ -2816,8 +2816,10 @@ function setupGuidebookCarousel(el: HTMLElement) {
 
 function setupFlashcardFlip(el: HTMLElement) {
   if (!el.classList.contains('sprout-macro-flashcards')) return;
-  const question = el.querySelector<HTMLElement>('.sprout-flashcard-question');
-  const answer = el.querySelector<HTMLElement>('.sprout-flashcard-answer');
+  const content = el.querySelector<HTMLElement>('.sprout-card-content');
+  if (!content) return;
+  const question = content.querySelector<HTMLElement>('.sprout-flashcard-question');
+  const answer = content.querySelector<HTMLElement>('.sprout-flashcard-answer');
   if (!question || !answer) return;
 
   let showingAnswer = false;
@@ -3148,7 +3150,8 @@ function enhanceCardElement(
 
       const side = ((e.currentTarget as HTMLElement).getAttribute("data-sprout-tts-side") === "back") ? "back" : "front";
       const panelSelector = side === "back" ? ".sprout-flashcard-answer" : ".sprout-flashcard-question";
-      const panel = el.querySelector<HTMLElement>(panelSelector);
+      const cardContent = el.querySelector<HTMLElement>('.sprout-card-content');
+      const panel = (cardContent ?? el).querySelector<HTMLElement>(panelSelector);
       if (!panel) return;
 
       const isClozeLike = el.dataset.sproutType === "cloze" || el.dataset.sproutType === "cloze-child";

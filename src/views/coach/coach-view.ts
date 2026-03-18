@@ -251,6 +251,7 @@ export class SproutCoachView extends ItemView {
 
     this._rootEl = null;
     resetAOS();
+    await Promise.resolve();
   }
 
   onRefresh(): void {
@@ -1364,12 +1365,12 @@ export class SproutCoachView extends ItemView {
 
     const dashboardBody = shell.createDiv({ cls: "sprout-coach-dashboard-body" });
 
-    const renderSelectedPlanBody = async () => {
+    const renderSelectedPlanBody = () => {
       const activePlan = shownPlans.find((plan) => planScopeId(plan) === this._selectedPlanScopeId) ?? shownPlans[0];
       if (!activePlan) return;
       refreshTabPressedState();
       dashboardBody.empty();
-      await this._renderSelectedPlanBody(dashboardBody, activePlan, now);
+      this._renderSelectedPlanBody(dashboardBody, activePlan, now);
     };
 
     for (const plan of shownPlans) {
@@ -1384,15 +1385,15 @@ export class SproutCoachView extends ItemView {
       tab.createSpan({ cls: "sprout-coach-switcher-tab-meta", text: `${days}d left` });
       tab.addEventListener("click", () => {
         this._selectedPlanScopeId = id;
-        void renderSelectedPlanBody();
+        renderSelectedPlanBody();
       });
     }
     refreshTabPressedState();
 
-    await renderSelectedPlanBody();
+    renderSelectedPlanBody();
   }
 
-  private async _renderSelectedPlanBody(host: HTMLElement, selectedPlan: CoachPlanRow, now: number): Promise<void> {
+  private _renderSelectedPlanBody(host: HTMLElement, selectedPlan: CoachPlanRow, now: number): void {
     if (!this._coachDb) return;
 
     const selectedScope = this._scopeFromParts(selectedPlan.scope_type, selectedPlan.scope_key, selectedPlan.scope_name);
