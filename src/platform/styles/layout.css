@@ -10,20 +10,20 @@
 .workspace-leaf.sprout,
 .workspace-leaf .sprout:not(.workspace-leaf-content),
 .workspace-leaf:has(.sprout) {
-  border-radius: none !important;
+  border-radius: none;
   background-color: rgba(0,0,0,0);
-  box-shadow: none !important;
+  box-shadow: none;
 }
 
 /* Leaf-content: flex column so header takes natural height and view-content fills the rest */
 .workspace-leaf-content.sprout,
 .workspace-leaf-content .sprout,
 .workspace-leaf-content:has(.sprout) {
-  display: flex !important;
-  flex-direction: column !important;
-  width: 100% !important;
-  border-radius: none !important;
-  box-shadow: none !important;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border-radius: none;
+  box-shadow: none;
 }
 
 /* Sprout-scoped pinch zoom: only Sprout leaves, never other plugins */
@@ -35,30 +35,32 @@
 .view-header.sprout,
 .view-header .sprout,
 .view-header:has(.sprout) {
-  background: transparent !important;
-  background-color: transparent !important;
-  border-radius: none !important;
-  box-shadow: none !important;
+  background: transparent;
+  background-color: transparent;
+  border-radius: none;
+  box-shadow: none;
 }
 
 /* High-level view backgrounds */
 .workspace-leaf-content.sprout[data-type="sprout-analytics"],
 .workspace-leaf-content.sprout[data-type="sprout-home"],
+.workspace-leaf-content.sprout[data-type="sprout-coach"],
 .workspace-leaf-content.sprout[data-type="sprout-browser"],
 .workspace-leaf-content.sprout[data-type="sprout-reviewer"],
-.workspace-leaf-content.sprout[data-type="sprout-settings"] {
-  background-color: var(--background-primary) !important;
+.workspace-leaf-content.sprout[data-type="sprout-settings"],
+.workspace-leaf-content.sprout[data-type="learnkit-note-review"] {
+  background-color: var(--color-base-00);
 }
 
 .sprout .sprout-view-content,
-.sprout .sprout-browser-view,
+.sprout .lk-browser-view,
 .sprout .sprout-analytics-root {
-  background-color: var(--background-primary) !important;
+  background-color: var(--color-base-00);
 }
 
 /* Exception: modal containers should be transparent to allow backdrop dimming */
-.sprout-modal-container.modal-container {
-  background-color: transparent !important;
+.lk-modal-container.modal-container {
+  background-color: transparent;
 }
 
 /* ---- Content sizing & padding ---- */
@@ -68,7 +70,7 @@
   position: relative;
   top: 0;
   width: 100%;
-  padding: 40px 0 40px;
+  padding: 40px 20px 40px;
   margin: 0 auto;
 
   display: flex;
@@ -82,45 +84,105 @@
 @media (max-width: 767px) {
   body.is-mobile .sprout .sprout-view-content {
     /* 40px base + 60px for Obsidian's mobile bottom toolbar (env() is 0 in webview) */
-    padding-bottom: 100px !important;
+    padding-bottom: 100px;
   }
 
   /* Prevent horizontal scrolling on mobile across all Sprout views */
   body.is-mobile .sprout,
   body.is-mobile .sprout .sprout-view-content,
-  body.is-mobile .sprout .sprout-home-root,
+  body.is-mobile .sprout .lk-home-root,
   body.is-mobile .sprout .sprout-analytics-root,
-  body.is-mobile .sprout .sprout-browser-view,
+  body.is-mobile .sprout .lk-browser-view,
   body.is-mobile .workspace-leaf-content:has(.sprout) {
-    overflow-x: hidden !important;
-    max-width: 100vw !important;
+    overflow-x: hidden;
+    max-width: 100vw;
   }
 }
 
 /* Keep scrollbar at the edge while preserving content padding */
 .sprout .sprout-view-content > * {
-  padding-left: 40px;
-  padding-right: 40px;
+  padding: 20px;
   box-sizing: border-box;
 }
 
 /* Root container width management */
 .sprout-root[data-sprout-wide="1"] .sprout-view-content {
-  max-width: none !important;
-  width: 100% !important;
+  max-width: none;
+  width: 100%;
 }
 
 .sprout-view-content {
-  max-width: 1080px !important;
-  width: 100% !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
+  max-width: 1280px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
   min-height: 0;
   gap: 12px;
 }
 
 .sprout[data-sprout-wide="1"] .sprout-view-content {
   max-width: none;
+}
+
+/* Keep shell spacing consistent across non-home top-level view roots. */
+.sprout :is(
+  .sprout-analytics-root,
+  .lk-browser-view,
+  .lk-review-root,
+  .sprout-exam-generator-root,
+  .sprout-settings-view-root,
+  .sprout-note-review-root
+) {
+  margin: 0 auto;
+}
+
+/* Shared shell style for page content panels. */
+.sprout .sprout-view-content-shell {
+  width: 100%;
+  max-width: min(var(--lk-home-max-width, 1280px), calc(100% - var(--lk-shell-gutter-desktop)));
+  margin: 0 auto;
+  box-sizing: border-box;
+  border-radius: 30px;
+  border: var(--color-base-30) 1px solid;
+  background-color: var(--color-base-20);
+}
+
+.workspace-leaf-content.sprout[data-sprout-wide="1"] .sprout-view-content-shell,
+.workspace-leaf-content[data-sprout-wide="1"] .sprout-view-content-shell {
+  width: calc(100% - var(--lk-shell-gutter-desktop));
+  max-width: calc(100% - var(--lk-shell-gutter-desktop));
+}
+
+/* Shared title strip rendered between the global header and view content. */
+.sprout .sprout-view-title-strip {
+  width: 100%;
+  margin: 0 auto;
+  max-width: min(var(--sprout-view-strip-max-width, 1280px), calc(100% - var(--lk-shell-gutter-desktop)));
+  padding: var(--lk-view-title-strip-padding-desktop);
+  box-sizing: border-box;
+}
+
+.sprout .sprout-view-title-strip-label {
+  font-size: var(--font-ui-large);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--text-normal);
+  padding: 0;
+}
+
+.workspace-leaf-content.sprout[data-sprout-wide="1"] .sprout-view-title-strip,
+.workspace-leaf-content[data-sprout-wide="1"] .sprout-view-title-strip {
+  width: calc(100% - var(--lk-shell-gutter-desktop));
+  max-width: calc(100% - var(--lk-shell-gutter-desktop));
+}
+
+@media (max-width: 767px) {
+  body.is-mobile .sprout .sprout-view-title-strip {
+    max-width: 100%;
+    padding-left: var(--lk-shell-padding-mobile);
+    padding-right: var(--lk-shell-padding-mobile);
+  }
 }
 
 
@@ -137,31 +199,23 @@
 }
 
 /* Re-enable visible scrollbars inside modals */
-.sprout .sprout-modal,
-.sprout .sprout-modals,
-.sprout .sprout-modal *,
-.sprout .sprout-modals * {
+.sprout .lk-modals,
+.sprout .lk-modals * {
   scrollbar-width: auto;
   -ms-overflow-style: auto;
 }
-.sprout .sprout-modal::-webkit-scrollbar,
-.sprout .sprout-modals::-webkit-scrollbar,
-.sprout .sprout-modal *::-webkit-scrollbar,
-.sprout .sprout-modals *::-webkit-scrollbar {
+.sprout .lk-modals::-webkit-scrollbar,
+.sprout .lk-modals *::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
-.sprout .sprout-modal::-webkit-scrollbar-thumb,
-.sprout .sprout-modals::-webkit-scrollbar-thumb,
-.sprout .sprout-modal *::-webkit-scrollbar-thumb,
-.sprout .sprout-modals *::-webkit-scrollbar-thumb {
+.sprout .lk-modals::-webkit-scrollbar-thumb,
+.sprout .lk-modals *::-webkit-scrollbar-thumb {
   background: rgba(120, 120, 120, 0.6);
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-md);
 }
-.sprout .sprout-modal::-webkit-scrollbar-track,
-.sprout .sprout-modals::-webkit-scrollbar-track,
-.sprout .sprout-modal *::-webkit-scrollbar-track,
-.sprout .sprout-modals *::-webkit-scrollbar-track {
+.sprout .lk-modals::-webkit-scrollbar-track,
+.sprout .lk-modals *::-webkit-scrollbar-track {
   background: transparent;
 }
 
@@ -169,41 +223,26 @@
 
 /* Hide Obsidian's global status bar only when Sprout views are active */
 body.sprout.sprout-hide-status-bar .status-bar {
-  display: none !important;
+  display: none;
 }
 
 .sprout-header {
-    border: none !important;
-    border-radius: 0px !important;
+    border: none;
+    border-radius: 0px;
 }
 
 .workspace-leaf-content.sprout {
-    border-radius: 0px !important;
-    border: none !important;
-}
-
-/* ---- Flex helpers ---- */
-/* Replaces inline: display:flex; align-items:center; gap:8px across 6+ files */
-
-.sprout .sprout-flex-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.sprout .sprout-flex-col {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+    border-radius: 0px;
+    border: none;
 }
 
 /* ---- Fixed-height input ---- */
 /* Replaces inline: height/min-height/max-height 38px across 4+ files */
 
 .sprout .sprout-input-fixed {
-  height: 38px !important;
-  min-height: 38px !important;
-  max-height: 38px !important;
+  height: 38px;
+  min-height: 38px;
+  max-height: 38px;
 }
 /* ============================================================================
    MOBILE AOS ANIMATIONS — Fully disabled on phone-sized mobile (≤767px).
@@ -219,9 +258,9 @@ body.sprout.sprout-hide-status-bar .status-bar {
   body.is-mobile .sprout [data-aos],
   body.is-mobile .sprout [data-aos].aos-init,
   body.is-mobile .sprout [data-aos].aos-animate {
-    opacity: 1 !important;
-    visibility: visible !important;
-    transform: none !important;
-    transition: none !important;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition: none;
   }
 }

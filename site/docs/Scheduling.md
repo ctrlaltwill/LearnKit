@@ -1,14 +1,14 @@
 # Scheduling
 
-Last modified: 13/02/2026
+Last modified: 17/03/2026
 
-## Overview
+## FSRS Basics
 
-Sprout uses **FSRS** (Free Spaced Repetition Scheduler).
+LearnKit uses **FSRS** (Free Spaced Repetition Scheduler).
 
 FSRS chooses future review dates per card, based on your past answers and elapsed time.
 
-## How FSRS works
+## FSRS Model
 
 Each card tracks 3 values:
 
@@ -26,7 +26,7 @@ When you rate a card, FSRS:
 
 In practice, easy cards get longer intervals; forgotten cards get shorter intervals.
 
-## Card stages
+## Card Stages
 
 | Stage | Description |
 |-------|-------------|
@@ -37,7 +37,7 @@ In practice, easy cards get longer intervals; forgotten cards get shorter interv
 
 ## Presets
 
-Choose a preset in **Settings → Study → Scheduling** or set values manually:
+Choose a preset in Settings -> Study -> Scheduling or set values manually:
 
 | Preset | Learning steps | Relearning steps | Retention |
 |--------|----------------|------------------|-----------|
@@ -46,7 +46,7 @@ Choose a preset in **Settings → Study → Scheduling** or set values manually:
 | Aggressive | 5 min, 30 min, 1 day | 10 min | 0.92 |
 | Custom | *(user-defined)* | *(user-defined)* | *(user-defined)* |
 
-### Manual options
+### Manual Options
 
 | Setting | Default | Description |
 |---------|---------|-------------|
@@ -54,7 +54,7 @@ Choose a preset in **Settings → Study → Scheduling** or set values manually:
 | Relearning steps | `10` | Minutes between relearning steps |
 | Requested retention | 0.90 | Target recall probability (0.80–0.97) |
 
-### What the settings mean
+### Setting Meaning
 
 - **Learning steps**: short intervals for new cards before they move to Review.
 - **Relearning steps**: short intervals after an Again on a Review card.
@@ -65,21 +65,27 @@ Higher retention increases workload (more frequent reviews). Lower retention red
 > [!TIP]
 > **0.90** is a strong default for most users.
 
-## FSRS console / log
+## FSRS Log
 
 You can inspect a card's FSRS history:
 
-1. Open the [Card Browser](./Card-Browser.md).
+1. Open the [Card Browser](./Card-Browser).
 2. Select a card.
 3. Open card details to see ratings, stability, difficulty, and interval calculations.
 
 Use this if a due date looks unexpected.
 
-## Reset options
+## Reset Options
 
 | Button | Effect |
 |--------|--------|
 | Reset scheduling | Reset all cards to **New** (clears intervals, stability, difficulty) |
 | Reset analytics | Clear review history and heatmap data |
 
-Both options are in **Settings → Reset** and cannot be undone.
+Both options are in Settings -> Reset and cannot be undone.
+
+## Related
+
+- [Study Sessions](./Study-Sessions)
+- [Grading](./Grading)
+- [Analytics](./Analytics)

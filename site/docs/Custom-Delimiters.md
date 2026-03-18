@@ -1,12 +1,12 @@
 # Custom Delimiters
 
-Last modified: 13/02/2026
+Last modified: 17/03/2026
 
-## What this setting does
+## Purpose
 
-Sprout uses `|` as the default card-field delimiter. If that conflicts with your note content (for example, heavy LaTeX), you can choose another delimiter.
+LearnKit uses `|` as the default card-field delimiter. If that conflicts with your note content (for example, heavy LaTeX), you can choose another delimiter.
 
-## Available delimiters
+## Delimiter List
 
 | Option | Character |
 |---|---|
@@ -15,9 +15,9 @@ Sprout uses `|` as the default card-field delimiter. If that conflicts with your
 | Tilde | `~` |
 | Semicolon | `;` |
 
-## Changing the delimiter
+## Change Steps
 
-1. Go to **Settings → Storage → Card delimiter**.
+1. Go to **Settings -> Storage -> Card delimiter**.
 2. Select your preferred delimiter from the dropdown.
 
 ## Example
@@ -40,14 +40,14 @@ Q ~ What is the capital of France? ~
 A ~ Paris ~
 ```
 
-## Important limit
+## Important Limit
 
 > [!WARNING]
 > Changing the delimiter does not migrate existing cards. Cards written with the old delimiter stop parsing. On the next sync, those cards can lose scheduling linkage/progress.
 
 Only change this on a fresh vault, or after manually converting all existing cards.
 
-## When to change
+## When to Change
 
 Most users should keep `|`. Consider changing only when needed:
 
@@ -55,4 +55,4 @@ Most users should keep `|`. Consider changing only when needed:
 - Another workflow or plugin conflicts with pipe-delimited fields.
 
 > [!TIP]
-> Before changing globally, try the multi-line pattern in [Card Formatting](./Card-Formatting.md). That often avoids delimiter conflicts without breaking existing cards.
+> Before changing globally, try the multi-line pattern in [Card Formatting](./Card-Formatting). That often avoids delimiter conflicts without breaking existing cards.

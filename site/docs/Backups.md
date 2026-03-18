@@ -4,7 +4,7 @@ Last modified: 10/03/2026
 
 ## What backups are for
 
-Backups save your **scheduling data** from Sprout's SQLite-backed store so you can recover from mistakes or bad imports.
+Backups save your **scheduling data** from LearnKit's SQLite-backed store so you can recover from mistakes or bad imports.
 They do not back up your note text.
 
 ## Backup settings

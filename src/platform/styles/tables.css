@@ -73,26 +73,45 @@
 /* ---- Generic table row hover ---- */
 
 .sprout .bc table tbody tr:hover {
-  background-color: var(--background-secondary) !important;
+  background-color: var(--background-secondary);
 }
 .sprout .bc table tbody tr:hover,
 .sprout .bc table tbody tr:hover td {
-  border-color: var(--background-secondary) !important;
-  border-bottom-color: var(--background-secondary) !important;
+  border-color: var(--background-secondary);
+  border-bottom-color: var(--background-secondary);
 }
 
 @media (hover: hover) {
   .sprout .table tr:hover {
-    background-color: var(--color-background) !important;
+    background-color: var(--theme-base-10);
+    border: 1px solid var(--theme-base-20);
+    color: var(--theme-base-95);
+  }
+
+  .sprout .table tr:hover td {
+    border-color: var(--theme-base-20);
+    color: var(--theme-base-95);
+  }
+
+  .sprout .table tr:hover :is(.sprout-deck-expand-icon, .sprout-deck-disclosure, .sprout-deck-control-icon) {
+    color: var(--theme-base-95);
+  }
+
+  .sprout .table tr:hover :is(.sprout-deck-expand-icon, .sprout-deck-disclosure, .sprout-deck-control-icon) svg {
+    color: inherit;
+    stroke: currentColor;
   }
 }
 
+.sprout .table tr {
+    transition: background-color .2s;
+}
 /* ---- Toggle buttons & chevrons ---- */
 
-.sprout-toggle-btn {
-  box-shadow: none !important;
-  background: none !important;
-  padding: 0 !important;
+.sprout .sprout-toggle-btn {
+  box-shadow: none;
+  background: none;
+  padding: 0;
   margin: 0;
   cursor: pointer;
   display: inline-flex;
@@ -101,22 +120,22 @@
 }
 
 /* Ensure chevron SVG is visible and sized correctly */
-.sprout-toggle-chevron {
+.sprout .sprout-toggle-chevron {
   width: 1em;
   height: 1em;
   color: inherit;
   display: inline-block;
   vertical-align: middle;
 }
-.sprout-toggle-btn:hover,
-.sprout-toggle-btn:active,
-.sprout-toggle-btn:focus {
-  background: none !important;
+.sprout .sprout-toggle-btn:hover,
+.sprout .sprout-toggle-btn:active,
+.sprout .sprout-toggle-btn:focus {
+  background: none;
 }
 
 /* ---- Changelog table ---- */
 
-.sprout-changelog-table {
+.sprout .sprout-changelog-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
@@ -130,64 +149,64 @@
 .sprout .sprout-changelog-scroll {
   padding: 8px;
   border: var(--sprout-border-width) solid var(--sprout-border-color);
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-md);
   max-height: 165px;
   overflow-y: auto;
   overflow-x: hidden;
   background: var(--background);
 }
 
-.sprout-changelog-table thead tr {
+.sprout .sprout-changelog-table thead tr {
   background: var(--background);
   border-bottom: var(--sprout-border-width) solid var(--sprout-border-color);
 }
-.sprout-changelog-table tbody tr {
+.sprout .sprout-changelog-table tbody tr {
   background: var(--background);
 }
-.sprout-changelog-table th,
-.sprout-changelog-table td,
-.sprout-changelog-cell {
+.sprout .sprout-changelog-table th,
+.sprout .sprout-changelog-table td,
+.sprout .sprout-changelog-cell {
   padding: 8px 10px;
   border: none;
   vertical-align: top;
 }
-.sprout-changelog-table tbody td {
+.sprout .sprout-changelog-table tbody td {
   background: inherit;
   border: none;
 }
-.sprout-changelog-table tbody td:first-child {
+.sprout .sprout-changelog-table tbody td:first-child {
   border-left: none;
 }
-.sprout-changelog-table tbody td:last-child {
+.sprout .sprout-changelog-table tbody td:last-child {
   border-right: none;
 }
 
 /* Add a single border below the header (top of tbody) */
-.sprout-changelog-table tbody {
+.sprout .sprout-changelog-table tbody {
   border-top: var(--sprout-border-width) solid var(--sprout-border-color);
 }
-.sprout-changelog-table th:first-child,
-.sprout-changelog-table td:first-child {
+.sprout .sprout-changelog-table th:first-child,
+.sprout .sprout-changelog-table td:first-child {
   border-top-left-radius: var(--radius-l);
   border-bottom-left-radius: var(--radius-l);
 }
 
-.sprout-changelog-table th:last-child,
-.sprout-changelog-table td:last-child {
+.sprout .sprout-changelog-table th:last-child,
+.sprout .sprout-changelog-table td:last-child {
   border-top-right-radius: var(--radius-l);
   border-bottom-right-radius: var(--radius-l);
 }
-.sprout-changelog-table th {
+.sprout .sprout-changelog-table th {
   color: var(--text-color);
   font-weight: 600;
   text-align: left;
 }
-.sprout-changelog-table td,
-.sprout-changelog-cell {
+.sprout .sprout-changelog-table td,
+.sprout .sprout-changelog-cell {
   color: var(--text-muted);
 }
-.sprout-changelog-table th:last-child,
-.sprout-changelog-table td:last-child {
+.sprout .sprout-changelog-table th:last-child,
+.sprout .sprout-changelog-table td:last-child {
   white-space: normal;
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -195,27 +214,27 @@
 
 /* Row hover: single rounded rectangle */
 .sprout .sprout-changelog-table tbody tr:hover {
-  background-color: var(--color-background) !important;
+  background-color: var(--color-background);
 }
 .sprout .sprout-changelog-table tbody tr:hover td {
-  background-color: var(--color-background) !important;
-  border-color: var(--sprout-border-color) !important;
+  background-color: var(--color-background);
+  border-color: var(--sprout-border-color);
 }
 .sprout .sprout-changelog-table tbody tr:hover td:first-child {
-  border-top-left-radius: var(--radius-m);
-  border-bottom-left-radius: var(--radius-m);
+  border-top-left-radius: var(--radius-md);
+  border-bottom-left-radius: var(--radius-md);
 }
 .sprout .sprout-changelog-table tbody tr:hover td:last-child {
-  border-top-right-radius: var(--radius-m);
-  border-bottom-right-radius: var(--radius-m);
+  border-top-right-radius: var(--radius-md);
+  border-bottom-right-radius: var(--radius-md);
 }
 
-.sprout-changelog-cell {
+.sprout .sprout-changelog-cell {
     border-radius: 0px;
 }
 
 /* Changelog footer with buttons */
-.sprout-changelog-footer {
+.sprout .sprout-changelog-footer {
   border-top: var(--sprout-border-width) solid var(--sprout-border-color);
   margin-top: 8px;
   padding-top: 8px;
@@ -223,24 +242,24 @@
 
 /* ---- Release summary card (What's New) ---- */
 
-.sprout-release-summary {
+.sprout .sprout-release-summary {
   padding: 10px 12px;
   border: var(--sprout-border-width) solid var(--sprout-border-color);
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-md);
   background: var(--background);
   max-height: 200px;
   overflow-y: auto;
   overflow-x: hidden;
 }
 
-.sprout-release-version-row {
+.sprout .sprout-release-version-row {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
 }
 
-.sprout-version-badge {
+.sprout .sprout-version-badge {
   display: inline-block;
   font-size: var(--sprout-font-2xs);
   font-weight: 600;
@@ -250,11 +269,11 @@
   color: var(--text-on-accent);
 }
 
-.sprout-release-content {
+.sprout .sprout-release-content {
   line-height: 1.5;
 }
 
-.sprout-release-heading {
+.sprout .sprout-release-heading {
   font-weight: 600;
   font-size: var(--sprout-font-2xs);
   margin-top: 6px;
@@ -262,23 +281,23 @@
   color: var(--text-normal);
 }
 
-.sprout-release-list {
+.sprout .sprout-release-list {
   margin: 0;
   padding-left: 0;
   list-style-position: inside;
   color: var(--text-muted);
 }
 
-.sprout-release-list li {
+.sprout .sprout-release-list li {
   margin-bottom: 1px;
 }
 
-.sprout-backup-hint {
+.sprout .sprout-backup-hint {
   display: flex;
   align-items: flex-start;
   gap: 6px;
   padding: 8px 10px;
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-md);
   background: var(--background-modifier-message);
   font-size: var(--sprout-font-2xs);
   color: var(--text-muted);

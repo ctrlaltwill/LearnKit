@@ -1,15 +1,28 @@
 :root {
-  --sprout-primary-rgb: 138, 92, 245;
+  --sprout-primary-rgb: 32, 80, 232;
   --sprout-primary: rgb(var(--sprout-primary-rgb));
-  --sprout-primary-strong: #7441ea;
-  --sprout-primary-soft: #f3ecff;
-  --sprout-slate: #150f26;
-  --sprout-ink: #33264f;
+  --sprout-primary-strong: #1741c2;
+  --sprout-primary-soft: #e8eeff;
+  --sprout-slate: #222222;
+  --sprout-ink: #3a3a3a;
+
+  --sprout-bg: rgb(242, 242, 242);
+  --sprout-bg-soft: #f7f7f7;
+  --sprout-bg-mute: #ededed;
+  --sprout-text: #222222;
+  --sprout-text-soft: #555555;
 
   --vp-c-brand-1: var(--sprout-primary);
-  --vp-c-brand-2: #9a6cff;
+  --vp-c-brand-2: #2b5bf0;
   --vp-c-brand-3: var(--sprout-primary-strong);
   --vp-c-brand-soft: rgba(var(--sprout-primary-rgb), 0.14);
+
+  --vp-c-bg: var(--sprout-bg);
+  --vp-c-bg-soft: var(--sprout-bg-soft);
+  --vp-c-bg-mute: var(--sprout-bg-mute);
+  --vp-c-text-1: var(--sprout-text);
+  --vp-c-text-2: var(--sprout-text-soft);
+  --vp-c-text-3: #666666;
 }
 
 .VPNavBarTitle .logo {
@@ -26,9 +39,9 @@
 
 .VPHome .VPHero {
   background:
-    radial-gradient(circle at 10% 15%, rgba(var(--sprout-primary-rgb), 0.22) 0, rgba(var(--sprout-primary-rgb), 0) 38%),
-    radial-gradient(circle at 92% 14%, rgba(64, 196, 255, 0.22) 0, rgba(64, 196, 255, 0) 36%),
-    linear-gradient(160deg, #fcf9ff 0%, #f5f0ff 40%, #f2f8ff 100%);
+    radial-gradient(circle at 10% 15%, rgba(var(--sprout-primary-rgb), 0.2) 0, rgba(var(--sprout-primary-rgb), 0) 38%),
+    radial-gradient(circle at 92% 14%, rgba(var(--sprout-primary-rgb), 0.12) 0, rgba(var(--sprout-primary-rgb), 0) 36%),
+    linear-gradient(160deg, #f5f7ff 0%, rgb(242, 242, 242) 42%, #f0f3ff 100%);
   border-radius: 18px;
   margin: 18px 16px 14px;
   border: 1px solid rgba(var(--sprout-primary-rgb), 0.18);
@@ -74,12 +87,12 @@
 .VPFeature .box {
   border: 1px solid rgba(var(--sprout-primary-rgb), 0.28);
   border-radius: 20px;
-  background: #ffffff;
+  background: rgb(242, 242, 242);
 }
 
 .VPFeature .icon {
-  background-color: #ece3ff;
-  color: #6e40e6;
+  background-color: #dde6ff;
+  color: rgb(32, 80, 232);
 }
 
 .dark .VPFeature .box {
@@ -111,7 +124,7 @@
   border: 1px solid rgba(var(--sprout-primary-rgb), 0.2);
   border-radius: 14px;
   padding: 14px;
-  background: linear-gradient(180deg, #ffffff 0%, #faf7ff 100%);
+  background: linear-gradient(180deg, #f6f8ff 0%, rgb(242, 242, 242) 100%);
 }
 
 .vp-doc .sprout-highlight-card .icon {
@@ -129,7 +142,7 @@
 .vp-doc .sprout-highlight-card p {
   margin: 0;
   font-size: 0.88rem;
-  color: #47386a;
+  color: var(--sprout-text-soft);
 }
 
 .vp-doc .sprout-home-grid {
@@ -143,7 +156,7 @@
   border: 1px solid rgba(var(--sprout-primary-rgb), 0.2);
   border-radius: 14px;
   padding: 14px;
-  background: linear-gradient(180deg, #ffffff 0%, #faf7ff 100%);
+  background: linear-gradient(180deg, #f6f8ff 0%, rgb(242, 242, 242) 100%);
 }
 
 .vp-doc .sprout-home-card svg {
@@ -161,7 +174,7 @@
 .vp-doc .sprout-home-card p {
   margin: 0;
   font-size: 0.88rem;
-  color: #47386a;
+  color: var(--sprout-text-soft);
 }
 
 @media (max-width: 768px) {

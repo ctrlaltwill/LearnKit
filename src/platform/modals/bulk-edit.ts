@@ -61,13 +61,8 @@ function formatGroupsForInput(groups: string[]): string {
 
 type EditableField = "title" | "question" | "answer" | "info" | "groups";
 
-function remToPx(rem: number): number {
-  const rootFontPx = Number.parseFloat(window.getComputedStyle(document.documentElement).fontSize || "16");
-  return Math.max(1, Math.round(rem * (Number.isFinite(rootFontPx) ? rootFontPx : 16)));
-}
-
 function fieldMinHeightPx(field: "title" | "question" | "answer" | "info"): number {
-  return remToPx(4.5);
+  return 100;
 }
 
 function getSharedEditableFieldValue(cards: CardRecord[], field: EditableField): string {
@@ -129,9 +124,9 @@ export class BulkEditCardModal extends Modal {
     // Apply all CSS classes and z-index BEFORE scoping to workspace.
     // scopeModalToWorkspace forces a repaint, which only works if the
     // positioning CSS (position:absolute, z-index, etc.) is already active.
-    this.containerEl.addClass("sprout-modal-container", "sprout-modal-dim", "sprout");
+    this.containerEl.addClass("lk-modal-container", "lk-modal-dim", "sprout");
     setCssProps(this.containerEl, "z-index", "2147483000");
-    this.modalEl.addClass("bc", "sprout-modals", "sprout-bulk-edit-panel");
+    this.modalEl.addClass("bc", "lk-modals", "sprout-bulk-edit-panel");
     setCssProps(this.modalEl, "z-index", "2147483001");
     scopeModalToWorkspace(this);
     this.contentEl.addClass("bc", "sprout-bulk-edit-content");
@@ -141,6 +136,13 @@ export class BulkEditCardModal extends Modal {
 
     const { contentEl } = this;
     contentEl.empty();
+
+    const headerEl = this.modalEl.querySelector<HTMLElement>(":scope > .modal-header");
+    const closeBtn = this.modalEl.querySelector<HTMLElement>(":scope > .modal-close-button");
+    if (headerEl) {
+      if (closeBtn) headerEl.appendChild(closeBtn);
+      contentEl.appendChild(headerEl);
+    }
 
     // Reset cleanup handlers for this modal instance and collect teardown work
     // (currently observers, and future global listeners if added).
@@ -163,7 +165,11 @@ export class BulkEditCardModal extends Modal {
   // Map of input elements by field key
   const inputEls: Record<string, HTMLInputElement | HTMLTextAreaElement> = {};
 
-  const attachFlagPreviewOverlay = (control: HTMLInputElement | HTMLTextAreaElement, minControlHeight = 38): HTMLElement => {
+  const attachFlagPreviewOverlay = (
+    control: HTMLInputElement | HTMLTextAreaElement,
+    minControlHeight = 100,
+    maxControlHeight = Number.POSITIVE_INFINITY,
+  ): HTMLElement => {
     const wrap = document.createElement("div");
     wrap.className = `bc sprout-flag-editor-wrap${control instanceof HTMLTextAreaElement ? " sprout-flag-editor-wrap--multiline" : ""}`;
 
@@ -188,6 +194,9 @@ export class BulkEditCardModal extends Modal {
     const applyControlHeight = (height: number) => {
       setCssProps(control, "min-height", `${height}px`);
       setCssProps(control, "height", `${height}px`);
+      if (Number.isFinite(maxControlHeight)) {
+        setCssProps(control, "max-height", `${Math.max(minControlHeight, Math.floor(maxControlHeight))}px`);
+      }
       if (control instanceof HTMLInputElement) {
         setCssProps(control, "max-height", `${height}px`);
       }
@@ -200,14 +209,20 @@ export class BulkEditCardModal extends Modal {
       const scrollbarFudgePx = 5;
       const controlHeight = measureControlHeight();
       const overlayHeight = Math.ceil(overlay.scrollHeight || 0);
-      const previewHeight = Math.max(
+      const rawPreviewHeight = Math.max(
         minControlHeight,
         controlHeight + scrollbarFudgePx,
         overlayHeight,
       );
+      const previewHeight = Number.isFinite(maxControlHeight)
+        ? Math.min(Math.max(minControlHeight, Math.floor(maxControlHeight)), rawPreviewHeight)
+        : rawPreviewHeight;
       if (previewHeight === lastPreviewHeight) return;
       lastPreviewHeight = previewHeight;
       wrap.style.setProperty("--sprout-flag-preview-height", `${previewHeight}px`);
+      if (Number.isFinite(maxControlHeight)) {
+        wrap.style.setProperty("--sprout-flag-preview-max-height", `${Math.max(minControlHeight, Math.floor(maxControlHeight))}px`);
+      }
       applyControlHeight(previewHeight);
     };
 
@@ -233,6 +248,7 @@ export class BulkEditCardModal extends Modal {
     }, true);
 
     overlay.addEventListener("click", () => control.focus());
+
     control.addEventListener("focus", () => {
       wrap.classList.add("sprout-flag-editor--focused");
       syncPreviewHeight();
@@ -266,10 +282,109 @@ export class BulkEditCardModal extends Modal {
     return wrap;
   };
 
+  const attachSingleEditBlurPreview = (textarea: HTMLTextAreaElement, minControlHeight = 100): HTMLElement => {
+    const wrap = document.createElement("div");
+    wrap.className = "bc sprout-single-edit-markdown-field";
+
+    const preview = document.createElement("div");
+    preview.className = "bc sprout-single-edit-markdown-preview markdown-rendered";
+    setCssProps(preview, "min-height", `${minControlHeight}px`);
+    let isEditing = false;
+
+    const applyModeVisibility = (editing: boolean) => {
+      if (editing) {
+        setCssProps(textarea, "display", "block");
+        setCssProps(preview, "display", "none");
+      } else {
+        setCssProps(textarea, "display", "none");
+        setCssProps(preview, "display", "block");
+      }
+    };
+
+    const syncFieldHeights = () => {
+      setCssProps(textarea, "height", "auto");
+      const textareaHeight = Math.ceil(textarea.scrollHeight || 0);
+      const previewHeight = Math.ceil(preview.scrollHeight || 0);
+      const targetHeight = Math.max(minControlHeight, textareaHeight, previewHeight);
+      setCssProps(textarea, {
+        "min-height": `${targetHeight}px`,
+        "height": `${targetHeight}px`,
+      });
+      setCssProps(preview, "min-height", `${targetHeight}px`);
+    };
+
+    const renderPreview = () => {
+      renderMarkdownPreviewInElement(preview, String(textarea.value ?? ""));
+      syncFieldHeights();
+    };
+
+    const showPreview = () => {
+      if (!isEditing) return;
+      isEditing = false;
+      renderPreview();
+      wrap.classList.add("is-preview");
+      applyModeVisibility(false);
+      if (document.activeElement === textarea) textarea.blur();
+    };
+
+    const showEditor = () => {
+      isEditing = true;
+      wrap.classList.remove("is-preview");
+      applyModeVisibility(true);
+      textarea.focus();
+      syncFieldHeights();
+    };
+
+    const activateEditFromPreview = (ev: Event) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      showEditor();
+    };
+
+    const handleDocumentPointerDown = (ev: PointerEvent) => {
+      if (!isEditing) return;
+      const target = ev.target;
+      if (!(target instanceof Node)) return;
+      if (wrap.contains(target)) return;
+      showPreview();
+    };
+    document.addEventListener("pointerdown", handleDocumentPointerDown, true);
+    registerCloseCleanup(() => {
+      document.removeEventListener("pointerdown", handleDocumentPointerDown, true);
+    });
+
+    preview.addEventListener("pointerdown", (ev: PointerEvent) => {
+      if (ev.button !== 0) return;
+      activateEditFromPreview(ev);
+    }, true);
+    preview.addEventListener("touchstart", activateEditFromPreview, { capture: true, passive: false });
+    textarea.addEventListener("focus", () => {
+      isEditing = true;
+      wrap.classList.remove("is-preview");
+      applyModeVisibility(true);
+      syncFieldHeights();
+    });
+    textarea.addEventListener("blur", (ev: FocusEvent) => {
+      if (!isEditing) return;
+      const related = ev.relatedTarget;
+      if (related instanceof Node && wrap.contains(related)) return;
+      // Keep edit mode active on blur; exit is controlled by outside pointerdown only.
+    });
+    textarea.addEventListener("input", syncFieldHeights);
+
+    renderPreview();
+    syncFieldHeights();
+    wrap.classList.add("is-preview");
+    applyModeVisibility(false);
+    wrap.appendChild(textarea);
+    wrap.appendChild(preview);
+    return wrap;
+  };
+
   /** Creates a label + textarea pair for an editable field. */
   const createEditableTextareaField = (label: string, field: "title" | "question" | "answer" | "info") => {
     const wrapper = document.createElement("div");
-    wrapper.className = "bc flex flex-col gap-1";
+    wrapper.className = "bc flex flex-col gap-1 sprout-card-meta-field";
 
     const labelEl = document.createElement("label");
     labelEl.className = "bc text-sm font-medium";
@@ -292,14 +407,20 @@ export class BulkEditCardModal extends Modal {
     textarea.addEventListener("keydown", (ev: KeyboardEvent) => {
       handleTabInTextarea(textarea, ev);
     });
-    wrapper.appendChild(attachFlagPreviewOverlay(textarea, fieldMinHeightPx(field)));
+    // Single-card edit: show textarea while editing and rendered markdown on blur.
+    if (isSingleEdit) {
+      setCssProps(textarea, "min-height", `${fieldMinHeightPx(field)}px`);
+      wrapper.appendChild(attachSingleEditBlurPreview(textarea, fieldMinHeightPx(field)));
+    } else {
+      wrapper.appendChild(attachFlagPreviewOverlay(textarea, fieldMinHeightPx(field)));
+    }
     inputEls[field] = textarea;
 
     return wrapper;
   };
 
   /** Creates a label + disabled input pair for a read-only field. */
-  const createReadonlyField = (label: string, value: string) => {
+  const createReadonlyField = (label: string, value: string, inputClass = "") => {
     const wrapper = document.createElement("div");
     wrapper.className = "bc flex flex-col gap-1";
 
@@ -310,7 +431,7 @@ export class BulkEditCardModal extends Modal {
 
     const input = document.createElement("input");
     input.type = "text";
-    input.className = "bc input w-full";
+    input.className = `bc input w-full ${inputClass}`.trim();
     input.value = value;
     input.disabled = true;
     wrapper.appendChild(input);
@@ -320,7 +441,7 @@ export class BulkEditCardModal extends Modal {
 
   // ── Top metadata grid (read-only) ───────────────────────────────────────
   const topGrid = document.createElement("div");
-  topGrid.className = "bc grid grid-cols-1 gap-3 md:grid-cols-2";
+  topGrid.className = "bc grid grid-cols-1 gap-3 md:grid-cols-2 sprout-card-meta-grid";
 
   const card0 = cards[0];
   const state0 = plugin.store.getState(card0.id);
@@ -333,7 +454,7 @@ export class BulkEditCardModal extends Modal {
 
   if (isBasicOrReversed) {
     const typeWrapper = document.createElement("div");
-    typeWrapper.className = "bc flex flex-col gap-1";
+    typeWrapper.className = "bc flex flex-col gap-1 sprout-card-meta-field";
 
     const typeLabelEl = document.createElement("label");
     typeLabelEl.className = "bc text-sm font-medium";
@@ -351,7 +472,7 @@ export class BulkEditCardModal extends Modal {
         fullWidth: false,
         buttonSize: "sm",
         buttonJustify: "start",
-        buttonClassName: "cursor-pointer",
+        buttonClassName: "cursor-pointer sprout-card-meta-type-btn",
       },
     );
     typeDropdown.onChange((value) => { selectedType = value; });
@@ -387,7 +508,7 @@ export class BulkEditCardModal extends Modal {
     const correctIdxSet = new Set(getCorrectIndices(mcqCard));
 
     mcqSection = document.createElement("div");
-    mcqSection.className = "bc flex flex-col gap-1";
+    mcqSection.className = "bc flex flex-col gap-2";
 
     const mcqLabel = document.createElement("label");
     mcqLabel.className = "bc text-sm font-medium inline-flex items-center gap-1";
@@ -430,7 +551,7 @@ export class BulkEditCardModal extends Modal {
       input.className = "bc input flex-1 text-sm sprout-input-fixed";
       input.placeholder = "Enter an answer option";
       input.value = value;
-      row.appendChild(attachFlagPreviewOverlay(input));
+      row.appendChild(attachFlagPreviewOverlay(input, 36, 36));
 
       const removeBtn = document.createElement("button");
       removeBtn.type = "button";
@@ -491,8 +612,8 @@ export class BulkEditCardModal extends Modal {
       addInput.value = "";
     });
     const addInputWrap = document.createElement("div");
-    addInputWrap.className = "bc flex items-center gap-2";
-    addInputWrap.appendChild(attachFlagPreviewOverlay(addInput));
+    addInputWrap.className = "bc flex items-center gap-2 sprout-mcq-add-row";
+    addInputWrap.appendChild(attachFlagPreviewOverlay(addInput, 36, 36));
     mcqSection.appendChild(addInputWrap);
 
     form.appendChild(mcqSection);
@@ -506,7 +627,7 @@ export class BulkEditCardModal extends Modal {
     const initialSteps = Array.isArray(oqCard.oqSteps) ? [...oqCard.oqSteps] : ["" , ""];
 
     const oqSection = document.createElement("div");
-    oqSection.className = "bc flex flex-col gap-1";
+    oqSection.className = "bc flex flex-col gap-2";
 
     const oqLabel = document.createElement("label");
     oqLabel.className = "bc text-sm font-medium inline-flex items-center gap-1";
@@ -573,13 +694,12 @@ export class BulkEditCardModal extends Modal {
       input.rows = 1;
       input.placeholder = `Step ${idx + 1}`;
       input.value = value;
-      const autoGrow = () => {
-        setCssProps(input, "height", "auto");
-        setCssProps(input, "height", `${Math.max(38, input.scrollHeight)}px`);
-      };
-      input.addEventListener("input", autoGrow);
-      autoGrow();
-      row.appendChild(attachFlagPreviewOverlay(input));
+      setCssProps(input, {
+        "min-height": "36px",
+        height: "36px",
+        "max-height": "36px",
+      });
+      row.appendChild(attachFlagPreviewOverlay(input, 36, 36));
 
       // Delete button
       const delBtn = document.createElement("button");
@@ -642,7 +762,7 @@ export class BulkEditCardModal extends Modal {
 
     // "Add step" input
     const addOqRow = document.createElement("div");
-    addOqRow.className = "bc flex items-center gap-2";
+    addOqRow.className = "bc flex items-center gap-2 sprout-oq-add-row";
     const addOqInput = document.createElement("input");
     addOqInput.type = "text";
     addOqInput.className = "bc input flex-1 text-sm sprout-input-fixed";
@@ -667,7 +787,7 @@ export class BulkEditCardModal extends Modal {
       renumberOq();
       addOqInput.value = "";
     });
-    addOqRow.appendChild(attachFlagPreviewOverlay(addOqInput));
+    addOqRow.appendChild(attachFlagPreviewOverlay(addOqInput, 36, 36));
     oqSection.appendChild(addOqRow);
 
     form.appendChild(oqSection);
@@ -694,17 +814,17 @@ export class BulkEditCardModal extends Modal {
   form.appendChild(groupsWrapper);
 
   // Location (read-only)
-  form.appendChild(createReadonlyField("Location", fmtLocation(card0.sourceNotePath)));
+  form.appendChild(createReadonlyField("Location", fmtLocation(card0.sourceNotePath), "sprout-location-input"));
 
   contentEl.appendChild(form);
 
   // ── Footer buttons ────────────────────────────────────────────────────────
   const footer = document.createElement("div");
-  footer.className = "bc flex items-center justify-end gap-4 sprout-modal-footer";
+  footer.className = "bc flex items-center justify-end gap-4 lk-modal-footer";
 
   const cancel = document.createElement("button");
   cancel.type = "button";
-  cancel.className = "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm";
+  cancel.className = "bc sprout-btn-toolbar sprout-btn-outline-muted inline-flex items-center gap-2 h-9 px-3 text-sm";
   const cancelIcon = document.createElement("span");
   cancelIcon.className = "bc inline-flex items-center justify-center [&_svg]:size-4";
   setIcon(cancelIcon, "x");
@@ -715,7 +835,7 @@ export class BulkEditCardModal extends Modal {
 
   const save = document.createElement("button");
   save.type = "button";
-  save.className = "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm";
+  save.className = "bc sprout-btn-toolbar sprout-bulk-edit-save-btn inline-flex items-center gap-2 h-9 px-3 text-sm";
   const saveIcon = document.createElement("span");
   saveIcon.className = "bc inline-flex items-center justify-center [&_svg]:size-4";
   setIcon(saveIcon, "check");

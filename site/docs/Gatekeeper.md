@@ -1,6 +1,6 @@
 # Gatekeeper
 
-Last modified: 04/03/2026
+Last modified: 17/03/2026
 
 ## Purpose
 
@@ -24,7 +24,7 @@ For gentler nudges, see [Reminders](./Reminders.md).
 | Gatekeeper frequency | Time between Gatekeeper rounds, in minutes. |
 | Number of due questions | How many due cards to include per round. |
 | Gatekeeper scoping | Choose whether Gatekeeper blocks only the current tab or the full workspace. |
-| Pause Gatekeeper while studying | Pauses countdown in Sprout study tabs and resumes after you leave. |
+| Pause Gatekeeper while studying | Pauses countdown in LearnKit study tabs and resumes after you leave. |
 
 ## Bypass
 
@@ -36,14 +36,14 @@ For gentler nudges, see [Reminders](./Reminders.md).
 If fewer due cards are available than requested, Gatekeeper shows all available due cards.
 If no cards are due, the round is skipped.
 
-## Behavior notes
+## Behavior Notes
 
 - Gatekeeper on launch runs on app start, not on settings toggles.
 - Gatekeeper rounds use your current due-card state from the scheduler.
 
 ## Related
 
-- [Reminders](./Reminders.md)
-- [Study-Sessions](./Study-Sessions.md)
-- [Grading](./Grading.md)
-- [Settings](./Settings.md)
+- [Reminders](./Reminders)
+- [Study Sessions](./Study-Sessions)
+- [Grading](./Grading)
+- [Settings](./Settings)

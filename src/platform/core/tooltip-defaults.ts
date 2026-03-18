@@ -22,7 +22,16 @@ function normalizeTooltipText(v: string): string {
     .trim();
 }
 
+function shouldSkipAutoTooltip(el: HTMLElement): boolean {
+  return !!el.closest(".sprout-mcq-options, .sprout-oq-step-list, .sprout-oq-answer-list");
+}
+
 function ensureTooltip(el: TooltipTarget): void {
+  if (shouldSkipAutoTooltip(el)) {
+    if (el.hasAttribute("title")) el.removeAttribute("title");
+    return;
+  }
+
   // Always remove native tooltips.
   if (el.hasAttribute("title")) el.removeAttribute("title");
 
@@ -50,7 +59,7 @@ function processNode(node: Node): void {
 
   // Process descendants
   const descendants = node.querySelectorAll<HTMLElement>("button,[role='button']");
-  for (const el of descendants) ensureTooltip(el as TooltipTarget);
+  descendants.forEach((el) => ensureTooltip(el as TooltipTarget));
 }
 
 /**
@@ -66,11 +75,11 @@ export function initButtonTooltipDefaults(): () => void {
   processNode(root);
 
   const obs = new MutationObserver((mutations) => {
-    for (const m of mutations) {
-      for (const n of m.addedNodes) processNode(n as Node);
+    mutations.forEach((m) => {
+      m.addedNodes.forEach((n) => processNode(n));
       // If attributes change (e.g., textContent updated later), callers should
       // set `aria-label` explicitly; we intentionally don't observe characterData.
-    }
+    });
   });
 
   obs.observe(root, { childList: true, subtree: true });

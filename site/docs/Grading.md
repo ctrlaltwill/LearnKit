@@ -1,16 +1,16 @@
 # Grading
 
-Last modified: 13/02/2026
+Last modified: 17/03/2026
 
-## How grading works
+## Grade Logic
 
 After you reveal a card, you grade recall quality. That grade is passed to FSRS, which updates difficulty and next review timing.
 
-## Grading modes
+## Grade Modes
 
-Sprout offers two grading modes, configurable in **Settings → Study → Grading buttons**:
+LearnKit offers two grading modes, configurable in Settings -> Study -> Grading buttons:
 
-### Two-button mode (default, recommended)
+### Two Button
 
 Two-button mode works as a simple pass / fail system:
 
@@ -21,7 +21,7 @@ Two-button mode works as a simple pass / fail system:
 
 This mode is simpler and faster, and is recommended for most users.
 
-### Four-button mode
+### Four Button
 
 | Button | Shortcut | When to use |
 |---|---|---|
@@ -35,7 +35,7 @@ This mode gives finer control, but it is slower and easier to overthink.
 > [!TIP]
 > Use four buttons only if you want extra grading granularity. Otherwise, keep two-button mode.
 
-## Auto-graded card types
+## Auto Graded
 
 Some card types are graded automatically based on your interaction — you don't press a separate grade button:
 
@@ -46,7 +46,7 @@ Some card types are graded automatically based on your interaction — you don't
 
 For these types, your response applies the grade directly.
 
-## How grading affects scheduling
+## Scheduling Impact
 
 Each grade feeds into the FSRS algorithm, which updates three values for the card:
 
@@ -56,9 +56,9 @@ Each grade feeds into the FSRS algorithm, which updates three values for the car
 | **Difficulty** | Increases when you press Again, decreases with Easy |
 | **Next interval** | Calculated so your recall probability equals your target retention on the due date |
 
-See [Scheduling](./Scheduling.md) for a deeper explanation of FSRS.
+See [Scheduling](./Scheduling) for a deeper explanation of FSRS.
 
-## Keyboard shortcuts summary
+## Key Summary
 
 | Key | Action |
 |---|---|

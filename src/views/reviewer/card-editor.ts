@@ -13,11 +13,12 @@ import type SproutPlugin from "../../main";
 import type { CardRecord } from "../../platform/core/store";
 import { normalizeCardOptions } from "../../platform/core/store";
 import { queryFirst } from "../../platform/core/ui";
-import { handleTabInTextarea } from "../../platform/card-editor/card-editor";
+import { handleTabInTextarea, attachFlagPreviewOverlay } from "../../platform/card-editor/card-editor";
 import { setModalTitle, scopeModalToWorkspace } from "../../platform/modals/modal-utils";
 import { persistEditedCardAndSiblings } from "../../platform/core/targeted-card-persist";
 import { log } from "../../platform/core/logger";
 import { escapeDelimiterRe } from "../../platform/core/delimiter";
+import { CARD_ANCHOR_LINE_RE } from "../../platform/core/identity";
 import { findCardBlockRangeById } from "./markdown-block";
 import { t } from "../../platform/translations/translator";
 
@@ -37,7 +38,7 @@ export type CardEditPayload = {
   info?: string;
 };
 
-const ANCHOR_RE = /^\^sprout-(\d{9})$/;
+const ANCHOR_RE = CARD_ANCHOR_LINE_RE;
 const ID_COMMENT_RE = /^<!--ID:(\d{9})-->$/;
 
 // Recognised field starts for "continuation line" handling (supports both pipe and legacy colon)
@@ -174,7 +175,7 @@ function setTaggedSection(
 }
 
 function mkSectionTitle(parent: HTMLElement, text: string) {
-  parent.createEl("label", { text, cls: "text-sm font-medium" });
+  parent.createEl("label", { text, cls: "bc text-sm font-medium" });
 }
 
 const tx = (token: string, fallback: string, vars?: Record<string, string | number>) =>
@@ -196,14 +197,21 @@ export class CardEditModal extends Modal {
 
   onOpen() {
     scopeModalToWorkspace(this);
-    this.containerEl.addClass("sprout-modal-container", "sprout-modal-dim", "sprout");
-    this.modalEl.addClass("bc", "sprout-modals", "sprout-edit-modal");
+    this.containerEl.addClass("lk-modal-container", "lk-modal-dim", "sprout");
+    this.modalEl.addClass("bc", "lk-modals", "sprout-edit-modal");
     this.contentEl.addClass("bc");
 
     setModalTitle(this, tx("ui.reviewer.cardEditor.title", "Quick edit flashcard"));
 
     const { contentEl } = this;
     contentEl.empty();
+
+    const headerEl = this.modalEl.querySelector<HTMLElement>(":scope > .modal-header");
+    const closeBtn = this.modalEl.querySelector<HTMLElement>(":scope > .modal-close-button");
+    if (headerEl) {
+      if (closeBtn) headerEl.appendChild(closeBtn);
+      contentEl.appendChild(headerEl);
+    }
 
     const type = String((this.card).type || "basic");
     const id = String((this.card).id || "");
@@ -212,7 +220,7 @@ export class CardEditModal extends Modal {
       const input = contentEl.createEl("input");
       input.type = "text";
       input.value = value || "";
-      input.classList.add("input", "w-full");
+      input.classList.add("bc", "input", "w-full");
       return input;
     };
 
@@ -220,7 +228,7 @@ export class CardEditModal extends Modal {
       const ta = contentEl.createEl("textarea");
       ta.value = value || "";
       ta.rows = rows;
-      ta.classList.add("textarea", "w-full", "sprout-textarea-fixed");
+      ta.classList.add("bc", "textarea", "w-full", "sprout-textarea-fixed");
       if (extraClass) ta.classList.add(extraClass);
       ta.addEventListener("keydown", (ev: KeyboardEvent) => {
         handleTabInTextarea(ta, ev);
@@ -228,10 +236,18 @@ export class CardEditModal extends Modal {
       return ta;
     };
 
+    /** Wrap a textarea with click-to-edit markdown preview overlay. */
+    const mkPreviewTextarea = (value: string, rows = 4, extraClass = "") => {
+      const ta = mkTextarea(value, rows, extraClass);
+      const wrap = attachFlagPreviewOverlay(ta);
+      return { ta, wrap };
+    };
+
     // ---- Title (always first) ----
     mkSectionTitle(contentEl, tx("ui.reviewer.cardEditor.field.title", "Title"));
     const titleEl = mkInput(String((this.card).title || ""));
     titleEl.classList.add("sprout-edit-field-title");
+    contentEl.appendChild(attachFlagPreviewOverlay(titleEl));
 
     // ---- Per-type fields ----
     let qEl: HTMLTextAreaElement | null = null;
@@ -311,10 +327,11 @@ export class CardEditModal extends Modal {
 
     if (type === "cloze") {
       mkSectionTitle(contentEl, tx("ui.reviewer.cardEditor.field.cloze", "Cloze"));
-      clozeEl = mkTextarea(String((this.card).clozeText || ""), 5, "sprout-edit-field-question");
+      { const r = mkPreviewTextarea(String((this.card).clozeText || ""), 5, "sprout-edit-field-question"); clozeEl = r.ta; contentEl.appendChild(r.wrap); }
 
       mkSectionTitle(contentEl, tx("ui.reviewer.cardEditor.field.extraInfo", "Extra information"));
-      const infoEl = mkTextarea(String((this.card).info || ""), 4, "sprout-edit-field-info");
+      const { ta: infoEl, wrap: infoWrap } = mkPreviewTextarea(String((this.card).info || ""), 4, "sprout-edit-field-info");
+      contentEl.appendChild(infoWrap);
 
       this.renderButtons(type, titleEl, {
         clozeEl,
@@ -329,13 +346,14 @@ export class CardEditModal extends Modal {
 
     if (type === "basic" || type === "reversed") {
       mkSectionTitle(contentEl, tx("ui.reviewer.cardEditor.field.question", "Question"));
-      qEl = mkTextarea(String((this.card).q || ""), 4, "sprout-edit-field-question");
+      { const r = mkPreviewTextarea(String((this.card).q || ""), 4, "sprout-edit-field-question"); qEl = r.ta; contentEl.appendChild(r.wrap); }
 
       mkSectionTitle(contentEl, tx("ui.reviewer.cardEditor.field.answer", "Answer"));
-      aEl = mkTextarea(String((this.card).a || ""), 4, "sprout-edit-field-answer");
+      { const r = mkPreviewTextarea(String((this.card).a || ""), 4, "sprout-edit-field-answer"); aEl = r.ta; contentEl.appendChild(r.wrap); }
 
       mkSectionTitle(contentEl, tx("ui.reviewer.cardEditor.field.extraInfo", "Extra information"));
-      const infoEl = mkTextarea(String((this.card).info || ""), 4, "sprout-edit-field-info");
+      const { ta: infoEl, wrap: infoWrap } = mkPreviewTextarea(String((this.card).info || ""), 4, "sprout-edit-field-info");
+      contentEl.appendChild(infoWrap);
 
       this.renderButtons(type, titleEl, {
         qEl,
@@ -350,11 +368,11 @@ export class CardEditModal extends Modal {
 
     if (type === "oq") {
       mkSectionTitle(contentEl, tx("ui.reviewer.cardEditor.field.question", "Question"));
-      qEl = mkTextarea(String((this.card).q || ""), 4, "sprout-edit-field-question");
+      { const r = mkPreviewTextarea(String((this.card).q || ""), 4, "sprout-edit-field-question"); qEl = r.ta; contentEl.appendChild(r.wrap); }
 
       mkSectionTitle(contentEl, tx("ui.reviewer.cardEditor.field.stepsCorrectOrder", "Steps (correct order)"));
 
-      const oqHint = contentEl.createDiv({ cls: "text-xs text-muted-foreground" });
+      const oqHint = contentEl.createDiv({ cls: "bc text-xs text-muted-foreground" });
       oqHint.textContent = tx("ui.reviewer.cardEditor.oq.dragHint", "Drag the grip handles to reorder steps. Steps are shuffled during review.");
 
       const oqListContainer = contentEl.createDiv({ cls: "sprout-oq-editor-list" });
@@ -461,7 +479,8 @@ export class CardEditModal extends Modal {
       };
 
       mkSectionTitle(contentEl, tx("ui.reviewer.cardEditor.field.extraInfo", "Extra information"));
-      const infoEl = mkTextarea(String((this.card).info || ""), 4, "sprout-edit-field-info");
+      const { ta: infoEl, wrap: infoWrap } = mkPreviewTextarea(String((this.card).info || ""), 4, "sprout-edit-field-info");
+      contentEl.appendChild(infoWrap);
 
       this.renderButtons(type, titleEl, {
         qEl,
@@ -477,7 +496,7 @@ export class CardEditModal extends Modal {
 
     // MCQ
     mkSectionTitle(contentEl, tx("ui.reviewer.cardEditor.field.question", "Question"));
-    mcqStemEl = mkTextarea(String((this.card).stem || ""), 4, "sprout-edit-field-question");
+    { const r = mkPreviewTextarea(String((this.card).stem || ""), 4, "sprout-edit-field-question"); mcqStemEl = r.ta; contentEl.appendChild(r.wrap); }
 
     mkSectionTitle(contentEl, tx("ui.reviewer.cardEditor.field.options", "Options"));
 
@@ -500,7 +519,8 @@ export class CardEditModal extends Modal {
     plusBtn.onclick = () => addMcqOptionRow("", false);
 
     mkSectionTitle(contentEl, tx("ui.reviewer.cardEditor.field.extraInfo", "Extra information"));
-    const infoEl = mkTextarea(String((this.card).info || ""), 4, "sprout-edit-field-info");
+    const { ta: infoEl, wrap: infoWrap } = mkPreviewTextarea(String((this.card).info || ""), 4, "sprout-edit-field-info");
+    contentEl.appendChild(infoWrap);
 
     this.renderButtons(type, titleEl, {
       qEl: null,
@@ -546,16 +566,16 @@ export class CardEditModal extends Modal {
   ) {
     const { contentEl } = this;
 
-    const footer = contentEl.createDiv({ cls: "bc flex items-center justify-end gap-4 sprout-modal-footer" });
+    const footer = contentEl.createDiv({ cls: "bc flex items-center justify-end gap-4 lk-modal-footer" });
 
-    const cancel = footer.createEl("button", { cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm" });
+    const cancel = footer.createEl("button", { cls: "bc sprout-btn-toolbar sprout-btn-outline-muted inline-flex items-center gap-2 h-9 px-3 text-sm" });
     cancel.type = "button";
     const cancelIcon = cancel.createEl("span", { cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
     setIcon(cancelIcon, "x");
     cancel.createSpan({ text: tx("ui.common.cancel", "Cancel") });
     cancel.onclick = () => this.close();
 
-    const save = footer.createEl("button", { cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm" });
+    const save = footer.createEl("button", { cls: "bc sprout-btn-toolbar sprout-btn-primary-action inline-flex items-center gap-2 h-9 px-3 text-sm" });
     save.type = "button";
     const saveIcon = save.createEl("span", { cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
     setIcon(saveIcon, "save");

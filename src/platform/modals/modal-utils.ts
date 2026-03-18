@@ -124,9 +124,9 @@ export function setDisabledUnder(root: HTMLElement, disabled: boolean) {
  */
 export function parkBehind(modalEl: HTMLElement, behind: boolean) {
   if (behind) {
-    modalEl.addClass("sprout-modal-behind-io-editor");
+    modalEl.addClass("lk-modal-behind-io-editor");
   } else {
-    modalEl.removeClass("sprout-modal-behind-io-editor");
+    modalEl.removeClass("lk-modal-behind-io-editor");
   }
 }
 
@@ -422,7 +422,7 @@ export function hasClozeToken(s: string): boolean {
  */
 export function createModalMcqSection() {
   const container = document.createElement("div");
-  container.className = "bc flex flex-col gap-1";
+  container.className = "bc flex flex-col gap-2";
 
   const label = document.createElement("label");
   label.className = "bc text-sm font-medium inline-flex items-center gap-1";
@@ -604,7 +604,7 @@ export function createThemedDropdown(
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = [
-    "bc btn-outline text-sm inline-flex items-center gap-2",
+    "bc sprout-btn-toolbar text-sm inline-flex items-center gap-2",
     buttonSize === "sm" ? "h-7 px-2" : "h-9 px-3",
     fullWidth ? "w-full" : "",
     buttonJustify === "between" ? "justify-between" : "",
@@ -632,7 +632,7 @@ export function createThemedDropdown(
   container.appendChild(popover);
 
   const panel = document.createElement("div");
-  panel.className = "bc rounded-lg border border-border bg-popover text-popover-foreground shadow-lg p-1 sprout-pointer-auto";
+  panel.className = "bc rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 sprout-pointer-auto";
   popover.appendChild(panel);
 
   const menu = document.createElement("div");

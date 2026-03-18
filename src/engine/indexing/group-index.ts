@@ -72,12 +72,15 @@ function isAvailableNowState(cardState: CardState | undefined, now: number): boo
 export type GroupCounts = { due: number; total: number };
 
 export class GroupIndex {
+  /** Lowercased key → card IDs (used for case-insensitive lookups) */
   private groupToIds = new Map<string, Set<string>>();
+  /** Original-case keys for display */
   private keys: string[] = [];
   private keysLower: string[] = [];
 
   build(cards: CardRecord[]): this {
     this.groupToIds.clear();
+    const originalCaseKeys = new Map<string, string>();
 
     for (const card of cards) {
       const id = String(card?.id ?? "");
@@ -90,17 +93,21 @@ export class GroupIndex {
 
         const prefixes = expandGroupPrefixes(normalizedGroup);
         for (const groupKey of prefixes) {
-          let cardIds = this.groupToIds.get(groupKey);
+          const lowerKey = groupKey.toLowerCase();
+          if (!originalCaseKeys.has(lowerKey)) {
+            originalCaseKeys.set(lowerKey, groupKey);
+          }
+          let cardIds = this.groupToIds.get(lowerKey);
           if (!cardIds) {
             cardIds = new Set<string>();
-            this.groupToIds.set(groupKey, cardIds);
+            this.groupToIds.set(lowerKey, cardIds);
           }
           cardIds.add(id);
         }
       }
     }
 
-    this.keys = Array.from(this.groupToIds.keys()).sort((a, b) => a.localeCompare(b));
+    this.keys = Array.from(originalCaseKeys.values()).sort((a, b) => a.localeCompare(b));
     this.keysLower = this.keys.map((k) => k.toLowerCase());
     return this;
   }
@@ -113,7 +120,7 @@ export class GroupIndex {
   getIds(group: string): Set<string> {
     const normalizedGroup = normalizeGroupPath(group);
     if (!normalizedGroup) return new Set<string>();
-    return this.groupToIds.get(normalizedGroup) ?? new Set<string>();
+    return this.groupToIds.get(normalizedGroup.toLowerCase()) ?? new Set<string>();
   }
 
   getCounts(group: string, states: Record<string, CardState>, now: number): GroupCounts {

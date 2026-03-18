@@ -30,8 +30,8 @@ import type {
 import {
   applyStickyThStyles,
 } from "./browser-helpers";
-import { makeDropdownMenu, makeColumnsDropdown } from "./browser-dropdowns";
-import { makeResizableTh } from "./browser-resize";
+import { makeDropdownMenu, makeColumnsDropdown } from "./shared/browser-dropdowns";
+import { makeResizableTh } from "./shared/browser-resize";
 import { t } from "../../platform/translations/translator";
 
 // ── Context / result interfaces ───────────────────────────
@@ -39,6 +39,7 @@ import { t } from "../../platform/translations/translator";
 export interface ToolbarContext {
   plugin: SproutPlugin;
   animationsEnabled: boolean;
+  internalAosEnabled?: boolean;
 
   query: string;
   typeFilter: TypeFilter;
@@ -106,7 +107,7 @@ function makeAosFn(animationsEnabled: boolean) {
   const applyAos = (el: HTMLElement, delay?: number, animation = "fade-up") => {
     if (!animationsEnabled) return;
     el.setAttribute("data-aos", animation);
-    el.setAttribute("data-aos-anchor", '[data-sprout-browser-root="1"]');
+    el.setAttribute("data-aos-anchor", '[data-lk-browser-root="1"]');
     el.setAttribute("data-aos-anchor-placement", "top-bottom");
     el.setAttribute("data-aos-duration", "600");
     el.setAttribute("data-aos-offset", "0");
@@ -128,39 +129,36 @@ export function buildBrowserLayout(
   root: HTMLElement,
   ctx: ToolbarContext,
 ): ToolbarRefs {
-  const { applyAos } = makeAosFn(ctx.animationsEnabled);
+  const { applyAos } = makeAosFn(ctx.animationsEnabled && (ctx.internalAosEnabled ?? true));
   const tx = (token: string, fallback: string, vars?: Record<string, string | number>) =>
     t(ctx.plugin.settings?.general?.interfaceLanguage, token, fallback, vars);
 
   const uiCleanups: Array<() => void> = [];
 
-  // ── Title ──
-  const title = document.createElement("div");
-  title.className = "bc text-xl font-semibold tracking-tight";
-  applyAos(title, 0);
-  title.textContent = tx("ui.view.browser.title", "Flashcard browser");
-  root.appendChild(title);
-
   // ── Toolbar / filters ──
   const top = document.createElement("div");
-  top.className = "flex flex-col gap-2 w-full";
+  top.className = "flex flex-col gap-4 w-full";
   root.appendChild(top);
 
-  const toolbarRow = document.createElement("div");
-  toolbarRow.className = "flex flex-row flex-wrap items-start gap-4 w-full sprout-browser-toolbar-row";
-  top.appendChild(toolbarRow);
+  const searchCard = document.createElement("div");
+  searchCard.className = "card lk-browser-card lk-browser-search-card";
+  applyAos(searchCard, 0);
+  top.appendChild(searchCard);
+
+  const searchRow = document.createElement("div");
+  searchRow.className = "flex flex-row flex-wrap items-start gap-3 w-full lk-browser-toolbar-row";
+  searchCard.appendChild(searchRow);
 
   // Search input
   const searchGroup = document.createElement("div");
-  searchGroup.className = "flex flex-row items-stretch gap-2 flex-1 min-w-[300px] sprout-browser-search-group";
-  applyAos(searchGroup, 200);
-  toolbarRow.appendChild(searchGroup);
+  searchGroup.className = "flex flex-row items-stretch gap-2 flex-1 min-w-[200px] lk-browser-search-group";
+  searchRow.appendChild(searchGroup);
 
   const q = document.createElement("input");
   q.type = "text";
   q.placeholder = tx("ui.browser.search.placeholder", "Search flashcards");
   q.value = ctx.query;
-  q.className = "input h-9 px-3 text-sm sprout-browser-search-input";
+  q.className = "input h-9 px-3 text-sm lk-browser-search-input";
   searchGroup.appendChild(q);
 
   q.addEventListener("input", () => {
@@ -199,9 +197,13 @@ export function buildBrowserLayout(
 
   // Controls row
   const controlsRow = document.createElement("div");
-  controlsRow.className = "flex flex-row flex-wrap items-center gap-2 sprout-browser-controls-row";
-  applyAos(controlsRow, 200);
-  toolbarRow.appendChild(controlsRow);
+  const controlsCard = document.createElement("div");
+  controlsCard.className = "card lk-browser-card lk-browser-controls-card";
+  applyAos(controlsCard, 120);
+  top.appendChild(controlsCard);
+
+  controlsRow.className = "flex flex-row flex-wrap items-center gap-1.5 lk-browser-controls-row";
+  controlsCard.appendChild(controlsRow);
 
   // Type filter
   const typeDd = makeDropdownMenu<TypeFilter>({
@@ -220,7 +222,7 @@ export function buildBrowserLayout(
     onBeforeChange: () => ctx.setPageIndex(0),
     widthPx: 260,
   });
-  typeDd.root.classList.add("sprout-browser-filter", "sprout-browser-filter-type");
+  typeDd.root.classList.add("lk-browser-filter", "lk-browser-filter-type");
   controlsRow.appendChild(typeDd.root);
   uiCleanups.push(typeDd.dispose);
 
@@ -241,7 +243,7 @@ export function buildBrowserLayout(
     onBeforeChange: () => ctx.setPageIndex(0),
     widthPx: 240,
   });
-  stageDd.root.classList.add("sprout-browser-filter", "sprout-browser-filter-stage");
+  stageDd.root.classList.add("lk-browser-filter", "lk-browser-filter-stage");
   controlsRow.appendChild(stageDd.root);
   uiCleanups.push(stageDd.dispose);
 
@@ -259,21 +261,21 @@ export function buildBrowserLayout(
     onBeforeChange: () => ctx.setPageIndex(0),
     widthPx: 220,
   });
-  dueDd.root.classList.add("sprout-browser-filter", "sprout-browser-filter-due");
+  dueDd.root.classList.add("lk-browser-filter", "lk-browser-filter-due");
   controlsRow.appendChild(dueDd.root);
   uiCleanups.push(dueDd.dispose);
 
   // Columns button
   const columnsWrap = document.createElement("div");
-  columnsWrap.className = "flex flex-row flex-wrap items-center gap-2 sprout-browser-filter-columns-wrap";
+  columnsWrap.className = "flex flex-row flex-wrap items-center gap-2 lk-browser-filter-columns-wrap";
   controlsRow.appendChild(columnsWrap);
-  colsDd.root.classList.add("sprout-browser-filter", "sprout-browser-filter-columns");
+  colsDd.root.classList.add("lk-browser-filter", "lk-browser-filter-columns");
   columnsWrap.appendChild(colsDd.root);
 
   // Suspend button
   const suspendBtn = document.createElement("button");
   suspendBtn.type = "button";
-  suspendBtn.className = "btn-outline h-9 px-3 text-sm inline-flex items-center gap-2 sprout-browser-action-btn sprout-browser-action-btn-suspend";
+  suspendBtn.className = "sprout-btn-toolbar h-9 px-3 text-sm inline-flex items-center gap-2 lk-browser-action-btn lk-browser-action-btn-suspend";
   suspendBtn.disabled = true;
   suspendBtn.setAttribute("aria-label", tx("ui.browser.action.suspend.tooltip", "Suspend or Unsuspend selected cards"));
   suspendBtn.setAttribute("data-tooltip-position", "top");
@@ -287,7 +289,7 @@ export function buildBrowserLayout(
   // Edit button
   const editBtn = document.createElement("button");
   editBtn.type = "button";
-  editBtn.className = "btn-outline h-9 px-3 text-sm inline-flex items-center gap-2 sprout-browser-action-btn sprout-browser-action-btn-edit";
+  editBtn.className = "sprout-btn-toolbar h-9 px-3 text-sm inline-flex items-center gap-2 lk-browser-action-btn lk-browser-action-btn-edit";
   editBtn.disabled = true;
   editBtn.setAttribute("aria-label", tx("ui.browser.action.edit.tooltip", "Edit selected cards"));
   editBtn.setAttribute("data-tooltip-position", "top");
@@ -310,7 +312,7 @@ export function buildBrowserLayout(
   // Reset filters button
   const resetFiltersBtn = document.createElement("button");
   resetFiltersBtn.type = "button";
-  resetFiltersBtn.className = "btn-outline h-9 px-3 text-sm inline-flex items-center gap-2 sprout-browser-action-btn sprout-browser-action-btn-reset";
+  resetFiltersBtn.className = "sprout-btn-toolbar h-9 px-3 text-sm inline-flex items-center gap-2 lk-browser-action-btn lk-browser-action-btn-reset";
   resetFiltersBtn.disabled = true;
   resetFiltersBtn.setAttribute("aria-label", tx("ui.browser.action.reset.tooltip", "Reset filters"));
   resetFiltersBtn.setAttribute("data-tooltip-position", "top");
@@ -329,14 +331,18 @@ export function buildBrowserLayout(
   controlsRow.appendChild(resetFiltersBtn);
 
   // ── Table ──
+  const tableCard = document.createElement("div");
+  tableCard.className = "card lk-browser-card lk-browser-table-card";
+  applyAos(tableCard, 240);
+  top.appendChild(tableCard);
+
   const tableWrap = document.createElement("div");
   tableWrap.className =
-    "bc rounded-lg border border-border overflow-auto flex-1 min-h-0 sprout-browser-table-wrap";
-  applyAos(tableWrap, 400);
-  root.appendChild(tableWrap);
+    "bc overflow-auto flex-1 min-h-0 lk-browser-table-wrap";
+  tableCard.appendChild(tableWrap);
 
   const table = document.createElement("table");
-  table.className = "table w-full text-sm leading-snug sprout-browser-table";
+  table.className = "table w-full text-sm leading-snug lk-browser-table";
   tableWrap.appendChild(table);
 
   // Colgroup
@@ -345,7 +351,7 @@ export function buildBrowserLayout(
 
   const selectCol = document.createElement("col");
   selectCol.setAttribute("data-col", "select");
-  selectCol.className = "sprout-browser-select-col";
+  selectCol.className = "lk-browser-select-col";
   colgroup.appendChild(selectCol);
 
   const colEls: Partial<Record<ColKey, HTMLTableColElement>> = {};
@@ -354,7 +360,7 @@ export function buildBrowserLayout(
   cols.forEach((k) => {
     const c = document.createElement("col");
     c.setAttribute("data-col", k);
-    c.className = "sprout-browser-col";
+    c.className = "lk-browser-col";
     setCssProps(c, "--sprout-col-width", `${ctx.colWidths[k] || 120}px`);
     colgroup.appendChild(c);
     colEls[k] = c;
@@ -365,17 +371,17 @@ export function buildBrowserLayout(
   table.appendChild(thead);
 
   const hr = document.createElement("tr");
-  hr.classList.add("sprout-browser-header-row");
+  hr.classList.add("lk-browser-header-row");
   thead.appendChild(hr);
 
   // Select-all checkbox
   const selectTh = document.createElement("th");
-  selectTh.className = "text-sm font-medium text-muted-foreground select-none sprout-browser-select-th";
+  selectTh.className = "text-sm font-medium text-muted-foreground select-none lk-browser-select-th";
   applyStickyThStyles(selectTh, 0);
 
   const selectAll = document.createElement("input");
   selectAll.type = "checkbox";
-  selectAll.className = "cursor-pointer sprout-browser-select-all";
+  selectAll.className = "cursor-pointer lk-browser-select-all";
   selectTh.appendChild(selectAll);
   hr.appendChild(selectTh);
 
@@ -385,20 +391,20 @@ export function buildBrowserLayout(
 
   const headCell = (label: string, key: SortKey) => {
     const th = document.createElement("th");
-    th.className = `text-sm font-medium text-muted-foreground select-none cursor-pointer ${ctx.cellWrapClass} sprout-browser-header-cell sprout-browser-th`;
+    th.className = `text-sm font-medium text-muted-foreground select-none cursor-pointer ${ctx.cellWrapClass} lk-browser-header-cell lk-browser-th`;
     th.setAttribute("data-col", key);
 
     applyStickyThStyles(th, 0);
 
     const inner = document.createElement("div");
-    inner.className = "items-center h-full sprout-browser-th-inner";
+    inner.className = "items-center h-full lk-browser-th-inner";
 
     const lbl = document.createElement("span");
     lbl.textContent = label;
-    lbl.className = "sprout-browser-th-label";
+    lbl.className = "lk-browser-th-label";
 
     const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    icon.setAttribute("class", "svg-icon lucide-chevron-down sprout-browser-header-icon sprout-browser-th-icon");
+    icon.setAttribute("class", "svg-icon lucide-chevron-down lk-browser-header-icon lk-browser-th-icon");
     icon.setAttribute("viewBox", "0 0 24 24");
     icon.setAttribute("width", "16");
     icon.setAttribute("height", "16");
@@ -458,24 +464,28 @@ export function buildBrowserLayout(
 
   // Tbody (empty — refreshTable fills it)
   const tbody = document.createElement("tbody");
-  thead.classList.add("sprout-browser-thead");
-  tbody.classList.add("sprout-browser-tbody");
+  thead.classList.add("lk-browser-thead");
+  tbody.classList.add("lk-browser-tbody");
   table.appendChild(tbody);
 
   // ── Bottom controls ──
+  const bottomCard = document.createElement("div");
+  bottomCard.className = "card lk-browser-card lk-browser-bottom-card";
+  applyAos(bottomCard, 360);
+  top.appendChild(bottomCard);
+
   const bottom = document.createElement("div");
-  bottom.className = "flex flex-row flex-wrap items-center justify-between gap-2 sprout-browser-bottom-bar";
-  applyAos(bottom, 600);
-  root.appendChild(bottom);
+  bottom.className = "flex flex-row flex-wrap items-center justify-between gap-2 lk-browser-bottom-bar";
+  bottomCard.appendChild(bottom);
 
   const summaryWrap = document.createElement("div");
-  summaryWrap.className = "flex flex-col gap-1 sprout-browser-summary-wrap";
+  summaryWrap.className = "flex flex-col gap-0.5 lk-browser-summary-wrap";
   const summary = document.createElement("div");
-  summary.className = "text-sm text-muted-foreground sprout-browser-summary";
+  summary.className = "text-sm text-muted-foreground lk-browser-summary";
   const selectionRow = document.createElement("div");
-  selectionRow.className = "flex items-center gap-2 sprout-browser-selection-row";
+  selectionRow.className = "flex items-center gap-2 lk-browser-selection-row";
   const selectionCount = document.createElement("div");
-  selectionCount.className = "text-sm text-muted-foreground sprout-browser-selection-count";
+  selectionCount.className = "text-sm text-muted-foreground lk-browser-selection-count";
   selectionCount.textContent = tx("ui.browser.selection.none", "No cards selected");
   summaryWrap.appendChild(summary);
   selectionRow.appendChild(selectionCount);
@@ -502,15 +512,15 @@ export function buildBrowserLayout(
   bottom.appendChild(summaryWrap);
 
   const right = document.createElement("div");
-  right.className = "flex flex-row flex-wrap items-center gap-2 ml-auto sprout-browser-bottom-right";
+  right.className = "flex flex-row flex-wrap items-center gap-2 ml-auto lk-browser-bottom-right";
   bottom.appendChild(right);
 
   const rowsControl = document.createElement("div");
-  rowsControl.className = "flex flex-row items-center gap-2 sprout-browser-rows-control";
+  rowsControl.className = "flex flex-row items-center gap-2 lk-browser-rows-control";
   right.appendChild(rowsControl);
 
   const rowsLbl = document.createElement("div");
-  rowsLbl.className = "text-sm text-muted-foreground sprout-browser-rows-label";
+  rowsLbl.className = "text-sm text-muted-foreground lk-browser-rows-label";
   rowsLbl.textContent = tx("ui.browser.rows.label", "Rows");
   rowsControl.appendChild(rowsLbl);
 
@@ -531,7 +541,7 @@ export function buildBrowserLayout(
   uiCleanups.push(pageSizeDd.dispose);
 
   const pagerHost = document.createElement("div");
-  pagerHost.className = "flex items-center sprout-browser-pager-host";
+  pagerHost.className = "flex items-center lk-browser-pager-host";
   right.appendChild(pagerHost);
 
   return {

@@ -288,6 +288,37 @@ describe("buildSession", () => {
     expect(session.queue.length).toBeLessThanOrEqual(3);
   });
 
+  it("supports due-only queue for coach sessions", () => {
+    const due1 = card("due-1");
+    const due2 = card("due-2");
+    const new1 = card("new-1");
+    const new2 = card("new-2");
+
+    const plugin = makePlugin(
+      [due1, due2, new1, new2],
+      {
+        "due-1": state("due-1", "review", NOW - 1000),
+        "due-2": state("due-2", "learning", NOW - 2000),
+        "new-1": state("new-1", "new"),
+        "new-2": state("new-2", "new"),
+      },
+      [],
+      { study: { dailyNewLimit: 0, dailyReviewLimit: 1 } },
+    );
+
+    const session = buildSession(plugin, vaultScope, {
+      ignoreDailyReviewLimit: true,
+      ignoreDailyNewLimit: true,
+      dueOnly: true,
+    });
+
+    const ids = session.queue.map((c) => c.id);
+    expect(ids).toContain("due-1");
+    expect(ids).toContain("due-2");
+    expect(ids).not.toContain("new-1");
+    expect(ids).not.toContain("new-2");
+  });
+
   it("today counts reduce remaining budget", () => {
     // 2 cards reviewed today, limit is 3 → 1 remaining new slot
     const startToday = new Date("2026-02-12T00:00:00").getTime();

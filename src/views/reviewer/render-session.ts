@@ -20,6 +20,7 @@ import { getCorrectIndices, isMultiAnswerMcq } from "../../platform/types/card";
 import type { ClozeRenderOptions } from "./question-cloze";
 import { openCardAnchorInNote } from "../../platform/core/open-card-anchor";
 import { processClozeForMath, convertInlineDisplayMath, forceSingleLineDisplayMathInline } from "../../platform/core/shared-utils";
+import { hydrateCircleFlagsInElement, processCircleFlagsInMarkdown } from "../../platform/flags/flag-tokens";
 import { t } from "../../platform/translations/translator";
 import { getRatingIntervalPreview } from "../../platform/core/grade-intervals";
 import type { CardState, SchedulerSettings } from "../../platform/types/scheduler";
@@ -145,6 +146,11 @@ function formatNotePathForHeader(raw: string): string {
   return formatBreadcrumbs(s);
 }
 
+function applyInlineMarkdownWithFlags(target: HTMLElement, raw: string): void {
+  applyInlineMarkdown(target, processCircleFlagsInMarkdown(raw));
+  hydrateCircleFlagsInElement(target);
+}
+
 function extractInfoField(card: CardRecord): string | null {
   if (!card) return null;
 
@@ -165,7 +171,7 @@ function extractInfoField(card: CardRecord): string | null {
 /**
  * IMPORTANT:
  * - Add `bc` to every element you want Basecoat to style.
- * - Your PostCSS scoper produces selectors like `.btn-outline.bc`, `div.card.bc`, etc.
+ * - Your PostCSS scoper produces selectors like `.sprout-btn-toolbar.bc`, `div.card.bc`, etc.
  *   so the presence of class `bc` is required for those rules to match.
  */
 function h(tag: string, className?: string, text?: string) {
@@ -197,6 +203,9 @@ function makeTextButton(opts: {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = opts.className.split(/\s+/).includes("bc") ? opts.className : `bc ${opts.className}`;
+  if (btn.classList.contains("sprout-btn-toolbar")) {
+    btn.classList.add("sprout-btn-filter");
+  }
   if (opts.subtitle) {
     btn.classList.add("sprout-grade-btn-with-interval");
     const labelWrap = document.createElement("span");
@@ -372,14 +381,14 @@ function makeHeaderMenu(opts: {
   const trigger = document.createElement("button");
   trigger.type = "button";
   trigger.id = `${id}-trigger`;
-  trigger.className = "bc btn-outline";
+  trigger.className = "bc sprout-btn-toolbar sprout-btn-filter";
   trigger.dataset.bcAction = "reviewer-more-trigger";
   trigger.setAttribute("aria-haspopup", "menu");
   trigger.setAttribute("aria-controls", `${id}-menu`);
   trigger.setAttribute("aria-expanded", "false");
   trigger.setAttribute("aria-label", tx("ui.reviewer.more.tooltip", "More actions"));
   if (opts.compactTrigger) {
-    trigger.classList.add("sprout-review-more-icon-btn");
+    trigger.classList.add("lk-review-more-icon-btn");
     trigger.setAttribute("aria-label", tx("ui.reviewer.more.tooltip", "More actions"));
     const iconWrap = document.createElement("span");
     iconWrap.className = "bc inline-flex items-center justify-center";
@@ -398,7 +407,7 @@ function makeHeaderMenu(opts: {
   popover.classList.add("sprout-popover-overlay");
 
   const panel = document.createElement("div");
-  panel.className = "bc sprout rounded-lg border border-border bg-popover text-popover-foreground shadow-lg p-1 pointer-events-auto";
+  panel.className = "bc sprout rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 pointer-events-auto";
   popover.appendChild(panel);
 
   const menu = document.createElement("div");
@@ -608,7 +617,7 @@ function renderMcqContent(ctx: CardRenderCtx): void {
 
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "bc btn-outline w-full justify-start text-left h-auto py-2 mb-2";
+    btn.className = "bc sprout-btn-toolbar w-full justify-start text-left h-auto py-2 mb-2";
 
     // Multi-answer selection state (before submit)
     if (multiAnswer && !reveal && multiSelected.has(origIdx)) {
@@ -664,12 +673,12 @@ function renderMcqContent(ctx: CardRenderCtx): void {
     } else if (text && text.includes("\n")) {
       text.split(/\n+/).forEach((line: string) => {
         const p = document.createElement("div");
-        applyInlineMarkdown(p, line);
+        applyInlineMarkdownWithFlags(p, line);
         p.classList.add("sprout-mcq-option-line");
         textEl.appendChild(p);
       });
     } else {
-      applyInlineMarkdown(textEl, text);
+      applyInlineMarkdownWithFlags(textEl, text);
     }
     left.appendChild(textEl);
 
@@ -843,7 +852,7 @@ function renderOqContent(ctx: CardRenderCtx): void {
         if (stepText.includes("[[") || stepText.includes("$") || stepText.includes("\\(") || stepText.includes("\\[")) {
           void args.renderMarkdownInto(textEl, forceSingleLineDisplayMathInline(stepText), sourcePath).then(() => setupLinkHandlers(textEl, sourcePath));
         } else {
-          applyInlineMarkdown(textEl, stepText);
+          applyInlineMarkdownWithFlags(textEl, stepText);
         }
         row.appendChild(textEl);
 
@@ -953,7 +962,7 @@ function renderOqContent(ctx: CardRenderCtx): void {
       if (stepText.includes("[[") || stepText.includes("$") || stepText.includes("\\(") || stepText.includes("\\[")) {
         void args.renderMarkdownInto(textEl, forceSingleLineDisplayMathInline(stepText), sourcePath).then(() => setupLinkHandlers(textEl, sourcePath));
       } else {
-        applyInlineMarkdown(textEl, stepText);
+        applyInlineMarkdownWithFlags(textEl, stepText);
       }
       row.appendChild(textEl);
 
@@ -984,13 +993,16 @@ export function renderSessionMode(args: Args) {
   const graded = args.session?.graded?.[id] || null;
 
   // ===== Render Study Session header (persists across all card renders) =====
-  renderStudySessionHeader(args.container, args.interfaceLanguage, applyAOS);
+  renderStudySessionHeader(args.container, args.interfaceLanguage, applyAOS, {
+    titleToken: "ui.reviewer.session.header.title",
+    titleFallback: "Flashcards",
+  });
 
   // ===== Root card (Basecoat) =====
   const wrap = document.createElement("div");
   wrap.className = "bc card w-full";
   // Optional: keep a plugin hook class for any small overrides you still want.
-  wrap.classList.add("bc-session-card", "sprout-session-card", "m-0");
+  wrap.classList.add("bc-session-card", "lk-session-card", "m-0");
   const resetAosState = () => {
     wrap.classList.remove("aos-init", "aos-animate", "sprout-aos-fallback");
   };
@@ -1024,35 +1036,14 @@ export function renderSessionMode(args: Args) {
   // ===== Quit button: Lucide X icon in top right =====
   const quitBtn = document.createElement("button");
   quitBtn.type = "button";
-  quitBtn.className = "bc btn-icon sprout-quit-btn";
+  quitBtn.className =
+    "sprout-btn-toolbar h-9 flex items-center gap-2 equal-height-btn sprout-btn-exit-sm sprout-btn-top-right";
   quitBtn.setAttribute("aria-label", tx("ui.reviewer.session.quit", "Quit study session"));
-  const quitSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  quitSvg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-  quitSvg.setAttribute("width", "20");
-  quitSvg.setAttribute("height", "20");
-  quitSvg.setAttribute("viewBox", "0 0 24 24");
-  quitSvg.setAttribute("fill", "none");
-  quitSvg.setAttribute("stroke", "currentColor");
-  quitSvg.setAttribute("stroke-width", "2");
-  quitSvg.setAttribute("stroke-linecap", "round");
-  quitSvg.setAttribute("stroke-linejoin", "round");
-  quitSvg.classList.add("lucide", "lucide-x");
-
-  const line1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-  line1.setAttribute("x1", "18");
-  line1.setAttribute("y1", "6");
-  line1.setAttribute("x2", "6");
-  line1.setAttribute("y2", "18");
-  quitSvg.appendChild(line1);
-
-  const line2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-  line2.setAttribute("x1", "6");
-  line2.setAttribute("y1", "6");
-  line2.setAttribute("x2", "18");
-  line2.setAttribute("y2", "18");
-  quitSvg.appendChild(line2);
-
-  quitBtn.appendChild(quitSvg);
+  quitBtn.setAttribute("data-tooltip-position", "top");
+  const quitIconWrap = document.createElement("span");
+  quitIconWrap.className = "inline-flex items-center justify-center sprout-btn-icon";
+  quitBtn.appendChild(quitIconWrap);
+  setIcon(quitIconWrap, "x");
   quitBtn.addEventListener("click", () => args.backToDecks());
 
   // Create section once for both empty and card-present states
@@ -1077,7 +1068,7 @@ export function renderSessionMode(args: Args) {
     header.appendChild(locationRow);
 
     const locationEl = document.createElement("div");
-    locationEl.className = "bc text-muted-foreground pt-4 text-center italic sprout-session-location-text";
+    locationEl.className = "bc text-muted-foreground lk-session-location-text";
     locationEl.textContent = location || tx("ui.reviewer.session.scope.home", "Home");
     locationRow.appendChild(locationEl);
 
@@ -1125,7 +1116,7 @@ export function renderSessionMode(args: Args) {
     if (practiceMode) {
       const backBtn = makeTextButton({
         label: tx("ui.reviewer.session.returnToDecks", "Return to Decks"),
-        className: "btn-outline",
+        className: "sprout-btn-toolbar",
         onClick: () => args.backToDecks(),
         kbd: isPhoneMobile ? undefined : "Q",
       });
@@ -1133,7 +1124,7 @@ export function renderSessionMode(args: Args) {
     } else if (canStartPractice && hasStartPractice) {
       const backBtn = makeTextButton({
         label: "Return to Decks",
-        className: "btn-outline",
+        className: "sprout-btn-toolbar",
         onClick: () => args.backToDecks(),
         kbd: isPhoneMobile ? undefined : "Q",
       });
@@ -1141,7 +1132,7 @@ export function renderSessionMode(args: Args) {
 
       const startBtn = makeTextButton({
         label: "Start Practice",
-        className: "btn-outline",
+        className: "sprout-btn-toolbar",
         onClick: () => args.startPractice?.(),
         kbd: isPhoneMobile ? undefined : "↵",
       });
@@ -1178,7 +1169,7 @@ export function renderSessionMode(args: Args) {
   header.appendChild(locationRow);
 
   const locationEl = document.createElement("div");
-  locationEl.className = "bc text-muted-foreground pt-4 text-center italic sprout-session-location-text";
+  locationEl.className = "bc text-muted-foreground lk-session-location-text";
   locationEl.textContent = location || "Note";
   locationRow.appendChild(locationEl);
 
@@ -1213,7 +1204,7 @@ export function renderSessionMode(args: Args) {
   if (titleMd.includes('[[') || titleMd.includes('$')) {
     void args.renderMarkdownInto(titleEl, titleMd, sourcePath).then(() => setupLinkHandlers(titleEl, sourcePath));
   } else {
-    applyInlineMarkdown(titleEl, titleMd);
+    applyInlineMarkdownWithFlags(titleEl, titleMd);
   }
 
   // ===== Content =====
@@ -1382,14 +1373,14 @@ export function renderSessionMode(args: Args) {
     ? makeTextButton({
       label: "",
       title: t(args.interfaceLanguage, "ui.reviewer.edit", "Edit"),
-      className: "btn-outline sprout-review-edit-icon-btn",
+      className: "sprout-btn-toolbar lk-review-edit-icon-btn",
       onClick: () => {
         args.openEditModal?.();
       },
     })
     : makeTextButton({
       label: t(args.interfaceLanguage, "ui.reviewer.edit", "Edit"),
-      className: "btn-outline",
+      className: "sprout-btn-toolbar",
       onClick: () => {
         args.openEditModal?.();
       },
@@ -1423,7 +1414,7 @@ export function renderSessionMode(args: Args) {
     footerCenter.appendChild(
       makeTextButton({
         label: "Reveal",
-        className: "btn-outline",
+        className: "sprout-btn-toolbar",
         onClick: () => {
           args.setShowAnswer(true);
           args.rerender();
@@ -1465,7 +1456,7 @@ export function renderSessionMode(args: Args) {
       if (practiceMode) {
         const continueBtn = makeTextButton({
           label: "Continue",
-          className: "btn-outline",
+          className: "sprout-btn-toolbar",
           onClick: goNext,
           kbd: isPhoneMobile ? undefined : "↵",
         });
@@ -1540,7 +1531,7 @@ export function renderSessionMode(args: Args) {
         const skipBtn = makeTextButton({
           label: "Skip",
           title: "Skip card (↵)",
-          className: "btn-outline",
+          className: "sprout-btn-toolbar",
           onClick: () => args.skipCurrentCard({ uiSource: "skip-btn", uiKey: 13, uiButtons: four ? 4 : 2 }),
           kbd: "↵",
         });
@@ -1562,7 +1553,7 @@ export function renderSessionMode(args: Args) {
     mainRow.appendChild(
       makeTextButton({
         label: "Next",
-        className: "btn-outline",
+        className: "sprout-btn-toolbar",
         onClick: () => void args.nextCard(true),
         kbd: "↵",
       }),

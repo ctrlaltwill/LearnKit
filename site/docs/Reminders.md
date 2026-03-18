@@ -1,6 +1,6 @@
 # Reminders
 
-Last modified: 04/03/2026
+Last modified: 17/03/2026
 
 ## Purpose
 
@@ -10,7 +10,7 @@ Use reminders when you want lightweight nudges, without fully blocking your work
 
 For blocking review rounds, see [Gatekeeper](./Gatekeeper.md).
 
-## Launch reminders
+## Launch Reminders
 
 Launch reminders run once after Obsidian starts.
 
@@ -19,7 +19,7 @@ Launch reminders run once after Obsidian starts.
 | Enable reminders on launch | Shows one reminder after startup. |
 | Launch delay | Delay in seconds before launch reminders appear. |
 
-## Routine reminders
+## Routine Reminders
 
 Routine reminders repeat while Obsidian remains open.
 
@@ -28,19 +28,19 @@ Routine reminders repeat while Obsidian remains open.
 | Enable routine reminders | Turns recurring reminders on or off. |
 | Reminder frequency | Time between reminders, in minutes. |
 
-## Message behavior
+## Message Behavior
 
-Sprout reminders only show when there are due cards, unless configured otherwise in advanced reminder settings.
+LearnKit reminders only show when there are due cards, unless configured otherwise in advanced reminder settings.
 
 Reminder notices can open a target view (for example Home or Reviewer), depending on your click action setting.
 
-## When to use reminders vs Gatekeeper
+## Use Cases
 
 - Use **Reminders** for gentle prompts.
-- Use [Gatekeeper](./Gatekeeper.md) when you want stronger enforcement before continuing work.
+- Use [Gatekeeper](./Gatekeeper) when you want stronger enforcement before continuing work.
 
 ## Related
 
-- [Gatekeeper](./Gatekeeper.md)
-- [Study-Sessions](./Study-Sessions.md)
-- [Settings](./Settings.md)
+- [Gatekeeper](./Gatekeeper)
+- [Study Sessions](./Study-Sessions)
+- [Settings](./Settings)

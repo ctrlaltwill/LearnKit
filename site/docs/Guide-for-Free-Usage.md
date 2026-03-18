@@ -4,14 +4,14 @@ Last modified: 10/03/2026
 
 ## Overview
 
-Sprig is bring-your-own-key. That means there is no Sprout subscription requirement for Assistant features.
+Companion is bring-your-own-key. That means there is no LearnKit subscription requirement for Companion features.
 
-You can run Sprig with free-tier models if your provider account has free usage available.
+You can run Companion with free-tier models if your provider account has free usage available.
 
 ## Recommended free setup
 
-1. Open **Settings → Assistant**.
-2. Turn on **Enable Sprig**.
+1. Open **Settings → Companion**.
+2. Turn on **Enable Companion**.
 3. Set **AI provider** to **OpenRouter**.
 4. In OpenRouter, create an API key and paste it into **API key**.
 5. Choose a free-capable model.

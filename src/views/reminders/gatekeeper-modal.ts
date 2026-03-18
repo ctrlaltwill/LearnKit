@@ -11,7 +11,7 @@ import { gradeFromRating } from "../../engine/scheduler/scheduler";
 import type { ReviewRating } from "../../platform/types/scheduler";
 import { logFsrsIfNeeded } from "../../views/reviewer/fsrs-log";
 import { log } from "../../platform/core/logger";
-import { processMarkdownFeatures, setupInternalLinkHandlers } from "../../views/widget/widget-markdown";
+import { processMarkdownFeatures, setupInternalLinkHandlers } from "../../views/widget/view/markdown";
 import { processClozeForMath, textContainsMath, convertInlineDisplayMath, forceSingleLineDisplayMathInline } from "../../platform/core/shared-utils";
 import { processCircleFlagsInMarkdown, hydrateCircleFlagsInElement } from "../../platform/flags/flag-tokens";
 import { getCorrectIndices, isMultiAnswerMcq, normalizeCardOptions } from "../../platform/types/card";
@@ -56,8 +56,8 @@ export class GatekeeperModal extends Modal {
   }
 
   override onOpen(): void {
-    this.containerEl.addClass("sprout-modal-container", "sprout-modal-dim", "sprout");
-    this.modalEl.addClass("bc", "sprout-modals", "sprout-gatekeeper-modal");
+    this.containerEl.addClass("lk-modal-container", "lk-modal-dim", "sprout");
+    this.modalEl.addClass("bc", "lk-modals", "sprout-gatekeeper-modal");
     this.contentEl.addClass("bc", "sprout-gatekeeper-content");
     setCssProps(this.containerEl, "z-index", "2147483000");
     setCssProps(this.modalEl, "z-index", "2147483001");
@@ -229,7 +229,7 @@ export class GatekeeperModal extends Modal {
     this.appendTtsReplayButton(qHeading, card, false);
     this.renderCardBody(body, card);
 
-    const footer = contentEl.createDiv({ cls: "bc flex flex-col items-center gap-3 sprout-modal-footer sprout-gatekeeper-footer" });
+    const footer = contentEl.createDiv({ cls: "bc flex flex-col items-center gap-3 lk-modal-footer sprout-gatekeeper-footer" });
 
     if (!this.reveal) {
       const mainActionRow = footer.createDiv({ cls: "bc flex items-center justify-center gap-2 w-full" });
@@ -329,7 +329,7 @@ export class GatekeeperModal extends Modal {
     });
 
     const actions = wrap.createDiv({ cls: "bc flex items-center justify-center gap-2" });
-    const goBack = actions.createEl("button", { cls: "bc btn-outline h-9 px-3 text-sm", type: "button" });
+    const goBack = actions.createEl("button", { cls: "bc sprout-btn-toolbar h-9 px-3 text-sm", type: "button" });
     goBack.createSpan({ text: "Go back" });
     goBack.removeAttribute("aria-label");
     goBack.removeAttribute("data-tooltip-position");

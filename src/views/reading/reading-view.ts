@@ -36,6 +36,7 @@ import {
 } from "./reading-helpers";
 import { getTtsService } from "../../platform/integrations/tts/tts-service";
 import { processClozeForMath } from "../../platform/core/shared-utils";
+import { hasCardAnchorForId } from "../../platform/core/identity";
 
 /* -----------------------
    Module-level mutable state
@@ -494,9 +495,9 @@ export function syncReadingViewStyles(): void {
     css += `  --sprout-rv-flash-cloze-text: ${darkClozeTextValue};\n`;
     css += `}\n`;
 
-    css += `${macroSelector} { background: var(--color-base-20) !important; color: var(--sprout-rv-flash-text) !important; }\n`;
-    css += `${macroSelector}.sprout-flashcard-flipped { background: var(--color-base-20) !important; }\n`;
-    css += `${macroSelector} .sprout-flashcard-question, ${macroSelector} .sprout-flashcard-answer { background: var(--color-base-20) !important; color: var(--sprout-rv-flash-text) !important; }\n`;
+    css += `${macroSelector} { background: var(--color-base-25) !important; color: var(--sprout-rv-flash-text) !important; }\n`;
+    css += `${macroSelector}.sprout-flashcard-flipped { background: var(--color-base-25) !important; }\n`;
+    css += `${macroSelector} .sprout-flashcard-question, ${macroSelector} .sprout-flashcard-answer { background: var(--color-base-25) !important; color: var(--sprout-rv-flash-text) !important; }\n`;
     css += `${macroSelector} .sprout-card-content, ${macroSelector} .sprout-flashcard-options, ${macroSelector} .sprout-flashcard-info, ${macroSelector} .sprout-flashcard-body { color: var(--sprout-rv-flash-text) !important; }\n`;
     css += `${macroSelector} .sprout-reading-view-cloze { background-color: var(--sprout-rv-flash-cloze-bg) !important; }\n`;
     css += `${macroSelector} .sprout-cloze-text { color: var(--sprout-rv-flash-cloze-text) !important; }\n`;
@@ -1626,11 +1627,11 @@ function hideCardSiblingElements(cardEl: HTMLElement, cardRawText?: string) {
       break;
     }
     
-    // Stop if we hit an anchor for the NEXT card (unprocessed .el-p with ^sprout-)
+    // Stop if we hit an anchor for the NEXT card (unprocessed .el-p with card anchor)
     if (classes.includes('el-p') && !classes.includes('sprout-pretty-card')) {
       const txt = extractRawTextFromParagraph(next as HTMLElement);
       const cleanTxt = clean(txt);
-      if (ANCHOR_RE.test(cleanTxt) && !cleanTxt.includes(`^sprout-${cardEl.dataset.sproutId}`)) {
+      if (ANCHOR_RE.test(cleanTxt) && !hasCardAnchorForId(cleanTxt, String(cardEl.dataset.sproutId || ""))) {
         break;
       }
     }
@@ -2984,7 +2985,7 @@ function enhanceCardElement(
     el.toggleAttribute('data-hide-answer', visibleFields.answer === false);
     el.toggleAttribute('data-hide-info', visibleFields.info === false);
     el.toggleAttribute('data-hide-groups', visibleFields.groups === false);
-    el.toggleAttribute('data-hide-edit', visibleFields.edit === false);
+    el.toggleAttribute('data-hide-edit', !isFlashcardsMacro && visibleFields.edit === false);
   }
   el.toggleAttribute('data-hide-labels', !displayLabels);
 

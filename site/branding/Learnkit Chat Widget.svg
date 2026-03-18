@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 640 640" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
+    <g transform="matrix(1,0,0,1,-1454,0)">
+        <g id="Chat-Widget" serif:id="Chat Widget" transform="matrix(0.5,0,0,1.014263,1454,0)">
+            <rect x="0" y="0" width="1280" height="631" style="fill:none;"/>
+            <g transform="matrix(21.501164,0,0,9.776413,-23538.058553,-3450.371482)">
+                <path d="M1120.339,365.333C1120.775,363.385 1122.504,362 1124.5,362C1126.496,362 1128.225,363.385 1128.661,365.333L1131.586,378.414L1144.667,381.339C1146.615,381.775 1148,383.504 1148,385.5C1148,387.496 1146.615,389.225 1144.667,389.661L1131.586,392.586L1128.661,405.667C1128.225,407.615 1126.496,409 1124.5,409C1122.504,409 1120.775,407.615 1120.339,405.667L1117.414,392.586L1104.333,389.661C1102.385,389.225 1101,387.496 1101,385.5C1101,383.504 1102.385,381.775 1104.333,381.339L1117.414,378.414L1120.339,365.333Z" style="fill:none;stroke:black;stroke-width:4.83px;"/>
+            </g>
+        </g>
+    </g>
+</svg>

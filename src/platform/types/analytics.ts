@@ -9,6 +9,8 @@
  *   - AnalyticsMode — type for scheduled vs practice review mode
  *   - AnalyticsReviewEvent — type for a single card-review analytics event
  *   - AnalyticsSessionEvent — type for a study-session analytics event
+ *   - AnalyticsExamAttemptEvent — type for a saved exam/test attempt
+ *   - AnalyticsNoteReviewEvent — type for a note-review grading/action event
  *   - AnalyticsEvent — discriminated union of all analytics event types
  *   - AnalyticsData — top-level analytics storage structure (version, seq, events)
  */
@@ -64,8 +66,52 @@ export type AnalyticsSessionEvent = {
   durationMs?: number;
 };
 
+/**
+ * Recorded when an exam/test attempt is submitted.
+ * Used for test-performance analytics views.
+ */
+export type AnalyticsExamAttemptEvent = {
+  kind: "exam-attempt";
+  eventId: string;
+  at: number;
+
+  testId: string;
+  attemptId?: string;
+  label?: string;
+  sourceSummary?: string;
+
+  finalPercent: number;
+  autoSubmitted?: boolean;
+  elapsedSec?: number;
+
+  mcqCount?: number;
+  saqCount?: number;
+};
+
+/**
+ * Recorded when a note is acted on in Note Review.
+ * Includes both scheduled and practice mode actions.
+ */
+export type AnalyticsNoteReviewEvent = {
+  kind: "note-review";
+  eventId: string;
+  at: number;
+
+  noteId: string;
+  sourceNotePath: string;
+  mode: AnalyticsMode;
+
+  action: "pass" | "fail" | "read" | "bury" | "suspend" | "skip";
+
+  algorithm?: "fsrs" | "lkrs";
+};
+
 /** Discriminated union of all analytics event types. */
-export type AnalyticsEvent = AnalyticsReviewEvent | AnalyticsSessionEvent;
+export type AnalyticsEvent =
+  | AnalyticsReviewEvent
+  | AnalyticsSessionEvent
+  | AnalyticsExamAttemptEvent
+  | AnalyticsNoteReviewEvent;
 
 /**
  * Top-level analytics storage structure.

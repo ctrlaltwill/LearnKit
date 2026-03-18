@@ -11,6 +11,10 @@ import type SproutPlugin from "../../main";
 import type { CardRecord } from "../core/store";
 import { parseCardsFromText, type ParsedCard } from "../../engine/parser/parser";
 import { CardEditModal, saveCardEdits } from "../../views/reviewer/card-editor";
+import {
+  buildPrimaryCardAnchor,
+  hasCardAnchorForId,
+} from "../core/identity";
 
 import {
   mkDangerCallout,
@@ -40,10 +44,10 @@ export class ParseErrorModal extends Modal {
     setModalTitle(this, `Sync errors`);
 
     scopeModalToWorkspace(this);
-    this.containerEl.addClass("sprout-modal-container");
-    this.containerEl.addClass("sprout-modal-dim");
+    this.containerEl.addClass("lk-modal-container");
+    this.containerEl.addClass("lk-modal-dim");
     this.containerEl.addClass("sprout");
-    this.modalEl.addClass("bc", "sprout-modals");
+    this.modalEl.addClass("bc", "lk-modals");
     this.contentEl.addClass("bc");
 
     // Escape key closes modal
@@ -112,9 +116,9 @@ export class ParseErrorModal extends Modal {
       }
     }
 
-    const footer = root.createDiv({ cls: "bc flex items-center justify-end gap-4 sprout-modal-footer" });
+    const footer = root.createDiv({ cls: "bc flex items-center justify-end gap-4 lk-modal-footer" });
     const closeBtn = footer.createEl("button", {
-      cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm",
+      cls: "bc sprout-btn-toolbar inline-flex items-center gap-2 h-9 px-3 text-sm",
       attr: { type: "button", "aria-label": "Close this dialog" },
     });
     const closeBtnIcon = closeBtn.createEl("span", { cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
@@ -124,9 +128,9 @@ export class ParseErrorModal extends Modal {
   }
 
   onClose() {
-    this.containerEl.removeClass("sprout-modal-container");
-    this.containerEl.removeClass("sprout-modal-dim");
-    this.modalEl.removeClass("bc", "sprout-modals");
+    this.containerEl.removeClass("lk-modal-container");
+    this.containerEl.removeClass("lk-modal-dim");
+    this.modalEl.removeClass("bc", "lk-modals");
     this.contentEl.removeClass("bc");
     this.contentEl.empty();
   }
@@ -216,7 +220,7 @@ export class ParseErrorModal extends Modal {
   private async openAtAnchor(id: string) {
     const ref = this.resolveCardRef(id);
     if (!ref?.sourceNotePath) {
-      new Notice(`Cannot resolve note path for ^sprout-${id}`);
+      new Notice(`Cannot resolve note path for ${buildPrimaryCardAnchor(id)}`);
       return;
     }
 
@@ -240,20 +244,19 @@ export class ParseErrorModal extends Modal {
     const view = leaf.view;
     if (!(view instanceof MarkdownView) || !view.editor) {
       // Fallback: open via link syntax which Obsidian interprets as anchor nav
-      await this.app.workspace.openLinkText(`${ref.sourceNotePath}#^sprout-${id}`, ref.sourceNotePath, true);
+      await this.app.workspace.openLinkText(`${ref.sourceNotePath}#${buildPrimaryCardAnchor(id)}`, ref.sourceNotePath, true);
       return;
     }
 
     const ed = view.editor;
 
-    const needle = `^sprout-${id}`;
     const text = await this.app.vault.read(file);
     const lines = text.split(/\r?\n/);
-    let lineNo = lines.findIndex((l) => (l || "").includes(needle));
+    let lineNo = lines.findIndex((l) => hasCardAnchorForId(l || "", id));
     if (lineNo < 0) lineNo = Math.max(0, Number(ref.sourceStartLine ?? 0));
 
     // If the line is just the bare anchor, skip past blanks to the next content
-    if (lines[lineNo] && lines[lineNo].trim() === needle) {
+    if (lineNo >= 0 && hasCardAnchorForId(lines[lineNo] || "", id)) {
       let t = lineNo + 1;
       while (t < lines.length && (lines[t] || "").trim() === "") t++;
       if (t < lines.length) lineNo = t;
@@ -270,7 +273,7 @@ export class ParseErrorModal extends Modal {
   private async openQuickEdit(id: string) {
     const ref = this.resolveCardRef(id);
     if (!ref?.sourceNotePath) {
-      new Notice(`Cannot resolve note path for ^sprout-${id}`);
+      new Notice(`Cannot resolve note path for ${buildPrimaryCardAnchor(id)}`);
       return;
     }
 

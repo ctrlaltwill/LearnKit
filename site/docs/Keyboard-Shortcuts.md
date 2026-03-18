@@ -1,12 +1,12 @@
 # Keyboard Shortcuts
 
-Last modified: 13/02/2026
+Last modified: 17/03/2026
 
-## Overview
+## Purpose
 
 These shortcuts speed up card creation and review.
 
-## Cloze creation
+## Cloze Creation
 
 ### In the Cloze modal
 
@@ -21,23 +21,23 @@ These shortcuts speed up card creation and review.
 |---|---|
 | Cmd+Shift+C (Mac) / Ctrl+Shift+C (Win/Linux) | Insert cloze wrapper (always c1) |
 
-## Study session
+## Study Session
 
 | Key | Action |
 |---|---|
 | `Space` / `Enter` | Reveal answer |
 | `1` – `2` (two-button mode) | Again / Good |
 | `1` – `4` (four-button mode) | Again / Hard / Good / Easy |
-| `E` | Edit current card (see [Editing Cards](./Editing-Cards.md)) |
+| `E` | Edit current card (see [Editing Cards](./Editing-Cards)) |
 | `O` | Open card in source note |
 | `M` | Open More menu |
 | `Q` / `Escape` | Exit session / back to deck selection |
-| `B` | Bury card (see [Burying Cards](./Burying-Cards.md)) |
-| `S` | Suspend card (see [Suspending Cards](./Suspending-Cards.md)) |
+| `B` | Bury card (see [Burying Cards](./Burying-Cards)) |
+| `S` | Suspend card (see [Suspending Cards](./Suspending-Cards)) |
 | `U` | Undo last grade |
 | `ArrowLeft` | Previous card / hide answer |
 
-## MCQ interaction
+## MCQ Input
 
 | Key | Action |
 |---|---|
@@ -49,6 +49,6 @@ These shortcuts speed up card creation and review.
 |---|---|
 | `Cmd/Ctrl + P` | Open command palette (Obsidian-wide) |
 
-## Customising shortcuts
+## Shortcut Setup
 
-Sprout commands are registered in Obsidian. You can remap them in **Settings → Hotkeys** by searching for "Sprout".
+LearnKit commands are registered in Obsidian. You can remap them in **Settings → Hotkeys** by searching for "LearnKit".

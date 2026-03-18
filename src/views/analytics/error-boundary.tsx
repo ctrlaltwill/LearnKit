@@ -65,7 +65,7 @@ export class ChartErrorBoundary extends React.Component<Props, State> {
             </svg>
           </div>
           <div className="bc text-center">
-            <div className="bc font-semibold text-foreground">
+            <div className="bc font-semibold lk-home-section-title text-foreground">
               {this.props.chartName} unavailable
             </div>
             <div className="bc text-sm text-muted-foreground mt-1">

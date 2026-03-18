@@ -44,7 +44,7 @@ To add notes for a new release:
 
 **Option 1: Copy from GitHub Releases**
 
-1. Open [GitHub Releases](https://github.com/ctrlaltwill/Sprout/releases/)
+1. Open [GitHub Releases](https://github.com/ctrlaltwill/LearnKit/releases/)
 2. Copy the release notes markdown
 3. Add to `release-notes.ts`:
 

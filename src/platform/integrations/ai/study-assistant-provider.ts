@@ -183,6 +183,14 @@ function extractTextFromOpenAiLikeResponse(json: Record<string, unknown>): strin
 
   if (typeof content === "string") return content;
 
+  if (content && typeof content === "object" && !Array.isArray(content)) {
+    try {
+      return JSON.stringify(content);
+    } catch {
+      // ignore
+    }
+  }
+
   if (Array.isArray(content)) {
     const parts: string[] = [];
     for (const block of content) {
@@ -190,6 +198,20 @@ function extractTextFromOpenAiLikeResponse(json: Record<string, unknown>): strin
       if (typeof obj?.text === "string") parts.push(obj.text);
     }
     if (parts.length) return parts.join("\n");
+  }
+
+  const functionCall = parseJsonFromUnknown(message?.function_call);
+  if (typeof functionCall?.arguments === "string" && functionCall.arguments.trim()) {
+    return functionCall.arguments.trim();
+  }
+
+  const toolCalls = Array.isArray(message?.tool_calls) ? message.tool_calls : [];
+  for (const toolCall of toolCalls) {
+    const toolObj = parseJsonFromUnknown(toolCall);
+    const fn = parseJsonFromUnknown(toolObj?.function);
+    if (typeof fn?.arguments === "string" && fn.arguments.trim()) {
+      return fn.arguments.trim();
+    }
   }
 
   return "";
@@ -263,7 +285,7 @@ export async function requestStudyAssistantCompletionDetailed(params: {
     throw new Error("Missing endpoint override for custom provider.");
   }
 
-  if (!model) throw new Error("Missing model name in Study Assistant settings.");
+  if (!model) throw new Error("Missing model name in Study Companion settings.");
 
   const usableImageDataUrls = imageDataUrls
     .map((url) => String(url || "").trim())
@@ -373,6 +395,7 @@ export async function requestStudyAssistantCompletionDetailed(params: {
         },
         body: JSON.stringify({
           model: requestModel,
+          max_tokens: 2500,
           messages: [
             { role: "system", content: systemPrompt },
             {

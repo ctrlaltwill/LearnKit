@@ -12,19 +12,19 @@
  *   - SproutHeader — class that installs and manages the header bar DOM
  *   - createViewHeader — factory function that wires a SproutHeader to any ItemView
  */
-
-import { setIcon, Notice, Platform, type App, type WorkspaceLeaf, type ItemView } from "obsidian";
-import { MAX_CONTENT_WIDTH, VIEW_TYPE_ANALYTICS, VIEW_TYPE_BROWSER, VIEW_TYPE_REVIEWER, VIEW_TYPE_HOME, VIEW_TYPE_SETTINGS } from "./constants";
+import { MAX_CONTENT_WIDTH, VIEW_TYPE_ANALYTICS, VIEW_TYPE_BROWSER, VIEW_TYPE_REVIEWER, VIEW_TYPE_HOME, VIEW_TYPE_SETTINGS, VIEW_TYPE_NOTE_REVIEW, VIEW_TYPE_EXAM_GENERATOR, VIEW_TYPE_COACH } from "./constants";
+import { App, ItemView, Notice, WorkspaceLeaf, setIcon } from "obsidian";
 import { log } from "./logger";
-import { placePopover, queryFirst } from "./ui";
+import { placePopover, queryFirst, setCssProps } from "./ui";
 import { clearNode } from "./shared-utils";
 
-export type SproutHeaderPage = "home" | "study" | "flashcards" | "analytics" | "settings";
+export type SproutHeaderPage = "home" | "cards" | "notes" | "exam" | "coach" | "analytics" | "library" | "settings";
 
 export type SproutHeaderMenuItem = {
+  type?: "action" | "section" | "separator";
   label: string;
   icon?: string; // lucide name used by setIcon
-  onActivate: () => void;
+  onActivate?: () => void;
   destructive?: boolean;
 };
 
@@ -75,7 +75,252 @@ export class SproutHeader {
   constructor(deps: Deps) {
     this.deps = deps;
     this.headerNavId = `sprout-topnav-${Math.random().toString(36).slice(2, 9)}`;
-    this.moreId = `sprout-more-${Math.random().toString(36).slice(2, 9)}`;
+    this.moreId = `lk-more-${Math.random().toString(36).slice(2, 9)}`;
+  }
+
+  private installCenterBrandLogo(viewHeader: HTMLElement) {
+    let brandHost =
+      queryFirst<HTMLElement>(viewHeader, ":scope > .sprout-header-center-brand") ??
+      queryFirst<HTMLElement>(viewHeader, ".sprout-header-center-brand");
+
+    if (!brandHost) {
+      brandHost = document.createElement("div");
+      brandHost.className = "sprout-header-center-brand";
+
+      const actionsHost =
+        queryFirst<HTMLElement>(viewHeader, ":scope > .view-actions") ??
+        queryFirst<HTMLElement>(viewHeader, ".view-actions");
+      if (actionsHost) viewHeader.insertBefore(brandHost, actionsHost);
+      else viewHeader.appendChild(brandHost);
+    }
+
+    clearChildren(brandHost);
+
+    const homeLink = document.createElement("a");
+    homeLink.className = "sprout-header-center-brand-link";
+    homeLink.href = "#";
+    homeLink.setAttribute("role", "link");
+    brandHost.appendChild(homeLink);
+
+    const logo = document.createElement("span");
+    logo.className = "sprout-header-center-brand-icon";
+    setIcon(logo, "sprout-brand-horizontal");
+
+    const outerSvg = logo.querySelector(":scope > svg");
+    if (outerSvg) {
+      outerSvg.removeAttribute("aria-tooltip");
+      outerSvg.removeAttribute("aria-label");
+      outerSvg.removeAttribute("aria-description");
+      outerSvg.removeAttribute("title");
+    }
+
+    const innerSvg = logo.querySelector(":scope > svg > svg");
+    if (innerSvg) {
+      innerSvg.setAttribute("aria-label", "Home");
+      innerSvg.setAttribute("aria-description", "Go to home");
+      innerSvg.removeAttribute("aria-tooltip");
+      innerSvg.removeAttribute("title");
+      innerSvg.removeAttribute("aria-hidden");
+      const innerViewBox = innerSvg.getAttribute("viewBox");
+      if (innerViewBox && outerSvg) {
+        // Match the icon wrapper viewport to the source logo viewport to avoid square-letterboxing.
+        outerSvg.setAttribute("viewBox", innerViewBox);
+      }
+      this.enhanceCenterBrandLogoInteractions(innerSvg);
+    }
+
+    homeLink.appendChild(logo);
+
+    const goHome = (ev: Event) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      void this.navigate("home");
+    };
+    homeLink.addEventListener("click", goHome);
+    homeLink.addEventListener("keydown", (ev: KeyboardEvent) => {
+      if (ev.key === "Enter" || ev.key === " ") goHome(ev);
+    });
+  }
+
+  private enhanceCenterBrandLogoInteractions(innerSvg: Element) {
+    if (!(innerSvg instanceof SVGSVGElement)) return;
+
+    const LOGO_HIT_STROKE_WIDTH = 10;
+
+    const svgHost = innerSvg.closest(".svg-icon");
+    if (!(svgHost instanceof SVGElement || svgHost instanceof HTMLElement)) return;
+
+    const logoPaths: SVGPathElement[] = [];
+    let clearHoverTimer: number | null = null;
+    const pathVisualOrder = new Map<SVGPathElement, number>();
+
+    const randomFloat = (min: number, max: number) => min + Math.random() * (max - min);
+    const randomSignedDeg = (minAbs: number, maxAbs: number) => {
+      const sign = Math.random() < 0.5 ? -1 : 1;
+      return `${(sign * randomFloat(minAbs, maxAbs)).toFixed(2)}deg`;
+    };
+
+    const applyRandomHoverMotion = () => {
+      svgHost.style.setProperty("--logo-active-translate", `${randomFloat(7.6, 9.8).toFixed(2)}px`);
+      svgHost.style.setProperty("--logo-active-scale", randomFloat(1.17, 1.22).toFixed(3));
+      svgHost.style.setProperty("--logo-active-rotate", randomSignedDeg(4.8, 7.8));
+      svgHost.style.setProperty("--logo-active-brightness", randomFloat(1.33, 1.43).toFixed(3));
+
+      svgHost.style.setProperty("--logo-neighbor-translate", `${randomFloat(4.8, 6.4).toFixed(2)}px`);
+      svgHost.style.setProperty("--logo-neighbor-scale", randomFloat(1.08, 1.12).toFixed(3));
+      svgHost.style.setProperty("--logo-neighbor-rotate", randomSignedDeg(1.1, 2.9));
+      svgHost.style.setProperty("--logo-neighbor-brightness", randomFloat(1.16, 1.24).toFixed(3));
+
+      svgHost.style.setProperty("--logo-next-translate", `${randomFloat(1.6, 3.3).toFixed(2)}px`);
+      svgHost.style.setProperty("--logo-next-scale", randomFloat(1.035, 1.065).toFixed(3));
+      svgHost.style.setProperty("--logo-next-rotate", randomSignedDeg(0.45, 1.7));
+      svgHost.style.setProperty("--logo-next-brightness", randomFloat(1.08, 1.15).toFixed(3));
+    };
+
+    const resetExitTiming = () => {
+      for (const logoPath of logoPaths) {
+        logoPath.style.removeProperty("--logo-in-delay");
+        logoPath.style.removeProperty("--logo-out-delay");
+        logoPath.style.removeProperty("--logo-out-duration");
+        logoPath.style.removeProperty("--logo-out-delay-scale");
+        logoPath.style.removeProperty("--logo-out-delay-rotate");
+      }
+    };
+
+    const applyRandomExitTiming = () => {
+      for (const logoPath of logoPaths) {
+        // Bubble-pop feel: each symbol waits a little, then scale/rotation unwind in varied order.
+        const outDelay = 250 + Math.floor(Math.random() * 380);
+        const outDuration = 180 + Math.floor(Math.random() * 170);
+        const phaseGap = 90 + Math.floor(Math.random() * 140);
+        const rotateFirst = Math.random() < 0.5;
+        const scaleDelay = rotateFirst ? outDelay + phaseGap : outDelay;
+        const rotateDelay = rotateFirst ? outDelay : outDelay + phaseGap;
+        logoPath.style.setProperty("--logo-out-delay", `${outDelay}ms`);
+        logoPath.style.setProperty("--logo-out-duration", `${outDuration}ms`);
+        logoPath.style.setProperty("--logo-out-delay-scale", `${scaleDelay}ms`);
+        logoPath.style.setProperty("--logo-out-delay-rotate", `${rotateDelay}ms`);
+      }
+    };
+
+    const setNeighborLevels = (activeIndex: number) => {
+      const activePath = logoPaths[activeIndex - 1];
+      const activeOrder = activePath ? pathVisualOrder.get(activePath) : undefined;
+      if (activeOrder === undefined) return;
+
+      for (const logoPath of logoPaths) {
+        const order = pathVisualOrder.get(logoPath);
+        if (order === undefined) continue;
+        const level = Math.min(3, Math.abs(order - activeOrder));
+        logoPath.setAttribute("data-logo-level", String(level));
+      }
+    };
+
+    const applyRandomNeighborInTiming = () => {
+      for (const logoPath of logoPaths) {
+        const logoPathEl = logoPath as unknown as HTMLElement;
+        const level = logoPath.getAttribute("data-logo-level");
+        if (level === "0") {
+          setCssProps(logoPathEl, "--logo-in-delay", "0ms");
+        } else if (level === "1") {
+          const neighborDelay = 40 + Math.floor(Math.random() * 150);
+          setCssProps(logoPathEl, "--logo-in-delay", `${neighborDelay}ms`);
+        } else {
+          setCssProps(logoPathEl, "--logo-in-delay", "0ms");
+        }
+      }
+    };
+
+    const clearHover = () => {
+      if (clearHoverTimer !== null) {
+        window.clearTimeout(clearHoverTimer);
+        clearHoverTimer = null;
+      }
+
+      applyRandomExitTiming();
+
+      // Keep the active state briefly before release so the shrink feels delayed.
+      const holdBeforeReleaseMs = 300 + Math.floor(Math.random() * 180);
+      clearHoverTimer = window.setTimeout(() => {
+        svgHost.removeAttribute("data-hover-path");
+        clearHoverTimer = null;
+      }, holdBeforeReleaseMs);
+    };
+
+    // Remove stale hit targets if this icon is re-initialized.
+    innerSvg.querySelectorAll(".sprout-logo-hit-target").forEach((node) => node.remove());
+
+    const paths = Array.from(innerSvg.querySelectorAll("path"));
+    for (let i = 0; i < paths.length; i += 1) {
+      const index = i + 1;
+      const path = paths[i];
+      path.setAttribute("data-logo-path", String(index));
+      path.setAttribute("data-logo-shape", "true");
+      logoPaths.push(path);
+
+      const hit = path.cloneNode(false) as SVGPathElement;
+      hit.classList.add("sprout-logo-hit-target");
+      hit.setAttribute("data-logo-hit", String(index));
+      hit.removeAttribute("data-logo-shape");
+      hit.removeAttribute("data-logo-path");
+      hit.setAttribute("fill", "none");
+      hit.setAttribute("stroke", "transparent");
+      hit.setAttribute("stroke-width", String(LOGO_HIT_STROKE_WIDTH));
+      hit.setAttribute("vector-effect", "non-scaling-stroke");
+      hit.setAttribute("pointer-events", "stroke");
+      hit.setAttribute("aria-hidden", "true");
+
+      const setHover = () => {
+        if (clearHoverTimer !== null) {
+          window.clearTimeout(clearHoverTimer);
+          clearHoverTimer = null;
+        }
+        applyRandomHoverMotion();
+        resetExitTiming();
+        setNeighborLevels(index);
+        applyRandomNeighborInTiming();
+        svgHost.setAttribute("data-hover-path", String(index));
+      };
+
+      path.addEventListener("pointerenter", setHover);
+      path.addEventListener("pointermove", setHover);
+      hit.addEventListener("pointerenter", setHover);
+      hit.addEventListener("pointermove", setHover);
+
+      innerSvg.appendChild(hit);
+    }
+
+    const getPathStartX = (path: SVGPathElement): number | null => {
+      const d = path.getAttribute("d") || "";
+      const match = d.match(/[Mm]\s*([-+]?\d*\.?\d+)/);
+      if (!match) return null;
+      const n = Number(match[1]);
+      return Number.isFinite(n) ? n : null;
+    };
+
+    const getPathCenterX = (path: SVGPathElement): number => {
+      // Prefer geometric center from path data because DOM path order may be arbitrary (e.g. 3,2,1,4).
+      const startX = getPathStartX(path);
+      if (startX !== null) return startX;
+
+      try {
+        const box = path.getBBox();
+        const centerX = box.x + box.width / 2;
+        if (Number.isFinite(centerX)) return centerX;
+      } catch {
+        // Ignore getBBox failures and use fallback below.
+      }
+
+      return 0;
+    };
+
+    // Build visual left-to-right order so neighbor falloff matches actual icon position.
+    const orderedPaths = [...logoPaths].sort((a, b) => getPathCenterX(a) - getPathCenterX(b));
+    for (let i = 0; i < orderedPaths.length; i += 1) {
+      pathVisualOrder.set(orderedPaths[i], i);
+    }
+
+    innerSvg.addEventListener("pointerleave", clearHover);
   }
 
   dispose() {
@@ -97,21 +342,23 @@ export class SproutHeader {
 
   install(active: SproutHeaderPage) {
     const viewHeader =
-      queryFirst(this.deps.containerEl, ":scope > .view-header") ??
-      queryFirst(this.deps.containerEl, ".view-header");
+      queryFirst<HTMLElement>(this.deps.containerEl, ":scope > .view-header") ??
+      queryFirst<HTMLElement>(this.deps.containerEl, ".view-header");
     if (viewHeader) {
       viewHeader.classList.add("bc", "sprout-header");
       // Wrap header in a transparent container if not already wrapped
       if (!viewHeader.parentElement?.classList.contains("sprout-header-wrap")) {
         const wrap = document.createElement("div");
-        wrap.className = "sprout-header-wrap";
+        wrap.className = "sprout-header-wrap learnkit-header-wrap";
         viewHeader.parentElement?.insertBefore(wrap, viewHeader);
         wrap.appendChild(viewHeader);
       }
+
+      this.installCenterBrandLogo(viewHeader);
     }
 
-    this.installHeaderDropdownNav(active);
     this.installHeaderActionsButtonGroup(active);
+    this.installHeaderDropdownNav(active);
 
     this.updateWidthButtonLabel();
     this.updateSyncButtonIcon();
@@ -178,17 +425,38 @@ export class SproutHeader {
     const type =
       page === "home"
         ? VIEW_TYPE_HOME
-        : page === "study"
+        : page === "cards"
           ? VIEW_TYPE_REVIEWER
+          : page === "notes"
+            ? VIEW_TYPE_NOTE_REVIEW
+          : page === "exam"
+            ? VIEW_TYPE_EXAM_GENERATOR
+          : page === "coach"
+            ? VIEW_TYPE_COACH
           : page === "analytics"
             ? VIEW_TYPE_ANALYTICS
-            : page === "settings"
-              ? VIEW_TYPE_SETTINGS
-              : VIEW_TYPE_BROWSER;
+            : page === "library"
+              ? VIEW_TYPE_BROWSER
+              : VIEW_TYPE_SETTINGS;
 
     await this.deps.leaf.setViewState?.({ type, active: true });
     void this.deps.app.workspace.revealLeaf(this.deps.leaf);
     this.deps.afterNavigate?.();
+  }
+
+  private switchSettingsTab(tab: "settings" | "guide" | "about") {
+    setTimeout(() => {
+      const settingsLeaf = this.deps.leaf;
+      const view = settingsLeaf?.view as { navigateToTab?: (tabId: string) => void } | undefined;
+      if (view && typeof view.navigateToTab === "function") {
+        view.navigateToTab(tab);
+      }
+    }, 100);
+  }
+
+  private openSettingsTab(tab: "settings" | "guide" | "about") {
+    void this.navigate("settings");
+    this.switchSettingsTab(tab);
   }
 
   // ---------------------------
@@ -225,7 +493,7 @@ export class SproutHeader {
     sproutWrapper.appendChild(root);
 
     const panel = document.createElement("div");
-    panel.className = "min-w-56 rounded-lg border border-border bg-popover text-popover-foreground shadow-lg p-1 sprout-pointer-auto";
+    panel.className = "min-w-56 rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 sprout-pointer-auto sprout-header-menu-panel";
     root.appendChild(panel);
 
     const menu = document.createElement("div");
@@ -233,38 +501,32 @@ export class SproutHeader {
     menu.className = "flex flex-col";
     panel.appendChild(menu);
 
-    const mkRadio = (label: string, page: SproutHeaderPage, checked: boolean, icon?: string) => {
+    const mkNavItem = (label: string, page: SproutHeaderPage, icon?: string, showBeta = false) => {
       const item = document.createElement("div");
       item.className =
         "group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer select-none outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground";
-      item.setAttribute("role", "menuitemradio");
-      item.setAttribute("aria-checked", checked ? "true" : "false");
+      item.setAttribute("role", "menuitem");
+      if (active === page) item.setAttribute("aria-current", "page");
       item.tabIndex = 0;
 
-      const dotWrap = document.createElement("div");
-      dotWrap.className = "size-4 flex items-center justify-center";
-      item.appendChild(dotWrap);
-
-      const dot = document.createElement("div");
-      dot.className = "size-2 rounded-full bg-foreground invisible group-aria-checked:visible";
-      dot.setAttribute("aria-hidden", "true");
-      dotWrap.appendChild(dot);
+      if (icon) {
+        const ic = document.createElement("span");
+        ic.className =
+          "inline-flex items-center justify-center [&_svg]:size-4 text-muted-foreground group-hover:text-inherit group-focus:text-inherit";
+        ic.setAttribute("aria-hidden", "true");
+        setIcon(ic, icon);
+        item.appendChild(ic);
+      }
 
       const txt = document.createElement("span");
       txt.textContent = label;
       item.appendChild(txt);
 
-      if (icon) {
-        const spacer = document.createElement("span");
-        spacer.className = "ml-auto";
-        item.appendChild(spacer);
-
-        const ic = document.createElement("span");
-        ic.className =
-          "inline-flex items-center justify-center [&_svg]:size-3 text-muted-foreground group-hover:text-inherit";
-        ic.setAttribute("aria-hidden", "true");
-        setIcon(ic, icon);
-        item.appendChild(ic);
+      if (showBeta) {
+        const beta = document.createElement("em");
+        beta.className = "text-xs text-muted-foreground group-hover:text-inherit group-focus:text-inherit";
+        beta.textContent = "Beta";
+        item.appendChild(beta);
       }
 
       const activate = () => {
@@ -295,14 +557,85 @@ export class SproutHeader {
       menu.appendChild(item);
     };
 
-    mkRadio("Home", "home", active === "home");
-    const sep = document.createElement("div");
-    sep.className = "my-1 h-px bg-border";
-    sep.setAttribute("role", "separator");
-    menu.appendChild(sep);
-    mkRadio("Analytics", "analytics", active === "analytics");
-    mkRadio("Flashcards", "flashcards", active === "flashcards");
-    mkRadio("Study", "study", active === "study");
+    const mkActionItem = (label: string, onActivate: () => void, icon?: string) => {
+      const item = document.createElement("div");
+      item.className =
+        "group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer select-none outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground";
+      item.setAttribute("role", "menuitem");
+      item.tabIndex = 0;
+
+      if (icon) {
+        const ic = document.createElement("span");
+        ic.className =
+          "inline-flex items-center justify-center [&_svg]:size-4 text-muted-foreground group-hover:text-inherit group-focus:text-inherit";
+        ic.setAttribute("aria-hidden", "true");
+        setIcon(ic, icon);
+        item.appendChild(ic);
+      }
+
+      const txt = document.createElement("span");
+      txt.textContent = label;
+      item.appendChild(txt);
+
+      const activate = () => {
+        this.closeTopNavPopover();
+        onActivate();
+      };
+
+      item.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        activate();
+      });
+
+      item.addEventListener("keydown", (ev: KeyboardEvent) => {
+        if (ev.key === "Enter" || ev.key === " ") {
+          ev.preventDefault();
+          ev.stopPropagation();
+          activate();
+        }
+        if (ev.key === "Escape") {
+          ev.preventDefault();
+          ev.stopPropagation();
+          this.closeTopNavPopover();
+          trigger.focus();
+        }
+      });
+
+      menu.appendChild(item);
+    };
+
+    const mkSection = (label: string) => {
+      const item = document.createElement("div");
+      item.className = "px-2 py-1.5 text-sm text-muted-foreground";
+      item.textContent = label;
+      item.setAttribute("role", "presentation");
+      menu.appendChild(item);
+    };
+
+    const mkSep = () => {
+      const sep = document.createElement("div");
+      sep.className = "my-1 h-px bg-border";
+      sep.setAttribute("role", "separator");
+      menu.appendChild(sep);
+    };
+
+    mkNavItem("Home", "home", "house");
+    mkSep();
+    mkSection("Study");
+    mkNavItem("Coach", "coach", "target");
+    mkNavItem("Flashcards", "cards", "star");
+    mkNavItem("Notes", "notes", "notebook-text");
+    mkNavItem("Tests", "exam", "clipboard-check");
+    mkSep();
+    mkSection("Tools");
+    mkNavItem("Analytics", "analytics", "chart-spline");
+    mkNavItem("Library", "library", "table-2");
+    mkSep();
+    mkSection("Resources");
+    mkActionItem("Guide", () => this.openSettingsTab("guide"), "compass");
+    mkActionItem("Release Notes", () => this.openSettingsTab("about"), "package");
+    mkActionItem("Settings", () => this.openSettingsTab("settings"), "settings");
 
     document.body.appendChild(sproutWrapper);
     this.topNavPopoverEl = root;
@@ -353,20 +686,67 @@ export class SproutHeader {
     };
   }
 
-  private installHeaderDropdownNav(_active: SproutHeaderPage) {
-    // Clear the left nav area so only Obsidian's native sidebar button remains.
-    // The Sprout page-switcher dropdown is now rendered in the right-hand
-    // actions group — see installHeaderActionsButtonGroup().
+  private installHeaderDropdownNav(active: SproutHeaderPage) {
+    // Render the page-switcher in the left nav area.
     const navHost =
       (this.deps.containerEl.querySelector<HTMLElement>(
         ":scope > .view-header .view-header-left .view-header-nav-buttons",
       )) ??
       (this.deps.containerEl.querySelector<HTMLElement>(".view-header .view-header-left .view-header-nav-buttons"));
 
-    if (navHost) {
-      clearNode(navHost);
-      navHost.classList.add("sprout-nav-host");
-    }
+    if (!navHost) return;
+
+    clearNode(navHost);
+    navHost.classList.add("sprout-nav-host");
+
+    const navRoot = document.createElement("div");
+    navRoot.id = this.headerNavId;
+    navRoot.className = "dropdown-menu";
+    navRoot.classList.add("sprout-dropdown-root");
+    navHost.appendChild(navRoot);
+
+    const navTrigger = document.createElement("button");
+    navTrigger.type = "button";
+    navTrigger.id = `${this.headerNavId}-trigger`;
+    navTrigger.className = "sprout-btn-toolbar h-7 px-2 text-xs inline-flex items-center gap-2";
+    navTrigger.setAttribute("aria-haspopup", "menu");
+    navTrigger.setAttribute("aria-expanded", "false");
+    navTrigger.setAttribute("aria-label", "Open menu");
+    navTrigger.setAttribute("data-tooltip-position", "bottom");
+    navRoot.appendChild(navTrigger);
+
+    const trigText = document.createElement("span");
+    trigText.className = "truncate";
+    trigText.textContent =
+      active === "home"
+        ? "Home"
+        : active === "cards"
+          ? "Flashcards"
+          : active === "notes"
+            ? "Notes"
+          : active === "exam"
+            ? "Tests"
+          : active === "coach"
+            ? "Coach"
+            : active === "analytics"
+              ? "Analytics"
+              : active === "library"
+                ? "Library"
+                : "Settings";
+    navTrigger.appendChild(trigText);
+
+    const trigIcon = document.createElement("span");
+    trigIcon.className = "inline-flex items-center justify-center [&_svg]:size-4";
+    trigIcon.setAttribute("aria-hidden", "true");
+    setIcon(trigIcon, "chevron-down");
+    navTrigger.appendChild(trigIcon);
+
+    navTrigger.addEventListener("click", (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      if (this.topNavPopoverEl) this.closeTopNavPopover();
+      else this.openTopNavPopover(navTrigger, active);
+    });
 
     this.closeTopNavPopover();
   }
@@ -394,6 +774,7 @@ export class SproutHeader {
 
   private openMorePopover(trigger: HTMLElement, items: SproutHeaderMenuItem[]) {
     this.closeMorePopover();
+    this.moreTriggerEl = trigger as HTMLButtonElement;
     trigger.setAttribute("aria-expanded", "true");
 
     const sproutWrapper = document.createElement("div");
@@ -404,7 +785,7 @@ export class SproutHeader {
     sproutWrapper.appendChild(root);
 
     const panel = document.createElement("div");
-    panel.className = "min-w-56 rounded-lg border border-border bg-popover text-popover-foreground shadow-lg p-1 sprout-pointer-auto";
+    panel.className = "min-w-56 rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 sprout-pointer-auto sprout-header-menu-panel";
     root.appendChild(panel);
 
     const menu = document.createElement("div");
@@ -413,6 +794,23 @@ export class SproutHeader {
     panel.appendChild(menu);
 
     for (const it of items) {
+      if (it.type === "separator") {
+        const separator = document.createElement("div");
+        separator.className = "my-1 h-px bg-border";
+        separator.setAttribute("role", "separator");
+        menu.appendChild(separator);
+        continue;
+      }
+
+      if (it.type === "section") {
+        const heading = document.createElement("div");
+        heading.className = "px-2 py-1.5 text-sm text-muted-foreground";
+        heading.setAttribute("role", "presentation");
+        heading.textContent = it.label;
+        menu.appendChild(heading);
+        continue;
+      }
+
       const row = document.createElement("div");
       row.setAttribute("role", "menuitem");
       row.tabIndex = 0;
@@ -425,7 +823,52 @@ export class SproutHeader {
         ic.className =
           "inline-flex items-center justify-center [&_svg]:size-4 text-muted-foreground group-hover:text-inherit";
         ic.setAttribute("aria-hidden", "true");
-        setIcon(ic, it.icon);
+        if (it.icon === "life-buoy") {
+          const svgNs = "http://www.w3.org/2000/svg";
+          const svg = document.createElementNS(svgNs, "svg");
+          svg.setAttribute("xmlns", svgNs);
+          svg.setAttribute("width", "24");
+          svg.setAttribute("height", "24");
+          svg.setAttribute("viewBox", "0 0 24 24");
+          svg.setAttribute("fill", "none");
+          svg.setAttribute("stroke", "currentColor");
+          svg.setAttribute("stroke-width", "2");
+          svg.setAttribute("stroke-linecap", "round");
+          svg.setAttribute("stroke-linejoin", "round");
+          svg.setAttribute("class", "svg-icon lucide-life-buoy");
+
+          const circleOuter = document.createElementNS(svgNs, "circle");
+          circleOuter.setAttribute("cx", "12");
+          circleOuter.setAttribute("cy", "12");
+          circleOuter.setAttribute("r", "10");
+          svg.appendChild(circleOuter);
+
+          const p1 = document.createElementNS(svgNs, "path");
+          p1.setAttribute("d", "m4.93 4.93 4.24 4.24");
+          svg.appendChild(p1);
+
+          const p2 = document.createElementNS(svgNs, "path");
+          p2.setAttribute("d", "m14.83 9.17 4.24-4.24");
+          svg.appendChild(p2);
+
+          const p3 = document.createElementNS(svgNs, "path");
+          p3.setAttribute("d", "m14.83 14.83 4.24 4.24");
+          svg.appendChild(p3);
+
+          const p4 = document.createElementNS(svgNs, "path");
+          p4.setAttribute("d", "m9.17 14.83-4.24 4.24");
+          svg.appendChild(p4);
+
+          const circleInner = document.createElementNS(svgNs, "circle");
+          circleInner.setAttribute("cx", "12");
+          circleInner.setAttribute("cy", "12");
+          circleInner.setAttribute("r", "4");
+          svg.appendChild(circleInner);
+
+          ic.appendChild(svg);
+        } else {
+          setIcon(ic, it.icon);
+        }
         row.appendChild(ic);
       }
 
@@ -435,7 +878,7 @@ export class SproutHeader {
 
       const activate = () => {
         this.closeMorePopover();
-        it.onActivate();
+        it.onActivate?.();
       };
 
       row.addEventListener("click", (ev) => {
@@ -532,46 +975,10 @@ export class SproutHeader {
     actionsHost.classList.add("bc", "sprout-view-actions");
     actionsHost.classList.add("sprout-actions-host");
 
-    // ── Nav dropdown (page switcher — left-most item in the actions row) ──
-    const navRoot = document.createElement("div");
-    navRoot.id = this.headerNavId;
-    navRoot.className = "dropdown-menu";
-    navRoot.classList.add("sprout-dropdown-root");
-    actionsHost.appendChild(navRoot);
-
-    const navTrigger = document.createElement("button");
-    navTrigger.type = "button";
-    navTrigger.id = `${this.headerNavId}-trigger`;
-    navTrigger.className = "btn-outline sprout-header-btn h-7 px-2 text-xs inline-flex items-center gap-2";
-    navTrigger.setAttribute("aria-haspopup", "menu");
-    navTrigger.setAttribute("aria-expanded", "false");
-    navTrigger.setAttribute("aria-label", "Sprout menu");
-    navTrigger.setAttribute("data-tooltip-position", "bottom");
-    navRoot.appendChild(navTrigger);
-
-    const trigText = document.createElement("span");
-    trigText.className = "truncate";
-    trigText.textContent =
-      active === "home" ? "Home" : active === "analytics" ? "Analytics" : active === "study" ? "Study" : active === "settings" ? "Settings" : "Flashcards";
-    navTrigger.appendChild(trigText);
-
-    const trigIcon = document.createElement("span");
-    trigIcon.className = "inline-flex items-center justify-center [&_svg]:size-4";
-    trigIcon.setAttribute("aria-hidden", "true");
-    setIcon(trigIcon, "chevron-down");
-    navTrigger.appendChild(trigIcon);
-
-    navTrigger.addEventListener("click", (ev) => {
-      ev.preventDefault();
-      ev.stopPropagation();
-      if (this.topNavPopoverEl) this.closeTopNavPopover();
-      else this.openTopNavPopover(navTrigger, active);
-    });
-
     // Collapse/Expand
     const widthBtn = document.createElement("button");
     widthBtn.type = "button";
-    widthBtn.className = "btn-outline sprout-header-btn inline-flex items-center gap-2";
+    widthBtn.className = "sprout-btn-toolbar inline-flex items-center gap-2";
     widthBtn.setAttribute("data-sprout-expand-collapse", "true");
     widthBtn.addEventListener("click", (ev) => {
       ev.preventDefault();
@@ -613,7 +1020,7 @@ export class SproutHeader {
     // Sync
     const syncBtn = document.createElement("button");
     syncBtn.type = "button";
-    syncBtn.className = "bc btn-outline sprout-header-btn inline-flex items-center gap-2";
+    syncBtn.className = "bc sprout-btn-toolbar inline-flex items-center gap-2";
     syncBtn.setAttribute("aria-label", "Sync flashcards");
     syncBtn.setAttribute("data-tooltip-position", "bottom");
     syncBtn.setAttribute("data-sprout-sync", "true");
@@ -641,16 +1048,16 @@ export class SproutHeader {
     // More
     const moreWrap = document.createElement("div");
     moreWrap.id = this.moreId;
-    moreWrap.className = "sprout-more-wrap";
+    moreWrap.className = "lk-more-wrap";
     actionsHost.appendChild(moreWrap);
 
     const moreBtn = document.createElement("button");
     moreBtn.type = "button";
     moreBtn.id = `${this.moreId}-trigger`;
-    moreBtn.className = "bc btn-icon-outline sprout-header-btn";
+    moreBtn.className = "bc btn-icon-outline sprout-btn-toolbar";
     moreBtn.setAttribute("aria-haspopup", "menu");
     moreBtn.setAttribute("aria-expanded", "false");
-    moreBtn.setAttribute("aria-label", "More options");
+    moreBtn.setAttribute("aria-label", "Tools");
     moreBtn.setAttribute("data-tooltip-position", "bottom");
     moreWrap.appendChild(moreBtn);
 
@@ -660,27 +1067,17 @@ export class SproutHeader {
     setIcon(moreIcon, "more-vertical");
     moreBtn.appendChild(moreIcon);
 
+    const moreLabel = document.createElement("span");
+    moreLabel.setAttribute("data-sprout-label", "true");
+    moreLabel.textContent = "Tools";
+    moreBtn.appendChild(moreLabel);
+
     this.moreTriggerEl = moreBtn;
 
     const closeTab = () => {
       try {
         this.deps.leaf.detach();
       } catch (e) { log.swallow("closeTab: leaf detach", e); }
-    };
-
-    const switchSettingsTab = (tab: "settings" | "guide" | "about") => {
-      setTimeout(() => {
-        const settingsLeaf = this.deps.leaf;
-        const view = settingsLeaf?.view as { navigateToTab?: (tabId: string) => void } | undefined;
-        if (view && typeof view.navigateToTab === "function") {
-          view.navigateToTab(tab);
-        }
-      }, 100);
-    };
-
-    const openSettings = () => {
-      void this.navigate("settings");
-      switchSettingsTab("settings");
     };
 
     const runCommand = (commandId: string, label: string) => {
@@ -690,27 +1087,22 @@ export class SproutHeader {
 
     const openAnkiImport = () => runCommand("sprout:import-anki", "Import from Anki");
     const openAnkiExport = () => runCommand("sprout:export-anki", "Export to Anki");
-
-    const openGuide = () => {
-      // Navigate to the Settings view and switch to the Guide tab
-      void this.navigate("settings");
-      switchSettingsTab("guide");
+    const openSupport = () => {
+      window.open("https://github.com/ctrlaltwill/Sprout/issues", "_blank", "noopener,noreferrer");
     };
-
-    const openReleaseNotes = () => {
-      // Navigate to the Settings view and switch to the Release Notes tab
-      void this.navigate("settings");
-      switchSettingsTab("about");
+    const openGithubRepository = () => {
+      window.open("https://github.com/ctrlaltwill/Sprout", "_blank", "noopener,noreferrer");
     };
 
     const menuItems: SproutHeaderMenuItem[] = [
-      ...(Platform.isMobileApp ? [] : [
-        { label: "Import from Anki", icon: "folder-down", onActivate: openAnkiImport },
-        { label: "Export to Anki", icon: "folder-up", onActivate: openAnkiExport },
-      ]),
-      { label: "Open guide", icon: "book-open", onActivate: openGuide },
-      { label: "Open release notes", icon: "sprout-brand", onActivate: openReleaseNotes },
-      { label: "Open settings", icon: "settings", onActivate: openSettings },
+      { type: "section", label: "Anki" },
+      { label: "Export to Anki", icon: "folder-up", onActivate: openAnkiExport },
+      { label: "Import from Anki", icon: "folder-down", onActivate: openAnkiImport },
+      { type: "separator", label: "" },
+      { type: "section", label: "Support" },
+      { label: "Get Support", icon: "life-buoy", onActivate: openSupport },
+      { label: "GitHub Repository", icon: "github", onActivate: openGithubRepository },
+      { type: "separator", label: "" },
       { label: "Close tab", icon: "x", onActivate: closeTab },
     ];
 

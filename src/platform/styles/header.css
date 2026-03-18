@@ -2,263 +2,356 @@
    HEADER — Brand link, brand icon/text reveal animation.
    ========================================================================== */
 
-.sprout .sprout-header-wrap {
-  background: var(--background-primary) !important;
-  background-color: transparent !important;
-  position: sticky !important;
-  top: 0 !important;
-  z-index: 10 !important;
-  overflow: visible !important;
-  display: flow-root !important; /* contain child margins so ::after sits outside them */
+.sprout .sprout-header-wrap,
+.sprout .learnkit-header-wrap {
+  background: var(--background-primary);
+  background-color: transparent;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  overflow: visible;
+  display: flow-root; /* contain child margins so ::after sits outside them */
 }
 
 /* Soft gradient fade below sticky header so content scrolls under a soft edge.
    z-index kept below tooltip z-index (9999999) so tooltips always render on top. */
-.sprout .sprout-header-wrap::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 50px;
-  transform: translateY(101%);
-  background: linear-gradient(to bottom, var(--background), transparent);
-  pointer-events: none;
-  z-index: 1;
+
+/* Settings, Guide, and Release Notes should scroll freely without sticky header. */
+.sprout:has(.sprout-settings-view-root) .sprout-header-wrap,
+.sprout:has(.sprout-settings-view-root) .studykit-header-wrap {
+  position: static;
+}
+
+.sprout:has(.sprout-settings-view-root) .sprout-header-wrap::after,
+.sprout:has(.sprout-settings-view-root) .studykit-header-wrap::after {
+  display: none;
 }
 
 .sprout .view-header.sprout-header {
-  height: auto !important;
-  margin: 40px 40px 0px 40px !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
-  padding: 20px !important;
-  border-radius: var(--radius-l) !important;
-  background-color: var(--color-base-10) !important;
-  box-shadow: none !important;
-  display: flex !important;
-  align-items: center !important;
-  column-gap: 6px !important;
+    border-radius: 0px;
+    background-color: var(--color-base-00);
+    height: auto;
+    box-shadow: none;
+    align-items: center;
+    column-gap: 6px;
+    margin: 0px;
+    padding: 6px;
+    display: flex;
+    position: relative;
 }
 
 .sprout .view-header.sprout-header .view-header-left {
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-  min-width: 0 !important;
-  flex: 0 0 auto !important;
+  margin-left: 0;
+  margin-right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 0;
+  flex: 1 1 0;
+  order: 1;
 }
 
 .sprout .view-header.sprout-header .view-actions {
-  margin-left: 0 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  flex-wrap: nowrap !important;
-  gap: 6px !important;
-  min-width: 0 !important;
-  flex: 1 1 auto !important;
+  margin-left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+  gap: 6px;
+  min-width: 0;
+  flex: 1 1 0;
+  order: 3;
 }
 
-/* Hide Obsidian page title for Sprout headers (all platforms). */
 .sprout .view-header.sprout-header .view-header-title-container {
-  display: none !important;
+  display: none;
 }
 
-.sprout .sprout-header-brand-link,
-.sprout .view-header .sprout-header-brand-link,
-.sprout .view-header .sprout-header-brand .sprout-header-brand-link {
-  background-color: #16a34a !important;
-  border-color: #16a34a !important;
-  color: #ffffff !important;
-  text-decoration: none !important;
-  border-style: solid !important;
-  border-width: 1px !important;
-  border-radius: var(--button-radius, var(--radius-m)) !important;
-  width: 32px !important;
-  min-width: 32px !important;
-  padding-left: 6px !important;
-  padding-right: 6px !important;
-  overflow: hidden !important;
-  white-space: nowrap !important;
-  transition: width 160ms ease, background-color 160ms ease, border-color 160ms ease, color 160ms ease;
-}
-
-.sprout .sprout-header-brand-link:hover,
-.sprout .sprout-header-brand-link:focus-visible,
-.sprout .view-header .sprout-header-brand-link:hover,
-.sprout .view-header .sprout-header-brand-link:focus-visible,
-.sprout .view-header .sprout-header-brand .sprout-header-brand-link:hover,
-.sprout .view-header .sprout-header-brand .sprout-header-brand-link:focus-visible {
-  background-color: #15803d !important;
-  border-color: #15803d !important;
-  color: #ffffff !important;
-  width: 92px !important;
-}
-
-.sprout .sprout-header-brand-link:active,
-.sprout .view-header .sprout-header-brand-link:active,
-.sprout .view-header .sprout-header-brand .sprout-header-brand-link:active {
-  background-color: #166534 !important;
-  border-color: #166534 !important;
-  color: #ffffff !important;
-  width: 92px !important;
-}
-
-.sprout .sprout-header-brand-link .sprout-header-brand-icon {
+/* Center slot for horizontal brand logo in Sprout headers. */
+.sprout .view-header.sprout-header .sprout-header-center-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  pointer-events: auto;
   flex: 0 0 auto;
+  order: 2;
+  margin: 0;
+  min-width: 0;
+  z-index: 2;
+  overflow: visible;
 }
 
-.sprout .sprout-header-brand-link .sprout-header-brand-text {
-  opacity: 0;
-  transform: translateX(-4px);
-  transition: opacity 160ms ease, transform 160ms ease;
+.sprout .view-header.sprout-header .sprout-header-center-brand .sprout-header-center-brand-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 85px;
+  height: 17px;
+  color: var(--text-normal);
+  overflow: visible;
 }
 
-.sprout .sprout-header-brand-link span:not(.sprout-header-brand-icon):not(.sprout-header-brand-text) {
-  opacity: 0;
-  transform: translateX(-4px);
-  transition: opacity 160ms ease, transform 160ms ease;
+.sprout .view-header.sprout-header .sprout-header-center-brand .sprout-header-center-brand-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  text-decoration: none;
+  cursor: default;
+  overflow: visible;
 }
 
-.sprout .sprout-header-brand-link:hover .sprout-header-brand-text,
-.sprout .sprout-header-brand-link:focus-visible .sprout-header-brand-text,
-.sprout .sprout-header-brand-link:active .sprout-header-brand-text {
+.sprout .view-header.sprout-header .sprout-header-center-brand .sprout-header-center-brand-link *,
+.sprout .view-header.sprout-header .sprout-header-center-brand .sprout-header-center-brand-icon .svg-icon,
+.sprout .view-header.sprout-header .sprout-header-center-brand .sprout-header-center-brand-icon .svg-icon * {
+  cursor: default;
+}
+
+.sprout .view-header.sprout-header .sprout-header-center-brand .sprout-header-center-brand-icon .svg-icon {
+  width: 85px;
+  height: 17px;
+  min-width: 85px;
+  flex: 0 0 auto;
+  display: block;
+  overflow: visible;
+}
+
+.sprout .view-header.sprout-header .sprout-header-center-brand .sprout-header-center-brand-icon .svg-icon svg {
+  overflow: visible;
+}
+
+.sprout .view-header.sprout-header .sprout-header-center-brand .sprout-header-center-brand-icon .svg-icon path[data-logo-shape="true"] {
+  transform-box: fill-box;
+  transform-origin: center;
+  translate: 0 0;
+  scale: 1;
+  rotate: 0deg;
+  transition:
+    translate var(--logo-out-duration, 320ms) cubic-bezier(0.2, 0.9, 0.2, 1) var(--logo-out-delay, 0ms),
+    scale var(--logo-out-duration, 320ms) cubic-bezier(0.2, 0.9, 0.2, 1) var(--logo-out-delay-scale, var(--logo-out-delay, 0ms)),
+    rotate var(--logo-out-duration, 320ms) cubic-bezier(0.2, 0.9, 0.2, 1) var(--logo-out-delay-rotate, var(--logo-out-delay, 0ms)),
+    opacity var(--logo-out-duration, 260ms) ease var(--logo-out-delay, 0ms),
+    filter var(--logo-out-duration, 320ms) ease var(--logo-out-delay, 0ms);
+  opacity: 0.92;
+}
+
+/* Cursor-proximal interaction by visual distance: 0=active, 1=neighbor, 2=next, 3=farthest. */
+.sprout .view-header.sprout-header .sprout-header-center-brand .sprout-header-center-brand-icon .svg-icon[data-hover-path] path[data-logo-shape="true"][data-logo-level="0"] {
+  transition-delay: 0ms;
+  translate: 0 calc(-1 * var(--logo-active-translate, 8px));
+  scale: var(--logo-active-scale, 1.2);
+  rotate: var(--logo-active-rotate, -6deg);
   opacity: 1;
-  transform: translateX(0);
+  filter: brightness(var(--logo-active-brightness, 1.34));
 }
 
-.sprout .sprout-header-brand-link:hover span:not(.sprout-header-brand-icon):not(.sprout-header-brand-text),
-.sprout .sprout-header-brand-link:focus-visible span:not(.sprout-header-brand-icon):not(.sprout-header-brand-text),
-.sprout .sprout-header-brand-link:active span:not(.sprout-header-brand-icon):not(.sprout-header-brand-text) {
-  opacity: 1;
-  transform: translateX(0);
+.sprout .view-header.sprout-header .sprout-header-center-brand .sprout-header-center-brand-icon .svg-icon[data-hover-path] path[data-logo-shape="true"][data-logo-level="1"] {
+  transition-delay: var(--logo-in-delay, 0ms);
+  translate: 0 calc(-1 * var(--logo-neighbor-translate, 5.5px));
+  scale: var(--logo-neighbor-scale, 1.1);
+  rotate: var(--logo-neighbor-rotate, -2deg);
+  opacity: 0.97;
+  filter: brightness(var(--logo-neighbor-brightness, 1.2));
+}
+
+.sprout .view-header.sprout-header .sprout-header-center-brand .sprout-header-center-brand-icon .svg-icon .sprout-logo-hit-target {
+  fill: none;
+  stroke: transparent;
+  pointer-events: stroke;
 }
 
 /* --- Header nav host (view-header-nav-buttons override) --- */
 .sprout .sprout-nav-host {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  gap: 6px !important;
-  overflow: visible !important;
-  min-width: 0 !important;
-  flex: 0 0 auto !important;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  overflow: visible;
+  min-width: 0;
+  flex: 0 0 auto;
 }
 
 /* --- Dropdown root (inline-flex container for the trigger) --- */
 .sprout .sprout-header .dropdown-menu.sprout-dropdown-root {
-  position: relative !important;
-  z-index: 10050 !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  background-color: transparent !important;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  margin-right: auto !important;
+  position: relative;
+  z-index: 10050;
+  display: inline-flex;
+  align-items: center;
+  background-color: transparent;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  margin-right: auto;
 }
 
 /* --- Actions host (view-actions override) --- */
 .sprout .sprout-actions-host {
-  display: flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  overflow: visible !important;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  overflow: visible;
 }
 
 /* --- More-menu wrapper --- */
-.sprout .sprout-header .sprout-more-wrap {
-  position: relative !important;
-  overflow: visible !important;
-  background-color: transparent !important;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
+.sprout .sprout-header .lk-more-wrap {
+  position: relative;
+  overflow: visible;
+  background-color: transparent;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 /* --- Header action buttons (custom style matching header bg) --- */
-.sprout .sprout-header .sprout-header-btn {
-  background-color: var(--background-modifier-form-field) !important;
-  color: var(--text-normal) !important;
-  font-size: var(--sprout-font-xs) !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
-  border-radius: var(--button-radius, var(--radius-m)) !important;
-  box-shadow: none !important;
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+.sprout .sprout-header .sprout-btn-toolbar {
+  background-color: var(--color-base-00);
+  color: var(--text-normal);
+  font-size: var(--sprout-font-xs);
+  border: 1px solid var(--color-base-00);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+  transition: all 0.15s ease-in-out, color 0.15s ease-in-out, border-color 0.15s ease-in-out;
 }
-.sprout .sprout-header .sprout-header-btn:hover {
-  background-color: var(--background-modifier-hover) !important;
-  color: var(--text-normal) !important;
-  border-color: var(--background-modifier-border-hover) !important;
+
+/* Keep header actions icon-first; text labels slide in on hover/focus. */
+.sprout .sprout-header .sprout-actions-host .sprout-btn-toolbar {
+  --sprout-header-btn-collapsed-width: 36px;
+  --sprout-header-btn-expanded-width: 92px;
+  gap: 0;
+  width: var(--sprout-header-btn-collapsed-width);
+  min-width: var(--sprout-header-btn-collapsed-width);
+  max-width: var(--sprout-header-btn-collapsed-width);
+  padding-left: 8px;
+  padding-right: 8px;
+  overflow: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, width 660ms cubic-bezier(0.2, 0.9, 0.2, 1), min-width 660ms cubic-bezier(0.2, 0.9, 0.2, 1), max-width 660ms cubic-bezier(0.2, 0.9, 0.2, 1);
 }
-.sprout .sprout-header .sprout-header-btn:focus-visible {
-  background-color: var(--background-modifier-hover) !important;
-  color: var(--color-base-100) !important;
-  border-color: var(--color-base-30) !important;
-  outline: 2px solid rgba(var(--interactive-accent-rgb), 0.5);
-  outline-offset: 2px;
+
+.sprout .sprout-header .sprout-actions-host .sprout-btn-toolbar[data-sprout-expand-collapse="true"] {
+  --sprout-header-btn-expanded-width: 102px;
 }
-.sprout .sprout-header .sprout-header-btn:active {
-  background-color: var(--muted) !important;
-  color: var(--foreground) !important;
-  border-color: var(--muted) !important;
+
+.sprout .sprout-header .sprout-actions-host .sprout-btn-toolbar[data-sprout-sync="true"] {
+  --sprout-header-btn-expanded-width: 80px;
+}
+
+.sprout .sprout-header .sprout-actions-host .sprout-btn-toolbar[aria-haspopup="menu"] {
+  --sprout-header-btn-expanded-width: 86px;
+}
+
+.sprout .sprout-header .sprout-actions-host .sprout-btn-toolbar [data-sprout-label="true"] {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 0;
+  opacity: 0;
+  margin-left: 0;
+  transform: translateX(-4px);
+  transition: max-width 660ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 540ms ease, margin-left 660ms cubic-bezier(0.2, 0.9, 0.2, 1), transform 660ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.sprout .sprout-header .sprout-actions-host .sprout-btn-toolbar:hover [data-sprout-label="true"],
+.sprout .sprout-header .sprout-actions-host .sprout-btn-toolbar:focus-visible [data-sprout-label="true"],
+.sprout .sprout-header .sprout-actions-host .sprout-btn-toolbar:focus-within [data-sprout-label="true"],
+.sprout .sprout-header .sprout-actions-host .sprout-btn-toolbar[aria-expanded="true"] [data-sprout-label="true"] {
+  max-width: 76px;
+  opacity: 1;
+  margin-left: 8px;
+  transform: translateX(0);
+}
+
+.sprout .sprout-header .sprout-actions-host .sprout-btn-toolbar:hover,
+.sprout .sprout-header .sprout-actions-host .sprout-btn-toolbar:focus-visible,
+.sprout .sprout-header .sprout-actions-host .sprout-btn-toolbar:focus-within,
+.sprout .sprout-header .sprout-actions-host .sprout-btn-toolbar[aria-expanded="true"] {
+  width: var(--sprout-header-btn-expanded-width);
+  min-width: var(--sprout-header-btn-expanded-width);
+  max-width: var(--sprout-header-btn-expanded-width);
+}
+
+.sprout .sprout-header .sprout-actions-host .sprout-btn-toolbar.sprout-is-hidden [data-sprout-label="true"] {
+  display: none;
+}
+
+.sprout .sprout-header .sprout-btn-toolbar:hover {
+  background-color: var(--color-base-20) !important;
+  color: var(--color-base-100);
+  border: var(--color-base-35) 1px solid !important;
+}
+.sprout .sprout-header .sprout-btn-toolbar[aria-expanded="true"] {
+  background-color: var(--color-base-20) !important;
+  color: var(--color-base-100);
+  border: var(--color-base-35) 1px solid !important;
+}
+.sprout .sprout-header .sprout-btn-toolbar:focus-visible {
+  background-color: var(--color-base-25);
+  color: var(--color-base-100);
+  border-color: var(--color-base-40) !important;
+}
+.sprout .sprout-header .sprout-btn-toolbar:active {
+  background-color: var(--color-base-25) !important;
+    color: var(--color-base-100);
+  border-color: var(--color-base-40) !important;
 }
 
 /* --- Mobile header layout --- */
 @media (max-width: 820px) {
   .sprout .view-header.sprout-header {
-    margin: 50px 12px 0 12px !important;
-    padding: 10px 12px !important;
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
-    column-gap: 6px !important;
-    max-width: calc(100% - 24px) !important;
-    box-sizing: border-box !important;
-    overflow-x: hidden !important;
-    border-color: transparent !important;
-    background-color: transparent !important;
+    margin: 50px 12px 0 12px;
+    padding: 10px 12px;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    column-gap: 6px;
+    max-width: calc(100% - 24px);
+    box-sizing: border-box;
+    overflow-x: hidden;
+    border-color: transparent;
+    background-color: transparent;
   }
 
   .sprout .view-header.sprout-header .view-header-left {
     order: 2;
-    display: flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    min-width: 0 !important;
-    flex: 0 0 auto !important;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 0;
+    margin-right: 0;
+    min-width: 0;
+    flex: 0 0 auto;
   }
 
   .sprout .view-header.sprout-header .view-actions {
     order: 3;
-    width: auto !important;
-    flex: 1 1 auto !important;
-    margin-left: 0 !important;
-    justify-content: flex-end !important;
-    flex-wrap: nowrap !important;
-    min-width: 0 !important;
-    gap: 6px !important;
-    background: transparent !important;
-    background-color: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
+    width: auto;
+    flex: 1 1 auto;
+    margin-left: 0;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    min-width: 0;
+    gap: 6px;
+    background: transparent;
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
   }
 
   .sprout .sprout-actions-host {
-    width: auto !important;
-    flex: 1 1 auto !important;
-    justify-content: flex-start !important;
-    flex-wrap: nowrap !important;
-    min-width: 0 !important;
-    gap: 6px !important;
-    background: transparent !important;
-    background-color: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
+    width: auto;
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    min-width: 0;
+    gap: 6px;
+    background: transparent;
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
   }
 
   /* Nuke any Obsidian-injected white bg on the view-actions bar */
@@ -266,35 +359,35 @@
   body.is-mobile .sprout .sprout-actions-host,
   body.is-mobile .sprout .view-header.sprout-header .view-actions::before,
   body.is-mobile .sprout .view-header.sprout-header .view-actions::after {
-    background: transparent !important;
-    background-color: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
+    background: transparent;
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
   }
 
   .sprout .sprout-header .dropdown-menu.sprout-dropdown-root {
-    margin-right: 0 !important;
+    margin-right: 0;
   }
 
   .sprout .view-header.sprout-header .view-actions .view-action.mod-bookmark,
   .sprout .view-header.sprout-header [data-sprout-expand-collapse="true"] {
-    display: none !important;
+    display: none;
   }
 
   .sprout .view-header.sprout-header [data-sprout-sync="true"] [data-sprout-label="true"] {
-    display: none !important;
+    display: none;
   }
 
   /* Keep sidebar button on the left and pin other controls to the right */
   .sprout .view-header.sprout-header .view-action {
     order: 1;
-    margin-left: 0 !important;
-    margin-right: auto !important;
+    margin-left: 0;
+    margin-right: auto;
   }
 
   /* Hide tooltip bubbles on mobile but keep buttons clickable */
   .sprout .view-header.sprout-header button[data-tooltip]::before,
   .sprout .view-header.sprout-header button[data-tooltip]::after {
-    display: none !important;
+    display: none;
   }
 }

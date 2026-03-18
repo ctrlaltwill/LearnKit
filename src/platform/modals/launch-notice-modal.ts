@@ -18,10 +18,10 @@ export class LaunchNoticeModal extends Modal {
     const tx = (token: string, fallback: string) =>
       t(this.plugin.settings?.general?.interfaceLanguage, token, fallback);
 
-    setModalTitle(this, tx("ui.launchNotice.title", "Sprout 1.1.0"));
-    this.containerEl.addClass("sprout-modal-container", "sprout-modal-dim", "sprout");
+    setModalTitle(this, tx("ui.launchNotice.title", "LearnKit 1.1.0"));
+    this.containerEl.addClass("lk-modal-container", "lk-modal-dim", "sprout");
     setCssProps(this.containerEl, "z-index", "2147483000");
-    this.modalEl.addClass("bc", "sprout-modals", "sprout-bulk-edit-panel");
+    this.modalEl.addClass("bc", "lk-modals", "sprout-bulk-edit-panel");
     setCssProps(this.modalEl, "z-index", "2147483001");
     scopeModalToWorkspace(this);
     this.contentEl.addClass("bc", "sprout-bulk-edit-content");
@@ -45,20 +45,20 @@ export class LaunchNoticeModal extends Modal {
       ),
     });
     body.createEl("p", {
-      text: "Version 1.1.0 is our biggest update so far. It introduces sprig, our AI learning assistant, with a bring-your-own-key model. This model allows it to be included for all users and not locked behind subscriptions or paywalls.",
+      text: "Version 1.1.0 is our biggest update so far. It introduces companion, our AI learning companion, with a bring-your-own-key model. This model allows it to be included for all users and not locked behind subscriptions or paywalls.",
     });
 
-    const setupHeading = body.createEl("h2", { text: "Getting started with sprig" });
+    const setupHeading = body.createEl("h2", { text: "Getting started with companion" });
     setupHeading.addClass("sprout-guide-snap-heading");
     const setupIntro = body.createEl("p");
-    setupIntro.setText("Sprig is not ready out of the box. You will need to connect an AI provider first.");
+    setupIntro.setText("Companion is not ready out of the box. You will need to connect an AI provider first.");
 
     const setupList = body.createEl("ol", { cls: "bc" });
-    setupList.createEl("li", { text: "Open sprout settings and go to assistant." });
+    setupList.createEl("li", { text: "Open sprout settings and go to companion." });
     setupList.createEl("li", { text: "Choose your provider. It works with free providers (for example, google and openrouter) and premium providers (for example, anthropic and openai)." });
     setupList.createEl("li", { text: "Choose the AI model from the provider that you want to use. This updates dynamically, and some models may return errors. If this happens, try a different model or raise an issue on GitHub." });
     setupList.createEl("li", { text: "Paste your API key." });
-    setupList.createEl("li", { text: "Open sprig from the command palette using 'open learning assistant widget', or from the assistant modal button in the bottom-right of your notes. You can adjust this button's visibility in settings." });
+    setupList.createEl("li", { text: "Open companion from the command palette using 'open study companion widget', or from the companion modal button in the bottom-right of your notes. You can adjust this button's visibility in settings." });
 
     const freeSetupHeading = body.createEl("h2", { text: "Free setup recommendation" });
     freeSetupHeading.addClass("sprout-guide-snap-heading");
@@ -68,7 +68,7 @@ export class LaunchNoticeModal extends Modal {
     freeSetupList.createEl("li", { text: "In sprout settings, set provider to openrouter." });
     freeSetupList.createEl("li", { text: "We recommend setting the model to auto router." });
     freeSetupList.createEl("li", { text: "Paste your API key." });
-    freeSetupList.createEl("li", { text: "You are ready to start using sprig!" });
+    freeSetupList.createEl("li", { text: "You are ready to start using companion!" });
 
     const securityHeading = body.createEl("h2", { text: "API key security" });
     const configPath = `${this.app.vault.configDir}/plugins/sprout/data.json`;
@@ -91,7 +91,7 @@ export class LaunchNoticeModal extends Modal {
       text: "There may be teething issues as 1.1.0 rolls out. Please report bugs and feedback on GitHub so we can improve quickly.",
     });
     body.createEl("p", {
-      text: "We remain committed to keeping sprout open source and accessible. We are also considering improving the product name in future, so suggestions are very welcome.",
+      text: "We remain committed to keeping sprout open source and accessible.",
     });
     body.createEl("p", {
       text: "If sprout is helping you, please share it with friends who might benefit too. Thank you again for being here.",
@@ -102,7 +102,7 @@ export class LaunchNoticeModal extends Modal {
     });
     setCssProps(signoff, "white-space", "pre-line");
 
-    const footer = body.createDiv({ cls: "bc flex items-center justify-end gap-4 sprout-modal-footer" });
+    const footer = body.createDiv({ cls: "bc flex items-center justify-end gap-4 lk-modal-footer" });
 
     const checkboxRow = footer.createEl("label", { cls: "bc flex items-center gap-2" });
     setCssProps(checkboxRow, {
@@ -124,7 +124,7 @@ export class LaunchNoticeModal extends Modal {
     });
 
     const releaseNotesBtn = footer.createEl("button", {
-      cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm",
+      cls: "bc sprout-btn-toolbar inline-flex items-center gap-2 h-9 px-3 text-sm",
       attr: { type: "button", "aria-label": "Open release notes" },
     });
     const releaseIcon = releaseNotesBtn.createEl("span", { cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
@@ -135,7 +135,7 @@ export class LaunchNoticeModal extends Modal {
     });
 
     const settingsBtn = footer.createEl("button", {
-      cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm",
+      cls: "bc sprout-btn-toolbar inline-flex items-center gap-2 h-9 px-3 text-sm",
       attr: { type: "button", "aria-label": "Open sprout settings" },
     });
     const settingsIcon = settingsBtn.createEl("span", { cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
@@ -147,7 +147,7 @@ export class LaunchNoticeModal extends Modal {
     });
 
     const closeBtn = footer.createEl("button", {
-      cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm",
+      cls: "bc sprout-btn-toolbar inline-flex items-center gap-2 h-9 px-3 text-sm",
       attr: { type: "button", "aria-label": tx("ui.launchNotice.close", "Close") },
     });
     const closeIcon = closeBtn.createEl("span", { cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
@@ -157,8 +157,8 @@ export class LaunchNoticeModal extends Modal {
   }
 
   override onClose(): void {
-    this.containerEl.removeClass("sprout-modal-container", "sprout-modal-dim", "sprout");
-    this.modalEl.removeClass("bc", "sprout-modals", "sprout-bulk-edit-panel");
+    this.containerEl.removeClass("lk-modal-container", "lk-modal-dim", "sprout");
+    this.modalEl.removeClass("bc", "lk-modals", "sprout-bulk-edit-panel");
     this.contentEl.removeClass("bc", "sprout-bulk-edit-content");
     this.contentEl.empty();
     void this.persistPreference();

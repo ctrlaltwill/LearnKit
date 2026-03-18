@@ -7,6 +7,97 @@ import { log } from "./logger";
 const SCHEDULING_DIR = "scheduling";
 const FLASHCARDS_DB = "flashcards.db";
 
+/**
+ * Best-effort copy of a .db file to the vault-visible sync folder
+ * when the user has enabled vault sync storage.
+ */
+export async function copyDbToVaultSyncFolder(
+  plugin: SproutPlugin,
+  dbFileName: string,
+  bytes: Uint8Array,
+): Promise<void> {
+  const vs = plugin.settings?.storage?.vaultSync;
+  if (!vs?.enabled || !vs.folderPath) return;
+
+  const adapter = plugin.app?.vault?.adapter as {
+    exists?: (path: string) => Promise<boolean>;
+    mkdir?: (path: string) => Promise<void>;
+    writeBinary?: (path: string, data: ArrayBuffer) => Promise<void>;
+    write?: (path: string, data: string) => Promise<void>;
+  } | null;
+  if (!adapter) return;
+
+  try {
+    const folder = vs.folderPath.replace(/\/+$/, "");
+    await ensureDir(adapter, folder);
+    const dest = joinPath(folder, dbFileName);
+    await writeBinary(adapter, dest, bytes);
+  } catch {
+    // Best-effort — don't break the primary save path
+  }
+}
+
+/**
+ * If vault sync is enabled, check whether the vault copy of a .db file is
+ * newer than the plugin-folder copy. If so, copy it back so we load the
+ * most recent data (e.g. synced from another device via Obsidian Sync).
+ */
+export async function reconcileFromVaultSync(
+  plugin: SproutPlugin,
+  dbFileName: string,
+  pluginDbPath: string,
+): Promise<void> {
+  const vs = plugin.settings?.storage?.vaultSync;
+  if (!vs?.enabled || !vs.folderPath) return;
+
+  const adapter = plugin.app?.vault?.adapter as {
+    exists?: (path: string) => Promise<boolean>;
+    stat?: (path: string) => Promise<{ mtime: number } | null>;
+    readBinary?: (path: string) => Promise<ArrayBuffer>;
+    read?: (path: string) => Promise<string>;
+    writeBinary?: (path: string, data: ArrayBuffer) => Promise<void>;
+    write?: (path: string, data: string) => Promise<void>;
+    mkdir?: (path: string) => Promise<void>;
+  } | null;
+  if (!adapter?.stat || !adapter.exists) return;
+
+  try {
+    const vaultPath = joinPath(vs.folderPath.replace(/\/+$/, ""), dbFileName);
+    const [vaultExists, pluginExists] = await Promise.all([
+      adapter.exists(vaultPath),
+      adapter.exists(pluginDbPath),
+    ]);
+    if (!vaultExists) return;
+
+    // If plugin copy doesn't exist, always use the vault copy
+    if (!pluginExists) {
+      const bytes = await readBinary(adapter, vaultPath);
+      if (bytes && bytes.byteLength > 0) {
+        const dir = pluginDbPath.split("/").slice(0, -1).join("/");
+        await ensureDir(adapter, dir);
+        await writeBinary(adapter, pluginDbPath, bytes);
+      }
+      return;
+    }
+
+    const [vaultStat, pluginStat] = await Promise.all([
+      adapter.stat(vaultPath),
+      adapter.stat(pluginDbPath),
+    ]);
+    if (!vaultStat || !pluginStat) return;
+
+    // Only overwrite if the vault copy is strictly newer
+    if (vaultStat.mtime > pluginStat.mtime) {
+      const bytes = await readBinary(adapter, vaultPath);
+      if (bytes && bytes.byteLength > 0) {
+        await writeBinary(adapter, pluginDbPath, bytes);
+      }
+    }
+  } catch {
+    // Best-effort — fall back to the existing plugin-folder copy
+  }
+}
+
 function joinPath(...parts: string[]): string {
   return parts
     .filter((p) => typeof p === "string" && p.length)
@@ -145,6 +236,7 @@ export class SqliteStore extends JsonStore {
     const path = getFlashcardsDbPath(this.plugin);
 
     await ensureDir(adapter, dir);
+    await reconcileFromVaultSync(this.plugin, FLASHCARDS_DB, path);
 
     let db: Database;
     const exists = adapter.exists ? await adapter.exists(path) : false;
@@ -225,6 +317,7 @@ export class SqliteStore extends JsonStore {
     writeSnapshot(this._db, this.data);
     const bytes = this._db.export();
     await writeBinary(adapter, path, bytes);
+    await copyDbToVaultSyncFolder(this.plugin, FLASHCARDS_DB, bytes);
   }
 
   async runIntegrityCheck(): Promise<{ ok: boolean; message: string }> {

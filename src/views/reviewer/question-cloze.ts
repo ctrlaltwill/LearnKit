@@ -10,6 +10,7 @@
 
 import { el, setCssProps } from "../../platform/core/ui";
 import { applyInlineMarkdown } from "../../platform/integrations/anki/anki-mapper";
+import { hydrateCircleFlagsInElement, processCircleFlagsInMarkdown } from "../../platform/flags/flag-tokens";
 
 /** Options bag for cloze rendering. */
 export type ClozeRenderOptions = {
@@ -91,10 +92,15 @@ export function renderClozeFront(
     if (lastNode) p.appendChild(document.createTextNode(" "));
   };
 
+  const applyInlineMarkdownWithFlags = (target: HTMLElement, raw: string) => {
+    applyInlineMarkdown(target, processCircleFlagsInMarkdown(raw));
+    hydrateCircleFlagsInElement(target);
+  };
+
   /** Append a text segment with inline markdown formatting (bold, italic, etc.) */
   const appendFormattedText = (parent: HTMLElement, text: string) => {
     const span = document.createElement("span");
-    applyInlineMarkdown(span, text);
+    applyInlineMarkdownWithFlags(span, text);
     parent.appendChild(span);
   };
 
@@ -126,7 +132,7 @@ export function renderClozeFront(
           // Correct: green pill with answer text
           const span = document.createElement("span");
           span.className = "sprout-cloze-revealed sprout-cloze-typed-correct";
-          applyInlineMarkdown(span, ans);
+          applyInlineMarkdownWithFlags(span, ans);
           p.appendChild(span);
         } else {
           // Wrong: red pill with strikethrough showing what was typed, then green pill with correct
@@ -139,14 +145,14 @@ export function renderClozeFront(
           }
           const correctSpan = document.createElement("span");
           correctSpan.className = "sprout-cloze-revealed sprout-cloze-typed-correct";
-          applyInlineMarkdown(correctSpan, ans);
+          applyInlineMarkdownWithFlags(correctSpan, ans);
           p.appendChild(correctSpan);
         }
       } else {
         // Standard mode back: normal accent-coloured reveal
         const answerSpan = document.createElement("span");
         answerSpan.className = "sprout-cloze-revealed";
-        applyInlineMarkdown(answerSpan, ans);
+        applyInlineMarkdownWithFlags(answerSpan, ans);
 
         // Apply custom colours if provided (standard mode only)
         if (opts?.clozeBgColor) {

@@ -45,6 +45,7 @@ import {
   splitAtDelimiterTerminator,
   escapeDelimiterRe,
 } from "../../platform/core/delimiter";
+import { CARD_ANCHOR_INLINE_RE } from "../../platform/core/identity";
 
 /* -----------------------
    Constants
@@ -54,7 +55,7 @@ import {
 export const INVIS_RE = /[\u200B\uFEFF]/g;
 
 /** Relaxed anchor regex (match anywhere on a line) */
-export const ANCHOR_RE = /\^sprout-(\d{6,12})/;
+export const ANCHOR_RE = CARD_ANCHOR_INLINE_RE;
 
 /** Dynamic field-start regex that uses the active delimiter. */
 export const FIELD_START_RE = { test: (s: string) => FIELD_START_READING_RE().test(s), exec: (s: string) => FIELD_START_READING_RE().exec(s) };

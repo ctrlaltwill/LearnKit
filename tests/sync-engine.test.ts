@@ -95,7 +95,7 @@ describe("sync engine", () => {
 
     expect(res.idsInserted).toBe(1);
     expect(res.newCount).toBe(1);
-    expect(content).toContain("^sprout-100000000");
+    expect(content).toContain("^learnkit-100000000");
     expect(plugin.store.data.cards["100000000"]).toBeDefined();
     expect(plugin.store.data.states["100000000"]).toBeDefined();
   });
@@ -120,8 +120,8 @@ describe("sync engine", () => {
     const content = await vault.read(file);
 
     expect(res.idsInserted).toBe(1);
-    expect(content).toContain("^sprout-100000000\nIO | ![[Attachments/Image Occlusion/example.png|200]] |");
-    expect(content).not.toContain("IO | ![[Attachments/Image Occlusion/example.png|200]] |\n^sprout-100000000");
+    expect(content).toContain("^learnkit-100000000\nIO | ![[Attachments/Image Occlusion/example.png|200]] |");
+    expect(content).not.toContain("IO | ![[Attachments/Image Occlusion/example.png|200]] |\n^learnkit-100000000");
   });
 
   it("creates scheduling state for new cards", async () => {
@@ -382,7 +382,7 @@ describe("sync engine", () => {
 
     expect(res.idsInserted).toBe(1);
     expect(res.newCount).toBe(2);
-    expect(contentTwo).toContain("^sprout-280000000");
+    expect(contentTwo).toContain("^learnkit-280000000");
     expect(Object.keys(plugin.store.data.cards)).toHaveLength(2);
   });
 

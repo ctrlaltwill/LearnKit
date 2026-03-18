@@ -53,12 +53,12 @@ export function toggleMoreMenu(view: SproutReviewerView, force?: boolean) {
     return;
   }
 
-  const panel = queryFirst(popover, ".sprout-more-panel");
+  const panel = queryFirst<HTMLElement>(popover, ".lk-more-panel");
 
   const place = () => {
     const btn = view._moreBtnEl;
     if (!btn || !panel) return;
-    placePopover({ trigger: btn, panel, popoverEl: popover });
+    placePopover({ trigger: btn, panel, popoverEl: popover, dropUp: true });
   };
 
   popover.setAttribute("aria-hidden", "false");
@@ -171,7 +171,7 @@ export function injectMoreMenu(view: SproutReviewerView) {
   const moreBtn = document.createElement("button");
   moreBtn.type = "button";
   moreBtn.id = triggerId;
-  moreBtn.className = "bc btn-outline";
+  moreBtn.className = "bc sprout-btn-toolbar sprout-btn-filter";
   moreBtn.dataset.sproutAction = "reviewer-more-trigger";
   moreBtn.setAttribute("aria-haspopup", "menu");
   moreBtn.setAttribute("aria-controls", menuId);
@@ -210,7 +210,7 @@ export function injectMoreMenu(view: SproutReviewerView) {
 
   const panel = document.createElement("div");
   panel.className =
-    "bc sprout-more-panel rounded-lg border border-border bg-popover text-popover-foreground shadow-lg p-1 sprout-pointer-auto";
+    "bc lk-more-panel rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 sprout-pointer-auto";
   popover.appendChild(panel);
 
   const menu = document.createElement("div");

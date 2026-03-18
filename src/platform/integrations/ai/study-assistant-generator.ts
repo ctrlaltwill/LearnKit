@@ -20,13 +20,94 @@ function extractFirstJsonObject(text: string): string {
   const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
   if (fenceMatch?.[1]) return fenceMatch[1].trim();
 
-  const firstBrace = text.indexOf("{");
-  const lastBrace = text.lastIndexOf("}");
-  if (firstBrace >= 0 && lastBrace > firstBrace) {
-    return text.slice(firstBrace, lastBrace + 1).trim();
+  const raw = String(text || "");
+  const candidates: string[] = [];
+
+  // Scan for balanced JSON values (objects/arrays) while respecting quoted strings and escapes.
+  let start = -1;
+  const stack: string[] = [];
+  let inString = false;
+  let escape = false;
+  for (let i = 0; i < raw.length; i += 1) {
+    const ch = raw[i];
+
+    if (inString) {
+      if (escape) {
+        escape = false;
+        continue;
+      }
+      if (ch === "\\") {
+        escape = true;
+        continue;
+      }
+      if (ch === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (ch === '"') {
+      inString = true;
+      continue;
+    }
+
+    if (ch === "{" || ch === "[") {
+      if (stack.length === 0) start = i;
+      stack.push(ch);
+      continue;
+    }
+
+    if (ch === "}" || ch === "]") {
+      if (stack.length === 0) continue;
+      const open = stack[stack.length - 1];
+      const isPair = (open === "{" && ch === "}") || (open === "[" && ch === "]");
+      if (!isPair) continue;
+      stack.pop();
+      if (stack.length === 0 && start >= 0) {
+        candidates.push(raw.slice(start, i + 1).trim());
+        start = -1;
+      }
+    }
   }
 
-  return text.trim();
+  // Prefer a parseable payload that already includes a suggestions array
+  // or is itself an array of suggestions.
+  for (const candidate of candidates) {
+    try {
+      const parsed: unknown = JSON.parse(candidate);
+      if (Array.isArray(parsed)) return candidate;
+      if (parsed && typeof parsed === "object") {
+        const obj = parsed as Record<string, unknown>;
+        if (Array.isArray(obj.suggestions)) return candidate;
+      }
+    } catch {
+      // ignore and continue
+    }
+  }
+
+  // Otherwise return the first parseable JSON object.
+  for (const candidate of candidates) {
+    try {
+      JSON.parse(candidate);
+      return candidate;
+    } catch {
+      // ignore and continue
+    }
+  }
+
+  const firstBrace = raw.indexOf("{");
+  const lastBrace = raw.lastIndexOf("}");
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    return raw.slice(firstBrace, lastBrace + 1).trim();
+  }
+
+  const firstBracket = raw.indexOf("[");
+  const lastBracket = raw.lastIndexOf("]");
+  if (firstBracket >= 0 && lastBracket > firstBracket) {
+    return raw.slice(firstBracket, lastBracket + 1).trim();
+  }
+
+  return raw.trim();
 }
 
 function coerceString(value: unknown): string {
@@ -174,17 +255,32 @@ type GenerationIntent = {
 
 const TYPE_ALIASES: Record<string, StudyAssistantCardType> = {
   basic: "basic",
+  "basic card": "basic",
+  "basic cards": "basic",
   reversed: "reversed",
+  reverse: "reversed",
+  "reversed card": "reversed",
+  "reversed cards": "reversed",
   cloze: "cloze",
+  "cloze card": "cloze",
+  "cloze cards": "cloze",
   mcq: "mcq",
+  "mcq card": "mcq",
+  "mcq cards": "mcq",
   "multiple choice": "mcq",
   "multiple-choice": "mcq",
+  "multiple choice question": "mcq",
+  "multiple-choice question": "mcq",
   oq: "oq",
   "ordered question": "oq",
   "ordered-question": "oq",
+  sequence: "oq",
+  "ordered question card": "oq",
   io: "io",
   "image occlusion": "io",
   "image-occlusion": "io",
+  "image occlusion card": "io",
+  "image-occlusion card": "io",
 };
 
 function parseUserRequestOverrides(text: string): UserRequestOverrides {
@@ -194,8 +290,8 @@ function parseUserRequestOverrides(text: string): UserRequestOverrides {
   const result: UserRequestOverrides = {};
 
   // Match patterns like "3 MCQs", "5 basic cards", "2 cloze questions"
-  const countTypePattern = /\b(\d{1,3})\s+(basic|reversed|clozes?|mcqs?|multiple[- ]choice|oqs?|ordered[- ]questions?|ios?|image[- ]occlusions?)\b/gi;
-  const typeOnlyPattern = /\b(basic|reversed|clozes?|mcqs?|multiple[- ]choice|oqs?|ordered[- ]questions?|ios?|image[- ]occlusions?)\s*(cards?|questions?|flashcards?)?\b/gi;
+  const countTypePattern = /\b(\d{1,3})\s+(basic|reversed?|clozes?|mcqs?|multiple[- ]choice(?:\s+questions?)?|oqs?|ordered[- ]questions?|sequences?|ios?|image[- ]occlusions?)\b/gi;
+  const typeOnlyPattern = /\b(basic|reversed?|clozes?|mcqs?|multiple[- ]choice(?:\s+questions?)?|oqs?|ordered[- ]questions?|sequences?|ios?|image[- ]occlusions?)\s*(cards?|questions?|flashcards?)?\b/gi;
   const countOnlyPattern = /\b(\d{1,3})\s+(cards?|questions?|flashcards?)\b/i;
 
   // Extract count+type pairs first
@@ -204,7 +300,14 @@ function parseUserRequestOverrides(text: string): UserRequestOverrides {
 
   while ((match = countTypePattern.exec(t)) !== null) {
     const n = parseInt(match[1], 10);
-    const typeKey = match[2].replace(/s$/, "").toLowerCase();
+    let typeKey = match[2].toLowerCase().trim();
+    if (/^reverses?$/.test(typeKey)) typeKey = "reverse";
+    typeKey = typeKey
+      .replace(/\bquestions?\b/g, "")
+      .replace(/\bcards?\b/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/s$/, "");
     const mapped = TYPE_ALIASES[typeKey];
     if (mapped) {
       if (!result.count) {
@@ -218,7 +321,14 @@ function parseUserRequestOverrides(text: string): UserRequestOverrides {
   // If no count+type pair, look for standalone type mentions
   if (!detectedTypes.length) {
     while ((match = typeOnlyPattern.exec(t)) !== null) {
-      const typeKey = match[1].replace(/s$/, "").toLowerCase();
+      let typeKey = match[1].toLowerCase().trim();
+      if (/^reverses?$/.test(typeKey)) typeKey = "reverse";
+      typeKey = typeKey
+        .replace(/\bquestions?\b/g, "")
+        .replace(/\bcards?\b/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .replace(/s$/, "");
       const mapped = TYPE_ALIASES[typeKey];
       if (mapped && !detectedTypes.includes(mapped)) detectedTypes.push(mapped);
     }
@@ -232,7 +342,12 @@ function parseUserRequestOverrides(text: string): UserRequestOverrides {
       result.exactCountRequested = true;
     }
     // Also handle "a card", "a question"
-    else if (/\ba\s+(card|question|flashcard)\b/i.test(t)) {
+    else if (/\b(a|an|one|single)\s+(card|question|flashcard)\b/i.test(t)) {
+      result.count = 1;
+      result.exactCountRequested = true;
+    }
+    // Handle singular type-only asks like "a cloze on X" / "single basic"
+    else if (detectedTypes.length > 0 && /\b(a|an|one|single)\s+(basic|reverse(?:d)?|cloze|mcq|multiple[- ]choice|oq|ordered[- ]question|sequence|io|image[- ]occlusion)\b/i.test(t)) {
       result.count = 1;
       result.exactCountRequested = true;
     }
@@ -385,7 +500,28 @@ function resolveSuggestionsWithFallback(
     requestedTopic: "",
     allowExternalKnowledge: true,
   };
-  return validateAndRepairSuggestions(relaxedIntent, suggestions, noteContent);
+  const relaxed = validateAndRepairSuggestions(relaxedIntent, suggestions, noteContent);
+  if (relaxed.length > 0) return relaxed;
+
+  // Last-resort fallback: if strict dedupe against existing note cards would produce zero,
+  // keep best-effort suggestions so the user gets actionable output instead of an empty run.
+  const minimal: StudyAssistantSuggestion[] = [];
+  for (const suggestion of suggestions) {
+    if (intent.requestedTypes?.length && !intent.requestedTypes.includes(suggestion.type)) continue;
+
+    const suggestionTopics = extractSuggestionTopics(suggestion);
+    const duplicatesOutput = minimal.some((existingSuggestion) => {
+      const existingSuggestionTopics = extractSuggestionTopics(existingSuggestion);
+      if (!existingSuggestionTopics.length || !suggestionTopics.length) return false;
+      return suggestionTopics.some((topic) =>
+        existingSuggestionTopics.some((existingTopic) => topicsLikelyEquivalent(topic, existingTopic)));
+    });
+    if (duplicatesOutput) continue;
+
+    minimal.push(suggestion);
+  }
+
+  return minimal;
 }
 
 function complexityScoreForSuggestion(s: StudyAssistantSuggestion): number {
@@ -784,7 +920,15 @@ function parseSuggestions(rawText: string): StudyAssistantSuggestion[] {
   }
 
   const obj = parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : null;
-  const items = obj && Array.isArray(obj.suggestions) ? obj.suggestions : [];
+  const items = Array.isArray(parsed)
+    ? parsed
+    : obj && Array.isArray(obj.suggestions)
+      ? obj.suggestions
+      : obj && Array.isArray(obj.flashcards)
+        ? obj.flashcards
+        : obj && Array.isArray(obj.cards)
+          ? obj.cards
+          : [];
 
   const suggestions: StudyAssistantSuggestion[] = [];
   for (const item of items) {
@@ -828,12 +972,13 @@ function buildSystemPrompt(customInstructions: string, canUseVisionForIo: boolea
     hiddenPrompt,
     "",
     "Public-mode instructions:",
-    "You are Sprout Study Assistant, generating flashcards from user notes.",
+    "You are LearnKit Study Companion, generating flashcards from user notes.",
     "Return strictly valid JSON only with exactly one top-level object: {\"suggestions\":[...]}",
     "Do not output markdown, code fences, explanations, or extra keys outside the documented schema.",
     "Return valid JSON matching this schema:",
     '{"suggestions":[{"type":"basic|reversed|cloze|mcq|oq|io","difficulty":1-3,"sourceOrigin":"note|external","title":"optional","question":"optional","answer":"optional","clozeText":"optional","options":["..."],"correctOptionIndexes":[0],"steps":["..."],"ioSrc":"optional","ioOcclusions":[{"rectId":"r1","x":0.1,"y":0.2,"w":0.2,"h":0.08,"groupKey":"1","shape":"rect"}],"ioMaskMode":"solo|all","info":"optional","groups":["optional/group"],"noteRows":["KIND | value |"],"rationale":"optional"}]}',
-    "Each suggestion must include parser-safe noteRows using Sprout row syntax.",
+    "Prefer semantic fields (question/answer/clozeText/options/correctOptionIndexes/steps/ioSrc/ioOcclusions/ioMaskMode).",
+    "Include noteRows only when you can guarantee exact parser-safe Sprout row syntax.",
     'Set sourceOrigin to "note" when the card tests content present in the note.',
     'Only use sourceOrigin "external" if the user explicitly asks for external/background knowledge.',
     "MCQ noteRows format (use A for correct options, O for wrong options, NEVER numbered rows): [\"MCQ | question stem |\", \"A | correct option |\", \"O | wrong option |\", \"O | wrong option |\"]",
@@ -888,8 +1033,9 @@ function buildChatSystemPrompt(input: StudyAssistantChatInput): string {
     "",
     "Public-mode instructions:",
     input.mode === "ask"
-      ? "You are Sprout Study Assistant. Answer with note context first, then supplement with external knowledge when needed."
-      : "You are Sprout Study Assistant. Review the note content using both note evidence and subject knowledge to provide study-focused quality feedback.",
+      ? "You are LearnKit Study Companion. Answer with note context first, then supplement with external knowledge when needed."
+      : "You are LearnKit Study Companion. Review the note content using both note evidence and subject knowledge to provide study-focused quality feedback.",
+    "Use a warm, human tone when appropriate. Be motivating and supportive, especially when the user seems discouraged.",
     "Be concise, clear, and practical.",
     "When content is not supported by the note, state that it is external/background knowledge.",
     "Use markdown formatting when useful.",
@@ -967,18 +1113,19 @@ function buildUserPrompt(input: StudyAssistantGeneratorInput, canUseVisionForIo:
 
   const optionalRowsInstructions: string[] = [];
   if (input.includeTitle) {
-    optionalRowsInstructions.push("For every suggestion, include exactly one title row in noteRows: T | ... |.");
+    optionalRowsInstructions.push("When providing noteRows, include exactly one title row: T | ... |.");
   }
   if (input.includeInfo) {
-    optionalRowsInstructions.push("For every suggestion, include an extra information row in noteRows: I | ... |.");
+    optionalRowsInstructions.push("When providing noteRows, include an extra information row: I | ... |.");
   }
   if (input.includeGroups) {
-    optionalRowsInstructions.push("For every suggestion, include a groups row in noteRows as a comma-separated tag list: G | Parent/Child, Parent2/Child2, Lone, Lone2 |.");
+    optionalRowsInstructions.push("When providing noteRows, include a groups row as a comma-separated tag list: G | Parent/Child, Parent2/Child2, Lone, Lone2 |.");
     optionalRowsInstructions.push("Generate smart, study-relevant tags that help group related questions by topic/system/theme; use hierarchical paths (Parent/Child) when helpful, and single-level tags when not.");
     optionalRowsInstructions.push("Do not use JSON arrays for groups in noteRows; keep groups as one comma-separated string inside the G row.");
   }
+  optionalRowsInstructions.push("If you omit noteRows, populate semantic fields fully so rows can be generated deterministically.");
   if (!input.includeTitle && !input.includeInfo && !input.includeGroups) {
-    optionalRowsInstructions.push("Do not include optional T/I/G rows in noteRows for this run.");
+    optionalRowsInstructions.push("If you include noteRows, do not include optional T/I/G rows for this run.");
   }
 
   const lines = [

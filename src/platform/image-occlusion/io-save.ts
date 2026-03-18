@@ -25,6 +25,7 @@ import {
   writeBinaryToVault,
   type ClipboardImage,
 } from "../../platform/modals/modal-utils";
+import { buildPrimaryCardAnchor } from "../../platform/core/identity";
 import type { IORect } from "./io-types";
 
 // ── Insert-at-cursor helper ─────────────────────────────────────────────────
@@ -270,7 +271,7 @@ export async function saveIoCard(params: IoSaveParams, maskMode: "all" | "solo")
         const { start, end } = findCardBlockRangeById(lines, parentId);
         const embed = `![[${normaliseVaultPath(imagePath)}]]`;
         const ioBlock = [
-          `^sprout-${parentId}`,
+          buildPrimaryCardAnchor(parentId),
           ...buildIoMarkdownWithAnchor({
             id: parentId,
             title: titleVal || parentRec.title || undefined,

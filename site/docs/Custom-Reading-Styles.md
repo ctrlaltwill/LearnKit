@@ -43,7 +43,7 @@ Paste this into **Custom style CSS**:
 ```css
 .sprout-pretty-card.sprout-macro-custom .sprout-custom-body {
   border: 1px solid var(--background-modifier-border);
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-md);
   padding: 14px;
   background: var(--background-primary);
 }

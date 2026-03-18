@@ -29,13 +29,14 @@ import {
   CARD_START_SETTINGS_RE,
   FIELD_LINE_SETTINGS_RE,
 } from "../../platform/core/delimiter";
+import { CARD_ANCHOR_LINE_RE } from "../../platform/core/identity";
 
 // ────────────────────────────────────────────
 // Regex constants for card-block detection
 // ────────────────────────────────────────────
 
 /** Matches a Sprout anchor line, e.g. `^sprout-123456789`. */
-export const ANCHOR_LINE_RE = /^\^sprout-(\d{9})\s*$/;
+export const ANCHOR_LINE_RE = CARD_ANCHOR_LINE_RE;
 
 /**
  * Card block detection: matches the opening line of a card block.
@@ -202,7 +203,7 @@ export function listVaultFolders(app: App): string[] {
  * Prefers prefix matches, then substring matches.
  * Returns at most `limit` results, sorted by relevance.
  */
-export function fuzzyFolderMatches(allFolders: string[], rawQuery: string, limit = 12): string[] {
+export function fuzzyFolderMatches(allFolders: string[], rawQuery: string, limit = 10): string[] {
   const q = normaliseVaultPath(rawQuery || "").toLowerCase();
   if (!q) return allFolders.slice(0, limit);
 
@@ -210,12 +211,27 @@ export function fuzzyFolderMatches(allFolders: string[], rawQuery: string, limit
   for (const p of allFolders) {
     const pl = p.toLowerCase();
 
-    // Prefer prefix matches, then substring matches.
+    // Closest-first ranking:
+    // exact > full-prefix > segment-exact > segment-prefix > substring
     let score = -1;
-    if (pl.startsWith(q)) score = 1000 - (pl.length - q.length);
-    else {
-      const idx = pl.indexOf(q);
-      if (idx >= 0) score = 500 - idx;
+    if (pl === q) {
+      score = 4000;
+    } else if (pl.startsWith(q)) {
+      score = 3000 - (pl.length - q.length);
+    } else {
+      const segments = pl.split("/").filter(Boolean);
+      const exactSeg = segments.findIndex((seg) => seg === q);
+      if (exactSeg >= 0) {
+        score = 2500 - exactSeg * 5 - (pl.length - q.length);
+      } else {
+        const prefixSeg = segments.findIndex((seg) => seg.startsWith(q));
+        if (prefixSeg >= 0) {
+          score = 2000 - prefixSeg * 5 - (pl.length - q.length);
+        } else {
+          const idx = pl.indexOf(q);
+          if (idx >= 0) score = 1000 - idx;
+        }
+      }
     }
     if (score >= 0) scored.push({ p, score });
   }

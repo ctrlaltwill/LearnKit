@@ -26,10 +26,42 @@
 export interface VersionTrackingData {
   lastSeenVersion: string | null;
   dismissedVersions: string[];
+  forcedReshowMigrationsApplied: string[];
 }
 
 /** In-memory cache — loaded once at startup, mutated in place, persisted via the plugin save cycle. */
-let _cache: VersionTrackingData = { lastSeenVersion: null, dismissedVersions: [] };
+let _cache: VersionTrackingData = {
+  lastSeenVersion: null,
+  dismissedVersions: [],
+  forcedReshowMigrationsApplied: [],
+};
+
+/**
+ * Versions that should be re-shown once, even if previously dismissed during testing.
+ *
+ * Behavior:
+ * - On first load after introducing this migration, dismissal for each version
+ *   listed here is removed.
+ * - A per-version marker is written so the reset happens only once per user.
+ */
+const FORCED_RESHOW_MIGRATION_VERSIONS = ["1.2.0"];
+
+function applyForcedReshowMigrations(cache: VersionTrackingData): VersionTrackingData {
+  const applied = new Set(cache.forcedReshowMigrationsApplied);
+  const dismissed = new Set(cache.dismissedVersions);
+
+  for (const version of FORCED_RESHOW_MIGRATION_VERSIONS) {
+    if (applied.has(version)) continue;
+    dismissed.delete(version);
+    applied.add(version);
+  }
+
+  return {
+    ...cache,
+    dismissedVersions: [...dismissed],
+    forcedReshowMigrationsApplied: [...applied],
+  };
+}
 
 /**
  * Populate the in-memory cache from the `versionTracking` key found in the
@@ -40,14 +72,21 @@ export function loadVersionTracking(rootObj: Record<string, unknown>): void {
   const raw = rootObj?.versionTracking;
   if (raw && typeof raw === "object" && !Array.isArray(raw)) {
     const obj = raw as Record<string, unknown>;
-    _cache = {
+    _cache = applyForcedReshowMigrations({
       lastSeenVersion: typeof obj.lastSeenVersion === "string" ? obj.lastSeenVersion : null,
       dismissedVersions: Array.isArray(obj.dismissedVersions)
         ? (obj.dismissedVersions as unknown[]).filter((v): v is string => typeof v === "string")
         : [],
-    };
+      forcedReshowMigrationsApplied: Array.isArray(obj.forcedReshowMigrationsApplied)
+        ? (obj.forcedReshowMigrationsApplied as unknown[]).filter((v): v is string => typeof v === "string")
+        : [],
+    });
   } else {
-    _cache = { lastSeenVersion: null, dismissedVersions: [] };
+    _cache = applyForcedReshowMigrations({
+      lastSeenVersion: null,
+      dismissedVersions: [],
+      forcedReshowMigrationsApplied: [],
+    });
   }
 }
 
@@ -222,5 +261,9 @@ export function markVersionSeen(version: string, dontShowAgain: boolean = false)
  * Clear all version tracking data (for testing/debugging)
  */
 export function clearVersionTracking(): void {
-  _cache = { lastSeenVersion: null, dismissedVersions: [] };
+  _cache = {
+    lastSeenVersion: null,
+    dismissedVersions: [],
+    forcedReshowMigrationsApplied: [],
+  };
 }

@@ -45,6 +45,17 @@ export function getCorrectIndices(card: { correctIndices?: number[] | null; corr
   if (Array.isArray(card.correctIndices) && card.correctIndices.length > 0) {
     return [...new Set(card.correctIndices.filter(i => Number.isInteger(i) && i >= 0))].sort((a, b) => a - b);
   }
+  const maybeOptions = (card as { options?: unknown }).options;
+  if (Array.isArray(maybeOptions) && maybeOptions.length > 0) {
+    const inferred: number[] = [];
+    for (let i = 0; i < maybeOptions.length; i += 1) {
+      const opt: unknown = maybeOptions[i];
+      if (opt && typeof opt === "object" && "isCorrect" in opt && (opt as { isCorrect?: unknown }).isCorrect === true) {
+        inferred.push(i);
+      }
+    }
+    if (inferred.length > 0) return inferred;
+  }
   if (Number.isFinite(card.correctIndex) && (card.correctIndex as number) >= 0) {
     return [card.correctIndex as number];
   }

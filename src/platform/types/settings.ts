@@ -29,6 +29,10 @@ export type SproutSettings = {
       fetchedAt: number | null;
     };
     enableAnimations: boolean;
+    /** Active Sprout appearance theme preset. Currently only "playground" is available. */
+    themePreset: "playground";
+    /** Optional Sprout-local accent override. Empty string inherits Obsidian theme accent. */
+    themeAccentOverride: string;
     /** Show a launch notice modal when Obsidian starts. */
     showLaunchNoticeModal: boolean;
     /** Master switch for Sprout card styling in Reading View. false = native Obsidian rendering. */
@@ -72,6 +76,21 @@ export type SproutSettings = {
 
     /** Treat folder notes (same name as parent folder) as deck roots. */
     treatFolderNotesAsDecks: boolean;
+
+    /** Include practice-mode note review actions in analytics charts. */
+    analyticsIncludePracticeNoteReview: boolean;
+
+    /** Hierarchy order for topic mastery rollups. */
+    analyticsTopicHierarchy: "folder-group-topic" | "group-topic" | "topic";
+
+    /** Fixed threshold boundaries for mastery health bands. */
+    analyticsMasteryThresholds: {
+      redMax: number;
+      yellowMax: number;
+    };
+
+    /** Number of weak topics shown in analytics focus recommendations. */
+    analyticsFocusTopicCount: number;
   };
 
   // Study Assistant — AI providers, prompts, and generation preferences
@@ -165,6 +184,30 @@ export type SproutSettings = {
     relearningStepsMinutes: number[];
     /** Target recall probability (0.80 – 0.97). */
     requestRetention: number;
+  };
+
+  // Note Review — reading scheduler + filter
+  noteReview: {
+    /** Active scheduler for note review sessions. */
+    algorithm: "fsrs" | "lkrs";
+
+    /** Animate note review session header and note transitions. */
+    enableSessionAnimations: boolean;
+
+    /** Exclude folder notes where note name matches its parent folder name. */
+    avoidFolderNotes: boolean;
+
+    /** Text filter applied to markdown notes before session building. */
+    filterQuery: string;
+
+    /** Target notes per day. */
+    reviewsPerDay: number;
+
+    /** Review step intervals in days. */
+    reviewStepsDays: number[];
+
+    /** Include notes slightly in the future to fill daily quota. */
+    fillFromFutureWhenUnderLimit: boolean;
   };
 
   // Indexing — card detection & anchor placement
@@ -430,6 +473,13 @@ export type SproutSettings = {
     deleteOrphanedImages: boolean;
     /** Vault-relative folder path for images pasted into Q/A/Info fields. */
     cardAttachmentFolderPath: string;
+
+    /** When enabled, duplicate .db files to a vault-visible folder for Obsidian Sync compatibility. */
+    vaultSync: {
+      enabled: boolean;
+      /** Vault-relative folder path for synced .db copies. */
+      folderPath: string;
+    };
 
     /** Automatic backup retention and cadence policy. */
     backups: {

@@ -1,0 +1,228 @@
+/* ============================================================================
+   TOKENS / THEMES / PLAYGROUND
+   Default LearnKit look-and-feel. Duplicate this file to create new theme packs.
+   ========================================================================== */
+
+body[data-sprout-theme-preset="playground"] .sprout,
+.sprout {
+  /* Surfaces - using parent theme color-base variables */
+  --background: var(--color-base-00);
+  --background-primary: var(--color-base-00);
+  --file-header-background-focused: transparent;
+  --color-popover: var(--color-base-00);
+  --interactive-normal: var(--color-base-00);
+  --card: var(--color-base-00);
+  --popover: var(--color-base-00);
+
+  /* App background */
+  --color-background: var(--color-base-25);
+
+  /* Sidebar surface */
+  --sidebar: var(--color-base-10);
+
+  /* Text/foreground - using darkest color-base for text */
+  --foreground: var(--color-base-100);
+  --text-color: var(--color-base-100);
+  --card-foreground: var(--color-base-100);
+  --color-card-foreground: var(--text-color);
+  --popover-foreground: var(--color-base-100);
+  --sidebar-foreground: var(--color-base-100);
+
+  /* Primary brand */
+  --primary: rgb(94, 165, 0);
+  --sidebar-primary: rgb(94, 165, 0);
+
+  --primary-foreground: rgb(247, 254, 231);
+  --sidebar-primary-foreground: rgb(247, 254, 231);
+
+  /* Secondary / muted surfaces */
+  --secondary: var(--color-base-10);
+  --muted: var(--color-base-10);
+
+  /* Secondary text */
+  --secondary-foreground: var(--color-base-100);
+  --accent-foreground: var(--color-base-100);
+  --sidebar-accent-foreground: var(--color-base-100);
+
+  /* Muted text */
+  --muted-foreground: var(--color-base-50);
+
+  /* Destructive */
+  --destructive: rgb(231, 0, 11);
+
+  /* Borders/inputs */
+  --border: var(--color-base-40);
+  --background-modifier-border: var(--color-base-40);
+  --color-border: var(--color-base-40);
+  --input: var(--color-base-40);
+
+  /* Structural border shorthand */
+  --sprout-border-color: var(--color-base-40);
+  --sprout-border-width: 0px;
+
+  /* Ring/focus */
+  --ring: rgb(154, 230, 0);
+  --sidebar-ring: rgb(154, 230, 0);
+
+  /* Theme accent passthrough */
+  --theme-accent: var(--sprout-theme-accent-override, var(--color-accent));
+
+  /* Accent-to-transparent scale */
+  --theme-base-05: color-mix(in oklab, var(--theme-accent) 5%, transparent);
+  --theme-base-10: color-mix(in oklab, var(--theme-accent) 10%, transparent);
+  --theme-base-15: color-mix(in oklab, var(--theme-accent) 15%, transparent);
+  --theme-base-20: color-mix(in oklab, var(--theme-accent) 20%, transparent);
+  --theme-base-25: color-mix(in oklab, var(--theme-accent) 25%, transparent);
+  --theme-base-30: color-mix(in oklab, var(--theme-accent) 30%, transparent);
+  --theme-base-35: color-mix(in oklab, var(--theme-accent) 35%, transparent);
+  --theme-base-40: color-mix(in oklab, var(--theme-accent) 40%, transparent);
+  --theme-base-45: color-mix(in oklab, var(--theme-accent) 45%, transparent);
+  --theme-base-50: color-mix(in oklab, var(--theme-accent) 50%, transparent);
+  --theme-base-55: color-mix(in oklab, var(--theme-accent) 55%, transparent);
+  --theme-base-60: color-mix(in oklab, var(--theme-accent) 60%, transparent);
+  --theme-base-65: color-mix(in oklab, var(--theme-accent) 65%, transparent);
+  --theme-base-70: color-mix(in oklab, var(--theme-accent) 70%, transparent);
+  --theme-base-75: color-mix(in oklab, var(--theme-accent) 75%, transparent);
+  --theme-base-80: color-mix(in oklab, var(--theme-accent) 80%, transparent);
+  --theme-base-85: color-mix(in oklab, var(--theme-accent) 85%, transparent);
+  --theme-base-90: color-mix(in oklab, var(--theme-accent) 90%, transparent);
+  --theme-base-95: color-mix(in oklab, var(--theme-accent) 95%, transparent);
+
+  /* Accent-to-black scale */
+  --theme-black-05: color-mix(in oklab, var(--theme-accent) 5%, black);
+  --theme-black-10: color-mix(in oklab, var(--theme-accent) 10%, black);
+  --theme-black-15: color-mix(in oklab, var(--theme-accent) 15%, black);
+  --theme-black-20: color-mix(in oklab, var(--theme-accent) 20%, black);
+  --theme-black-25: color-mix(in oklab, var(--theme-accent) 25%, black);
+  --theme-black-30: color-mix(in oklab, var(--theme-accent) 30%, black);
+  --theme-black-35: color-mix(in oklab, var(--theme-accent) 35%, black);
+  --theme-black-40: color-mix(in oklab, var(--theme-accent) 40%, black);
+  --theme-black-45: color-mix(in oklab, var(--theme-accent) 45%, black);
+  --theme-black-50: color-mix(in oklab, var(--theme-accent) 50%, black);
+  --theme-black-55: color-mix(in oklab, var(--theme-accent) 55%, black);
+  --theme-black-60: color-mix(in oklab, var(--theme-accent) 60%, black);
+  --theme-black-65: color-mix(in oklab, var(--theme-accent) 65%, black);
+  --theme-black-70: color-mix(in oklab, var(--theme-accent) 70%, black);
+  --theme-black-75: color-mix(in oklab, var(--theme-accent) 75%, black);
+  --theme-black-80: color-mix(in oklab, var(--theme-accent) 80%, black);
+  --theme-black-85: color-mix(in oklab, var(--theme-accent) 85%, black);
+  --theme-black-90: color-mix(in oklab, var(--theme-accent) 90%, black);
+  --theme-black-95: color-mix(in oklab, var(--theme-accent) 95%, black);
+
+  --sidebar-accent: var(--theme-accent, rgb(244, 244, 245));
+
+  /* Chart accents */
+  --chart-accent-1: color-mix(in oklab, var(--theme-accent) 90%, rgb(255, 255, 255) 10%);
+  --chart-accent-2: color-mix(in oklab, var(--theme-accent) 70%, rgb(255, 255, 255) 30%);
+  --chart-accent-3: color-mix(in oklab, var(--theme-accent) 50%, rgb(255, 255, 255) 50%);
+  --chart-accent-4: color-mix(in oklab, var(--theme-accent) 30%, rgb(255, 255, 255) 70%);
+
+  /* Ratings */
+  --sprout-again-bg: rgb(239, 68, 68);
+  --sprout-again-fg: var(--bc-btn-fg, rgb(255, 255, 255));
+  --sprout-again-bg-light: rgb(254, 226, 226);
+
+  --sprout-good-bg: rgb(34, 197, 94);
+  --sprout-good-fg: rgb(255, 255, 255);
+  --sprout-good-bg-light: rgb(220, 252, 231);
+
+  --sprout-hard-bg: rgb(234, 179, 8);
+  --sprout-hard-fg: rgb(66, 32, 6);
+  --sprout-hard-bg-light: rgb(254, 249, 195);
+
+  --sprout-easy-bg: rgb(0, 0, 0);
+  --sprout-easy-fg: rgb(255, 255, 255);
+
+  --sprout-deck-dropdown-bg: rgb(255, 255, 255);
+  --sprout-deck-hover-bg: rgb(246, 246, 246);
+
+  /* Semantic aliases for future theme packs */
+  --lk-color-accent: var(--theme-accent);
+  --lk-color-text-primary: var(--foreground);
+  --lk-color-text-muted: var(--muted-foreground);
+  --lk-color-surface: var(--background);
+  --lk-color-border: var(--border);
+}
+
+body.theme-dark[data-sprout-theme-preset="playground"] .sprout,
+.theme-dark .sprout {
+  --background: var(--color-base-00);
+  --background-primary: var(--color-base-00);
+  --color-popover: var(--color-base-00);
+  --file-header-background-focused: transparent;
+
+  --interactive-normal: var(--color-base-25);
+  --color-background: var(--color-base-25);
+  --card: var(--color-base-25);
+  --popover: var(--color-base-25);
+  --sidebar: var(--color-base-25);
+
+  --accent: var(--color-base-30);
+
+  --foreground: var(--color-base-100);
+  --text-color: var(--color-base-100);
+  --card-foreground: var(--color-base-100);
+  --color-card-foreground: var(--text-color);
+  --popover-foreground: var(--color-base-100);
+  --sidebar-foreground: var(--color-base-100);
+  --secondary-foreground: var(--color-base-100);
+  --accent-foreground: var(--color-base-100);
+  --sidebar-accent-foreground: var(--color-base-100);
+
+  --primary: rgb(94, 165, 0);
+  --primary-foreground: rgb(247, 254, 231);
+
+  --sidebar-primary: rgb(124, 207, 0);
+  --sidebar-primary-foreground: rgb(247, 254, 231);
+
+  --secondary: var(--color-base-25);
+  --muted: var(--color-base-30);
+
+  --muted-foreground: var(--color-base-60);
+
+  --theme-accent: var(--sprout-theme-accent-override, var(--color-accent));
+  --sidebar-accent: var(--theme-accent, rgb(39, 39, 42));
+
+  --chart-accent-1: color-mix(in oklab, var(--theme-accent) 90%, rgb(255, 255, 255) 10%);
+  --chart-accent-2: color-mix(in oklab, var(--theme-accent) 70%, rgb(255, 255, 255) 30%);
+  --chart-accent-3: color-mix(in oklab, var(--theme-accent) 50%, rgb(255, 255, 255) 50%);
+  --chart-accent-4: color-mix(in oklab, var(--theme-accent) 30%, rgb(255, 255, 255) 70%);
+
+  --destructive: rgb(255, 100, 103);
+
+  --border: var(--color-base-40);
+  --background-modifier-border: var(--color-base-40);
+  --color-border: var(--color-base-40);
+  --sidebar-border: var(--color-base-40);
+  --input: var(--color-base-40);
+
+  --sprout-border-color: var(--color-base-40);
+  --sprout-border-width: 0px;
+
+  --ring: rgb(53, 83, 14);
+  --sidebar-ring: rgb(53, 83, 14);
+
+  --sprout-again-bg: rgb(185, 28, 28);
+  --sprout-again-fg: var(--bc-btn-fg, rgb(255, 255, 255));
+  --sprout-again-bg-light: rgb(63, 29, 29);
+
+  --sprout-good-bg: rgb(21, 128, 61);
+  --sprout-good-fg: rgb(255, 255, 255);
+  --sprout-good-bg-light: rgb(22, 48, 34);
+
+  --sprout-hard-bg: rgb(161, 98, 7);
+  --sprout-hard-fg: rgb(255, 255, 255);
+  --sprout-hard-bg-light: rgb(52, 36, 10);
+
+  --sprout-easy-bg: rgb(60, 60, 60);
+  --sprout-easy-fg: rgb(255, 255, 255);
+
+  --sprout-deck-dropdown-bg: rgb(42, 42, 42);
+  --sprout-deck-hover-bg: rgb(60, 60, 60);
+
+  --lk-color-accent: var(--theme-accent);
+  --lk-color-text-primary: var(--foreground);
+  --lk-color-text-muted: var(--muted-foreground);
+  --lk-color-surface: var(--background);
+  --lk-color-border: var(--border);
+}

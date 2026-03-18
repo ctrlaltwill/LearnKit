@@ -28,7 +28,7 @@ import { Modal, Notice, type App } from "obsidian";
 import { log } from "../core/logger";
 import { setCssProps } from "../core/ui";
 import type SproutPlugin from "../../main";
-import { createGroupPickerField as createGroupPickerFieldImpl } from "../card-editor/card-editor";
+import { createGroupPickerField as createGroupPickerFieldImpl, attachFlagPreviewOverlay } from "../card-editor/card-editor";
 import { normaliseGroupKey } from "../../platform/image-occlusion/mask-tool";
 import { renderOverlay } from "../../platform/image-occlusion/io-overlay-renderer";
 import {
@@ -162,10 +162,10 @@ export class ImageOcclusionCreatorModal extends Modal {
     setModalTitle(this, headerTitle);
 
     scopeModalToWorkspace(this);
-    this.containerEl.addClass("sprout-modal-container");
-    this.containerEl.addClass("sprout-modal-dim");
+    this.containerEl.addClass("lk-modal-container");
+    this.containerEl.addClass("lk-modal-dim");
     this.containerEl.addClass("sprout");
-    this.modalEl.addClass("bc", "sprout-modals", "sprout-io-creator", "sprout-io-creator-modal");
+    this.modalEl.addClass("bc", "lk-modals", "sprout-io-creator", "sprout-io-creator-modal");
     this.contentEl.addClass("bc", "sprout-io-creator-content");
 
     // Escape key behavior: first exits focused input, second closes the modal.
@@ -190,6 +190,13 @@ export class ImageOcclusionCreatorModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
 
+    const headerEl = this.modalEl.querySelector<HTMLElement>(":scope > .modal-header");
+    const closeBtn = this.modalEl.querySelector<HTMLElement>(":scope > .modal-close-button");
+    if (headerEl) {
+      if (closeBtn) headerEl.appendChild(closeBtn);
+      contentEl.appendChild(headerEl);
+    }
+
     const modalRoot = contentEl;
     modalRoot.addClass("bc", "sprout-io-creator-root");
 
@@ -204,6 +211,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     titleLabel.textContent = "Title";
     const titleInput = titleField.createEl("textarea", { cls: "bc textarea w-full sprout-io-title-input" });
     titleInput.rows = 2;
+    titleField.appendChild(attachFlagPreviewOverlay(titleInput));
     this.titleInput = titleInput;
 
     // ── Canvas editor label ─────────────────────────────────────────────────
@@ -313,6 +321,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     infoLabel.textContent = "Extra information";
     const infoInput = infoField.createEl("textarea", { cls: "bc textarea w-full sprout-io-info-input" });
     infoInput.rows = 3;
+    infoField.appendChild(attachFlagPreviewOverlay(infoInput));
     this.infoInput = infoInput;
 
     // ── Groups field ────────────────────────────────────────────────────────
@@ -1459,9 +1468,9 @@ export class ImageOcclusionCreatorModal extends Modal {
       cancelAnimationFrame(this.fitRetryRaf);
       this.fitRetryRaf = null;
     }
-    this.containerEl.removeClass("sprout-modal-container");
-    this.containerEl.removeClass("sprout-modal-dim");
-    this.modalEl.removeClass("bc", "sprout-modals", "sprout-io-creator");
+    this.containerEl.removeClass("lk-modal-container");
+    this.containerEl.removeClass("lk-modal-dim");
+    this.modalEl.removeClass("bc", "lk-modals", "sprout-io-creator");
     this.contentEl.removeClass("bc", "sprout-io-creator-content");
     this.contentEl.empty();
   }

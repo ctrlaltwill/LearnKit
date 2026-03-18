@@ -200,6 +200,20 @@ function applyFlagSrcToDocument(code: string, src: string) {
   });
 }
 
+function parseFlagCodeFromImage(img: HTMLImageElement): string | null {
+  const attrCode = normalizeFlagCode(img.getAttribute("data-sprout-flag-code") || "");
+  if (attrCode) return attrCode;
+
+  const altCode = normalizeFlagCode(img.getAttribute("alt") || "");
+  if (altCode) return altCode;
+
+  const src = String(img.getAttribute("src") || "");
+  if (!src) return null;
+  const m = src.match(/\/flags\/(?:language\/)?([a-z]{2}(?:-[a-z0-9]{2,3})?)\.svg(?:[?#]|$)/i);
+  if (!m) return null;
+  return normalizeFlagCode(m[1] || "");
+}
+
 export function hydrateCircleFlagsInElement(root: ParentNode): void {
   const images: HTMLImageElement[] = [];
   const stack: Node[] = [root as Node];
@@ -208,7 +222,7 @@ export function hydrateCircleFlagsInElement(root: ParentNode): void {
     const node = stack.pop();
     if (!node) continue;
 
-    if (node instanceof HTMLImageElement && node.hasAttribute("data-sprout-flag-code")) {
+    if (node instanceof HTMLImageElement && (node.hasAttribute("data-sprout-flag-code") || node.classList.contains("sprout-inline-flag"))) {
       images.push(node);
     }
 
@@ -219,8 +233,12 @@ export function hydrateCircleFlagsInElement(root: ParentNode): void {
 
   images.forEach((node) => {
     const img = node;
-    const code = normalizeFlagCode(img.getAttribute("data-sprout-flag-code") || "");
+    const code = parseFlagCodeFromImage(img);
     if (!code) return;
+
+    if (!img.hasAttribute("data-sprout-flag-code")) {
+      img.setAttribute("data-sprout-flag-code", code);
+    }
 
     const cached = getCachedFlagDataUri(code);
     if (cached) {

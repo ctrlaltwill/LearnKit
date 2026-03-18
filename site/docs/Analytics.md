@@ -9,7 +9,7 @@ Open it from the **Analytics** sidebar item or the command palette.
 
 ## Top summary cards
 
-At the top, Sprout shows four key metrics:
+At the top, LearnKit shows four key metrics:
 
 - **Longest streak**: Your best run of consecutive study days. Shows **Live** if you are currently matching it.
 - **Current streak**: How many days in a row you have studied, including today.

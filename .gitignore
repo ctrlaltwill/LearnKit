@@ -2,6 +2,7 @@ node_modules/
 .DS_Store
 .local/
 .vscode/
+offline/
 sprout-latest.zip
 sprout-latest/
 

@@ -114,7 +114,7 @@ export class ImageOcclusionEditorModal extends Modal {
 
   onOpen() {
     scopeModalToWorkspace(this);
-    this.modalEl.addClass("sprout-modals", "sprout-io-modal");
+    this.modalEl.addClass("lk-modals", "sprout-io-modal");
     this.containerEl.addClass("sprout-io-editor-modal");
 
     if (Platform.isMobileApp) {
@@ -210,7 +210,7 @@ export class ImageOcclusionEditorModal extends Modal {
 
     const setActive = (btn: HTMLButtonElement, active: boolean) => {
       btn.classList.toggle("btn", active);
-      btn.classList.toggle("btn-outline", !active);
+      btn.classList.toggle("sprout-btn-toolbar", !active);
       btn.classList.toggle("sprout-is-active", active);
     };
 
@@ -294,7 +294,7 @@ export class ImageOcclusionEditorModal extends Modal {
     this.btnOcclusion.onclick = () => this.setTool("occlusion");
 
     this.btnTransform = toolbar.createEl("button", {
-      cls: "bc btn-outline",
+      cls: "bc sprout-btn-toolbar",
       attr: { type: "button" },
       text: "Move image",
     });
@@ -350,7 +350,7 @@ export class ImageOcclusionEditorModal extends Modal {
     this.btnDelete.onclick = () => this.deleteSelected();
 
     this.btnReset = toolbar.createEl("button", {
-      cls: "bc btn-outline",
+      cls: "bc sprout-btn-toolbar",
       attr: { type: "button" },
       text: "Reset",
     });
@@ -432,7 +432,7 @@ export class ImageOcclusionEditorModal extends Modal {
 
     const dropRoot = modeRow.createDiv({ cls: "bc sprout relative inline-flex" });
     const trigger = dropRoot.createEl("button", {
-      cls: "bc btn-outline h-7 px-2 text-sm inline-flex items-center gap-2",
+      cls: "bc sprout-btn-toolbar h-7 px-2 text-sm inline-flex items-center gap-2",
       attr: { type: "button", "aria-haspopup": "menu", "aria-expanded": "false" },
     });
     const triggerLabel = trigger.createEl("span", {

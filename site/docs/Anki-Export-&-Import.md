@@ -4,7 +4,7 @@ Last modified: 13/02/2026
 
 ## Overview
 
-Sprout can import from and export to Anki using `.apkg` files.
+LearnKit can import from and export to Anki using `.apkg` files.
 Use the command palette:
 
 - **Export to Anki (.apkg)**
@@ -36,7 +36,7 @@ Use the command palette:
 
 ## FSRS after export
 
-Sprout includes FSRS parameters and card memory state in the export.
+LearnKit includes FSRS parameters and card memory state in the export.
 Anki still requires you to manually enable FSRS because that switch is global in Anki.
 
 After import into Anki:

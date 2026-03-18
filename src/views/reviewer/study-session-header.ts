@@ -9,13 +9,18 @@
 
 import { setIcon } from "obsidian";
 import { refreshAOS } from "../../platform/core/aos-loader";
-import { queryFirst, setCssProps } from "../../platform/core/ui";
+import { queryFirst } from "../../platform/core/ui";
 import { t } from "../../platform/translations/translator";
 
 export interface TimerState {
   timerRunning: boolean;
   elapsedSeconds: number;
   timerInterval: number | null;
+}
+
+export interface StudySessionHeaderOptions {
+  titleToken?: string;
+  titleFallback?: string;
 }
 
 const tx = (interfaceLanguage: string | undefined, token: string, fallback: string, vars?: Record<string, string | number>) =>
@@ -25,7 +30,12 @@ const tx = (interfaceLanguage: string | undefined, token: string, fallback: stri
  * Creates or retrieves the persistent study session header with timer.
  * This header is created once per session and persists across all card renders.
  */
-export function renderStudySessionHeader(container: HTMLElement, interfaceLanguage?: string, applyAOS?: boolean): void {
+export function renderStudySessionHeader(
+  container: HTMLElement,
+  interfaceLanguage?: string,
+  applyAOS?: boolean,
+  options?: StudySessionHeaderOptions,
+): void {
   // Check if header already exists
   let studySessionHeader = queryFirst<HTMLElement>(container, "[data-study-session-header]");
   if (studySessionHeader) {
@@ -49,27 +59,36 @@ export function renderStudySessionHeader(container: HTMLElement, interfaceLangua
 
   // Left column: title and timer stacked
   const leftColumn = document.createElement("div");
-  leftColumn.className = "bc flex flex-col sprout-session-header-left";
+  leftColumn.className = "bc flex flex-col lk-session-header-left";
 
   const studySessionLabel = document.createElement("div");
   studySessionLabel.className = "bc text-xl font-semibold tracking-tight";
-  studySessionLabel.textContent = tx(interfaceLanguage, "ui.reviewer.session.header.title", "Study session");
+  studySessionLabel.textContent = tx(
+    interfaceLanguage,
+    options?.titleToken ?? "ui.reviewer.session.header.title",
+    options?.titleFallback ?? "Study session",
+  );
   leftColumn.appendChild(studySessionLabel);
 
   // Timer and controls
   const timerContainer = document.createElement("div");
   timerContainer.className = "bc flex items-center gap-3";
 
-  // Button group for timer controls
+  // Standalone timer controls (display, play, pause)
   const timerGroup = document.createElement("div");
-  timerGroup.className = "bc button-group sprout-session-timer-group";
-  timerGroup.setAttribute("role", "group");
-  timerGroup.setAttribute("aria-label", tx(interfaceLanguage, "ui.reviewer.session.header.timerControls", "Timer controls"));
+  timerGroup.className = "bc flex items-center gap-2 lk-session-timer-group";
 
-  const timerDisplay = document.createElement("div");
-  timerDisplay.className = "bc btn-outline text-sm flex items-center justify-center sprout-session-timer-display";
-    setCssProps(timerDisplay, "--sprout-timer-min-width", "3.5rem");
-  timerDisplay.textContent = "00:00";
+  const timerDisplay = document.createElement("button");
+  timerDisplay.type = "button";
+  timerDisplay.disabled = true;
+  timerDisplay.className =
+    "bc sprout-btn-toolbar sprout-btn-accent h-9 w-full md:w-auto inline-flex items-center gap-2 equal-height-btn sprout-btn-timer-display";
+  timerDisplay.setAttribute("aria-label", tx(interfaceLanguage, "ui.reviewer.session.header.timerControls", "Timer controls"));
+
+  const timerText = document.createElement("span");
+  timerText.className = "truncate lk-session-timer-text";
+  timerText.textContent = "00:00";
+  timerDisplay.appendChild(timerText);
   timerGroup.appendChild(timerDisplay);
 
   // Timer state - stored on the header element for persistence
@@ -84,13 +103,11 @@ export function renderStudySessionHeader(container: HTMLElement, interfaceLangua
       const h = Math.floor(timerState.elapsedSeconds / 3600);
       const m = Math.floor((timerState.elapsedSeconds % 3600) / 60);
       const s = timerState.elapsedSeconds % 60;
-      timerDisplay.textContent = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-        setCssProps(timerDisplay, "--sprout-timer-min-width", "5rem");
+      timerText.textContent = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
     } else {
       const m = Math.floor(timerState.elapsedSeconds / 60);
       const s = timerState.elapsedSeconds % 60;
-      timerDisplay.textContent = `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-        setCssProps(timerDisplay, "--sprout-timer-min-width", "3.5rem");
+      timerText.textContent = `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
     }
   };
 
@@ -99,6 +116,7 @@ export function renderStudySessionHeader(container: HTMLElement, interfaceLangua
     timerState.timerRunning = true;
     playBtn.disabled = true;
     pauseBtn.disabled = false;
+    syncTimerControls();
     timerState.timerInterval = window.setInterval(() => {
       timerState.elapsedSeconds++;
       updateTimerDisplay();
@@ -112,6 +130,7 @@ export function renderStudySessionHeader(container: HTMLElement, interfaceLangua
     timerState.timerRunning = false;
     playBtn.disabled = false;
     pauseBtn.disabled = true;
+    syncTimerControls();
   };
 
   const disposeTimer = () => {
@@ -125,14 +144,16 @@ export function renderStudySessionHeader(container: HTMLElement, interfaceLangua
   // Play button
   const playBtn = document.createElement("button");
   playBtn.type = "button";
-  playBtn.className = "bc btn-outline inline-flex items-center gap-1 sprout-session-timer-btn";
-  playBtn.setAttribute("aria-label", tx(interfaceLanguage, "ui.reviewer.session.header.playTooltip", "Play timer"));
+  playBtn.className =
+    "h-9 flex items-center gap-2 equal-height-btn sprout-btn-outline-muted";
+  playBtn.setAttribute("aria-label", tx(interfaceLanguage, "ui.reviewer.session.header.playTooltip", "Start timer"));
   const playIconWrap = document.createElement("span");
-  playIconWrap.className = "bc inline-flex items-center justify-center [&_svg]:size-3.5 scale-60";
+  playIconWrap.className = "inline-flex items-center justify-center sprout-btn-icon";
   setIcon(playIconWrap, "play");
+  queryFirst(playIconWrap, "svg")?.classList.add("bc", "shrink-0");
   playBtn.appendChild(playIconWrap);
   const playLabel = document.createElement("span");
-  playLabel.textContent = tx(interfaceLanguage, "ui.reviewer.session.header.play", "Play");
+  playLabel.textContent = tx(interfaceLanguage, "ui.reviewer.session.header.play", "Start");
   playBtn.appendChild(playLabel);
   playBtn.addEventListener("click", startTimer);
   timerGroup.appendChild(playBtn);
@@ -140,17 +161,28 @@ export function renderStudySessionHeader(container: HTMLElement, interfaceLangua
   // Pause button
   const pauseBtn = document.createElement("button");
   pauseBtn.type = "button";
-  pauseBtn.className = "bc btn-outline inline-flex items-center gap-1 sprout-session-timer-btn";
+  pauseBtn.className =
+    "h-9 flex items-center gap-2 equal-height-btn sprout-btn-outline-muted";
   pauseBtn.setAttribute("aria-label", tx(interfaceLanguage, "ui.reviewer.session.header.pauseTooltip", "Pause timer"));
   const pauseIconWrap = document.createElement("span");
-  pauseIconWrap.className = "bc inline-flex items-center justify-center [&_svg]:size-3.5 scale-60";
+  pauseIconWrap.className = "inline-flex items-center justify-center sprout-btn-icon";
   setIcon(pauseIconWrap, "pause");
+  queryFirst(pauseIconWrap, "svg")?.classList.add("bc", "shrink-0");
   pauseBtn.appendChild(pauseIconWrap);
   const pauseLabel = document.createElement("span");
   pauseLabel.textContent = tx(interfaceLanguage, "ui.reviewer.session.header.pause", "Pause");
   pauseBtn.appendChild(pauseLabel);
   pauseBtn.addEventListener("click", pauseTimer);
   timerGroup.appendChild(pauseBtn);
+
+  const syncTimerControlState = (_btn: HTMLButtonElement) => {
+    // Appearance is handled by CSS :disabled selectors on sprout-btn-outline-muted
+  };
+
+  const syncTimerControls = () => {
+    syncTimerControlState(playBtn);
+    syncTimerControlState(pauseBtn);
+  };
 
   timerContainer.appendChild(timerGroup);
   leftColumn.appendChild(timerContainer);
@@ -159,6 +191,7 @@ export function renderStudySessionHeader(container: HTMLElement, interfaceLangua
   // Initialize button states (timer starts automatically)
   playBtn.disabled = true;
   pauseBtn.disabled = false;
+  syncTimerControls();
 
   // Start timer automatically
   startTimer();

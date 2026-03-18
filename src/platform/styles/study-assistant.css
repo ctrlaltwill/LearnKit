@@ -33,39 +33,39 @@
 }
 
 .sprout .sprout-study-assistant-mode-btn,
-.sprout .sprout-study-assistant-composer .btn-outline,
-.sprout .sprout-study-assistant-flashcards .btn-outline,
-.sprout .sprout-study-assistant-card > .flex .btn-outline {
-  background-color: var(--background) !important;
-  color: var(--foreground) !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
-  box-shadow: none !important;
+.sprout .sprout-study-assistant-composer .sprout-btn-toolbar,
+.sprout .sprout-study-assistant-flashcards .sprout-btn-toolbar,
+.sprout .sprout-study-assistant-card > .flex .sprout-btn-toolbar {
+  background-color: var(--background);
+  color: var(--foreground);
+  border: var(--sprout-border-width) solid var(--sprout-border-color);
+  box-shadow: none;
   min-height: 32px;
   font-size: var(--sprout-sa-font-small);
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-md);
 }
 
 .sprout .sprout-study-assistant-mode-btn:hover,
 .sprout .sprout-study-assistant-mode-btn:focus-visible,
-.sprout .sprout-study-assistant-composer .btn-outline:hover,
-.sprout .sprout-study-assistant-composer .btn-outline:focus-visible,
-.sprout .sprout-study-assistant-flashcards .btn-outline:hover,
-.sprout .sprout-study-assistant-flashcards .btn-outline:focus-visible,
-.sprout .sprout-study-assistant-card > .flex .btn-outline:hover,
-.sprout .sprout-study-assistant-card > .flex .btn-outline:focus-visible {
-  background-color: var(--color-base-25) !important;
-  border-color: var(--color-base-30) !important;
+.sprout .sprout-study-assistant-composer .sprout-btn-toolbar:hover,
+.sprout .sprout-study-assistant-composer .sprout-btn-toolbar:focus-visible,
+.sprout .sprout-study-assistant-flashcards .sprout-btn-toolbar:hover,
+.sprout .sprout-study-assistant-flashcards .sprout-btn-toolbar:focus-visible,
+.sprout .sprout-study-assistant-card > .flex .sprout-btn-toolbar:hover,
+.sprout .sprout-study-assistant-card > .flex .sprout-btn-toolbar:focus-visible {
+  background-color: var(--color-base-25);
+  border-color: var(--color-base-30);
 }
 
 .sprout .sprout-study-assistant-mode-btn.is-active {
-  background: color-mix(in srgb, var(--interactive-accent, #7c9dff) 16%, var(--background)) !important;
-  border-color: color-mix(in srgb, var(--interactive-accent, #7c9dff) 38%, var(--sprout-border-color)) !important;
+  background: color-mix(in srgb, var(--interactive-accent, #7c9dff) 16%, var(--background));
+  border-color: color-mix(in srgb, var(--interactive-accent, #7c9dff) 38%, var(--sprout-border-color));
 }
 
 .sprout .sprout-study-assistant-card {
-  overflow: hidden !important;
-  padding: 0 !important;
-  gap: 0 !important;
+  overflow: hidden;
+  padding: 0;
+  gap: 0;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -74,7 +74,7 @@
 
 
 .sprout .sprout-study-assistant-content-host {
-  margin: 10px auto 20px !important;
+  margin: 10px auto 20px;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -84,17 +84,17 @@
 /* Allow copy/select interactions inside Ask, Review, and Generate cards. */
 .sprout .sprout-study-assistant-content-host,
 .sprout .sprout-study-assistant-content-host * {
-  user-select: text !important;
-  -webkit-user-select: text !important;
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 .sprout .sprout-study-assistant-content-host.sprout-widget-teaser {
-  margin: 10px auto 10px !important;
+  margin: 10px auto 10px;
 }
 
 .sprout .sprout-study-assistant-card > h3 {
-  margin: 0 !important;
-  padding: 20px 20px 00px 20px!important;
+  margin: 0;
+  padding: 20px 20px 00px 20px;
   font-size: var(--sprout-sa-font);
   line-height: 1.25;
 }
@@ -114,7 +114,7 @@
 .sprout .sprout-study-assistant-chat-wrap {
   position: relative;
   border: none;
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-md);
   background: transparent;
   padding: 0 20px;
   max-height: 340px;
@@ -200,7 +200,7 @@
 .sprout .sprout-study-assistant-message-bubble {
   max-width: min(88%, 36rem);
   padding: 0.48rem 0.65rem;
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-md);
   border: var(--sprout-border-width) solid var(--sprout-border-color);
   font-size: var(--sprout-sa-font-small);
   line-height: 1.45;
@@ -241,7 +241,7 @@
 
 .sprout .sprout-study-assistant-switch-generate-btn {
   min-height: 30px;
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-md);
   font-size: 0.82rem;
   padding: 0 0.65rem;
 }
@@ -268,16 +268,16 @@
 .sprout .sprout-study-assistant-review-select {
   min-height: 32px;
   font-size: var(--sprout-sa-font-small);
-  border-radius: var(--radius-m);
-  background: var(--background) !important;
-  color: var(--foreground) !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
+  border-radius: var(--radius-md);
+  background: var(--background);
+  color: var(--foreground);
+  border: var(--sprout-border-width) solid var(--sprout-border-color);
   padding-inline: 0.5rem;
 }
 
 .sprout .sprout-study-assistant-review-select:focus-visible {
   outline: none;
-  border-color: color-mix(in srgb, var(--interactive-accent, #7c9dff) 38%, var(--sprout-border-color)) !important;
+  border-color: color-mix(in srgb, var(--interactive-accent, #7c9dff) 38%, var(--sprout-border-color));
 }
 
 .sprout .sprout-study-assistant-input {
@@ -287,20 +287,20 @@
   font-size: var(--sprout-sa-font-small);
   line-height: 1.45;
   resize: none;
-  background: transparent !important;
-  border: none !important;
-  padding: 10px 46px 10px 12px !important;
+  background: transparent;
+  border: none;
+  padding: 10px 46px 10px 12px;
 }
 
 .sprout .sprout-study-assistant-composer .sprout-study-assistant-send-btn {
   position: absolute;
   right: 8px;
   bottom: 8px;
-  width: 30px !important;
-  height: 30px !important;
-  min-height: 30px !important;
+  width: 30px;
+  height: 30px;
+  min-height: 30px;
   border-radius: 999px;
-  padding: 0 !important;
+  padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -318,7 +318,7 @@
 
 .sprout .sprout-study-assistant-flashcards .card {
   border: var(--sprout-border-width) solid var(--sprout-border-color);
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--background-secondary) 55%, var(--background));
 }
 
@@ -357,7 +357,7 @@
 
 .sprout .sprout-study-assistant-card details {
   border: var(--sprout-border-width) dashed color-mix(in srgb, var(--sprout-border-color) 85%, transparent);
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-md);
   padding: 0.4rem 0.55rem;
 }
 
@@ -428,6 +428,60 @@
   height: 20px;
 }
 
+/* Companion icon motion: hover in quickly, then unwind in two staged steps on hover-out. */
+.sprout-assistant-trigger .svg-icon.sprout-widget-assistant {
+  transform-origin: center;
+  transform: translateY(0) scale(1);
+  filter: brightness(1);
+  will-change: transform, filter;
+  transition:
+    transform 200ms cubic-bezier(0.22, 0.9, 0.28, 1) 240ms,
+    filter 180ms ease 240ms;
+}
+
+.sprout-assistant-trigger .svg-icon.sprout-widget-assistant > svg {
+  transform-origin: center;
+  transform-box: fill-box;
+  transform: rotate(0deg);
+  will-change: transform;
+  transition: transform 220ms cubic-bezier(0.2, 0.85, 0.35, 1) 460ms;
+}
+
+.sprout-assistant-trigger:hover .svg-icon.sprout-widget-assistant,
+.sprout-assistant-trigger:focus-visible .svg-icon.sprout-widget-assistant,
+.sprout-assistant-trigger.is-open .svg-icon.sprout-widget-assistant {
+  transform: translateY(-2px) scale(1.18);
+  filter: brightness(1.18);
+  transition-delay: 0ms, 0ms;
+}
+
+.sprout-assistant-trigger:hover .svg-icon.sprout-widget-assistant > svg,
+.sprout-assistant-trigger:focus-visible .svg-icon.sprout-widget-assistant > svg,
+.sprout-assistant-trigger.is-open .svg-icon.sprout-widget-assistant > svg {
+  transform: rotate(8deg);
+  transition-delay: 70ms;
+}
+
+.sprout-assistant-trigger:active .svg-icon.sprout-widget-assistant {
+  transform: translateY(0) scale(1.04);
+  filter: brightness(1.06);
+  transition-delay: 0ms, 0ms;
+}
+
+.sprout-assistant-trigger:active .svg-icon.sprout-widget-assistant > svg {
+  transform: rotate(2deg);
+  transition-delay: 0ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sprout-assistant-trigger .svg-icon.sprout-widget-assistant,
+  .sprout-assistant-trigger .svg-icon.sprout-widget-assistant > svg {
+    transition: none;
+    transform: none;
+    filter: none;
+  }
+}
+
 .sprout-assistant-trigger-pending-badge {
   position: absolute;
   top: -3px;
@@ -448,7 +502,7 @@
 }
 
 .sprout-assistant-trigger.is-hidden {
-  display: none !important;
+  display: none;
 }
 
 .sprout-assistant-trigger.is-hover-only {
@@ -493,7 +547,7 @@
 }
 
 .sprout-assistant-trigger-hotzone.is-hidden {
-  display: none !important;
+  display: none;
 }
 
 /* ---- Popup panel ---- */
@@ -525,15 +579,15 @@
 .view-content .sprout.sprout-assistant-popup:not(.sprout-assistant-popup-embedded),
 .workspace-leaf .sprout.sprout-assistant-popup:not(.sprout-assistant-popup-embedded),
 .workspace-leaf-content .sprout.sprout-assistant-popup:not(.sprout-assistant-popup-embedded) {
-  border-radius: 16px !important;
-  background: var(--background-primary, #fff) !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.06) !important;
-  width: 400px !important;
-  max-width: 95% !important;
+  border-radius: var(--radius-md);
+  background: var(--background-primary, #fff);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.06);
+  width: 400px;
+  max-width: 95%;
 }
 
 .sprout-assistant-popup.is-hidden {
-  display: none !important;
+  display: none;
 }
 
 .sprout-assistant-popup.sprout-assistant-popup-embedded {
@@ -568,34 +622,43 @@
 }
 
 .sprout-assistant-popup.sprout-assistant-popup-embedded .sprout-assistant-popup-header-note {
-  font-size: 0.9rem !important;
+  font-size: 0.9rem;
   color: var(--foreground);
   font-weight: 400;
 }
 
-/* Widget-only: align chat bubbles with teaser card surface styling. */
-.sprout-assistant-popup.sprout-assistant-popup-embedded .sprout-assistant-popup-message-bubble.is-assistant,
+/* Widget-only: assistant bubbles use teaser card surface styling. */
+.sprout-assistant-popup.sprout-assistant-popup-embedded .sprout-assistant-popup-message-bubble.is-assistant {
+  background: var(--background);
+  box-shadow: none;
+  border: var(--color-base-30) 1px solid;
+}
+
+/* Widget-only: preserve emphasized user bubble styling. */
 .sprout-assistant-popup.sprout-assistant-popup-embedded .sprout-assistant-popup-message-bubble.is-user {
-  background: var(--background) !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
+  background: var(--theme-base-95);
+  box-shadow: none;
+  border: 1px solid color-mix(in srgb, var(--theme-base-95) 60%, transparent);
+  color: #fff;
 }
 
 /* Widget-only: make header action buttons match teaser card surface. */
 .sprout-assistant-popup.sprout-assistant-popup-embedded .sprout-assistant-popup-overflow,
 .sprout-assistant-popup.sprout-assistant-popup-embedded .sprout-assistant-popup-close {
   background: var(--background) !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
+  box-shadow: none;
+  border: var(--color-base-30) 1px solid !important;
 }
 
-/* Custom widget tab icon sizing overrides. */
-.workspace-tab-header .svg-icon.sprout-widget-study {
-  width: 1.6em;
-  height: 1.6em;
-}
-
+/* Widget tab icons should follow the active theme icon color. */
+.workspace-tab-header .svg-icon.sprout-widget-study,
 .workspace-tab-header .svg-icon.sprout-widget-assistant {
-  width: 1.4em;
-  height: 1.4em;
+  color: inherit;
+}
+
+.workspace-tab-header .svg-icon.sprout-widget-study *,
+.workspace-tab-header .svg-icon.sprout-widget-assistant * {
+  stroke: currentColor;
 }
 
 @keyframes sprout-popup-in {
@@ -625,9 +688,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px 10px;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--background-modifier-border, rgba(0, 0, 0, 0.08));
   flex: 0 0 auto;
+  overflow: visible;
 }
 
 .sprout-assistant-popup-header-left {
@@ -659,15 +723,15 @@
   height: auto;
   min-width: 36px;
   min-height: 32px;
-  border-radius: var(--button-radius);
-  border: none;
+  border-radius: var(--radius-sm);
+  border: var(--color-base-30) 1px solid !important;
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2px 10px !important;
+  padding: 2px 10px;
   flex: 0 0 auto;
   transition: background 0.12s ease, color 0.12s ease;
 }
@@ -675,36 +739,81 @@
 .sprout-assistant-popup-header-actions {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 10px;
   flex: 0 0 auto;
+  overflow: visible;
 }
 
 .sprout-assistant-popup-header-menu {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  overflow: visible;
 }
 
 .sprout-assistant-popup-overflow {
-  width: auto;
+  --sprout-assistant-overflow-collapsed-width: 36px;
+  --sprout-assistant-overflow-expanded-width: 102px;
+  width: var(--sprout-assistant-overflow-collapsed-width);
   height: auto;
-  min-width: 32px;
+  min-width: var(--sprout-assistant-overflow-collapsed-width);
+  max-width: var(--sprout-assistant-overflow-collapsed-width);
   min-height: 32px;
-  border-radius: var(--button-radius);
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
+  border-radius: var(--radius-md);
+  border: var(--color-base-30) 1px solid;
+  background: var(--background);
+  color: var(--foreground);
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  padding: 2px 10px !important;
+  justify-content: flex-start;
+  gap: 0;
+  padding: 2px 8px;
   flex: 0 0 auto;
-  transition: background 0.12s ease, color 0.12s ease;
+  box-shadow: none;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, width 660ms cubic-bezier(0.2, 0.9, 0.2, 1), min-width 660ms cubic-bezier(0.2, 0.9, 0.2, 1), max-width 660ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.sprout-assistant-popup-overflow > [aria-hidden="true"] {
+  flex: 0 0 auto;
+}
+
+.sprout-assistant-popup-overflow [data-sprout-label="true"] {
+  display: inline-block;
+  flex: 0 0 auto;
+  opacity: 0;
+  max-width: 0;
+  overflow: hidden;
+  margin-left: 0;
+  transform: translateX(-4px);
+  white-space: nowrap;
+  transition: max-width 660ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 540ms ease, margin-left 660ms cubic-bezier(0.2, 0.9, 0.2, 1), transform 660ms cubic-bezier(0.2, 0.9, 0.2, 1);
 }
 
 .sprout-assistant-popup-overflow:hover,
+.sprout-assistant-popup-overflow:focus-visible,
+.sprout-assistant-popup-overflow:focus-within,
 .sprout-assistant-popup-overflow[aria-expanded="true"] {
-  background: var(--background-modifier-hover, rgba(0, 0, 0, 0.06));
-  color: var(--text-normal);
+  width: var(--sprout-assistant-overflow-expanded-width);
+  min-width: var(--sprout-assistant-overflow-expanded-width);
+  max-width: var(--sprout-assistant-overflow-expanded-width);
+}
+
+.sprout-assistant-popup-overflow:hover [data-sprout-label="true"],
+.sprout-assistant-popup-overflow:focus-visible [data-sprout-label="true"],
+.sprout-assistant-popup-overflow:focus-within [data-sprout-label="true"],
+.sprout-assistant-popup-overflow[aria-expanded="true"] [data-sprout-label="true"] {
+  max-width: 76px;
+  opacity: 1;
+  margin-left: 8px;
+  transform: translateX(0);
+}
+
+.sprout-assistant-popup-overflow:focus-visible,
+.sprout-assistant-popup-overflow:active {
+  border-color: var(--color-base-40);
 }
 
 .sprout-assistant-popup-overflow .svg-icon {
@@ -744,6 +853,7 @@
   gap: 8px;
   padding: 6px 8px;
   border-radius: 8px;
+  border: 1px solid var(--color-base-00);
   cursor: pointer;
   user-select: none;
   outline: none;
@@ -751,8 +861,13 @@
 }
 
 .sprout-assistant-popup-header-menu-item:hover,
-.sprout-assistant-popup-header-menu-item:focus-visible {
+.sprout-assistant-popup-header-menu-item:focus-visible,
+.sprout-assistant-popup-header-menu-item:active,
+.sprout-assistant-popup-header-menu-item[aria-checked="true"],
+.sprout-assistant-popup-header-menu-item[aria-current="true"],
+.sprout-assistant-popup-header-menu-item[aria-selected="true"] {
   background: var(--background-modifier-hover, rgba(0, 0, 0, 0.04));
+  border: 1px solid var(--color-base-35);
 }
 
 .sprout-assistant-popup-header-menu-item.is-danger {
@@ -788,17 +903,17 @@
 
 /* Keep popup icon button padding against global `.sprout button` resets. */
 .sprout-assistant-popup .sprout-assistant-popup-close {
-  padding: 2px 10px !important;
+  padding: 2px 10px;
 }
 
 .sprout-assistant-popup .sprout-assistant-popup-overflow {
-  padding: 2px 10px !important;
+  padding: 2px 8px;
 }
 
 /* ---- Mode toolbar ---- */
 .sprout-assistant-popup-toolbar {
   display: flex;
-  gap: 4px;
+  gap: 12px;
   padding: 10px 12px;
   border-bottom: 1px solid var(--background-modifier-border, rgba(0, 0, 0, 0.06));
   flex: 0 0 auto;
@@ -813,11 +928,11 @@
   gap: 5px;
   min-height: 32px;
   padding: 6px 10px;
-  border-radius: var(--radius-l) !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
-  background: var(--background) !important;
-  color: var(--foreground) !important;
-  box-shadow: none !important;
+  border-radius: var(--radius-md);
+  border: none;
+  background: var(--background);
+  color: var(--foreground);
+  box-shadow: none;
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
@@ -826,9 +941,9 @@
 
 .sprout-assistant-popup-mode-btn:hover,
 .sprout-assistant-popup-mode-btn:focus-visible {
-  background: var(--background-modifier-hover) !important;
-  color: var(--color-base-100) !important;
-  border-color: var(--color-base-30) !important;
+  background: var(--background-modifier-hover);
+  color: var(--color-base-100);
+  border-color: var(--color-base-30);
 }
 
 .sprout-assistant-popup-mode-btn:focus-visible {
@@ -837,22 +952,22 @@
 }
 
 .sprout-assistant-popup-mode-btn:active {
-  background: var(--muted) !important;
-  color: var(--foreground) !important;
-  border-color: var(--muted) !important;
+  background: var(--muted);
+  color: var(--foreground);
+  border-color: var(--muted);
 }
 
 .sprout-assistant-popup-mode-btn.is-active {
-  background: color-mix(in srgb, var(--interactive-accent, #7c9dff) 12%, var(--background)) !important;
-  border-color: color-mix(in srgb, var(--interactive-accent, #7c9dff) 30%, var(--sprout-border-color)) !important;
-  color: var(--foreground) !important;
+  background: color-mix(in srgb, var(--interactive-accent, #7c9dff) 12%, var(--background));
+  border-color: color-mix(in srgb, var(--interactive-accent, #7c9dff) 30%, var(--sprout-border-color));
+  color: var(--foreground);
 }
 
 .theme-dark .sprout-assistant-popup-mode-btn:hover,
 .theme-dark .sprout-assistant-popup-mode-btn:focus-visible {
-  background: var(--color-base-30) !important;
-  color: var(--color-base-100) !important;
-  border-color: var(--color-base-35) !important;
+  background: var(--color-base-25);
+  color: var(--color-base-100);
+  border-color: var(--color-base-35);
 }
 
 .sprout-assistant-popup-mode-btn .svg-icon {
@@ -904,8 +1019,8 @@
 /* Allow text selection in popup */
 .sprout-assistant-popup,
 .sprout-assistant-popup * {
-  user-select: text !important;
-  -webkit-user-select: text !important;
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 /* ---- Messages ---- */
@@ -957,7 +1072,7 @@
 
 .sprout-assistant-popup-message-bubble {
   max-width: 85%;
-  padding: 8px 12px 2px 12px !important;
+  padding: 8px 12px 2px 12px;
   border-radius: 14px;
   font-size: 0.9rem;
   line-height: 1.5;
@@ -966,9 +1081,9 @@
 
 .sprout-assistant-popup-message-bubble.is-user {
   border-top-right-radius: 4px;
-  background: color-mix(in srgb, var(--interactive-accent, #7c9dff) 16%, var(--background-primary, #fff));
-  border: 1px solid color-mix(in srgb, var(--interactive-accent, #7c9dff) 25%, transparent);
-  color: var(--text-normal);
+  background: var(--theme-base-95);
+  border: 1px solid color-mix(in srgb, var(--theme-base-95) 60%, transparent);
+  color: #fff;
 }
 
 .sprout-assistant-popup-message-bubble.is-assistant {
@@ -1015,47 +1130,47 @@
   td,
   hr
 ) {
-  margin: 0 0 0.5em !important;
-  padding: 0 !important;
-  border: 0 !important;
+  margin: 0 0 0.5em;
+  padding: 0;
+  border: 0;
 }
 
 .sprout-assistant-popup .sprout-assistant-popup-message-bubble :is(pre) {
-    overflow: scroll !important;
-    background-color: var(--color-base-30);
-    padding: 0.25rem 0.5rem !important;
+    overflow: scroll;
+    background-color: var(--color-base-25);
+    padding: 0.25rem 0.5rem;
     border-radius: var(--radius-s);
 }
 
 .sprout-assistant-popup .sprout-assistant-popup-message-bubble :is(ul, ol) {
-  margin: 0.35em 0 0.6em 1.2em !important;
-  padding: 0 !important;
-  border: 0 !important;
-  list-style-position: outside !important;
+  margin: 0.35em 0 0.6em 1.2em;
+  padding: 0;
+  border: 0;
+  list-style-position: outside;
 }
 
 .sprout-assistant-popup .sprout-assistant-popup-message-bubble li {
-  margin: 0.18em 0 !important;
-  padding: 0 !important;
-  border: 0 !important;
+  margin: 0.18em 0;
+  padding: 0;
+  border: 0;
 }
 
 .sprout-assistant-popup .sprout-assistant-popup-message-bubble li > :is(ul, ol) {
-  margin: 0.25em 0 0.4em 1.1em !important;
+  margin: 0.25em 0 0.4em 1.1em;
 }
 
 .sprout-assistant-popup .sprout-assistant-popup-message-bubble :is(h1, h2, h3, h4, h5, h6) {
-  font-size: 1em !important;
-  line-height: inherit !important;
-  font-weight: 600 !important;
+  font-size: 1em;
+  line-height: inherit;
+  font-weight: 600;
 }
 
-.sprout-assistant-popup .sprout-assistant-popup-message-bubble h1 { font-size: 1.2rem !important; }
-.sprout-assistant-popup .sprout-assistant-popup-message-bubble h2 { font-size: 1.15rem !important; }
-.sprout-assistant-popup .sprout-assistant-popup-message-bubble h3 { font-size: 1.1rem !important; }
-.sprout-assistant-popup .sprout-assistant-popup-message-bubble h4 { font-size: 1.05rem !important; }
-.sprout-assistant-popup .sprout-assistant-popup-message-bubble h5 { font-size: 1rem !important; }
-.sprout-assistant-popup .sprout-assistant-popup-message-bubble p { font-size: 0.9rem !important; line-height: 1.6; }
+.sprout-assistant-popup .sprout-assistant-popup-message-bubble h1 { font-size: 1.2rem; }
+.sprout-assistant-popup .sprout-assistant-popup-message-bubble h2 { font-size: 1.15rem; }
+.sprout-assistant-popup .sprout-assistant-popup-message-bubble h3 { font-size: 1.1rem; }
+.sprout-assistant-popup .sprout-assistant-popup-message-bubble h4 { font-size: 1.05rem; }
+.sprout-assistant-popup .sprout-assistant-popup-message-bubble h5 { font-size: 1rem; }
+.sprout-assistant-popup .sprout-assistant-popup-message-bubble p { font-size: 0.9rem; line-height: 1.6; }
 
 /* ---- Typing indicator ---- */
 .sprout-assistant-popup-typing {
@@ -1139,20 +1254,20 @@
   font-size: 0.9rem;
   line-height: 1.45;
   resize: none;
-  background: transparent !important;
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-  padding: 8px 44px 8px 14px !important;
+  background: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  padding: 8px 44px 8px 14px;
   color: var(--text-normal);
   font-family: inherit;
 }
 
 .sprout-assistant-popup-input:focus,
 .sprout-assistant-popup-input:focus-visible {
-  outline: none !important;
-  border: none !important;
-  box-shadow: none !important;
+  outline: none;
+  border: none;
+  box-shadow: none;
 }
 
 .sprout-assistant-popup-input::placeholder {
@@ -1168,7 +1283,7 @@
   height: auto;
   min-width: 36px;
   min-height: 32px;
-  border-radius: var(--button-radius);
+  border-radius: var(--radius-sm);
   border: none;
   background: var(--interactive-accent, #7c9dff);
   color: var(--text-on-accent, #fff);
@@ -1176,19 +1291,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2px 10px !important;
+  padding: 2px 10px;
   transition: background 0.12s ease, transform 0.1s ease;
 }
 
 /* Guard against global button reset rules in Sprout core styles. */
 .sprout .sprout-assistant-popup-send {
-  height: 36px !important;
-  min-height: 36px !important;
-  line-height: 0 !important;
+  height: 36px;
+  min-height: 36px;
+  line-height: 0;
 }
 
 .sprout-assistant-popup-send:hover:not(:disabled) {
-  background: var(--color-base-20);
+  background: var(--color-base-25);
 }
 
 .sprout-assistant-popup-send:disabled {
@@ -1207,7 +1322,7 @@
 
 /* Keep popup send button padding against global `.sprout button` resets. */
 .sprout-assistant-popup .sprout-assistant-popup-send {
-  padding: 0px !important;
+  padding: 0px;
 }
 
 @keyframes sprout-assistant-spin {
@@ -1363,7 +1478,7 @@
 .sprout-assistant-popup-review-starters {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 12px;
   padding: 2px 32px 0;
 }
 
@@ -1371,14 +1486,14 @@
 .sprout-assistant-popup-switch-generate-btn,
 .sprout-assistant-popup-switch-ask-btn {
   min-height: 32px;
-  border-radius: var(--radius-l) !important;
+  border-radius: var(--radius-md);
   font-size: 0.9rem;
   font-weight: 500;
   padding: 5px 12px;
-  border: 1px solid color-mix(in srgb, var(--sprout-border-color) 70%, transparent) !important;
-  background: var(--background) !important;
-  color: var(--foreground) !important;
-  box-shadow: none !important;
+  border: var(--color-base-30) 1px solid;
+  background: var(--background);
+  color: var(--foreground);
+  box-shadow: none;
 }
 
 .sprout-assistant-popup-review-starters .sprout-assistant-popup-btn:hover:not(:disabled),
@@ -1387,10 +1502,10 @@
 .sprout-assistant-popup-switch-generate-btn:focus-visible,
 .sprout-assistant-popup-switch-ask-btn:hover:not(:disabled),
 .sprout-assistant-popup-switch-ask-btn:focus-visible {
-  background: var(--background-modifier-hover) !important;
-  border-color: color-mix(in srgb, var(--sprout-border-color) 45%, var(--color-base-30)) !important;
-  color: var(--color-base-100) !important;
-  box-shadow: none !important;
+  background: var(--background-modifier-hover);
+  border-color: color-mix(in srgb, var(--sprout-border-color) 45%, var(--color-base-30));
+  color: var(--color-base-100);
+  box-shadow: none;
 }
 
 /* ---- Shared button style ---- */
@@ -1400,8 +1515,8 @@
   justify-content: center;
   gap: 4px;
   padding: 6px 14px;
-  border-radius: 8px;
-  border: 1px solid var(--background-modifier-border, rgba(0, 0, 0, 0.12));
+  border-radius: var(--radius-md);
+  border: none;
   background: var(--background-primary, #fff);
   color: var(--text-normal);
   font-size: 0.9rem;
@@ -1451,22 +1566,22 @@
 
 .sprout-assistant-popup-generate-starters .sprout-assistant-popup-btn {
   min-height: 32px;
-  border-radius: var(--radius-l) !important;
+  border-radius: var(--radius-md);
   font-size: 0.9rem;
   font-weight: 500;
   padding: 5px 12px;
-  border: 1px solid color-mix(in srgb, var(--sprout-border-color) 70%, transparent) !important;
-  background: var(--background) !important;
-  color: var(--foreground) !important;
-  box-shadow: none !important;
+  border: none;
+  background: var(--background);
+  color: var(--foreground);
+  box-shadow: none;
 }
 
 .sprout-assistant-popup-generate-starters .sprout-assistant-popup-btn:hover:not(:disabled),
 .sprout-assistant-popup-generate-starters .sprout-assistant-popup-btn:focus-visible {
-  background: var(--background-modifier-hover) !important;
-  border-color: color-mix(in srgb, var(--sprout-border-color) 45%, var(--color-base-30)) !important;
-  color: var(--color-base-100) !important;
-  box-shadow: none !important;
+  background: var(--background-modifier-hover);
+  border-color: none;
+  color: var(--color-base-100);
+  box-shadow: none;
 }
 
 .sprout-assistant-popup-generated-cards {
@@ -1507,7 +1622,7 @@
 
 .sprout-assistant-popup-generated-card-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 6px;
   margin:0.3rem 0rem;
@@ -1516,7 +1631,7 @@
 .sprout-assistant-popup-generated-card-type {
   font-size: 0.85rem;
   font-weight: 600;
-      margin-bottom: 0.3rem;
+  margin: 0;
 
   color: var(--text-muted);
 }
@@ -1541,7 +1656,7 @@
   position: absolute;
   bottom: var(--sprout-assistant-insert-btn-offset);
   right: var(--sprout-assistant-insert-btn-offset);
-  width: var(--sprout-assistant-insert-btn-size) !important;
+  width: var(--sprout-assistant-insert-btn-size);
   height: var(--sprout-assistant-insert-btn-size);
   border-radius: 50%;
   border: 1px solid var(--background-modifier-border, rgba(0, 0, 0, 0.12));
@@ -1551,17 +1666,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 !important;
+  padding: 0;
   transition: background 0.12s, color 0.12s, border-color 0.12s, transform 0.1s;
 }
 
 /* Beat global `.sprout button` padding rules for the circular insert button. */
 .sprout .sprout-assistant-popup-insert-btn {
-  padding: 0 !important;
-  padding-top: 0 !important;
-  padding-right: 0 !important;
-  padding-bottom: 0 !important;
-  padding-left: 0 !important;
+  padding: 0;
+  padding-top: 0;
+  padding-right: 0;
+  padding-bottom: 0;
+  padding-left: 0;
 }
 
 .sprout-assistant-popup-insert-btn:hover,
@@ -1594,7 +1709,7 @@
 .sprout-assistant-popup-generate-actions .sprout-assistant-popup-btn {
   width: 100%;
   min-height: 34px;
-  border-radius: var(--button-radius, 10px);
+  border-radius: var(--radius-md, 10px);
   font-weight: 600;
   border-color: color-mix(in srgb, var(--interactive-accent, #7c9dff) 40%, var(--background-modifier-border));
   background: color-mix(in srgb, var(--interactive-accent, #7c9dff) 10%, var(--background-primary, #fff));
@@ -1763,10 +1878,10 @@
   margin: 0;
   margin-bottom: 0;
   padding: 0;
-  border-radius: var(--button-radius);
+  border-radius: var(--radius-sm);
   display: flex;
-  background: var(--color-base-25) !important;
-  border: 1px solid transparent !important;
+  background: var(--color-base-25);
+  border: 1px solid transparent;
   max-height: 0;
   opacity: 0;
   overflow: hidden;
@@ -1784,16 +1899,16 @@
   padding: 0.2rem 0.5rem;
   pointer-events: auto;
   transform: translateY(0);
-  border-color: var(--color-base-40) !important;
+  border-color: var(--color-base-40);
 }
 
 .sprout-assistant-reply-audio.is-finishing {
-  max-height: 0 !important;
-  opacity: 0 !important;
-  margin-bottom: 0 !important;
-  padding: 0 !important;
-  pointer-events: none !important;
-  transform: translateY(-2px) !important;
+  max-height: 0;
+  opacity: 0;
+  margin-bottom: 0;
+  padding: 0;
+  pointer-events: none;
+  transform: translateY(-2px);
 }
 
 .sprout-assistant-reply-audio.is-paused {
@@ -1808,32 +1923,32 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: none !important;
+  border: none;
   border-radius: 0;
-  background: transparent !important;
-  box-shadow: none !important;
-  outline: none !important;
-  color: var(--text-muted) !important;
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 0;
 }
 
 .sprout-assistant-reply-audio-btn:hover {
-  background: transparent !important;
-  color: var(--text-normal) !important;
+  background: transparent;
+  color: var(--text-normal);
 }
 
 .sprout-assistant-reply-audio-solid-icon {
   width: 14px;
   height: 14px;
   display: block;
-  color: inherit !important;
-  fill: currentColor !important;
+  color: inherit;
+  fill: currentColor;
   animation: sprout-reply-audio-icon-in 0.26s ease;
 }
 
 .sprout-assistant-reply-audio-solid-icon path {
-  fill: currentColor !important;
+  fill: currentColor;
 }
 
 .sprout-assistant-reply-audio-solid-icon.is-pause {
@@ -1842,15 +1957,15 @@
 
 .sprout .sprout-assistant-reply-audio-btn,
 .sprout-assistant-popup .sprout-assistant-reply-audio-btn {
-  width: 20px !important;
-  height: 20px !important;
-  min-width: 20px !important;
-  min-height: 20px !important;
-  padding: 0 !important;
-  line-height: 0 !important;
-  border: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  padding: 0;
+  line-height: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 
 .sprout-assistant-reply-audio-wave {

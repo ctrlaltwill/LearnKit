@@ -10,6 +10,11 @@
 
 import { getCorrectIndices, type CardRecord } from "../../platform/core/store";
 import { normaliseGroupPath } from "../../engine/indexing/group-index";
+import {
+  CARD_ANCHOR_LINE_RE,
+  buildPrimaryCardAnchor,
+  extractCardAnchorId,
+} from "../../platform/core/identity";
 import { escapePipes } from "./fields";
 
 /**
@@ -17,7 +22,7 @@ import { escapePipes } from "./fields";
  * Do NOT write <!--ID:...--> comments (they create duplication and mismatch with sync logic).
  */
 const ID_COMMENT_RE = /^<!--ID:(\d{9})-->$/;
-const ANCHOR_LINE_RE = /^\^sprout-(\d{9})$/;
+const ANCHOR_LINE_RE = CARD_ANCHOR_LINE_RE;
 
 export function isMarkerLine(line: string): boolean {
   const t = (line || "").trim();
@@ -32,10 +37,9 @@ export function isMarkerLine(line: string): boolean {
  * - Scan downward; once we've seen any non-marker content, the next marker line starts the next card.
  */
 export function findCardBlockRangeById(lines: string[], id: string): { start: number; end: number } {
-  const anchorLine = `^sprout-${id}`;
   const idLine = `<!--ID:${id}-->`;
 
-  let start = lines.findIndex((l) => (l || "").trim() === anchorLine);
+  let start = lines.findIndex((l) => extractCardAnchorId(l || "") === id);
 
   if (start === -1) {
     start = lines.findIndex((l) => (l || "").trim() === idLine);
@@ -88,7 +92,7 @@ export function buildCardBlockMarkdown(id: string, rec: CardRecord): string[] {
   const out: string[] = [];
 
   // Canonical marker only
-  out.push(`^sprout-${id}`);
+  out.push(buildPrimaryCardAnchor(id));
 
   const startsWithListMarker = (line: string): boolean => /^\s*(?:[-+*]|\d+[.)])\s+/.test(String(line ?? ''));
 

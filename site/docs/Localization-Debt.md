@@ -4,7 +4,7 @@ This file tracks known user-facing hardcoded strings that should be tokenized.
 
 ## Migration Order (Highest Traffic First)
 
-1. `src/views/settings/sprout-settings-tab.ts`
+1. `src/views/settings/settings-tab.ts`
 Token target: `ui.settings.*`
 Scope: section headings, setting names/descriptions, placeholders, backup table labels, action button text.
 

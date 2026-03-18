@@ -1,8 +1,8 @@
 # Suspending Cards
 
-Last modified: 13/02/2026
+Last modified: 17/03/2026
 
-## Overview
+## Purpose
 
 Suspending removes a card from study sessions until you unsuspend it.
 
@@ -10,7 +10,7 @@ The card is kept in your collection, but it is not shown for review.
 
 Unlike burying, suspension does not reset automatically.
 
-## How to suspend a card
+## Suspend Steps
 
 ### During a study session
 
@@ -19,17 +19,17 @@ Unlike burying, suspension does not reset automatically.
 
 ### From the Card Browser
 
-1. Open the [Card Browser](./Card-Browser.md).
+1. Open the [Card Browser](./Card-Browser).
 2. Select one or more cards.
 3. Click the **Suspend** button in the bulk actions bar.
 
 To unsuspend, select suspended cards and click **Unsuspend**.
 
-## Finding suspended cards
+## Find Suspended
 
-In [Card Browser](./Card-Browser.md), filter by **Stage → Suspended**.
+In [Card Browser](./Card-Browser), filter by Stage -> Suspended.
 
-## When to suspend
+## Use Cases
 
 Suspending is useful when:
 
@@ -37,7 +37,7 @@ Suspending is useful when:
 - You're studying a subset of material (e.g. only certain chapters) and want to temporarily exclude other cards.
 - A card is a leech (you keep forgetting it) and you need to rewrite it before continuing.
 
-## Suspending vs burying
+## Compare Bury
 
 | | Bury | Suspend |
 |--|------|---------|
@@ -48,3 +48,8 @@ Suspending is useful when:
 
 > [!TIP]
 > Use **Bury** for "I'll try again tomorrow" and **Suspend** for "I need to fix this card first."
+
+## Related
+
+- [Burying Cards](./Burying-Cards)
+- [Card Browser](./Card-Browser)

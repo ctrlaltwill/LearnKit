@@ -36,10 +36,10 @@ export class AnkiImportModal extends Modal {
     setModalTitle(this, "Import from Anki");
 
     scopeModalToWorkspace(this);
-    this.containerEl.addClass("sprout-modal-container");
-    this.containerEl.addClass("sprout-modal-dim");
+    this.containerEl.addClass("lk-modal-container");
+    this.containerEl.addClass("lk-modal-dim");
     this.containerEl.addClass("sprout");
-    this.modalEl.addClass("bc", "sprout-modals", "sprout-anki-import-modal");
+    this.modalEl.addClass("bc", "lk-modals", "sprout-anki-import-modal");
     this.contentEl.addClass("bc");
 
     // Escape key closes modal
@@ -54,10 +54,10 @@ export class AnkiImportModal extends Modal {
   }
 
   onClose() {
-    this.containerEl.removeClass("sprout-modal-container");
-    this.containerEl.removeClass("sprout-modal-dim");
+    this.containerEl.removeClass("lk-modal-container");
+    this.containerEl.removeClass("lk-modal-dim");
     this.containerEl.removeClass("sprout");
-    this.modalEl.removeClass("bc", "sprout-modals", "sprout-anki-import-modal");
+    this.modalEl.removeClass("bc", "lk-modals", "sprout-anki-import-modal");
     this.contentEl.removeClass("bc");
     this.contentEl.empty();
     this.apkgBytes = null;
@@ -67,13 +67,13 @@ export class AnkiImportModal extends Modal {
 
   /** Shared footer builder. */
   private buildFooter(root: HTMLElement): HTMLElement {
-    return root.createDiv({ cls: "bc flex items-center justify-end gap-4 sprout-modal-footer" });
+    return root.createDiv({ cls: "bc flex items-center justify-end gap-4 lk-modal-footer" });
   }
 
   /** Shared nav button builder (← Back, Cancel, Next →, Import, etc.). */
   private mkNavBtn(parent: HTMLElement, label: string, icon: string, opts?: { tooltip?: string }): HTMLButtonElement {
     const btn = parent.createEl("button", {
-      cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm",
+      cls: "bc sprout-btn-toolbar inline-flex items-center gap-2 h-9 px-3 text-sm",
       attr: { type: "button", "aria-label": opts?.tooltip || label },
     });
     const ic = btn.createEl("span", { cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
@@ -113,7 +113,7 @@ export class AnkiImportModal extends Modal {
     fileRow.appendChild(fileInput);
 
     const pickBtn = fileRow.createEl("button", {
-      cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm",
+      cls: "bc sprout-btn-toolbar inline-flex items-center gap-2 h-9 px-3 text-sm",
       attr: { type: "button", "aria-label": "Choose an Anki .apkg file from your computer" },
     });
     const pickIcon = pickBtn.createEl("span", { cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });

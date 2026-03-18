@@ -1,6 +1,6 @@
 /**
  * @file src/modals/whats-new-modal/release-notes.ts
- * @summary Release notes content for each version of Sprout.
+ * @summary Release notes content for each version of LearnKit.
  * 
  * Add a new entry here for each release to display in the What's New modal.
  * Content supports markdown formatting.
@@ -25,27 +25,60 @@ export interface ReleaseNote {
  * 3. The modal will automatically show for users upgrading to that version
  */
 export const RELEASE_NOTES: Record<string, ReleaseNote> = {
+  "1.2.0": {
+    version: "1.2.0",
+    title: "1.2.0",
+    releaseDate: "2026-03-18",
+    content: `
+# LearnKit 1.2.0
+LearnKit 1.2.0 is a major overhaul release focused on making study workflows more powerful inside Obsidian.
+
+## What's New
+
+### Tests
+- Added Tests for auto-generating study tests from your notes and learning context.
+- Use Tests to quickly build structured question rounds and identify weak areas.
+
+### Coach
+- Added Coach to help you turn note content into guided learning prompts and focused practice.
+- Coach is designed to shorten the gap between reading and active recall.
+
+### Note Review
+- Added Note Review workflows to support pass/fail review loops on notes.
+- Note Review helps bring your notes into the same spaced repetition loop as your cards.
+
+## Project Direction
+- LearnKit is still in its infancy, and this release is an early foundation for what comes next.
+- There will be bugs and rough edges while we continue iterating quickly.
+- We appreciate all of our early users and everyone sharing feedback.
+
+## Open Source Mission
+- We are building an open source study plugin for Obsidian that expands core functionality.
+- The long-term goal is to bring LearnKit closer to the depth of premium subscription study platforms, while keeping your data local and under your control.
+    `.trim(),
+  },
+
   "1.1.0": {
     version: "1.1.0",
     title: "1.1.0",
     releaseDate: "2026-03-10",
     content: `
-# Sprout 1.1.0
-Release 1.1.0 focused on introducing Sprig, the built-in AI assistant.
+# LearnKit 1.1.0
+Release 1.1.0 focused on introducing Companion, the built-in AI companion.
 
 ## What's New
 
-### Sprig - AI Assistant
+### Companion - AI Companion
 - Bring your own API key support so you can connect your preferred model provider.
-- Ask questions about your notes and study material directly inside Sprout.
+- Ask questions about your notes and study material directly inside LearnKit.
 - Review your notes with AI-assisted summaries and guided understanding prompts.
 - Generate flashcards from your existing notes to speed up deck creation. These flashcards are context aware, and clicking on them in the chat will show what part of your note was used to inform their creation.
-- Configure Sprig settings for provider details, key management, and assistant behavior.
+- Configure Companion settings for provider details, key management, and companion behavior.
 
 ## What's Updated
 
 ### Data Storage
-- Transitioned storage from JSON to SQLite to improve reliability, scalability, and data consistency as Sprout grows.
+- Transitioned storage from JSON to SQLite to improve reliability, scalability, and data consistency as LearnKit grows.
 
 ### Image Occlusion Editor
 - Added **Auto-Mask** feature in the IO editor toolbar to detect text regions and create masks automatically.
@@ -56,7 +89,7 @@ Release 1.1.0 focused on introducing Sprig, the built-in AI assistant.
 ## Coming Next
 
 ### Sync Efficiency
-- Future updates will focus on syncing data more efficiently so Sprout can avoid full database updates every session.
+- Future updates will focus on syncing data more efficiently so LearnKit can avoid full database updates every session.
     `.trim(),
   },
 

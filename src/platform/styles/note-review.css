@@ -1,0 +1,404 @@
+/* ============================================================================
+   NOTE REVIEW — full-note reading surface + floating action dock.
+   ========================================================================== */
+
+.workspace-leaf-content.sprout[data-type="learnkit-note-review"] {
+  background-color: var(--background-primary) !important;
+}
+
+.sprout .sprout-note-review-root {
+  width: 100% !important;
+  max-width: var(--sprout-note-review-max-width, 1280px) !important;
+  margin-top: 0;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  gap: 20px !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+.sprout .sprout-note-review-title-row {
+  width: 100%;
+}
+
+.sprout .sprout-note-review-title-timer-host {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.sprout .sprout-note-review-title-timer-host .sprout-session-timer-group {
+  margin-left: auto;
+}
+
+.sprout .sprout-note-review-root [data-study-session-header].sprout-note-review-session-header-hidden {
+  display: none !important;
+}
+
+
+.sprout .sprout-note-review-panel {
+  --sprout-note-review-dock-space: 96px;
+  --sprout-note-review-edge-fade: 40px;
+  position: relative;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+.sprout .sprout-note-review-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  border: none !important;
+  background: transparent !important;
+}
+
+.sprout .sprout-note-review-viewport {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.sprout .sprout-note-review-content {
+  min-height: 0;
+  overflow: auto;
+  padding: 0 0 var(--sprout-note-review-dock-space);
+  border: none !important;
+  background: transparent !important;
+}
+
+.sprout .sprout-note-review-content:has(.sprout-note-review-empty) {
+  padding-bottom: 0;
+}
+
+.sprout .sprout-note-review-root.sprout-note-review-overflow .sprout-note-review-panel {
+  flex: 1 1 auto;
+}
+
+.sprout .sprout-note-review-root.sprout-note-review-overflow .sprout-note-review-content {
+  flex: 1 1 auto;
+  overflow: auto;
+}
+
+.sprout .sprout-note-review-article {
+  margin: 0;
+  min-height: 100%;
+  width: 100%;
+  padding: 0;
+}
+
+.sprout .sprout-note-review-note-title {
+  margin: 0 0 14px;
+  font-size: var(--sprout-font-xl);
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.sprout .sprout-note-review-note-body {
+  font-size: var(--sprout-font-sm);
+  line-height: 1.7;
+  width: 100%;
+}
+
+.sprout .sprout-note-review-note-body > *:first-child {
+  margin-top: 0;
+}
+
+.sprout .sprout-note-review-empty {
+  margin: 0;
+
+}
+
+.sprout .sprout-note-review-empty-title {
+  font-size: clamp(1.2rem, 1.1rem + 0.35vw, 1.45rem);
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0 0 8px;
+  text-align: center;
+}
+
+.sprout .sprout-note-review-empty-body {
+  text-align: center;
+  margin: 0;
+}
+
+.sprout .sprout-note-review-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.sprout .sprout-note-review-dock {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  transform: none;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.sprout .sprout-note-review-dock :is(button, .sprout-note-review-more-menu) {
+  position: relative;
+  z-index: 31;
+}
+
+.sprout .sprout-note-review-queue-count {
+  --sprout-note-review-progress: 0%;
+  min-width: 164px;
+  font-size: var(--sprout-font-xs);
+  color: var(--text-normal);
+  border-radius: 999px;
+  border: var(--sprout-border-width) solid transparent;
+  background:
+    linear-gradient(color-mix(in srgb, var(--background-primary) 92%, transparent), color-mix(in srgb, var(--background-primary) 92%, transparent)) padding-box,
+    linear-gradient(
+      90deg,
+      var(--interactive-accent) 0,
+      var(--interactive-accent) var(--sprout-note-review-progress),
+      var(--sprout-border-color) var(--sprout-note-review-progress),
+      var(--sprout-border-color) 100%
+    ) border-box;
+  padding: 7px 10px;
+  white-space: nowrap;
+  text-align: center;
+  transition: background 180ms ease;
+}
+
+.sprout .sprout-note-review-queue-count-label {
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  text-align: center;
+}
+
+.sprout .sprout-note-review-dock-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.sprout .sprout-note-review-dock-left,
+.sprout .sprout-note-review-dock-right {
+  display: flex;
+  align-items: center;
+}
+
+.sprout .sprout-note-review-dock-right {
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.sprout .sprout-note-review-dock-buttons > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: calc(var(--radius-md) + 2px);
+  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
+  background: var(--background-secondary) !important;
+  color: var(--text-normal) !important;
+  font-size: var(--sprout-font-xs);
+  font-weight: 600;
+  line-height: 1;
+  padding: 10px 14px;
+}
+
+.sprout .sprout-note-review-dock-buttons > button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--interactive-accent) 10%, var(--background-secondary));
+}
+
+.sprout .sprout-note-review-dock-buttons > button:disabled {
+  opacity: 0.45;
+}
+
+.sprout .sprout-note-review-dock-buttons > button :is(kbd, .kbd) {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.sprout .sprout-note-review-dock-buttons > .sprout-btn-again {
+  border-color: color-mix(in srgb, var(--destructive) 52%, transparent) !important;
+  background: color-mix(in srgb, var(--destructive) 18%, var(--background-secondary)) !important;
+  color: color-mix(in srgb, var(--destructive) 72%, var(--text-normal)) !important;
+}
+
+.sprout .sprout-note-review-dock-buttons > .sprout-btn-again:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--destructive) 26%, var(--background-secondary)) !important;
+}
+
+.sprout .sprout-note-review-dock-buttons > .sprout-btn-good {
+  border-color: color-mix(in srgb, var(--sprout-good-bg, #22c55e) 52%, transparent) !important;
+  background: color-mix(in srgb, var(--sprout-good-bg, #22c55e) 18%, var(--background-secondary)) !important;
+  color: color-mix(in srgb, var(--sprout-good-bg, #22c55e) 76%, var(--text-normal)) !important;
+}
+
+.sprout .sprout-note-review-dock-buttons > .sprout-btn-good:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--sprout-good-bg, #22c55e) 28%, var(--background-secondary)) !important;
+}
+
+.sprout .sprout-note-review-more {
+  position: relative;
+  z-index: 31;
+}
+
+.sprout .sprout-note-review-more-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: var(--radius-md);
+  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
+  background: color-mix(in srgb, var(--background-primary) 90%, transparent) !important;
+  color: var(--text-normal) !important;
+  font-size: var(--sprout-font-xs);
+  font-weight: 600;
+  line-height: 1;
+  padding: 10px 12px;
+}
+
+.sprout .sprout-note-review-more-trigger:hover:not(:disabled),
+.sprout .sprout-note-review-more-trigger:focus-visible {
+  background: color-mix(in srgb, var(--interactive-accent) 10%, var(--background-secondary));
+}
+
+.sprout .sprout-note-review-more-popover {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 230px;
+  padding: 4px;
+  border-radius: var(--radius-l);
+  border: var(--sprout-border-width) solid var(--sprout-border-color);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  box-shadow: var(--shadow-s);
+  pointer-events: auto;
+  z-index: 32;
+}
+
+.sprout .sprout-note-review-more-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  font-size: var(--sprout-font-sm);
+  text-align: left;
+  border-radius: var(--radius-s);
+  border: 0 !important;
+  background: transparent !important;
+  padding: 6px 8px;
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+}
+
+.sprout .sprout-note-review-more-item:hover:not(:disabled),
+.sprout .sprout-note-review-more-item:focus-visible {
+  background: var(--background-modifier-hover) !important;
+  color: var(--text-normal) !important;
+}
+
+.sprout .sprout-note-review-more-item :is(kbd, .kbd) {
+  margin-left: auto;
+  opacity: 0.85;
+}
+
+.sprout .sprout-note-review-more-item.sprout-menu-item--disabled,
+.sprout .sprout-note-review-more-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sprout .sprout-note-review-more-popover .sprout-menu-item--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.sprout .sprout-note-review-panel .sprout-btn-top-right {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 7;
+}
+
+@media (max-width: 767px) {
+  .sprout .sprout-note-review-panel {
+    --sprout-note-review-dock-space: 120px;
+    --sprout-note-review-edge-fade: 32px;
+  }
+
+  .sprout .sprout-note-review-content {
+    padding: 0 0 var(--sprout-note-review-dock-space);
+  }
+
+  .sprout .sprout-note-review-article {
+    padding: 0;
+  }
+
+  .sprout .sprout-note-review-panel {
+    margin-left: 14px;
+    margin-right: 14px;
+  }
+
+  .sprout .sprout-note-review-panel .sprout-btn-top-right {
+    top: 10px;
+    right: 10px;
+  }
+
+  .sprout .sprout-note-review-dock {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .sprout .sprout-note-review-dock-left,
+  .sprout .sprout-note-review-dock-right {
+    justify-content: center;
+  }
+
+  .sprout .sprout-note-review-dock-buttons {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .sprout .sprout-note-review-dock-buttons > button {
+    width: 100%;
+  }
+
+  .sprout .sprout-note-review-more-popover {
+    right: 50%;
+    transform: translateX(50%);
+  }
+}

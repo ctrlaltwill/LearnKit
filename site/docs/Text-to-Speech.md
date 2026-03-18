@@ -1,17 +1,17 @@
 # Text to Speech
 
-Last modified: 13/02/2026
+Last modified: 17/03/2026
 
-## Overview
+## Purpose
 
 Text to Speech (TTS) can read card content aloud.
 
 This helps with language study, listening practice, and accessibility.
 
-Sprout also supports flag-aware voice routing with [inline flag tokens](./Flags.md).
+LearnKit also supports flag-aware voice routing with [inline flag tokens](./Flags).
 Flag assets are provided by [HatScripts/circle-flags](https://github.com/HatScripts/circle-flags) (MIT).
 
-## Supported card types
+## Card Support
 
 | Card type | TTS support | What's read |
 |-----------|-------------|-------------|
@@ -23,7 +23,7 @@ Flag assets are provided by [HatScripts/circle-flags](https://github.com/HatScri
 
 If a card type is unsupported, no TTS audio is generated for that card.
 
-## Cloze TTS options
+## Cloze Modes
 
 For cloze cards, choose what is read on the answer side:
 
@@ -32,18 +32,18 @@ For cloze cards, choose what is read on the answer side:
 | **Deletion only** | Reads only the hidden/deleted text (e.g. "Paris") |
 | **Full sentence** | Reads the complete sentence with the deletion filled in (e.g. "The capital of France is Paris") |
 
-Configure this in **Settings → Audio → Cloze TTS mode**.
+Configure this in Settings -> Audio -> Cloze TTS mode.
 
-## Enabling TTS
+## Enable Steps
 
 1. Go to **Settings → Audio**.
 2. Toggle **Enable text-to-speech** on.
-3. Choose voice and language (see [Language Settings](./Language-Settings.md)).
+3. Choose voice and language (see [Language Settings](./Language-Settings)).
 4. TTS controls will appear in the study session interface.
 
-## Flag-aware voice routing
+## Flag Routing
 
-In **Settings → Audio → Flag-aware routing**:
+In Settings -> Audio -> Flag-aware routing:
 
 - **Use flags for language and accent** (default: on)
 	- `{{es}}` and `{{es-mx}}` can switch spoken language/accent.
@@ -53,9 +53,9 @@ In **Settings → Audio → Flag-aware routing**:
 	- Adds a spoken language prefix before each flag-switched segment.
 	- English variants use the label **English** while keeping regional accent (for example UK/US voice choice).
 
-See [Flags](./Flags.md) for token syntax and supported formats, and [Flag Codes](./Flag-Codes.md) for available language/region codes.
+See [Flags](./Flags) for token syntax and supported formats, and [Flag Codes](./Flag-Codes) for available language/region codes.
 
-## During a session
+## Session Controls
 
 When TTS is enabled:
 
@@ -63,7 +63,7 @@ When TTS is enabled:
 - Click it to hear the current side read aloud.
 - Auto-play can be configured to read automatically when a card is shown or when the answer is revealed.
 
-## Audio quality
+## Voice Quality
 
 TTS uses your device's built-in speech engine. Voice quality and available voices depend on your OS:
 

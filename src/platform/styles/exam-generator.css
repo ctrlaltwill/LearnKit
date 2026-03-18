@@ -1,0 +1,432 @@
+/* Exam Generator (beta) — isolated MVP styles */
+
+.workspace-leaf-content.sprout[data-type="sprout-exam-generator"] {
+  background: var(--background-primary) !important;
+}
+
+.sprout .sprout-exam-generator-root {
+  max-width: var(--sprout-exam-generator-max-width, 1280px);
+  width: 100%;
+  margin: 0 auto;
+  overflow: visible;
+}
+
+.sprout .sprout-exam-generator-title-strip {
+  max-width: min(var(--sprout-exam-generator-max-width, 1280px), calc(100% - var(--lk-shell-gutter-desktop)));
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--lk-title-strip-padding-desktop);
+  box-sizing: border-box;
+}
+
+.sprout .sprout-exam-generator-saved-tests-wrap {
+  position: relative;
+}
+
+.sprout .sprout-exam-generator-saved-tests-btn {
+  min-width: 120px;
+}
+
+.sprout .sprout-exam-generator-saved-tests-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.sprout .sprout-exam-generator-saved-tests-chevron {
+  transition: transform 140ms ease;
+}
+
+.sprout .sprout-exam-generator-saved-tests-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.sprout .sprout-exam-generator-saved-tests-popover {
+  min-width: 280px;
+  right: 0;
+  left: auto;
+}
+
+.sprout .sprout-exam-generator-saved-tests-panel {
+  box-shadow: var(--lk-shadow-popover-md);
+}
+
+.sprout .sprout-exam-generator-saved-tests-search {
+  margin-bottom: 4px;
+}
+
+.sprout .sprout-exam-generator-saved-tests-list {
+  min-width: 280px;
+}
+
+.sprout .sprout-exam-generator-saved-tests-option {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+}
+
+.sprout .sprout-exam-generator-content-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: var(--lk-shell-padding-desktop);
+}
+
+.sprout .sprout-exam-generator-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+}
+
+.sprout .sprout-exam-generator-setup-card {
+  gap: 14px;
+}
+
+.sprout .sprout-exam-generator-setup-card h3 {
+  margin: 0;
+}
+
+.sprout .sprout-exam-generator-setup-status {
+  display: inline-flex;
+  align-self: flex-start;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.sprout .sprout-exam-generator-step {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 12px;
+  padding: 12px;
+  background: color-mix(in oklab, var(--background-primary) 80%, transparent 20%);
+}
+
+.sprout .sprout-exam-generator-step-header h4 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.sprout .sprout-exam-generator-step-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sprout .sprout-exam-generator-source-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sprout .sprout-exam-generator-note-list {
+  max-height: 260px;
+  overflow: auto;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 10px;
+}
+
+.sprout .sprout-exam-generator-group-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sprout .sprout-exam-generator-selected-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sprout .sprout-exam-generator-tag-box {
+  height: auto;
+  min-height: 42px;
+  max-height: 110px;
+  align-items: flex-start;
+  padding: 6px 8px;
+}
+
+.sprout .sprout-exam-generator-note-chip {
+  background: var(--interactive-accent);
+  color: #fff;
+}
+
+.sprout .sprout-exam-generator-note-search {
+  width: 100%;
+  min-width: 160px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  padding: 8px;
+}
+
+.sprout .sprout-exam-generator-note-option {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+}
+
+.sprout .sprout-exam-generator-note-checkbox {
+  margin-top: 2px;
+}
+
+.sprout .sprout-exam-generator-note-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sprout .sprout-exam-generator-folder-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px dashed var(--background-modifier-border);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.sprout .sprout-exam-generator-folder-preview-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sprout .sprout-exam-generator-folder-preview-list {
+  max-height: 180px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sprout .sprout-exam-generator-note-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.sprout .sprout-exam-generator-note-row:last-child {
+  border-bottom: 0;
+}
+
+.sprout .sprout-exam-generator-note-title {
+  font-weight: 600;
+}
+
+.sprout .sprout-exam-generator-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.sprout .sprout-exam-generator-options-single {
+  grid-template-columns: 1fr;
+}
+
+.sprout .sprout-exam-generator-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sprout .sprout-exam-generator-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.sprout .sprout-exam-generator-select,
+.sprout .sprout-exam-generator-textarea {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  padding: 8px;
+}
+
+.sprout .sprout-exam-generator-textarea {
+  min-height: 160px;
+  resize: vertical;
+}
+
+.sprout .sprout-exam-generator-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sprout .sprout-exam-generator-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.sprout .sprout-exam-generator-actions-bottom {
+  margin-top: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.sprout .sprout-exam-generator-list-header {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 6px 10px 4px;
+}
+
+.sprout .sprout-exam-generator-list-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 4px 4px;
+}
+
+.sprout .sprout-exam-generator-list-group-pinned {
+  padding-top: 2px;
+}
+
+.sprout .sprout-exam-generator-list-divider {
+  height: 1px;
+  margin: 4px 8px;
+  background: var(--background-modifier-border);
+}
+
+.sprout .sprout-exam-generator-note-option-selected {
+  background: color-mix(in oklab, var(--interactive-accent) 14%, var(--background-primary) 86%);
+  border: 1px solid color-mix(in oklab, var(--interactive-accent) 55%, var(--background-modifier-border) 45%);
+}
+
+.sprout .sprout-exam-generator-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--text-muted);
+}
+
+.sprout .sprout-exam-generator-topline-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sprout .sprout-exam-generator-scope-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.sprout .sprout-exam-generator-scope-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.sprout .sprout-exam-generator-timer {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Auto-submit grace period warning banner */
+.sprout .sprout-exam-autosubmit-warning {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: var(--background-modifier-error);
+  color: var(--text-on-accent);
+  margin-bottom: 4px;
+}
+
+.sprout .sprout-exam-autosubmit-message {
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.sprout .sprout-exam-autosubmit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Title strip timer for exam taking mode */
+.sprout .sprout-exam-generator-title-strip .lk-session-timer-group {
+  flex-shrink: 0;
+}
+
+.sprout .sprout-exam-generator-option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+}
+
+.sprout .sprout-exam-generator-results {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sprout .sprout-exam-generator-result-row {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.sprout .sprout-exam-generator-result-title {
+  font-weight: 600;
+}
+
+.sprout .sprout-exam-generator-result-score {
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .sprout .sprout-exam-generator-title-strip {
+    padding: var(--lk-title-strip-padding-mobile);
+  }
+
+  .sprout .sprout-exam-generator-title-strip .sprout-inline-sentence {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sprout .sprout-exam-generator-saved-tests-wrap,
+  .sprout .sprout-exam-generator-saved-tests-btn {
+    width: 100%;
+  }
+
+  .sprout .sprout-exam-generator-saved-tests-popover,
+  .sprout .sprout-exam-generator-saved-tests-list {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .sprout .sprout-exam-generator-content-shell {
+    padding: var(--lk-shell-padding-mobile);
+  }
+
+  .sprout .sprout-exam-generator-options {
+    grid-template-columns: 1fr;
+  }
+}

@@ -6,20 +6,22 @@
 /* ---- Basecoat accent tokens passthrough ---- */
 
 /* Sprout: force Basecoat accent tokens on all Basecoat-scoped nodes */
-:where(.bc) {
-  --color-accent: var(--accent) !important;
-  --color-accent-foreground: var(--accent-foreground) !important;
+.sprout :where(.bc),
+:where(.sprout.bc) {
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
 }
 
 /* Obsidian dark mode class */
-:where(.theme-dark .bc) {
-  --color-accent: var(--accent) !important;
-  --color-accent-foreground: var(--accent-foreground) !important;
+:where(.theme-dark .sprout .bc),
+:where(.theme-dark .sprout.bc) {
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
 }
 
 /* ---- Dropdown menu basics ---- */
 
-.dropdown-menu hr {margin: 0; border-radius: var(--radius-m);
+.sprout .dropdown-menu hr {margin: 0; border-radius: var(--radius-m);
     overflow: hidden;}
 
 
@@ -53,105 +55,105 @@
 /* ---- Unified Basecoat dropdowns + filter panels ---- */
 
 /* Floating popover containers */
-:where(
+.sprout :where(
   .dropdown-menu > .min-w-56,
   .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1
 ) {
-  background-color: var(--bg-popover, var(--color-popover, var(--color-background))) !important;
-  color: var(--text-color) !important;
-  border-color: var(--border-color, var(--border-border, var(--border))) !important;
-  padding: 6px !important;
+  background-color: var(--bg-popover, var(--color-popover, var(--color-background)));
+  color: var(--text-color);
+  border-color: var(--border-color, var(--border-border, var(--border)));
+  padding: 6px;
 }
 
 /* Inherit theme border-radius on all popover panels (overrides Tailwind rounded-lg) */
-:where(.rounded-lg.border.bg-popover) {
-  border-radius: var(--button-radius, var(--radius-m)) !important;
+.sprout :where(.rounded-lg.border.bg-popover) {
+  border-radius: var(--button-radius, var(--radius-m));
 }
 
 /* Menu items: role=menuitem + role=menuitemradio */
-:where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
+.sprout :where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
   :is([role="menuitem"], [role="menuitemradio"]).group {
-  color: var(--text-color) !important;
-  margin: 1px 0 !important;
-  outline: none !important;
+  color: var(--text-color);
+  margin: 1px 0;
+  outline: none;
 }
 
 /* Hover / focus / active */
-:where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
+.sprout :where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
   :is([role="menuitem"], [role="menuitemradio"]).group:hover,
-:where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
+.sprout :where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
   :is([role="menuitem"], [role="menuitemradio"]).group:focus,
-:where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
+.sprout :where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
   :is([role="menuitem"], [role="menuitemradio"]).group:focus-visible {
-  background-color: var(--color-background) !important;
-  color: var(--text-color) !important;
+  background-color: var(--color-background);
+  color: var(--text-color);
 }
 
-:where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
+.sprout :where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
   :is([role="menuitem"], [role="menuitemradio"]).group:active {
-  background-color: var(--color-background) !important;
-  color: var(--text-color) !important;
+  background-color: var(--color-background);
+  color: var(--text-color);
 }
 
 /* Selected / current states */
-:where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
+.sprout :where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
   [role="menuitemradio"].group[aria-checked="true"],
-:where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
+.sprout :where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
   [role="menuitem"].group[aria-current="true"],
-:where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
+.sprout :where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
   [role="menuitem"].group[aria-selected="true"] {
-  background-color: var(--color-background) !important;
-  color: var(--text-color) !important;
+  background-color: var(--color-background);
+  color: var(--text-color);
 }
 
 /* Radio dot matches text color */
-:where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
+.sprout :where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
   [role="menuitemradio"].group .bg-foreground {
-  background-color: currentColor !important;
+  background-color: currentColor;
 }
 
 /* Icons inside menu items: override muted + inherit color */
-:where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
+.sprout :where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
   :is([role="menuitem"], [role="menuitemradio"]).group > span[aria-hidden="true"] {
-  color: currentColor !important;
+  color: currentColor;
   opacity: 0.9;
 }
 
-:where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
+.sprout :where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
   :is([role="menuitem"], [role="menuitemradio"]).group:hover > span[aria-hidden="true"],
-:where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
+.sprout :where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
   :is([role="menuitem"], [role="menuitemradio"]).group:focus > span[aria-hidden="true"],
-:where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
+.sprout :where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
   :is([role="menuitem"], [role="menuitemradio"]).group:focus-visible > span[aria-hidden="true"] {
   opacity: 1;
 }
 
 /* Ensure SVG strokes inherit everywhere */
-:where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
+.sprout :where(.dropdown-menu, .bc.p-1, .p-1, .rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-1)
   svg {
-  stroke: currentColor !important;
-  fill: none !important;
+  stroke: currentColor;
+  fill: none;
 }
 
 /* Collapsible section headers in the filter panel (role=button) */
-:where(.bc.p-1, .p-1) [role="button"] {
-  color: var(--text-color) !important;
-  margin: 1px 0 !important;
+.sprout :where(.bc.p-1, .p-1) [role="button"] {
+  color: var(--text-color);
+  margin: 1px 0;
   border-radius: var(--radius-m);
 }
 
-:where(.bc.p-1, .p-1) [role="button"]:hover,
-:where(.bc.p-1, .p-1) [role="button"]:active,
-:where(.bc.p-1, .p-1) [role="button"]:focus,
-:where(.bc.p-1, .p-1) [role="button"]:focus-visible {
-  background-color: var(--color-background) !important;
-  color: var(--text-color) !important;
-  outline: none !important;
+.sprout :where(.bc.p-1, .p-1) [role="button"]:hover,
+.sprout :where(.bc.p-1, .p-1) [role="button"]:active,
+.sprout :where(.bc.p-1, .p-1) [role="button"]:focus,
+.sprout :where(.bc.p-1, .p-1) [role="button"]:focus-visible {
+  background-color: var(--color-background);
+  color: var(--text-color);
+  outline: none;
 }
 
 /* Decks / Groups subtitles (non-clickable headings) */
-:where(.bc.p-1, .p-1) .text-sm.text-muted-foreground.px-2.py-1 {
-  color: var(--text-color) !important;
+.sprout :where(.bc.p-1, .p-1) .text-sm.text-muted-foreground.px-2.py-1 {
+  color: var(--text-color);
 }
 
 /* ---- Popover scaffold ---- */
@@ -160,10 +162,10 @@
 
 .sprout .sprout-popover-overlay,
 .sprout.sprout-popover-overlay {
-  position: fixed !important;
-  z-index: 999999 !important;
-  display: none !important;
-  pointer-events: auto !important;
+  position: fixed;
+  z-index: var(--lk-z-popover-overlay);
+  display: none;
+  pointer-events: auto;
   left: var(--sprout-popover-left, auto);
   top: var(--sprout-popover-top, auto);
   width: var(--sprout-popover-width, auto);
@@ -171,7 +173,7 @@
 
 .sprout .sprout-popover-overlay.is-open,
 .sprout.sprout-popover-overlay.is-open {
-  display: block !important;
+  display: block;
 }
 
 /* Sprout-scoped zoom for portalled popovers / dropdowns */
@@ -183,11 +185,46 @@
 }
 
 .sprout .sprout-overflow-visible {
-  overflow: visible !important;
+  overflow: visible;
 }
 
 .sprout .sprout-columns-panel {
-  padding: 6px !important;
+  padding: 6px;
+}
+
+/* ---- Columns-panel items (dot / radio-button multiselect) ---- */
+
+.sprout .sprout-cols-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  margin: 1px 0;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: var(--font-ui-small);
+  color: var(--text-normal);
+  user-select: none;
+  outline: none;
+  transition: background-color 80ms ease, border-color 80ms ease;
+}
+
+.sprout .sprout-cols-item:hover,
+.sprout .sprout-cols-item:focus {
+  background-color: var(--color-base-20);
+  border-color: var(--color-base-35);
+  outline: none;
+}
+
+.sprout .sprout-cols-item[aria-checked="true"] {
+  background-color: transparent;
+}
+
+.sprout .sprout-cols-item[aria-checked="true"]:hover,
+.sprout .sprout-cols-item[aria-checked="true"]:focus {
+  background-color: var(--color-base-20);
+  border-color: var(--color-base-35);
 }
 
 /* ---- Chart filter popover panel ---- */
@@ -197,63 +234,63 @@
 .sprout .sprout-chart-filter-panel {
   position: absolute;
   top: calc(100% + 6px);
-  z-index: 1000;
+  z-index: var(--lk-z-modal-container);
   min-width: 250px;
 }
 
 /* "Reset filters" (clickable text row) */
-:where(.bc.p-1, .p-1) .text-sm.text-muted-foreground.cursor-pointer {
-  color: var(--text-color) !important;
+.sprout :where(.bc.p-1, .p-1) .text-sm.text-muted-foreground.cursor-pointer {
+  color: var(--text-color);
   border-radius: var(--radius-m);
   padding-top: 6px;
   padding-bottom: 6px;
 }
 
-:where(.bc.p-1, .p-1) .text-sm.text-muted-foreground.cursor-pointer:hover,
-:where(.bc.p-1, .p-1) .text-sm.text-muted-foreground.cursor-pointer:focus,
-:where(.bc.p-1, .p-1) .text-sm.text-muted-foreground.cursor-pointer:focus-visible {
-  background-color: var(--color-background) !important;
-  outline: none !important;
+.sprout :where(.bc.p-1, .p-1) .text-sm.text-muted-foreground.cursor-pointer:hover,
+.sprout :where(.bc.p-1, .p-1) .text-sm.text-muted-foreground.cursor-pointer:focus,
+.sprout :where(.bc.p-1, .p-1) .text-sm.text-muted-foreground.cursor-pointer:focus-visible {
+  background-color: var(--color-background);
+  outline: none;
 }
 
 /* ---- Combobox / search popover ---- */
 
-:where(.rounded-lg.border.border-border.bg-popover.text-popover-foreground):not(.p-1) {
-  background-color: var(--background) !important;
-  color: var(--text-color) !important;
-  border-color: var(--border-color, var(--border-border, var(--border))) !important;
+.sprout :where(.rounded-lg.border.border-border.bg-popover.text-popover-foreground):not(.p-1) {
+  background-color: var(--background);
+  color: var(--text-color);
+  border-color: var(--border-color, var(--border-border, var(--border)));
 }
 
 /* Options in the listbox */
-:where(.rounded-lg.border.border-border.bg-popover.text-popover-foreground)
+.sprout :where(.rounded-lg.border.border-border.bg-popover.text-popover-foreground)
   [role="option"].group {
-  color: var(--text-color) !important;
-  margin: 1px 0 !important;
-  outline: none !important;
+  color: var(--text-color);
+  margin: 1px 0;
+  outline: none;
 }
 
-:where(.rounded-lg.border.border-border.bg-popover.text-popover-foreground)
+.sprout :where(.rounded-lg.border.border-border.bg-popover.text-popover-foreground)
   [role="option"].group:hover,
-:where(.rounded-lg.border.border-border.bg-popover.text-popover-foreground)
+.sprout :where(.rounded-lg.border.border-border.bg-popover.text-popover-foreground)
   [role="option"].group:active,
-:where(.rounded-lg.border.border-border.bg-popover.text-popover-foreground)
+.sprout :where(.rounded-lg.border.border-border.bg-popover.text-popover-foreground)
   [role="option"].group:focus,
-:where(.rounded-lg.border.border-border.bg-popover.text-popover-foreground)
+.sprout :where(.rounded-lg.border.border-border.bg-popover.text-popover-foreground)
   [role="option"].group:focus-visible {
-  background-color: var(--color-background) !important;
-  color: var(--text-color) !important;
+  background-color: var(--color-background);
+  color: var(--text-color);
 }
 
 /* If option text uses text-muted-foreground, force it to match */
-:where(.rounded-lg.border.border-border.bg-popover.text-popover-foreground)
+.sprout :where(.rounded-lg.border.border-border.bg-popover.text-popover-foreground)
   [role="option"] .text-muted-foreground {
-  color: var(--text-color) !important;
+  color: var(--text-color);
 }
 
 /* Combobox header icon inherits text color */
-:where(.rounded-lg.border.border-border.bg-popover.text-popover-foreground)
+.sprout :where(.rounded-lg.border.border-border.bg-popover.text-popover-foreground)
   .text-muted-foreground svg {
-  stroke: currentColor !important;
+  stroke: currentColor;
 }
 
 /* ---- Searchable popover (settings) ---- */
@@ -306,9 +343,9 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--background-primary) !important;
-  color: var(--text-normal) !important;
-  border-color: var(--sprout-border-color) !important;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  border-color: var(--sprout-border-color);
 }
 
 /* Search input wrapper */
@@ -317,7 +354,6 @@
   align-items: center;
   gap: 6px;
   padding: 4px 8px;
-  border-bottom: var(--sprout-border-width) solid var(--sprout-border-color);
 }
 
 .sprout-sp-search-icon {
@@ -332,11 +368,11 @@
 
 .sprout-sp-search-input {
   flex: 1;
-  border: none !important;
-  outline: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  color: var(--text-normal) !important;
+  border: none;
+  outline: none;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-normal);
   font-size: var(--font-ui-small);
   padding: 2px 0;
 }
@@ -349,6 +385,14 @@
   overflow-y: auto;
   flex: 1;
   padding: 2px 0;
+}
+
+.sprout-sp-listbox::before {
+  content: "";
+  display: block;
+  height: 1px;
+  margin: 4px 0 6px;
+  background: var(--sprout-border-color);
 }
 
 /* Individual option item */

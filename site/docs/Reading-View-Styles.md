@@ -4,7 +4,7 @@ Last modified: 16/02/2026
 
 ## Overview
 
-This page explains the Reading View macro styles in Sprout.
+This page explains the Reading View macro styles in LearnKit.
 
 Use **Settings → Reading → Macro styles** to switch between them.
 
@@ -12,7 +12,7 @@ Use **Settings → Reading → Macro styles** to switch between them.
 
 Currently available:
 
-- **Disabled**: turns off Sprout card styling and uses native Obsidian reading rendering.
+- **Disabled**: turns off LearnKit card styling and uses native Obsidian reading rendering.
 - **Flashcards**: fastest active-recall view with flip interaction (question face ↔ answer face).
 - **Clean markdown**: minimal note-like rendering with low chrome and clean text flow.
 

@@ -3,6 +3,8 @@ import type { CardRecord } from "../types/card";
 import type { ReviewLogEntry } from "../types/review";
 import type {
   AnalyticsEvent,
+  AnalyticsExamAttemptEvent,
+  AnalyticsNoteReviewEvent,
   AnalyticsReviewEvent,
   AnalyticsSessionEvent,
 } from "../types/analytics";
@@ -36,6 +38,8 @@ export interface IStore {
   getAnalyticsEvents(): AnalyticsEvent[];
   appendAnalyticsReview(args: Omit<AnalyticsReviewEvent, "kind" | "eventId">): AnalyticsReviewEvent;
   appendAnalyticsSession(args: Omit<AnalyticsSessionEvent, "kind" | "eventId">): AnalyticsSessionEvent;
+  appendAnalyticsExamAttempt(args: Omit<AnalyticsExamAttemptEvent, "kind" | "eventId">): AnalyticsExamAttemptEvent;
+  appendAnalyticsNoteReview(args: Omit<AnalyticsNoteReviewEvent, "kind" | "eventId">): AnalyticsNoteReviewEvent;
   truncateAnalyticsEvents(toLength: number): void;
   dataWeight(): number;
   assessPersistSafety(diskStore: Record<string, unknown> | null | undefined): PersistSafetyResult;

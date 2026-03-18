@@ -19,6 +19,7 @@
 import { type App, TFile } from "obsidian";
 import type SproutPlugin from "../../main";
 import { generateUniqueId } from "../../platform/core/ids";
+import { createCardAnchorGlobalRe } from "../../platform/core/identity";
 import { formatPipeField } from "../../platform/modals/modal-utils";
 
 // ── Vault-path utilities ────────────────────────────────────────────────────
@@ -102,7 +103,7 @@ export function uid(prefix = "sprout-io") {
 /** Collect all `^sprout-NNNNNNNNN` anchor IDs from a text string. */
 export function collectAnchorIdsFromText(text: string): Set<string> {
   const out = new Set<string>();
-  const re = /\^sprout-(\d{9})\b/g;
+  const re = createCardAnchorGlobalRe();
   let m: RegExpExecArray | null;
   while ((m = re.exec(text))) {
     if (m[1]) out.add(m[1]);

@@ -17,6 +17,8 @@ import {
 import { AOS_DURATION, MAX_CONTENT_WIDTH, MAX_CONTENT_WIDTH_PX, MS_DAY, VIEW_TYPE_REVIEWER } from "../../platform/core/constants";
 import { log } from "../../platform/core/logger";
 import { queryFirst, setCssProps } from "../../platform/core/ui";
+import { createTitleStripFrame } from "../../platform/core/view-primitives";
+import { SPROUT_HOME_CONTENT_SHELL_CLASS } from "../../platform/core/ui-classes";
 import { gradeFromRating } from "../../engine/scheduler/scheduler";
 import { syncOneFile } from "../../platform/integrations/sync/sync-engine";
 import { persistEditedCardAndSiblings } from "../../platform/core/targeted-card-persist";
@@ -28,13 +30,13 @@ import type SproutPlugin from "../../main";
 import type { Scope, Session, Rating } from "./types";
 import type { CardRecord } from "../../platform/types/card";
 import { getCorrectIndices, isMultiAnswerMcq } from "../../platform/types/card";
-import { buildSession, getNextDueInScope } from "./session";
+import { buildSession, getNextDueInScope, type SessionBuildOptions } from "./session";
 import { formatCountdown } from "./timers";
 import { renderClozeFront } from "./question-cloze";
 import type { ClozeRenderOptions } from "./question-cloze";
 import { renderDeckMode } from "./render-deck";
 import { renderSessionMode } from "./render-session";
-import { initAOS } from "../../platform/core/aos-loader";
+import { cascadeAOSOnLoad } from "../../platform/core/aos-loader";
 
 import { openSproutImageZoom } from "./zoom";
 import { SproutMarkdownHelper } from "./markdown-render";
@@ -121,6 +123,7 @@ export class SproutReviewerView extends ItemView {
   private _sessionStamp = 0;
   private _undo: UndoFrame | null = null;
   private _firstSessionRender = true;
+  private _firstDeckRender = true;
 
   // time-to-answer proxy
   private _timing: { stamp: number; cardId: string; startedAt: number } = {
@@ -134,6 +137,7 @@ export class SproutReviewerView extends ItemView {
   _moreMenuEl: HTMLElement | null = null;
   _moreBtnEl: HTMLElement | null = null;
   _moreOutsideBound = false;
+  private _returnToCoach = false;
 
   // Width toggle (header action)
   // Removed: private _isWideReviewer = false; (now using plugin.isWideMode)
@@ -144,6 +148,9 @@ export class SproutReviewerView extends ItemView {
 
   // Add shared header instance
   private _header: SproutHeader | null = null;
+  private _titleStripEl: HTMLElement | null = null;
+  private _pendingSessionBuildOptions: SessionBuildOptions | null = null;
+  private _titleTimerHostEl: HTMLElement | null = null;
 
   // Typed cloze state: stores what the user typed for each cloze index on the current card
   private _typedClozeAnswers = new Map<number, string>();
@@ -183,7 +190,7 @@ export class SproutReviewerView extends ItemView {
     return VIEW_TYPE_REVIEWER;
   }
   getDisplayText() {
-    return t(this.plugin.settings?.general?.interfaceLanguage, "ui.view.study.title", "Study");
+    return t(this.plugin.settings?.general?.interfaceLanguage, "ui.reviewer.session.header.title", "Flashcards");
   }
   getIcon() {
     return "star";
@@ -208,6 +215,7 @@ export class SproutReviewerView extends ItemView {
   private _applyReviewerWidthMode() {
     const root = this.contentEl as HTMLElement | null;
     if (!root) return;
+    const strip = this._titleStripEl;
 
     // Set data-sprout-wide attribute on containerEl (same as browser.ts)
     if (this.plugin.isWideMode) this.containerEl.setAttribute("data-sprout-wide", "1");
@@ -219,10 +227,17 @@ export class SproutReviewerView extends ItemView {
       this._widthToggleActionEl.classList.toggle("sprout-is-hidden", hideToggle);
     }
 
-    if (this.plugin.isWideMode) {
-      setCssProps(root, "--sprout-review-max-width", "none");
+    if (this.mode === "deck" || this.mode === "session") {
+      const maxWidth = this.plugin.isWideMode ? "none" : MAX_CONTENT_WIDTH_PX;
+      setCssProps(root, "--lk-home-max-width", maxWidth);
+      if (strip) setCssProps(strip, "--lk-home-max-width", maxWidth);
+      setCssProps(root, "--lk-review-max-width", maxWidth);
+    } else if (this.plugin.isWideMode) {
+      setCssProps(root, "--lk-review-max-width", "none");
+      if (strip) setCssProps(strip, "--sprout-view-strip-max-width", "none");
     } else {
-      setCssProps(root, "--sprout-review-max-width", MAX_CONTENT_WIDTH_PX);
+      setCssProps(root, "--lk-review-max-width", MAX_CONTENT_WIDTH_PX);
+      if (strip) setCssProps(strip, "--sprout-view-strip-max-width", MAX_CONTENT_WIDTH_PX);
     }
 
     const btn = this._widthToggleActionEl;
@@ -239,8 +254,75 @@ export class SproutReviewerView extends ItemView {
     }
   }
 
+  private _reviewerTitleText(): string {
+    if (this.mode === "deck") {
+      return t(this.plugin.settings?.general?.interfaceLanguage, "ui.reviewer.deck.title", "Deck browser");
+    }
+    return t(this.plugin.settings?.general?.interfaceLanguage, "ui.reviewer.session.header.title", "Flashcards");
+  }
+
+  private _reviewerSubtitleText(): string {
+    if (this.mode === "deck") {
+      return this.tx("ui.reviewer.deck.subtitle.chooseDeck", "Choose a deck to start studying");
+    }
+
+    if (this.isPracticeSession()) {
+      const totalPractice = Math.max(0, Number(this.session?.queue?.length ?? this.session?.stats?.total ?? 0));
+      const donePractice = Math.max(0, Number(this.session?.stats?.done ?? 0));
+      const remainingPractice = Math.max(0, totalPractice - donePractice);
+      return this.tx("ui.reviewer.title.practiceRemaining", "{count} flashcard{suffix} left in this practice session", {
+        count: remainingPractice,
+        suffix: remainingPractice === 1 ? "" : "s",
+      });
+    }
+
+    const total = Math.max(0, Number(this.session?.stats?.total ?? 0));
+    const done = Math.max(0, Number(this.session?.stats?.done ?? 0));
+    const remaining = Math.max(0, total - done);
+
+    if (remaining === 0) {
+      return this.tx("ui.reviewer.title.noneDue", "No flashcards are currently due!");
+    }
+
+    return this.tx("ui.reviewer.title.dueRemaining", "{count} due card{suffix} remaining", {
+      count: remaining,
+      suffix: remaining === 1 ? "" : "s",
+    });
+  }
+
+  private _ensureTitleStrip(root: HTMLElement): void {
+    const parent = root.parentElement;
+    if (!parent) return;
+
+    this._titleStripEl?.remove();
+    this._titleTimerHostEl = null;
+
+    const frame = createTitleStripFrame({
+      root,
+      stripClassName:
+        this.mode === "deck"
+          ? "lk-home-title-strip lk-review-title-strip lk-review-title-strip-deck"
+          : "lk-home-title-strip lk-review-title-strip lk-review-title-strip-session",
+      rowClassName: "sprout-inline-sentence w-full flex items-center justify-between gap-[10px] lk-review-title-row",
+    });
+    const { strip, right, title, subtitle } = frame;
+    title.textContent = this._reviewerTitleText();
+    subtitle.textContent = this._reviewerSubtitleText();
+
+    const timerHost = document.createElement("div");
+    timerHost.className = "lk-review-title-timer-host";
+    right.appendChild(timerHost);
+
+    this._titleStripEl = strip;
+    this._titleTimerHostEl = timerHost;
+  }
+
   private resetTiming() {
     this._timing = { stamp: 0, cardId: "", startedAt: 0 };
+  }
+
+  setReturnToCoach(enabled: boolean): void {
+    this._returnToCoach = !!enabled;
   }
 
   private noteCardPresented(card: CardRecord) {
@@ -336,7 +418,8 @@ export class SproutReviewerView extends ItemView {
       tts.speakBasicCard(card.q, audio);
     } else if ((card.type === "reversed" || card.type === "reversed-child") && (card.q || card.a)) {
       this._ttsLastSpokenKey = key;
-      const isBackDir = card.type === "reversed-child" && (card as unknown).reversedDirection === "back";
+      const reversedDirection = (card as Record<string, unknown>).reversedDirection;
+      const isBackDir = card.type === "reversed-child" && reversedDirection === "back";
       const frontText = (isBackDir || card.type === "reversed") ? (card.a || "") : (card.q || "");
       tts.speakBasicCard(frontText, audio);
     } else if ((card.type === "cloze" || card.type === "cloze-child") && card.clozeText) {
@@ -366,7 +449,8 @@ export class SproutReviewerView extends ItemView {
       tts.speakBasicCard(card.a, audio);
     } else if ((card.type === "reversed" || card.type === "reversed-child") && (card.q || card.a)) {
       this._ttsLastSpokenKey = key;
-      const isBackDir = card.type === "reversed-child" && (card as unknown).reversedDirection === "back";
+      const reversedDirection = (card as Record<string, unknown>).reversedDirection;
+      const isBackDir = card.type === "reversed-child" && reversedDirection === "back";
       const backText = (isBackDir || card.type === "reversed") ? (card.q || "") : (card.a || "");
       tts.speakBasicCard(backText, audio);
     } else if ((card.type === "cloze" || card.type === "cloze-child") && card.clozeText) {
@@ -760,6 +844,9 @@ export class SproutReviewerView extends ItemView {
     this.clearCountdown();
     closeMoreMenuImpl(this);
     this.clearUndo();
+    this._titleStripEl?.remove();
+    this._titleStripEl = null;
+    this._titleTimerHostEl = null;
     // Stop any ongoing TTS
     getTtsService().stop();
     await Promise.resolve();
@@ -824,7 +911,9 @@ export class SproutReviewerView extends ItemView {
   }
 
   private buildSession(scope: Scope): Session {
-    return buildSession(this.plugin, scope);
+    const options = this._pendingSessionBuildOptions ?? undefined;
+    this._pendingSessionBuildOptions = null;
+    return buildSession(this.plugin, scope, options);
   }
 
   private getNextDueInScope(scope: Scope): number | null {
@@ -1001,7 +1090,7 @@ export class SproutReviewerView extends ItemView {
         log.warn(`failed to persist practice analytics`, e);
       }
 
-      this.session.graded[id] = { rating, at: now, meta: meta || null };
+      this.session.graded[id] = { rating, at: now, meta: meta || undefined };
       this.session.stats.done = Object.keys(this.session.graded).length;
 
       this.showAnswer = true;
@@ -1065,9 +1154,11 @@ export class SproutReviewerView extends ItemView {
         });
       }
 
+      await this.plugin.recordCoachProgressForScope(this.session.scope, "flashcard", 1);
+
       await this.plugin.store.persist();
 
-      this.session.graded[id] = { rating, at: now, meta: meta || null };
+      this.session.graded[id] = { rating, at: now, meta: meta || undefined };
       this.session.stats.done = Object.keys(this.session.graded).length;
 
       this.showAnswer = true;
@@ -1155,7 +1246,8 @@ export class SproutReviewerView extends ItemView {
     // If this is a multi-answer MCQ, delegate to answerMcqMulti
     if (isMultiAnswerMcq(card)) return;
 
-    const pass = choiceIdx === card.correctIndex;
+    const [correctIdx] = getCorrectIndices(card);
+    const pass = Number.isInteger(correctIdx) && choiceIdx === correctIdx;
 
     const four = isFourButtonMode(this.plugin);
     const rating: Rating = pass ? (four ? "easy" : "good") : "again";
@@ -1168,7 +1260,7 @@ export class SproutReviewerView extends ItemView {
 
     await this.gradeCurrentRating(rating, {
       mcqChoice: choiceIdx,
-      mcqCorrect: card.correctIndex,
+      mcqCorrect: Number.isInteger(correctIdx) ? correctIdx : null,
       mcqPass: pass,
     });
 
@@ -1304,6 +1396,7 @@ export class SproutReviewerView extends ItemView {
     closeMoreMenuImpl(this);
 
     this.mode = "session";
+    this._firstSessionRender = true;
     this.session = this.buildSession(scope);
 
     if (this.session) {
@@ -1324,6 +1417,11 @@ export class SproutReviewerView extends ItemView {
 
     this.showAnswer = false;
     this.render();
+  }
+
+  openSessionFromScope(scope: Scope, options?: SessionBuildOptions) {
+    this._pendingSessionBuildOptions = options ?? null;
+    this.openSession(scope);
   }
 
   openSessionFromWidget(payload: WidgetSessionHandoffPayload) {
@@ -1369,8 +1467,16 @@ export class SproutReviewerView extends ItemView {
     closeMoreMenuImpl(this);
 
     this.mode = "deck";
+    this._firstDeckRender = true;
     this.session = null;
     this.showAnswer = false;
+
+    if (this._returnToCoach) {
+      this._returnToCoach = false;
+      void this.plugin.openCoachTab();
+      return;
+    }
+
     this.render();
   }
 
@@ -1564,7 +1670,7 @@ export class SproutReviewerView extends ItemView {
           // In-place DOM update: toggle the button class and update submit button
           const optionList = this.contentEl.querySelector(".sprout-mcq-options");
           if (optionList) {
-            const buttons = optionList.querySelectorAll<HTMLButtonElement>(":scope > button.btn-outline");
+            const buttons = optionList.querySelectorAll<HTMLButtonElement>(":scope > button.sprout-btn-toolbar");
             if (buttons[displayIdx]) {
               buttons[displayIdx].classList.toggle("sprout-mcq-selected", this._mcqMultiSelected.has(origIdx));
             }
@@ -1784,6 +1890,9 @@ export class SproutReviewerView extends ItemView {
 
   render() {
     const root = this.contentEl;
+    this._titleStripEl?.remove();
+    this._titleStripEl = null;
+    this._titleTimerHostEl = null;
     
     // Preserve the study session header when in session mode
     const studySessionHeader = queryFirst(root, "[data-study-session-header]");
@@ -1797,19 +1906,30 @@ export class SproutReviewerView extends ItemView {
     this._moreBtnEl = null;
 
     root.classList.add("sprout-view-content");
-    root.classList.add("sprout-review-root");
+    root.classList.add("lk-review-root");
+    root.classList.add("flex", "flex-col");
+    root.setAttribute("data-lk-review-mode", this.mode);
     this.containerEl.addClass("sprout");
+    this._ensureTitleStrip(root);
+
+    let contentHost: HTMLElement = root;
+    if (this.mode === "deck" || this.mode === "session") {
+      const contentShell = document.createElement("div");
+      contentShell.className = `${SPROUT_HOME_CONTENT_SHELL_CLASS} lk-review-content-shell`;
+      root.appendChild(contentShell);
+      contentHost = contentShell;
+    }
 
     let sessionColumn: HTMLElement | null = null;
     if (this.mode === "session") {
       sessionColumn = document.createElement("div");
-      sessionColumn.className = "sprout-study-column sprout-session-column flex flex-col min-h-0";
-      root.appendChild(sessionColumn);
+      sessionColumn.className = "sprout-study-column lk-session-column flex flex-col min-h-0";
+      contentHost.appendChild(sessionColumn);
     }
 
     // Re-attach the study session header if it was preserved
     if (headerWillPersist && studySessionHeader) {
-      (sessionColumn ?? root).appendChild(studySessionHeader);
+      (sessionColumn ?? contentHost).appendChild(studySessionHeader);
     }
 
     // --- Use shared SproutHeader ---
@@ -1821,7 +1941,7 @@ export class SproutReviewerView extends ItemView {
       });
     }
 
-    this._header.install("study");
+    this._header.install("cards");
 
     // Apply width rules again after mode-specific DOM is present
     this._applyReviewerWidthMode();
@@ -1835,13 +1955,32 @@ export class SproutReviewerView extends ItemView {
       renderDeckMode({
         app: this.app,
         plugin: this.plugin,
-        container: root,
+        container: contentHost,
+        applyAOS: false,
         expanded: this.expanded,
         setExpanded: (s) => (this.expanded = s),
         openSession: (scope) => this.openSession(scope),
         resyncActiveFile: () => this.resyncActiveFile(),
         rerender: () => this.render(),
       });
+
+      if (this._firstDeckRender) {
+        const animationsEnabled = this.plugin.settings?.general?.enableAnimations ?? true;
+        if (animationsEnabled) {
+          const titleStrip = this._titleStripEl as HTMLElement | null;
+          if (titleStrip) {
+            titleStrip.setAttribute("data-aos", "fade-up");
+            titleStrip.setAttribute("data-aos-anchor-placement", "top-top");
+            titleStrip.setAttribute("data-aos-duration", String(AOS_DURATION));
+          }
+          contentHost.setAttribute("data-aos", "fade-up");
+          contentHost.setAttribute("data-aos-delay", "100");
+          contentHost.setAttribute("data-aos-anchor-placement", "top-top");
+          contentHost.setAttribute("data-aos-duration", String(AOS_DURATION));
+          cascadeAOSOnLoad(root, { stepMs: 0, baseDelayMs: 0, durationMs: AOS_DURATION, overwriteDelays: false });
+        }
+        this._firstDeckRender = false;
+      }
 
       return;
     }
@@ -1861,7 +2000,7 @@ export class SproutReviewerView extends ItemView {
     const canStartPractice = !practiceMode && !activeCard && this.canStartPractice(this.session.scope);
 
     renderSessionMode({
-      container: sessionColumn ?? root,
+      container: sessionColumn ?? contentHost,
       interfaceLanguage: this.plugin.settings?.general?.interfaceLanguage,
 
       session: this.session,
@@ -1966,7 +2105,7 @@ export class SproutReviewerView extends ItemView {
 
       openEditModal: () => this.openEditModalForCurrentCard(),
 
-      applyAOS: this.plugin.settings?.general?.enableAnimations ?? true,
+      applyAOS: false,
       aosDelayMs: this._firstSessionRender ? 100 : 0,
 
       ttsEnabled: ttsEnabledForCard,
@@ -1975,6 +2114,19 @@ export class SproutReviewerView extends ItemView {
 
       rerender: () => this.render(),
     });
+
+    const renderedSessionHeader = queryFirst<HTMLElement>(sessionColumn ?? root, "[data-study-session-header]");
+    const renderedSessionTimerRow = renderedSessionHeader?.querySelector<HTMLElement>(".lk-session-header-left > div:nth-child(2)") ?? null;
+    const titleTimerHost = this._titleTimerHostEl as HTMLElement | null;
+    if (titleTimerHost) {
+      while (titleTimerHost.firstChild) titleTimerHost.removeChild(titleTimerHost.firstChild);
+      if (renderedSessionTimerRow) {
+        titleTimerHost.appendChild(renderedSessionTimerRow);
+      }
+    }
+    if (renderedSessionHeader) {
+      renderedSessionHeader.classList.add("lk-review-session-header-hidden");
+    }
 
     queueMicrotask(() =>
       renderTitleMarkdownIfNeeded({
@@ -1990,9 +2142,17 @@ export class SproutReviewerView extends ItemView {
       const animationsEnabled = this.plugin.settings?.general?.enableAnimations ?? true;
       // Initialize AOS animations for reviewer cards
       if (animationsEnabled) {
-        try {
-          initAOS({ duration: AOS_DURATION, easing: "ease-out", once: true, offset: 50 });
-        } catch (e) { log.swallow("review-view initAOS", e); }
+        const titleStrip = this._titleStripEl as HTMLElement | null;
+        if (titleStrip) {
+          titleStrip.setAttribute("data-aos", "fade-up");
+          titleStrip.setAttribute("data-aos-anchor-placement", "top-top");
+          titleStrip.setAttribute("data-aos-duration", String(AOS_DURATION));
+        }
+        contentHost.setAttribute("data-aos", "fade-up");
+        contentHost.setAttribute("data-aos-delay", "100");
+        contentHost.setAttribute("data-aos-anchor-placement", "top-top");
+        contentHost.setAttribute("data-aos-duration", String(AOS_DURATION));
+        cascadeAOSOnLoad(root, { stepMs: 0, baseDelayMs: 0, durationMs: AOS_DURATION, overwriteDelays: false });
       }
       this._firstSessionRender = false;
       this.armTimer();

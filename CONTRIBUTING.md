@@ -1,6 +1,6 @@
-# Contributing to Sprout
+# Contributing to LearnKit
 
-Thanks for helping to improve Sprout
+Thanks for helping to improve LearnKit
 
 This document focuses on the workflow for translating the plugin to improve localisation.
 

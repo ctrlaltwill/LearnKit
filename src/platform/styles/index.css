@@ -54,6 +54,12 @@
 /* 14a. Study Assistant — dedicated panel/chat styles */
 @import "./study-assistant.css";
 
+/* 14b. Note Review — full-note reader and floating action dock */
+@import "./note-review.css";
+
+/* 14c. Exam Generator (beta) */
+@import "./exam-generator.css";
+
 /* 15. Settings — backup grid rows, table wrapper, cell labels */
 @import "./settings.css";
 

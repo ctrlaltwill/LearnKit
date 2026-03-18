@@ -13,6 +13,8 @@
  *   - AnalyticsMode (re-exported type) — scheduled vs practice mode
  *   - AnalyticsReviewEvent (re-exported type) — per-card review analytics event
  *   - AnalyticsSessionEvent (re-exported type) — study session analytics event
+ *   - AnalyticsExamAttemptEvent (re-exported type) — exam/test attempt analytics event
+ *   - AnalyticsNoteReviewEvent (re-exported type) — note-review action analytics event
  *   - AnalyticsEvent (re-exported type) — discriminated union of analytics events
  *   - AnalyticsData (re-exported type) — top-level analytics storage
  *   - CardStage (re-exported type) — card lifecycle stage
@@ -37,6 +39,8 @@ export type {
   AnalyticsMode,
   AnalyticsReviewEvent,
   AnalyticsSessionEvent,
+  AnalyticsExamAttemptEvent,
+  AnalyticsNoteReviewEvent,
   AnalyticsEvent,
   AnalyticsData,
 } from "../types/analytics";
@@ -48,6 +52,8 @@ import type { CardRecord } from "../types/card";
 import { normalizeCardOptions } from "../types/card";
 import type { ReviewLogEntry } from "../types/review";
 import type {
+  AnalyticsExamAttemptEvent,
+  AnalyticsNoteReviewEvent,
   AnalyticsReviewEvent,
   AnalyticsSessionEvent,
   AnalyticsEvent,
@@ -256,6 +262,60 @@ export class JsonStore {
     const a = this.data.analytics;
     a.events.push(ev);
 
+    if (a.events.length > ANALYTICS_MAX_EVENTS) {
+      a.events.splice(0, a.events.length - ANALYTICS_MAX_EVENTS);
+    }
+
+    this.bumpRevision();
+    return ev;
+  }
+
+  appendAnalyticsExamAttempt(args: Omit<AnalyticsExamAttemptEvent, "kind" | "eventId">): AnalyticsExamAttemptEvent {
+    const now = Date.now();
+    this._ensureAnalyticsShape(now);
+
+    const ev: AnalyticsExamAttemptEvent = {
+      kind: "exam-attempt",
+      eventId: this._nextAnalyticsId(),
+      at: Number(args.at) || now,
+      testId: String(args.testId || ""),
+      attemptId: args.attemptId ? String(args.attemptId) : undefined,
+      label: args.label ? String(args.label) : undefined,
+      sourceSummary: args.sourceSummary ? String(args.sourceSummary) : undefined,
+      finalPercent: Number.isFinite(args.finalPercent) ? Number(args.finalPercent) : 0,
+      autoSubmitted: Boolean(args.autoSubmitted),
+      elapsedSec: Number.isFinite(args.elapsedSec) ? Number(args.elapsedSec) : undefined,
+      mcqCount: Number.isFinite(args.mcqCount) ? Number(args.mcqCount) : undefined,
+      saqCount: Number.isFinite(args.saqCount) ? Number(args.saqCount) : undefined,
+    };
+
+    const a = this.data.analytics;
+    a.events.push(ev);
+    if (a.events.length > ANALYTICS_MAX_EVENTS) {
+      a.events.splice(0, a.events.length - ANALYTICS_MAX_EVENTS);
+    }
+
+    this.bumpRevision();
+    return ev;
+  }
+
+  appendAnalyticsNoteReview(args: Omit<AnalyticsNoteReviewEvent, "kind" | "eventId">): AnalyticsNoteReviewEvent {
+    const now = Date.now();
+    this._ensureAnalyticsShape(now);
+
+    const ev: AnalyticsNoteReviewEvent = {
+      kind: "note-review",
+      eventId: this._nextAnalyticsId(),
+      at: Number(args.at) || now,
+      noteId: String(args.noteId || args.sourceNotePath || ""),
+      sourceNotePath: String(args.sourceNotePath || args.noteId || ""),
+      mode: args.mode === "practice" ? "practice" : "scheduled",
+      action: args.action,
+      algorithm: args.algorithm === "lkrs" ? "lkrs" : "fsrs",
+    };
+
+    const a = this.data.analytics;
+    a.events.push(ev);
     if (a.events.length > ANALYTICS_MAX_EVENTS) {
       a.events.splice(0, a.events.length - ANALYTICS_MAX_EVENTS);
     }

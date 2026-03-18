@@ -16,6 +16,12 @@ import type { ReviewLogEntry } from "../../platform/types/review";
 import type { CardState } from "../../platform/types/scheduler";
 import { getGroupIndex, normaliseGroupPath } from "../../engine/indexing/group-index";
 
+export type SessionBuildOptions = {
+  ignoreDailyReviewLimit?: boolean;
+  ignoreDailyNewLimit?: boolean;
+  dueOnly?: boolean;
+};
+
 
 /** Scope predicate used by deck/session logic (note-path based scopes). */
 export function inScope(scope: Scope | null, notePath: string) {
@@ -174,15 +180,20 @@ function resolveCardsInScope(plugin: SproutPlugin, scope: Scope): CardRecord[] {
   return filterReviewable(raw);
 }
 
-export function buildSession(plugin: SproutPlugin, scope: Scope): Session {
+export function buildSession(plugin: SproutPlugin, scope: Scope, options?: SessionBuildOptions): Session {
   const now = Date.now();
   const startToday = startOfTodayMs(now);
 
   const settings = plugin.settings;
   const study = settings?.study ?? {};
 
-  const dailyNewLimit = toNonNegIntOrInfinity(study.dailyNewLimit);
-  const dailyReviewLimit = toNonNegIntOrInfinity(study.dailyReviewLimit);
+  const dailyNewLimit = options?.ignoreDailyNewLimit
+    ? Number.POSITIVE_INFINITY
+    : toNonNegIntOrInfinity(study.dailyNewLimit);
+  const dailyReviewLimit = options?.ignoreDailyReviewLimit
+    ? Number.POSITIVE_INFINITY
+    : toNonNegIntOrInfinity(study.dailyReviewLimit);
+  const dueOnly = options?.dueOnly === true;
   const siblingMode: string = (study as Record<string, unknown>).siblingMode as string ?? "standard";
 
   const cards = resolveCardsInScope(plugin, scope);
@@ -249,8 +260,9 @@ export function buildSession(plugin: SproutPlugin, scope: Scope): Session {
   const dueTake =
     remainingReview === Number.POSITIVE_INFINITY ? dueLike : dueLike.slice(0, remainingReview);
 
-  const newTake =
-    remainingNew === Number.POSITIVE_INFINITY ? news : news.slice(0, remainingNew);
+  const newTake = dueOnly
+    ? []
+    : (remainingNew === Number.POSITIVE_INFINITY ? news : news.slice(0, remainingNew));
 
   // ── Combine and apply sibling mode ─────────────────────────────────────
   let queue: CardRecord[];

@@ -3,6 +3,12 @@
    Light + dark theme variants.
    ========================================================================== */
 
+/* ---- LearnKit-wide button shadow reset ---- */
+
+.sprout button {
+  box-shadow: none !important;
+}
+
 /* ---- Icon outline buttons ---- */
 
 .sprout .btn-icon-outline {
@@ -10,7 +16,7 @@
   color: var(--foreground) !important;
   border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
   box-shadow: none !important;
-  border-radius: var(--button-radius, var(--radius-m)) !important;
+  border-radius: var(--radius-md, var(--radius-md)) !important;
   padding: 0.375rem !important;
   min-width: 32px;
   min-height: 36px;
@@ -23,14 +29,14 @@
   height: 36px !important;
   min-height: 36px !important;
 }
-.sprout .sprout-view-actions .btn-outline,
+.sprout .sprout-view-actions .sprout-btn-toolbar,
 .sprout .sprout-view-actions .btn-icon-outline {
   height: 36px !important;
   min-height: 36px !important;
   align-items: center;
 }
-.sprout .view-header-nav-buttons .btn-outline,
-.sprout .sprout-header .view-header-nav-buttons .btn-outline {
+.sprout .view-header-nav-buttons .sprout-btn-toolbar,
+.sprout .sprout-header .view-header-nav-buttons .sprout-btn-toolbar {
   height: 36px !important;
   min-height: 36px !important;
   align-items: center;
@@ -55,7 +61,7 @@
   background: var(--background) !important;
   color: var(--foreground) !important;
   border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
-  border-radius: var(--button-radius, var(--radius-m)) !important;
+  border-radius: var(--radius-md, var(--radius-md)) !important;
 }
 .theme-dark .sprout .btn-icon-outline:hover,
 .theme-dark .sprout .btn-icon-outline:focus-visible {
@@ -99,79 +105,250 @@
 
 /* ---- Outline buttons ---- */
 
-.sprout .btn-outline {
-  background: var(--background) !important;
+.sprout .sprout-btn-toolbar {
+  background: var(--color-base-20);
   color: var(--foreground) !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
+  border: 1px solid var(--color-base-35);
   box-shadow: none !important;
-  border-radius: var(--button-radius, var(--radius-m)) !important;
+  border-radius: var(--radius-md, var(--radius-md));
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
-.sprout .btn-outline:hover,
-.sprout .btn-outline:focus-visible {
-  background: var(--background-modifier-hover)!important;
+.sprout .sprout-btn-toolbar:hover,
+.sprout .sprout-btn-toolbar:focus-visible {
+  background: var(--color-base-25)!important;
   color: var(--color-base-100) !important;
-  border-color: var(--color-base-30) !important;
-}
-.sprout .btn-outline:focus-visible {
-  outline: 2px solid rgba(var(--interactive-accent-rgb), 0.5);
-  outline-offset: 2px;
+  border-color: var(--color-base-40) !important;
 }
 
-.sprout .btn-outline:active {
-  background: var(--muted) !important;
-  color: var(--foreground) !important;
-  border-color: var(--muted) !important;
+.sprout .sprout-btn-toolbar:active {
+  background: var(--color-base-35)!important;
+  color: var(--color-base-100) !important;
+  border-color: var(--color-base-50) !important;
+}
+
+/* ---- Generic reusable button variants ---- */
+
+.sprout .sprout-btn-toolbar {
+  background-color: var(--color-base-00) ;
+  color: var(--text-normal) !important;
+  border: 1px solid var(--color-base-00) ;
+  border-radius: var(--radius-md, var(--radius-md)) !important;
+  box-shadow: none !important;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.sprout .sprout-btn-toolbar:hover,
+.sprout .sprout-btn-toolbar:focus-visible,
+.sprout .sprout-btn-toolbar:focus-within,
+.sprout .sprout-btn-toolbar[aria-expanded="true"] {
+  background-color: var(--color-base-20) !important;
+  color: var(--color-base-100) !important;
+  border-color: var(--color-base-35) !important;
+}
+
+.sprout .sprout-btn-toolbar:active {
+  background-color: var(--color-base-25) !important;
+  color: var(--color-base-100) !important;
+  border-color: var(--color-base-40) !important;
+}
+
+.sprout .sprout-btn-filter {
+  background-color: var(--color-base-10) !important;
+  border: 1px solid var(--color-base-25) !important;
+}
+
+.theme-dark .sprout .sprout-btn-filter {
+  background-color: var(--color-base-10) !important;
+  border: 1px solid var(--color-base-25) !important;
+}
+
+.sprout :is(.sprout-btn-control, .sprout-btn-outline-muted) {
+  border-radius: var(--radius-md, var(--radius-md)) !important;
+  padding: 7px 15px !important;
+  transition: transform .14s, background-color .14s, color .14s, border-color .14s;
+}
+
+.sprout .sprout-btn-control {
+  color: var(--theme-base-95) !important;
+  background: var(--theme-base-15) !important;
+  border: 1px solid var(--theme-base-35) !important;
+}
+
+
+
+.sprout .sprout-btn-control:focus-visible,
+.sprout .sprout-btn-control:active {
+  transform: translateY(0);
+  background: var(--theme-base-25) !important;
+}
+
+.sprout .sprout-btn-outline-muted {
+  color: var(--theme-base-95) !important;
+  background: var(--theme-base-15) !important;
+  border: 1px solid var(--theme-base-35) !important;
+}
+
+.sprout .sprout-btn-outline-muted:hover:not(:disabled):not([disabled]) {
+      transform: translateY(-1px);
+    border: 1px solid var(--theme-base-45) !important;
+    color: var(--theme-base-95) !important;
+    background-color: var(--theme-base-25) !important;}
+
+.sprout .sprout-btn-outline-muted:focus-visible,
+.sprout .sprout-btn-outline-muted:active {
+ transform: translateY(-1px);
+    border: 1px solid var(--theme-base-45) !important;
+    color: var(--theme-base-95) !important;
+    background-color: var(--theme-base-25) !important;
+}
+
+.sprout .sprout-btn-outline-muted:disabled,
+.sprout .sprout-btn-outline-muted[disabled],
+.sprout .sprout-btn-outline-muted:disabled:hover,
+.sprout .sprout-btn-outline-muted[disabled]:hover,
+.sprout .sprout-btn-outline-muted:disabled:active,
+.sprout .sprout-btn-outline-muted[disabled]:active,
+.sprout .sprout-btn-outline-muted:disabled:focus,
+.sprout .sprout-btn-outline-muted[disabled]:focus,
+.sprout .sprout-btn-outline-muted:disabled:focus-visible,
+.sprout .sprout-btn-outline-muted[disabled]:focus-visible {
+  background: var(--theme-base-05) !important;
+  color: var(--theme-base-75) !important;
+  border: 1px solid var(--theme-base-25) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+/* Keep title-strip controls visually consistent across views. */
+.sprout .lk-home-title-strip :is(.sprout-btn-toolbar, .sprout-btn-control, .sprout-btn-outline-muted) {
+  font-size: var(--sprout-font-xs);
+}
+
+.sprout .lk-home-title-strip :is(
+    .sprout-btn-control[aria-pressed="true"],
+    .sprout-btn-control.is-active,
+    .sprout-btn-toolbar.sprout-btn-control[aria-pressed="true"],
+    .sprout-btn-toolbar.sprout-btn-control.is-active
+  ) {
+  border: 1px solid var(--theme-black-95) !important;
+  background: var(--theme-base-95) !important;
+  color: #fff !important;
+}
+
+.sprout .lk-home-title-strip :is(
+    .sprout-btn-control[aria-pressed="true"],
+    .sprout-btn-control.is-active,
+    .sprout-btn-toolbar.sprout-btn-control[aria-pressed="true"],
+    .sprout-btn-toolbar.sprout-btn-control.is-active
+  ):hover,
+.sprout .lk-home-title-strip :is(
+    .sprout-btn-control[aria-pressed="true"],
+    .sprout-btn-control.is-active,
+    .sprout-btn-toolbar.sprout-btn-control[aria-pressed="true"],
+    .sprout-btn-toolbar.sprout-btn-control.is-active
+  ):focus-visible {
+  border: 1px solid var(--theme-black-95) !important;
+  background: var(--theme-base-95) !important;
+  color: #fff !important;
+  transform: translateY(0);
+}
+
+.sprout .sprout-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sprout .sprout-btn-exit-sm {
+  justify-content: center;
+  align-items: center;
+  display: inline-flex;
+  width: 26px;
+  height: 26px !important;
+  min-width: 26px;
+  min-height: 26px !important;
+  border-radius: calc(var(--radius-md) + 2px) !important;
+  padding: 0 !important;
+  background: var(--color-base-20) !important;
+  color: var(--color-base-100) !important;
+  border: 1px solid var(--color-base-35) !important;
+  transition: transform .16s, background-color .16s, color .16s, box-shadow .16s;
+}
+
+.sprout .sprout-btn-exit-sm .svg-icon,
+.sprout .sprout-btn-exit-sm svg {
+  width: 14px;
+  height: 14px;
+}
+
+.sprout .sprout-btn-exit-sm:hover,
+.sprout .sprout-btn-exit-sm:focus-visible {
+  transform: translateY(-1px);
+  background: var(--color-base-25) !important;
+  border-color: var(--color-base-40) !important;
+}
+
+.sprout .sprout-btn-exit-sm:active {
+  transform: translateY(0);
+}
+
+.sprout .sprout-btn-top-right {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 7;
 }
 
 /* ---- Button groups ---- */
 
 .sprout .button-group {
   display: inline-flex;
-  border-radius: var(--button-radius, var(--radius-m)) !important;
+  border-radius: var(--radius-md, var(--radius-md)) !important;
   overflow: hidden;
   background: var(--background) !important;
   border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
 }
 
-.sprout .button-group .btn-outline,
+.sprout .button-group .sprout-btn-toolbar,
 .sprout .button-group .btn-icon-outline {
   border-radius: 0 !important;
   border: none !important;
   border-right: var(--sprout-border-width) solid var(--sprout-border-color) !important;
 }
-.sprout .button-group .btn-outline:last-child,
+.sprout .button-group .sprout-btn-toolbar:last-child,
 .sprout .button-group .btn-icon-outline:last-child {
   border-right: none !important;
 }
 
 /* First child inherits left radii from group */
 .sprout .button-group > :first-child {
-  border-top-left-radius: var(--button-radius, var(--radius-m)) !important;
-  border-bottom-left-radius: var(--button-radius, var(--radius-m)) !important;
+  border-top-left-radius: var(--radius-md, var(--radius-md)) !important;
+  border-bottom-left-radius: var(--radius-md, var(--radius-md)) !important;
 }
 /* Last child inherits right radii from group */
 .sprout .button-group > :last-child {
-  border-top-right-radius: var(--button-radius, var(--radius-m)) !important;
-  border-bottom-right-radius: var(--button-radius, var(--radius-m)) !important;
+  border-top-right-radius: var(--radius-md, var(--radius-md)) !important;
+  border-bottom-right-radius: var(--radius-md, var(--radius-md)) !important;
 }
 
 /* ---- Dark theme outline buttons & button groups ---- */
 
-.theme-dark .sprout .btn-outline {
+.theme-dark .sprout .sprout-btn-toolbar {
   background: var(--background) !important;
   color: var(--foreground) !important;
   border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
-  border-radius: var(--button-radius, var(--radius-m)) !important;
+  border-radius: var(--radius-md, var(--radius-md)) !important;
 }
-.theme-dark .sprout .btn-outline:hover,
-.theme-dark .sprout .btn-outline:focus-visible {
+.theme-dark .sprout .sprout-btn-toolbar:hover,
+.theme-dark .sprout .sprout-btn-toolbar:focus-visible {
   background: var(--color-base-30) !important;
   color: var(--color-base-100) !important;
   border-color: var(--color-base-35) !important;
 }
-.theme-dark .sprout .btn-outline:active {
+.theme-dark .sprout .sprout-btn-toolbar:active {
   background: var(--muted) !important;
   color: var(--foreground) !important;
   border-color: var(--muted) !important;
@@ -179,25 +356,25 @@
 .theme-dark .sprout .button-group {
   background: var(--background) !important;
   border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
-  border-radius: var(--button-radius, var(--radius-m)) !important;
+  border-radius: var(--radius-md, var(--radius-md)) !important;
 }
-.theme-dark .sprout .button-group .btn-outline,
+.theme-dark .sprout .button-group .sprout-btn-toolbar,
 .theme-dark .sprout .button-group .btn-icon-outline {
   border-radius: 0 !important;
   border: none !important;
   border-right: var(--sprout-border-width) solid var(--sprout-border-color) !important;
 }
-.theme-dark .sprout .button-group .btn-outline:last-child,
+.theme-dark .sprout .button-group .sprout-btn-toolbar:last-child,
 .theme-dark .sprout .button-group .btn-icon-outline:last-child {
   border-right: none !important;
 }
 .theme-dark .sprout .button-group > :first-child {
-  border-top-left-radius: var(--button-radius, var(--radius-m)) !important;
-  border-bottom-left-radius: var(--button-radius, var(--radius-m)) !important;
+  border-top-left-radius: var(--radius-md, var(--radius-md)) !important;
+  border-bottom-left-radius: var(--radius-md, var(--radius-md)) !important;
 }
 .theme-dark .sprout .button-group > :last-child {
-  border-top-right-radius: var(--button-radius, var(--radius-m)) !important;
-  border-bottom-right-radius: var(--button-radius, var(--radius-m)) !important;
+  border-top-right-radius: var(--radius-md, var(--radius-md)) !important;
+  border-bottom-right-radius: var(--radius-md, var(--radius-md)) !important;
 }
 
 /* ---- Global Obsidian button padding reset ---- */
@@ -233,10 +410,28 @@ button[aria-current="page"] {
     background-color: rgba(255, 255, 255, 0.08);
 }
 
-/* ---- Expand/collapse button min width ---- */
+/* ---- Expand/collapse button compact behavior ---- */
 
-.btn-outline[data-sprout-expand-collapse] {
-  min-width: 110px !important;
+.sprout .sprout-btn-toolbar[data-sprout-expand-collapse] {
+  min-width: 36px !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+  overflow: hidden;
+}
+
+.sprout .sprout-btn-toolbar[data-sprout-expand-collapse] [data-sprout-label] {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  margin-left: 0;
+  transition: max-width 160ms ease, opacity 120ms ease, margin-left 160ms ease;
+}
+
+.sprout .sprout-btn-toolbar[data-sprout-expand-collapse]:is(:hover, :focus-visible, [aria-expanded="true"]) [data-sprout-label] {
+  max-width: 8rem;
+  opacity: 1;
+  margin-left: 2px;
 }
 
 /* ---- Button height preview (uniform 34px minimum) ---- */
@@ -244,7 +439,7 @@ button[aria-current="page"] {
 .sprout :is(
   button,
   .btn,
-  .btn-outline,
+  .sprout-btn-toolbar,
   .btn-primary,
   .btn-destructive,
   .btn-icon-outline,
@@ -255,7 +450,7 @@ button[aria-current="page"] {
   font-weight: 400 !important;
 }
 
-.sprout :is(.btn, .btn-outline, .btn-primary, .btn-destructive, .btn-icon-outline) {
+.sprout :is(.btn, .sprout-btn-toolbar, .btn-primary, .btn-destructive, .btn-icon-outline) {
   max-height: none !important;
 }
 
@@ -282,9 +477,10 @@ button[aria-current="page"] {
 
 
 button.sprout-guide-dropdown-item {
-    background-color: transparent !important;
+  background-color: transparent !important;
 }
 
 button.sprout-guide-dropdown-item:hover {
-    background-color: var(--muted) !important;
+  background-color: var(--accent, var(--color-base-25)) !important;
+  color: var(--accent-foreground, var(--text-normal)) !important;
 }

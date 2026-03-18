@@ -26,15 +26,18 @@ export const VIEW_TYPE_REVIEWER = "sprout-reviewer";
 export const VIEW_TYPE_WIDGET = "sprout-widget";
 export const VIEW_TYPE_STUDY_ASSISTANT = "sprout-study-assistant";
 export const VIEW_TYPE_BROWSER = "sprout-browser";
+export const VIEW_TYPE_NOTE_REVIEW = "learnkit-note-review";
 export const VIEW_TYPE_ANALYTICS = "sprout-analytics";
 export const VIEW_TYPE_HOME = "sprout-home";
 export const VIEW_TYPE_SETTINGS = "sprout-settings";
+export const VIEW_TYPE_EXAM_GENERATOR = "sprout-exam-generator";
+export const VIEW_TYPE_COACH = "sprout-coach";
 
-export const BRAND = "Sprout";
+export const BRAND = "LearnKit";
 
 // ── Layout ──────────────────────────────────────────────────────────
 /** Max content width in normal (non-wide) mode. */
-export const MAX_CONTENT_WIDTH = 1080;
+export const MAX_CONTENT_WIDTH = 1280;
 export const MAX_CONTENT_WIDTH_PX = `${MAX_CONTENT_WIDTH}px`;
 
 // ── Z-index ─────────────────────────────────────────────────────────

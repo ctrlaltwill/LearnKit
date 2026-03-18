@@ -7,6 +7,7 @@ import {
   buildQuestionFor,
   buildAnswerOrOptionsFor,
 } from "../src/views/reviewer/fields";
+import { getCorrectIndices, isMultiAnswerMcq } from "../src/platform/types/card";
 import type { CardRecord } from "../src/platform/core/store";
 
 describe("reviewer fields utilities", () => {
@@ -92,5 +93,20 @@ describe("reviewer fields utilities", () => {
     } as CardRecord;
 
     expect(buildAnswerOrOptionsFor(mcqMulti)).toBe("One | **Two** | Three | **Four**");
+  });
+
+  it("infers correct indices from object-style options when index fields are missing", () => {
+    const legacyLike = {
+      options: [
+        { text: "A", isCorrect: false },
+        { text: "B", isCorrect: true },
+        { text: "C", isCorrect: true },
+      ],
+      correctIndex: null,
+      correctIndices: null,
+    };
+
+    expect(getCorrectIndices(legacyLike)).toEqual([1, 2]);
+    expect(isMultiAnswerMcq(legacyLike)).toBe(true);
   });
 });

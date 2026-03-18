@@ -4,7 +4,7 @@ Last modified: 04/03/2026
 
 ## Overview
 
-Sprout supports inline circle flags inside card text fields using token syntax.
+LearnKit supports inline circle flags inside card text fields using token syntax.
 Flag assets are provided by [HatScripts/circle-flags](https://github.com/HatScripts/circle-flags) (MIT).
 
 Supported token formats:
@@ -40,7 +40,7 @@ In card editors and browser inputs:
 - when the field is focused, you see raw tokens (for example `{{gb}}`)
 - when the field loses focus, tokens render as flag icons
 
-This matches Sprout’s existing image-preview editing style.
+This matches LearnKit’s existing image-preview editing style.
 
 ## Display behavior
 
@@ -71,7 +71,7 @@ A | {{gb}} West Coast, United States |
 
 ## Syntax and compatibility notes
 
-- Sprout keeps cloze syntax untouched (`{{c1::...}}`, `{{c2::...}}`, etc.).
+- LearnKit keeps cloze syntax untouched (`{{c1::...}}`, `{{c2::...}}`, etc.).
 - Invalid flag tokens are left as plain text.
 - Flags use circle-flag asset codes (country/region style codes), not free-form language names.
 

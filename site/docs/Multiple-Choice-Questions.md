@@ -1,12 +1,12 @@
 # Multiple Choice Questions
 
-Last modified: 13/02/2026
+Last modified: 17/03/2026
 
-## Overview
+## Purpose
 
 MCQ cards show one question with multiple options. You choose one answer.
 
-## Writing an MCQ card
+## MCQ Format
 
 Use `MCQ` for the question stem, `A` for the correct answer, and `O` for each incorrect option:
 
@@ -25,7 +25,7 @@ G | Geography |
 - `A`: required correct answer (one).
 - `O`: required incorrect options (one or more).
 
-## Using the modal
+## Modal Steps
 
 1. Right-click in a note → **Add flashcard → MCQ Card**.
 2. Enter the question stem.
@@ -34,7 +34,7 @@ G | Geography |
 5. Optionally add title, info, and groups.
 6. Click **Save**.
 
-## How MCQs are reviewed
+## Review Flow
 
 During review, options are shown as buttons. Select one option.
 
@@ -44,11 +44,11 @@ During review, options are shown as buttons. Select one option.
 > [!NOTE]
 > MCQ grading is automatic. You do not press a separate grade button.
 
-### Option randomisation
+### Option Shuffle
 
-By default, options stay in the order you wrote. Enable **Randomise MCQ options** in **Settings → Study** to shuffle order each time.
+By default, options stay in the order you wrote. Enable **Randomise MCQ options** in Settings -> Study to shuffle order each time.
 
-## Grading behaviour
+## Grading
 
 MCQs are **auto-graded** based on your selection:
 
@@ -57,10 +57,15 @@ MCQs are **auto-graded** based on your selection:
 | Correct option | **Good** |
 | Incorrect option | **Again** |
 
-The FSRS scheduler then updates the card's scheduling data based on the grade, just like any other card type. See [Grading](./Grading.md) for more on how grading works.
+The FSRS scheduler then updates the card's scheduling data based on the grade, just like any other card type. See [Grading](./Grading) for more on how grading works.
 
 ## Tips
 
 - Write plausible distractors (wrong options) — if options are obviously wrong, the card isn't testing real knowledge.
 - Use MCQs for topics where distinguishing between similar items is the learning goal.
 - Combine with the `I` field to explain why the correct answer is right.
+
+## Related
+
+- [Creating Cards](./Creating-Cards)
+- [Grading](./Grading)

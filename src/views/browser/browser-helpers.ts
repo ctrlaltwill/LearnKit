@@ -71,6 +71,7 @@ import {
   escapeDelimiterText,
   pushDelimitedField,
 } from "../../platform/core/delimiter";
+import { buildPrimaryCardAnchor } from "../../platform/core/identity";
 
 // ─── Filter / column types ──────────────────────────────────────────
 
@@ -207,7 +208,7 @@ export function pushPipeField(out: string[], key: string, value: string) {
  */
 export function buildCardBlockPipeMarkdown(id: string, rec: CardRecord): string[] {
   const out: string[] = [];
-  out.push(`^sprout-${id}`);
+  out.push(buildPrimaryCardAnchor(id));
 
   const title = (rec.title || "").trim();
   if (title) pushPipeField(out, "T", title);
@@ -432,7 +433,7 @@ export function buildIoImgHtml(resolvedSrc: string, _displayRef: string, title: 
   <img
     src="${safeSrc}"
     alt="${safeTitle}"
-    class="sprout-browser-io-img"
+    class="lk-browser-io-img"
   />
 </div>
 `.trim();
@@ -485,17 +486,17 @@ export function buildIoOccludedHtml(
         "--sprout-io-height": `${height}%`,
       });
 
-      return `<div class="bc sprout-browser-io-overlay${cls ? ` ${cls}` : ""}"></div>`;
+      return `<div class="bc lk-browser-io-overlay${cls ? ` ${cls}` : ""}"></div>`;
     })
     .join("");
 
   const badges = cardForLabels ? renderOcclusionBadgesHtml(cardForLabels) : "";
 
   return `
-<div class="bc sprout-browser-io-wrap" title="${safeTitle}">
-  <div class="bc sprout-browser-io-frame">
+<div class="bc lk-browser-io-wrap" title="${safeTitle}">
+  <div class="bc lk-browser-io-frame">
     ${badges}
-    <img class="bc sprout-browser-io-img-inner" src="${safeSrc}" alt="${safeTitle}" />
+    <img class="bc lk-browser-io-img-inner" src="${safeSrc}" alt="${safeTitle}" />
     ${overlays}
   </div>
 </div>
@@ -641,7 +642,7 @@ export function renderMarkdownWithImages(
     if (resolvedSrc) {
       const safeAlt = escapeHtml(img.alt);
       const safeSrc = escapeHtml(resolvedSrc);
-      html += `<img src="${safeSrc}" alt="${safeAlt}" class="sprout-browser-inline-img" data-img-ref="${escapeHtml(img.match)}" />`;
+      html += `<img src="${safeSrc}" alt="${safeAlt}" class="lk-browser-inline-img" data-img-ref="${escapeHtml(img.match)}" />`;
     } else {
       // Image couldn't be resolved, keep as text
       html += escapeTextWithCircleFlags(img.match);

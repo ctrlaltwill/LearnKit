@@ -29,6 +29,8 @@ export const DEFAULT_SETTINGS: SproutSettings = {
       fetchedAt: null,
     },
     enableAnimations: true,
+    themePreset: "playground",
+    themeAccentOverride: "",
     showLaunchNoticeModal: true,
     enableReadingStyles: true,
     prettifyCards: "accent", // default to 'accent', options: 'off' | 'accent' | 'theme'
@@ -54,6 +56,14 @@ export const DEFAULT_SETTINGS: SproutSettings = {
     siblingMode: "standard" as const,
 
     treatFolderNotesAsDecks: true,
+
+    analyticsIncludePracticeNoteReview: true,
+    analyticsTopicHierarchy: "folder-group-topic",
+    analyticsMasteryThresholds: {
+      redMax: 59,
+      yellowMax: 79,
+    },
+    analyticsFocusTopicCount: 7,
   },
 
   studyAssistant: {
@@ -76,7 +86,7 @@ export const DEFAULT_SETTINGS: SproutSettings = {
       custom: "",
     },
     prompts: {
-      assistant: "You are a helpful study assistant. Use note context first, then supplement with clearly-labeled background knowledge when needed. If I ask for flashcards, format them as parser-compatible rows in a markdown code block and remind me that the Generate key creates context-aware cards I can insert directly.",
+      assistant: "You are a helpful study companion. Use note context first, then supplement with clearly-labeled background knowledge when needed. If I ask for flashcards, format them as parser-compatible rows in a markdown code block and remind me that the Generate key creates context-aware cards I can insert directly.",
       noteReview: "Review this note for correctness, clarity, and exam readiness. Suggest concrete improvements. If I ask for flashcards, format them as parser-compatible rows in a markdown code block and remind me that the Generate key creates context-aware cards I can insert directly.",
       generator: "Generate high-quality flashcards from this note. Avoid duplicates and prioritize testable facts.",
     },
@@ -128,6 +138,16 @@ export const DEFAULT_SETTINGS: SproutSettings = {
     learningStepsMinutes: [10, 1440],
     relearningStepsMinutes: [10],
     requestRetention: 0.9,
+  },
+
+  noteReview: {
+    algorithm: "fsrs",
+    enableSessionAnimations: true,
+    avoidFolderNotes: true,
+    filterQuery: "",
+    reviewsPerDay: 10,
+    reviewStepsDays: [1, 7, 30, 365],
+    fillFromFutureWhenUnderLimit: true,
   },
 
   cards: {
@@ -337,6 +357,10 @@ export const DEFAULT_SETTINGS: SproutSettings = {
     imageOcclusionFolderPath: "Attachments/Image Occlusion/",
     deleteOrphanedImages: true,
     cardAttachmentFolderPath: "Attachments/Cards/",
+    vaultSync: {
+      enabled: false,
+      folderPath: "LearnKit/",
+    },
     backups: {
       rollingDailyEnabled: true,
       recentCount: 8,

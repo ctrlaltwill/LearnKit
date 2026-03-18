@@ -1,0 +1,81 @@
+type Tx = (token: string, fallback: string, vars?: Record<string, string | number>) => string;
+
+export function isFlashcardRequest(text: string): boolean {
+  const value = String(text || "");
+  return /(flash\s*cards?|anki|q\s*\|\s*|\brq\s*\|\s*|\bcq\s*\|\s*|\bmcq\s*\|\s*|\boq\s*\|\s*|\bio\s*\|\s*)/i.test(value);
+}
+
+export function flashcardDisclaimerText(tx: Tx): string {
+  return tx(
+    "ui.studyAssistant.chat.flashcardDisclaimer",
+    "Using the Generate key will produce context-aware flashcards you can directly insert into your notes.",
+  );
+}
+
+export function appendFlashcardDisclaimerIfNeeded(tx: Tx, replyText: string, userMessage: string): string {
+  const reply = String(replyText || "").trim();
+  if (!isFlashcardRequest(userMessage)) return reply;
+
+  const disclaimer = flashcardDisclaimerText(tx);
+  if (reply.toLowerCase().includes(disclaimer.toLowerCase())) return reply;
+  if (!reply) return disclaimer;
+  return `${reply}\n\n${disclaimer}`;
+}
+
+export function shouldShowGenerateSwitch(tx: Tx, text: string): boolean {
+  const body = String(text || "").toLowerCase();
+  return body.includes(flashcardDisclaimerText(tx).toLowerCase());
+}
+
+export function generateNonFlashcardHintText(tx: Tx): string {
+  return tx(
+    "ui.studyAssistant.generator.nonFlashcardHint",
+    "Your request did not specify flashcard generation. Try something like 'Make 4 basic and cloze flashcards on this topic.' If you have a general question about your note, go to the Ask tab.",
+  );
+}
+
+export function shouldShowAskSwitch(tx: Tx, text: string): boolean {
+  const body = String(text || "").toLowerCase();
+  return body.includes(generateNonFlashcardHintText(tx).toLowerCase());
+}
+
+export function isGenerateFlashcardRequest(text: string, hasPriorGenerateContext: boolean): boolean {
+  const value = String(text || "").toLowerCase();
+  if (!value.trim()) return false;
+  if (/(flash\s*cards?|flashcards?|\bmcq\b|\boq\b|\bio\b|\bclozes?\b|\bbasic\b|\breversed\b|\banki\b)/i.test(value)) {
+    return true;
+  }
+  if (/\b(a|an|one|single)\s+(basic|reverse(?:d)?|cloze|mcq|multiple[- ]choice|oq|ordered[- ]question|sequence|io|image[- ]occlusion)\s+(card|question)?\b/i.test(value)) {
+    return true;
+  }
+  if (/\b(card|flashcard|question)\s+(on|about|regarding|focused on|for)\b/i.test(value)) {
+    return true;
+  }
+  if (hasPriorGenerateContext && /\b(another|more|again|next|same|similar|harder|easier|variant|rephrase|one more|few more|give me)\b/i.test(value)) {
+    return true;
+  }
+  return /\b(generate|make|create|build)\b[\s\S]{0,40}\b(cards?|questions?)\b/i.test(value);
+}
+
+export function extractRequestedGenerateCount(text: string): number | null {
+  const value = String(text || "").toLowerCase();
+  const countMatch = value.match(/\b(\d{1,3})\s+(flashcards?|cards?|questions?|mcqs?|clozes?|basics?|reversed|oqs?|ios?)\b/i);
+  if (!countMatch?.[1]) return null;
+  const count = Number.parseInt(countMatch[1], 10);
+  return Number.isFinite(count) ? count : null;
+}
+
+export function generateExcessiveCountHintText(tx: Tx, count: number): string {
+  return tx(
+    "ui.studyAssistant.generator.tooManyRequested",
+    "You asked for {count} flashcards. Please break this down into smaller chunks of 20 or fewer focused on specific parts of the note or question types (for example: '10 clozes on prognosis' then '10 MCQs on treatment').",
+    { count },
+  );
+}
+
+export function allFlashcardsInsertedText(tx: Tx): string {
+  return tx(
+    "ui.studyAssistant.generator.allInserted",
+    "All flashcards inserted into the note.",
+  );
+}

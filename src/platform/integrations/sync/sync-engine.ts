@@ -24,6 +24,10 @@ import { expandGroupPrefixes, normaliseGroupPath } from "../../../engine/indexin
 import { log } from "../../../platform/core/logger";
 import { stableIoChildId, normaliseGroupKey } from "../../../platform/image-occlusion/mask-tool";
 import type { StoredIORect } from "../../../platform/image-occlusion/image-occlusion-types";
+import {
+  buildPrimaryCardAnchor,
+  extractCardAnchorId,
+} from "../../../platform/core/identity";
 
 import {
   countObjectKeys,
@@ -152,7 +156,7 @@ function splitMdPrefix(line: string): { prefix: string; rest: string } {
 /** Returns `true` if `rest` (after prefix strip) resembles a flashcard header/field/anchor. */
 function looksLikeFlashcardHeader(rest: string): boolean {
   const s = String(rest ?? "");
-  if (/^\^sprout-\d{9}\s*$/.test(s.trim())) return true;
+  if (extractCardAnchorId(s) !== null) return true;
   if (FLASHCARD_HEADER_CARD_RE().test(s)) return true;
   if (FLASHCARD_HEADER_FIELD_RE().test(s)) return true;
   if (/^\d+(?:\.\d+)?\s*\|\s*/.test(s)) return true;
@@ -175,8 +179,7 @@ function normaliseTextForParsing(originalText: string): string {
 /** Matches a Sprout anchor ID even inside list/quote prefixes. */
 function matchAnchorId(line: string): string | null {
   const { rest } = splitMdPrefix(line);
-  const m = /^\^sprout-(\d{9})\s*$/.exec(String(rest ?? "").trim());
-  return m ? m[1] : null;
+  return extractCardAnchorId(rest);
 }
 
 /** Infers the Markdown prefix at a given line index (for anchor insertion). */
@@ -421,7 +424,7 @@ function getBlockBounds(lines: string[], cardStartLine: number): { lo: number; h
 }
 
 /**
- * Finds the line index where a `^sprout-*` anchor should be inserted.
+ * Finds the line index where a card anchor should be inserted.
  * Places it directly before the first flashcard row in the contiguous block.
  */
 function findAnchorInsertLineIndex(lines: string[], cardStartLine: number): number {
@@ -1175,7 +1178,7 @@ export async function syncOneFile(
       if (!existingAnchorIds.has(id)) {
         const insertAt = findAnchorInsertLineIndex(lines, c.sourceStartLine);
         const prefix = inferPrefixAt(lines, insertAt);
-        edits.push({ lineIndex: insertAt, insertText: `${prefix}^sprout-${id}` });
+        edits.push({ lineIndex: insertAt, insertText: `${prefix}${buildPrimaryCardAnchor(id)}` });
         idsInserted += 1;
         existingAnchorIds.add(id);
       }
@@ -1527,7 +1530,7 @@ export async function syncQuestionBank(plugin: SproutPlugin) {
         if (!existingAnchorIds.has(id)) {
           const insertAt = findAnchorInsertLineIndex(lines, c.sourceStartLine);
           const prefix = inferPrefixAt(lines, insertAt);
-          edits.push({ lineIndex: insertAt, insertText: `${prefix}^sprout-${id}` });
+          edits.push({ lineIndex: insertAt, insertText: `${prefix}${buildPrimaryCardAnchor(id)}` });
           planInserted += 1;
           existingAnchorIds.add(id);
         }

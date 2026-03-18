@@ -68,10 +68,10 @@ export class AnkiExportModal extends Modal {
     setModalTitle(this, "Export to Anki");
 
     scopeModalToWorkspace(this);
-    this.containerEl.addClass("sprout-modal-container");
-    this.containerEl.addClass("sprout-modal-dim");
+    this.containerEl.addClass("lk-modal-container");
+    this.containerEl.addClass("lk-modal-dim");
     this.containerEl.addClass("sprout");
-    this.modalEl.addClass("bc", "sprout-modals", "sprout-anki-export-modal");
+    this.modalEl.addClass("bc", "lk-modals", "sprout-anki-export-modal");
     this.contentEl.addClass("bc");
 
     // Escape key closes modal
@@ -86,10 +86,10 @@ export class AnkiExportModal extends Modal {
   onClose() {
     for (const fn of this.disposers) { try { fn(); } catch { /* */ } }
     this.disposers = [];
-    this.containerEl.removeClass("sprout-modal-container");
-    this.containerEl.removeClass("sprout-modal-dim");
+    this.containerEl.removeClass("lk-modal-container");
+    this.containerEl.removeClass("lk-modal-dim");
     this.containerEl.removeClass("sprout");
-    this.modalEl.removeClass("bc", "sprout-modals", "sprout-anki-export-modal");
+    this.modalEl.removeClass("bc", "lk-modals", "sprout-anki-export-modal");
     this.contentEl.removeClass("bc");
     this.contentEl.empty();
   }
@@ -152,7 +152,7 @@ export class AnkiExportModal extends Modal {
     container.appendChild(popover);
 
     const panel = document.createElement("div");
-    panel.className = "bc rounded-lg border border-border bg-popover text-popover-foreground p-0 flex flex-col sprout-pointer-auto";
+    panel.className = "bc rounded-md border border-border bg-popover text-popover-foreground p-0 flex flex-col sprout-pointer-auto";
     popover.appendChild(panel);
 
     const list = document.createElement("div");
@@ -265,11 +265,11 @@ export class AnkiExportModal extends Modal {
     container.appendChild(popover);
 
     const panel = document.createElement("div");
-    panel.className = "bc rounded-lg border border-border bg-popover text-popover-foreground p-0 flex flex-col sprout-pointer-auto";
+    panel.className = "bc rounded-md border border-border bg-popover text-popover-foreground p-0 flex flex-col sprout-pointer-auto";
     popover.appendChild(panel);
 
     const searchWrap = document.createElement("div");
-    searchWrap.className = "bc flex items-center gap-1 border-b border-border pl-1 pr-0 w-full sprout-browser-search-wrap min-h-[38px]";
+    searchWrap.className = "bc flex items-center gap-1 border-b border-border pl-1 pr-0 w-full lk-browser-search-wrap min-h-[38px]";
     panel.appendChild(searchWrap);
 
     const searchIcon = document.createElement("span");
@@ -299,7 +299,7 @@ export class AnkiExportModal extends Modal {
       }
       for (const tag of selected) {
         const badge = document.createElement("span");
-        badge.className = "bc badge inline-flex items-center gap-1 px-2 py-0.5 text-xs whitespace-nowrap group h-6 sprout-badge-inline sprout-browser-tag-badge";
+        badge.className = "bc badge inline-flex items-center gap-1 px-2 py-0.5 text-xs whitespace-nowrap group h-6 sprout-badge-inline lk-browser-tag-badge";
 
         const txt = document.createElement("span");
         txt.textContent = formatGroupDisplay(tag);
@@ -534,10 +534,10 @@ export class AnkiExportModal extends Modal {
     });
 
     // ── Footer ────────────────────────────────────────────────────────────────
-    const footer = root.createDiv({ cls: "bc flex items-center justify-end gap-4 sprout-modal-footer" });
+    const footer = root.createDiv({ cls: "bc flex items-center justify-end gap-4 lk-modal-footer" });
 
     const cancelBtn = footer.createEl("button", {
-      cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm",
+      cls: "bc sprout-btn-toolbar inline-flex items-center gap-2 h-9 px-3 text-sm",
       attr: { type: "button", "aria-label": "Cancel export" },
     });
     const cancelIcon = cancelBtn.createEl("span", { cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
@@ -546,7 +546,7 @@ export class AnkiExportModal extends Modal {
     cancelBtn.onclick = () => this.close();
 
     const exportBtn = footer.createEl("button", {
-      cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm",
+      cls: "bc sprout-btn-toolbar inline-flex items-center gap-2 h-9 px-3 text-sm",
       attr: { type: "button", "aria-label": "Export cards to .apkg file" },
     });
     const exportIcon = exportBtn.createEl("span", { cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
@@ -620,10 +620,10 @@ export class AnkiExportModal extends Modal {
     if (stats.mediaFiles > 0) addRow("Media files", stats.mediaFiles);
 
     // ── Footer ──────────────────────────────────────────────────────────────
-    const footer = root.createDiv({ cls: "bc flex items-center justify-end gap-4 sprout-modal-footer" });
+    const footer = root.createDiv({ cls: "bc flex items-center justify-end gap-4 lk-modal-footer" });
 
     const downloadBtn = footer.createEl("button", {
-      cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm",
+      cls: "bc sprout-btn-toolbar inline-flex items-center gap-2 h-9 px-3 text-sm",
       attr: { type: "button", "aria-label": "Download .apkg file to your computer" },
     });
     const dlIcon = downloadBtn.createEl("span", { cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
@@ -644,7 +644,7 @@ export class AnkiExportModal extends Modal {
     };
 
     const saveBtn = footer.createEl("button", {
-      cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm",
+      cls: "bc sprout-btn-toolbar inline-flex items-center gap-2 h-9 px-3 text-sm",
       attr: { type: "button", "aria-label": "Save .apkg file into your vault" },
     });
     const saveIcon = saveBtn.createEl("span", { cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
@@ -670,7 +670,7 @@ export class AnkiExportModal extends Modal {
     };
 
     const doneBtn = footer.createEl("button", {
-      cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm",
+      cls: "bc sprout-btn-toolbar inline-flex items-center gap-2 h-9 px-3 text-sm",
       attr: { type: "button", "aria-label": "Close this dialog" },
     });
     const doneIcon = doneBtn.createEl("span", { cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });

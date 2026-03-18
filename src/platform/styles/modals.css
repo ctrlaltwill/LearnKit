@@ -6,120 +6,127 @@
 /* ---- Workspace positioning for modal containers ---- */
 
 /* Make the workspace leaf content a positioning context for modals */
-.workspace-leaf-content {
-  position: relative !important;
+.workspace-leaf-content:has(.lk-modal-container.modal-container),
+.workspace-leaf-content:has(.lk-modal-dim.modal-container) {
+  position: relative;
 }
 
 /* Ensure view content is layered below modals but creates stacking context */
-.workspace-leaf-content > .view-header,
-.workspace-leaf-content > .view-content {
+.workspace-leaf-content:has(.lk-modal-container.modal-container) > .view-header,
+.workspace-leaf-content:has(.lk-modal-container.modal-container) > .view-content,
+.workspace-leaf-content:has(.lk-modal-dim.modal-container) > .view-header,
+.workspace-leaf-content:has(.lk-modal-dim.modal-container) > .view-content {
   position: relative;
   z-index: 1;
 }
 
 /* Make the workspace root area a positioning context for modals (fallback) */
-.workspace-split.mod-root {
-  position: relative !important;
+.workspace-split.mod-root:has(.lk-modal-container.modal-container),
+.workspace-split.mod-root:has(.lk-modal-dim.modal-container) {
+  position: relative;
 }
 
 /* Scope modal containers to workspace area only */
-.sprout-modal-container.modal-container,
-.sprout-modal-dim.modal-container {
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  z-index: 1000 !important;
-  pointer-events: none !important;
+.lk-modal-container.modal-container,
+.lk-modal-dim.modal-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  z-index: var(--lk-z-modal-container);
+  pointer-events: none;
 }
 
 /* Re-enable pointer events for modal backdrop and content */
-.sprout-modal-container .modal-bg,
-.sprout-modal-container .modal {
-  pointer-events: auto !important;
+.lk-modal-container .modal-bg,
+.lk-modal-container .modal {
+  pointer-events: auto;
 }
 
 /* ---- Backdrop ---- */
 
-.sprout .sprout-modal-container .modal-bg,
+.sprout .lk-modal-container .modal-bg,
 .sprout .modal-container.mod-dim .modal-bg,
-.sprout-modal-dim .modal-bg {
-  -webkit-backdrop-filter: none !important;
-  backdrop-filter: none !important;
+.lk-modal-dim .modal-bg {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   opacity: 0.6;
-  background-color: var(--background) !important;
-  position: absolute !important;
-  inset: 0 !important;
+  background-color: var(--background);
+  position: absolute;
+  inset: 0;
 }
 
 /* ---- Panel ---- */
 
-.sprout .sprout-modals.modal {
+.sprout .lk-modals.modal {
     border: var(--sprout-border-width) solid var(--sprout-border-color);
     background: var(--background);
     border-radius: var(--radius-l);
-    max-width: min(560px, 92vw);
-    max-height: min(80vh, 720px);
-    padding: 10px !important;
+  max-width: min(1080px, 95%);
+    max-height: min(80vh);
+    padding: 1rem 0 1rem 1rem;
     overflow: hidden;
     outline: none;
-    height: auto !important;
-    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    height: auto;
+    box-shadow: var(--lk-shadow-modal);
 }
 
 .sprout .modal-container .modal {
-  padding: 0;
-  border-radius: var(--radius-l);
-  border: var(--sprout-border-width) solid var(--sprout-border-color);
-  background: var(--background);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.24), 0 2px 8px rgba(0, 0, 0, 0.12) !important;
-  overflow: hidden;
-  height: auto !important;
-  max-width: min(560px, 92vw);
-  max-height: min(80vh, 720px);
-  position: relative;
+  border-radius: var(--radius-lg);
+    border: 1px solid var(--color-base-40);
+    background: var(--color-base-00);
+    box-shadow: var(--lk-shadow-modal);
+    max-width: min(1080px, 95%);
+    height: auto;
+    max-height: min(80vh, 720px);
+    padding: 30px 30px 20px 30px;
+    position: relative;
+    overflow: hidden;
 }
 
+.sprout-confirm-modal .modal-title {
+    font-size: 1.2rem !important;
+    font-weight: 600;
+    letter-spacing: normal;
+}
 /* ---- Header + content spacing ---- */
 
-.sprout .sprout-modals.modal .modal-header {
-  padding: 0 20px 0;
+.sprout .lk-modals.modal .modal-header {
+  padding: 1rem 0 0.5rem 0;
   border-bottom: none;
-  background: var(--background);
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
 .sprout .modal-container .modal-header {
-  padding: 0 20px 0;
+  padding: 0;
   border-bottom: none;
-  background: var(--background);
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.sprout .sprout-modals.modal .modal-content {
-  padding: 16px 20px 20px;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  border-radius: 0 !important;
+.sprout .lk-modals.modal .modal-content {
+  padding :0rem 1.5rem 1rem 1rem !important;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
   overflow-y: auto;
   overflow-x: hidden;
   text-align: left;
 }
 
 .sprout .modal-container .modal-content {
-  padding: 16px 20px 16px !important;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  border-radius: 0 !important;
+  padding: 0px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
   overflow-y: auto;
   overflow-x: hidden;
   text-align: left;
@@ -130,135 +137,230 @@
 .sprout .modal-container h2,
 .sprout .modal-container h3,
 .sprout .modal-container p {
-  text-align: left !important;
+  text-align: left;
 }
 
-/* ---- Modal inputs & dropdowns: match browser 36px sizing ---- */
+/* ---- Modal inputs & preview fields: unified 100px sizing ---- */
 
-.sprout .sprout-modals.modal .input,
-.sprout .sprout-modals.modal select.input,
-.sprout .sprout-modals.modal input[type="text"].input {
+.sprout .lk-modals.modal .input,
+.sprout .lk-modals.modal select.input,
+.sprout .lk-modals.modal input[type="text"].input {
+  height: 40px;
+  min-height: 40px;
+}
+
+.sprout .lk-modals.modal .sprout-btn-toolbar {
+  min-height: 40px;
+  background-color: var(--color-base-20);
+    border: 1px solid var(--color-base-35);
+}
+
+.sprout .lk-modals.modal .sprout-tag-box {
+  height: 40px;
+  min-height: 40px;
+}
+
+.sprout .lk-modals.modal .textarea {
+  line-height: 1.5;
+  min-height: 100px;
+  height: 100px;
+}
+
+/* Keep inline flags in modal markdown previews sized to the current text size. */
+.sprout .lk-modals :is(.sprout-flag-editor-overlay, .sprout-single-edit-markdown-preview) img.sprout-inline-flag {
+  width: 1em !important;
+  height: 1em !important;
+  min-width: 1em !important;
+  min-height: 1em !important;
+  max-width: 1em !important;
+  max-height: 1em !important;
+  display: inline-block !important;
+  object-fit: cover;
+  vertical-align: text-bottom;
+  margin: 0 0.3em;
+}
+
+.sprout .lk-modals.modal .sprout-flag-editor-wrap {
+  --sprout-flag-preview-height: 100px;
+  --sprout-flag-preview-max-height: 100px;
+  min-height: 100px;
+}
+
+.sprout .lk-modals.modal .sprout-flag-editor-control,
+.sprout .lk-modals.modal .sprout-flag-editor-overlay {
+  min-height: 100px;
+  height: 100px;
+}
+
+/* MCQ/OQ option rows should stay compact (fixed 36px) in add/edit modals. */
+.sprout .lk-modals.modal :is(.sprout-edit-mcq-option-row, .sprout-mcq-add-row, .sprout-oq-editor-row, .sprout-oq-add-row) .sprout-flag-editor-wrap {
+  --sprout-flag-preview-height: 36px !important;
+  --sprout-flag-preview-max-height: 36px !important;
+  min-height: 36px;
+}
+
+.sprout .lk-modals.modal :is(.sprout-edit-mcq-option-row, .sprout-mcq-add-row, .sprout-oq-editor-row, .sprout-oq-add-row) :is(.sprout-flag-editor-control, .sprout-flag-editor-overlay) {
+  min-height: 36px !important;
   height: 36px !important;
+  max-height: 36px !important;
+}
+
+.sprout .lk-modals.modal :is(.sprout-edit-mcq-option-row, .sprout-mcq-add-row, .sprout-oq-editor-row, .sprout-oq-add-row) .sprout-input-fixed,
+.sprout .lk-modals.modal :is(.sprout-edit-mcq-option-row, .sprout-mcq-add-row, .sprout-oq-editor-row, .sprout-oq-add-row) .sprout-oq-step-input {
   min-height: 36px !important;
+  height: 36px !important;
+  max-height: 36px !important;
 }
 
-.sprout .sprout-modals.modal .btn-outline {
-  min-height: 36px !important;
+/* Quick edit modal — panel structure matching card-creator & bulk-edit */
+.sprout .sprout-edit-modal {
+  padding: 0;
+  width: min(640px, 100%);
+  max-width: min(640px, 92vw);
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-l);
+  border-color: var(--sprout-border-color);
+  box-shadow: var(--lk-shadow-modal);
+  background: var(--background);
+  position: relative;
+  z-index: var(--lk-z-modal-top);
+  isolation: isolate;
 }
 
-.sprout .sprout-modals.modal .sprout-tag-box {
-  height: 38px !important;
-  min-height: 38px !important;
+.sprout .sprout-edit-modal > .modal-content > .modal-header {
+  padding: 12px 20px;
+  border-bottom: none;
+  background: var(--background);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
 }
 
-.sprout .sprout-modals.modal .textarea {
-  line-height: 1.5 !important;
+.sprout .sprout-edit-modal > .modal-content > .modal-header .modal-title {
+  font-size: var(--sprout-font-md-plus);
+  font-weight: 600;
+}
+
+.sprout .sprout-edit-modal > .modal-content {
+  padding: 16px 20px 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  flex: 1 1 auto;
+  min-height: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
 }
 
 /* Quick edit modal field baselines */
 .sprout .sprout-edit-modal .sprout-edit-field-title.input {
-  min-height: 4.5rem !important;
-  height: 4.5rem !important;
+  min-height: 100px;
+  height: 100px;
 }
 
 .sprout .sprout-edit-modal .sprout-edit-field-question.textarea,
 .sprout .sprout-edit-modal .sprout-edit-field-answer.textarea {
-  min-height: 4.5rem !important;
+  min-height: 100px;
 }
 
 .sprout .sprout-edit-modal .sprout-edit-field-info.textarea {
-  min-height: 4.5rem !important;
+  min-height: 100px;
 }
 
 /* Input and textarea focus styles */
-.sprout .sprout-modals.modal .input:focus,
-.sprout .sprout-modals.modal select.input:focus,
-.sprout .sprout-modals.modal input[type="text"].input:focus,
-.sprout .sprout-modals.modal textarea.textarea:focus,
-.sprout .sprout-modals.modal .textarea:focus {
-  border: 1.5px solid var(--theme-accent) !important;
-  box-shadow: none !important;
-  outline: none !important;
+.sprout .lk-modals.modal .input:focus,
+.sprout .lk-modals.modal select.input:focus,
+.sprout .lk-modals.modal input[type="text"].input:focus,
+.sprout .lk-modals.modal textarea.textarea:focus,
+.sprout .lk-modals.modal .textarea:focus {
+  border: 1.5px solid var(--theme-accent);
+  box-shadow: none;
+  outline: none;
 }
 
 /* MCQ answer section label spacing */
-.sprout .sprout-modals.modal .bc.text-xs.text-muted-foreground.inline-flex {
-  margin-top: 5px !important;
+.sprout .lk-modals.modal .bc.text-xs.text-muted-foreground.inline-flex {
+  margin-top: 5px;
 }
 
 /* ---- Export modal: deck & group pickers ---- */
 
 .sprout .sprout-deck-picker .sprout-popover-dropdown,
 .sprout .sprout-group-picker .sprout-popover-dropdown {
-  position: absolute !important;
-  bottom: calc(100% + 6px) !important;
-  left: 0 !important;
-  right: auto !important;
-  z-index: 10001 !important;
-  width: 100% !important;
-  display: none !important;
-  pointer-events: auto !important;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  right: auto;
+  z-index: 10001;
+  width: 100%;
+  display: none;
+  pointer-events: auto;
 }
 
 .sprout .sprout-deck-picker .sprout-popover-dropdown.is-open,
 .sprout .sprout-group-picker .sprout-popover-dropdown.is-open {
-  display: block !important;
+  display: block;
 }
 
 /* Show focus effect on tag box when popover is open */
 .sprout .sprout-group-picker:has(.sprout-popover-dropdown.is-open) .sprout-tag-box {
-  border: 1.5px solid var(--theme-accent) !important;
-  box-shadow: none !important;
-  outline: none !important;
+  border: 1.5px solid var(--theme-accent);
+  box-shadow: none;
+  outline: none;
 }
 
 /* ---- Modal popover / dropdown backgrounds & borders ---- */
-.sprout .sprout-popover-dropdown .rounded-lg.bg-popover,
-.sprout .sprout-popover-dropdown-below .rounded-lg.bg-popover,
-.sprout .sprout-modals .sprout-popover-dropdown .bg-popover,
-.sprout .sprout-modals .sprout-popover-dropdown-below .bg-popover {
-  background-color: var(--background-primary, var(--background, #fff)) !important;
-  border: 1px solid var(--sprout-border-color) !important;
-  border-radius: var(--radius-m) !important;
-  color: var(--text-normal, var(--foreground, #111)) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
-  opacity: 1 !important;
+.sprout .sprout-popover-dropdown .rounded-md.bg-popover,
+.sprout .sprout-popover-dropdown-below .rounded-md.bg-popover,
+.sprout .lk-modals .sprout-popover-dropdown .bg-popover,
+.sprout .lk-modals .sprout-popover-dropdown-below .bg-popover {
+  background-color: var(--background-primary, var(--background, #fff));
+  border: 1px solid var(--sprout-border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-normal, var(--foreground, #111));
+  box-shadow: var(--lk-shadow-popover-subtle);
+  opacity: 1;
 }
 
-.theme-dark .sprout .sprout-popover-dropdown .rounded-lg.bg-popover,
-.theme-dark .sprout .sprout-popover-dropdown-below .rounded-lg.bg-popover,
-.theme-dark .sprout .sprout-modals .sprout-popover-dropdown .bg-popover,
-.theme-dark .sprout .sprout-modals .sprout-popover-dropdown-below .bg-popover {
-  background-color: var(--background-secondary, var(--background, #1e1e1e)) !important;
-  border-color: var(--sprout-border-color) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-  opacity: 1 !important;
+.theme-dark .sprout .sprout-popover-dropdown .rounded-md.bg-popover,
+.theme-dark .sprout .sprout-popover-dropdown-below .rounded-md.bg-popover,
+.theme-dark .sprout .lk-modals .sprout-popover-dropdown .bg-popover,
+.theme-dark .sprout .lk-modals .sprout-popover-dropdown-below .bg-popover {
+  background-color: var(--background-secondary, var(--background, #1e1e1e));
+  border-color: var(--sprout-border-color);
+  box-shadow: var(--lk-shadow-popover-subtle-dark);
+  opacity: 1;
 }
 
 .sprout .sprout-export-tag-box {
-  height: 38px !important;
-  min-height: 38px !important;
-  max-height: 38px !important;
-  overflow: auto !important;
-  padding: 6px 8px !important;
-  box-sizing: border-box !important;
-  display: flex !important;
-  flex-wrap: wrap !important;
-  column-gap: 6px !important;
-  row-gap: 2px !important;
-  align-content: flex-start !important;
-  cursor: pointer !important;
-  background: var(--background-modifier-form-field) !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
-  box-shadow: none !important;
+  height: 38px;
+  min-height: 38px;
+  max-height: 38px;
+  overflow: auto;
+  padding: 6px 8px;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 6px;
+  row-gap: 2px;
+  align-content: flex-start;
+  cursor: pointer;
+  background: var(--background-modifier-form-field);
+  border: var(--sprout-border-width) solid var(--sprout-border-color);
+  box-shadow: none;
 }
 
 /* Dark mode modal text: force readable foreground */
-.theme-dark .sprout .sprout-modal,
-.theme-dark .sprout .sprout-modals.modal,
-.theme-dark .sprout .sprout-modals.modal .modal-content,
+.theme-dark .sprout .lk-modals.modal,
+.theme-dark .sprout .lk-modals.modal .modal-content,
 .theme-dark .sprout .sprout-card-editor-modal-root {
-  color: var(--foreground) !important;
+  color: var(--foreground);
 }
 
 /* ---- Card editor modal ---- */
@@ -268,14 +370,14 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  width: min(640px, 100%) !important;
-  max-height: 90vh !important;
-  overflow: auto !important;
-  padding: 20px !important;
+  width: min(640px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  padding: 20px;
   border-radius: var(--radius-l);
   border: var(--sprout-border-width) solid var(--sprout-border-color);
   background: var(--background);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.24), 0 2px 8px rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.24), 0 2px 8px rgba(0, 0, 0, 0.12);
   box-sizing: border-box;
 }
 
@@ -287,68 +389,92 @@
 /* ---- Modal utils ---- */
 
 .sprout .sprout-danger-callout {
-  border-color: rgba(220, 38, 38, 0.35) !important;
-  background: rgba(220, 38, 38, 0.08) !important;
+  border-color: rgba(220, 38, 38, 0.35);
+  background: rgba(220, 38, 38, 0.08);
 }
 
 .sprout .sprout-danger-callout-body {
-  white-space: pre-wrap !important;
-  line-height: 1.35 !important;
+  white-space: pre-wrap;
+  line-height: 1.35;
 }
 
-.sprout .sprout-modal-behind-io-editor {
-  pointer-events: none !important;
-  z-index: 0 !important;
+.sprout .lk-modal-behind-io-editor {
+  pointer-events: none;
+  z-index: 0;
 }
 
 .sprout .sprout-parse-errors-list {
-  margin: 0 !important;
-  padding-left: 18px !important;
+  margin: 0;
+  padding-left: 18px;
 }
 
 /* ---- Card creator modal ---- */
 
 .sprout .sprout-card-creator-modal {
-  backdrop-filter: none !important;
-  padding: 0 !important;
-  gap: 0 !important;
-  max-width: 90% !important;
-  width: auto !important;
-  max-height: 90% !important;
-  box-sizing: border-box !important;
-  overflow: visible !important;
-  display: flex !important;
-  flex-direction: column !important;
-  border-radius: var(--radius-l) !important;
-  z-index: 2147483001 !important;
+  backdrop-filter: none;
+  padding: 0;
+  gap: 0;
+  width: min(640px, 100%);
+  max-width: min(640px, 92vw);
+  max-height: 90vh;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-l);
+  border-color: var(--sprout-border-color);
+  box-shadow: var(--lk-shadow-modal);
+  background: var(--background);
+  position: relative;
+  z-index: var(--lk-z-modal-top);
   isolation: isolate;
 }
 
+.sprout .sprout-card-creator-content > .modal-header {
+  padding: 12px 20px;
+  border-bottom: none;
+  background: var(--background);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.sprout .sprout-card-creator-content > .modal-header .modal-title {
+  font-size: var(--sprout-font-md-plus);
+  font-weight: 600;
+}
+
 .sprout .sprout-card-creator-content {
-  padding: 16px 20px 20px !important;
-  box-sizing: border-box !important;
-  display: flex !important;
-  flex-direction: column !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
+  padding: 16px 20px 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  flex: 1 1 auto;
+  min-height: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
 }
 
 /* ---- Gatekeeper modal ---- */
 
 .sprout .sprout-gatekeeper-modal {
-  backdrop-filter: none !important;
-  padding: 2rem 0 0 !important;
-  gap: 0 !important;
-  max-width: 90% !important;
-  max-height: 90% !important;
-  box-sizing: border-box !important;
-  overflow: visible !important;
-  display: flex !important;
-  flex-direction: column !important;
-  border-radius: var(--radius-l) !important;
-  z-index: 2147483001 !important;
+  backdrop-filter: none;
+  padding: 2rem 0 0;
+  gap: 0;
+  max-width: 90%;
+  max-height: 90%;
+  box-sizing: border-box;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-l);
+  z-index: var(--lk-z-modal-top);
   isolation: isolate;
 }
 
@@ -358,23 +484,23 @@
 }
 
 .sprout .sprout-gatekeeper-modal > .modal-header {
-  padding: 0 20px 0 !important;
-  border-bottom: none !important;
-  background: var(--background) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
+  padding: 0 20px 0;
+  border-bottom: none;
+  background: var(--background);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .sprout .sprout-gatekeeper-content {
-  padding: 16px 20px 20px !important;
-  box-sizing: border-box !important;
-  display: flex !important;
-  flex-direction: column !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
+  padding: 16px 20px 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .sprout .sprout-gatekeeper-card-header {
@@ -405,14 +531,14 @@
 }
 
 .sprout .sprout-gatekeeper-section-label {
-  margin: 0 !important;
-  margin-block-start: 0 !important;
-  margin-block-end: 0 !important;
+  margin: 0;
+  margin-block-start: 0;
+  margin-block-end: 0;
 }
 
 .sprout .sprout-gatekeeper-section-label:not(:first-child) {
-  margin-top: 1rem !important;
-  margin-block-start: 1rem !important;
+  margin-top: 1rem;
+  margin-block-start: 1rem;
 }
 
 .sprout .sprout-gatekeeper-body {
@@ -422,7 +548,7 @@
 }
 
 .sprout .sprout-gatekeeper-body .whitespace-pre-wrap.break-words {
-  line-height: 1.75 !important;
+  line-height: 1.75;
 }
 
 .sprout .sprout-gatekeeper-question-block {
@@ -430,7 +556,7 @@
 }
 
 .sprout .sprout-gatekeeper-footer {
-  padding-top: 2rem !important;
+  padding-top: 2rem;
 }
 
 .sprout .sprout-gatekeeper-grade-grid {
@@ -460,25 +586,25 @@
 
 .sprout .sprout-gatekeeper-modal.sprout-gatekeeper-warning-mode > .sprout-gatekeeper-top-row,
 .sprout .sprout-gatekeeper-modal.sprout-gatekeeper-warning-mode > .modal-header {
-  display: none !important;
+  display: none;
 }
 
 .sprout .sprout-gatekeeper-modal.sprout-gatekeeper-warning-mode > .sprout-gatekeeper-content {
-  height: 100% !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .sprout .sprout-gatekeeper-bypass-btn {
-  border: var(--sprout-border-width) solid color-mix(in srgb, var(--destructive) 45%, transparent) !important;
-  background: color-mix(in srgb, var(--destructive) 16%, var(--background)) !important;
-  color: color-mix(in srgb, var(--destructive) 72%, var(--foreground)) !important;
+  border: var(--sprout-border-width) solid color-mix(in srgb, var(--destructive) 45%, transparent);
+  background: color-mix(in srgb, var(--destructive) 16%, var(--background));
+  color: color-mix(in srgb, var(--destructive) 72%, var(--foreground));
 }
 
 .sprout .sprout-gatekeeper-top-row .sprout-gatekeeper-bypass-btn {
-  gap: 0 !important;
-  padding-inline: 8px !important;
+  gap: 0;
+  padding-inline: 8px;
   overflow: hidden;
   transition: gap 180ms ease, padding-inline 180ms ease;
 }
@@ -495,8 +621,8 @@
 
 .sprout .sprout-gatekeeper-top-row .sprout-gatekeeper-bypass-btn:hover,
 .sprout .sprout-gatekeeper-top-row .sprout-gatekeeper-bypass-btn:focus-visible {
-  gap: 8px !important;
-  padding-inline: 12px !important;
+  gap: 8px;
+  padding-inline: 12px;
 }
 
 .sprout .sprout-gatekeeper-top-row .sprout-gatekeeper-bypass-btn:hover .sprout-gatekeeper-bypass-label,
@@ -508,52 +634,97 @@
 
 .sprout .sprout-gatekeeper-bypass-btn:hover,
 .sprout .sprout-gatekeeper-bypass-btn:focus-visible {
-  background: color-mix(in srgb, var(--destructive) 24%, var(--background)) !important;
-  border-color: color-mix(in srgb, var(--destructive) 60%, transparent) !important;
+  background: color-mix(in srgb, var(--destructive) 24%, var(--background));
+  border-color: color-mix(in srgb, var(--destructive) 60%, transparent);
 }
 
 .theme-dark .sprout .sprout-gatekeeper-bypass-btn {
-  background: color-mix(in srgb, var(--destructive) 26%, var(--background)) !important;
-  color: color-mix(in srgb, var(--destructive) 82%, var(--foreground)) !important;
+  background: color-mix(in srgb, var(--destructive) 26%, var(--background));
+  color: color-mix(in srgb, var(--destructive) 82%, var(--foreground));
 }
 
 .sprout .sprout-card-creator-modal [data-tooltip]:not([data-tooltip-position])::after,
 .sprout .sprout-bulk-edit-panel [data-tooltip]:not([data-tooltip-position])::after {
-  bottom: calc(100% + 6px) !important;
-  top: auto !important;
-  left: 50% !important;
-  transform: translateX(calc(-50% + var(--sprout-tooltip-shift-x, 0px))) !important;
+  bottom: calc(100% + 6px);
+  top: auto;
+  left: 50%;
+  transform: translateX(calc(-50% + var(--sprout-tooltip-shift-x, 0px)));
 }
 
 .sprout .sprout-card-creator-root {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 0 !important;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 .sprout .sprout-card-creator-editor {
-  width: 80vw !important;
-  max-width: 450px !important;
+  width: 100%;
+  max-width: 100%;
 }
 
-.sprout .sprout-location-input {
-  min-height: 36px !important;
-  max-height: 36px !important;
-  height: 36px !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  direction: rtl !important;
-  text-align: left !important;
-  opacity: 1 !important;
-  background-color: var(--background-primary) !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
-  cursor: not-allowed !important;
+.sprout .lk-modals.modal .sprout-location-input {
+  min-height: 40px;
+  max-height: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  box-shadow: none !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  direction: rtl;
+  text-align: left;
+  opacity: 1;
+  color: var(--text-muted);
+  background-color: var(--background-secondary, var(--background-primary));
+  border: 1px solid var(--color-base-50);
+  cursor: not-allowed;
+}
+
+.sprout :is(.sprout-card-creator-modal, .sprout-bulk-edit-panel, .sprout-edit-modal, .sprout-io-creator-modal) .sprout-group-picker .sprout-tag-box {
+  min-height: 40px;
+  max-height: 40px;
+  height: 40px;
+}
+
+.sprout .lk-modals.modal .sprout-card-meta-field .input {
+  min-height: 40px;
+  max-height: 40px;
+  height: 40px;
+}
+
+.sprout .lk-modals.modal .sprout-card-meta-type-btn {
+  min-height: 40px;
+  max-height: 40px;
+  height: 40px;
+}
+
+.sprout :is(.sprout-btn-primary-action, .sprout-card-creator-add-btn, .sprout-bulk-edit-save-btn, .sprout-io-save-btn) {
+  border: 1px solid var(--theme-black-95) !important;
+  border-radius: 8px;
+  background: var(--theme-base-95) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  transition: transform 140ms ease, background-color 140ms ease, border-color 140ms ease;
+}
+
+.sprout :is(.sprout-btn-primary-action, .sprout-card-creator-add-btn, .sprout-bulk-edit-save-btn, .sprout-io-save-btn):hover,
+.sprout :is(.sprout-btn-primary-action, .sprout-card-creator-add-btn, .sprout-bulk-edit-save-btn, .sprout-io-save-btn):focus-visible {
+  border-color: var(--theme-black-85) !important;
+  background: var(--theme-black-95) !important;
+  color: #fff !important;
+  transform: translateY(-1px);
+}
+
+.sprout :is(.sprout-btn-primary-action, .sprout-card-creator-add-btn, .sprout-bulk-edit-save-btn, .sprout-io-save-btn):active {
+  border-color: var(--theme-black-75) !important;
+  background: var(--theme-black-85) !important;
+  color: #fff !important;
+  transform: translateY(0);
 }
 
 .sprout .sprout-io-preview-image {
-  max-height: 300px !important;
-  object-fit: contain !important;
+  max-height: 300px;
+  object-fit: contain;
 }
 
 .sprout .sprout-cloze-mobile-actions {
@@ -564,7 +735,7 @@
 }
 
 .sprout .sprout-cloze-mobile-actions .sprout-cloze-mobile-btn {
-  min-height: 28px !important;
+  min-height: 28px;
 }
 
 body.is-mobile .sprout .sprout-cloze-mobile-actions {
@@ -573,463 +744,563 @@ body.is-mobile .sprout .sprout-cloze-mobile-actions {
 
 /* ---- No inner borders inside modals ---- */
 
-.sprout .sprout-modals.modal .border,
-.sprout .sprout-modals.modal .border-border,
-.sprout .sprout-modals.modal .modal-content .border,
-.sprout .sprout-modals.modal .modal-content .border-border {
-  border-color: transparent !important;
+.sprout .lk-modals.modal .border,
+.sprout .lk-modals.modal .border-border,
+.sprout .lk-modals.modal .modal-content .border,
+.sprout .lk-modals.modal .modal-content .border-border {
+  border-color: transparent;
 }
 
 /* Re-apply visible border on dropdown panels inside modals */
-.sprout .sprout-modals.modal .sprout-popover-dropdown .border,
-.sprout .sprout-modals.modal .sprout-popover-dropdown .border-border {
-  border-color: var(--sprout-border-color) !important;
-}
-
-/* Preserve the outer modal border itself */
-.sprout .sprout-modals.modal {
-  border-color: var(--sprout-border-color) !important;
+.sprout .lk-modals.modal .sprout-popover-dropdown .border,
+.sprout .lk-modals.modal .sprout-popover-dropdown .border-border {
+  border-color: var(--sprout-border-color);
 }
 
 /* Also strip borders inside bulk-edit overlay panels */
 .sprout .sprout-bulk-edit-panel .border,
 .sprout .sprout-bulk-edit-panel .border-border {
-  border-color: transparent !important;
-}
-
-/* Preserve the outer bulk-edit panel border */
-.sprout .sprout-bulk-edit-panel {
-  border-color: var(--sprout-border-color) !important;
+  border-color: transparent;
 }
 
 /* ---- Consistent modal footer spacing ---- */
 
-.sprout .sprout-modal-footer {
-  padding-top: 20px !important;
+.sprout .lk-modal-footer {
+  padding-top: 20px;
   border-top: none;
 }
 
-.sprout .sprout-modal-footer.sprout-gatekeeper-footer {
-  padding-top: 2rem !important;
+.sprout .lk-modal-footer.sprout-gatekeeper-footer {
+  padding-top: 2rem;
 }
 
 /* ---- Bulk edit modal (browser) ---- */
 
 .sprout .sprout-bulk-edit-panel {
-  padding: 0 !important;
-  width: min(640px, 100%) !important;
-  max-width: min(640px, 92vw) !important;
-  max-height: 90vh !important;
-  overflow: hidden !important;
-  display: flex !important;
-  flex-direction: column !important;
-  border-radius: var(--radius-l) !important;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.24), 0 2px 8px rgba(0, 0, 0, 0.12) !important;
-  background: var(--background) !important;
-  position: relative !important;
-  z-index: 2147483001 !important;
+  padding: 0;
+  width: min(640px, 100%);
+  max-width: min(640px, 92vw);
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-l);
+  border-color: var(--sprout-border-color);
+  box-shadow: var(--lk-shadow-modal);
+  background: var(--background);
+  position: relative;
+  z-index: var(--lk-z-modal-top);
   isolation: isolate;
 }
 
-.sprout .sprout-bulk-edit-panel > .modal-close-button {
-  position: absolute !important;
-  top: 8px !important;
-  right: 8px !important;
-  z-index: 1 !important;
+.sprout :is(.sprout-bulk-edit-panel > .modal-header, .sprout-bulk-edit-content > .modal-header) {
+  padding: 12px 20px;
+  border-bottom: none;
+  background: var(--background);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
 }
 
-.sprout .sprout-bulk-edit-panel > .modal-header {
-  padding: 0 20px 0 !important;
-  border-bottom: none !important;
-  background: var(--background) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-}
-
-.sprout .sprout-bulk-edit-panel > .modal-header .modal-title {
-  font-size: var(--sprout-font-md-plus) !important;
-  font-weight: 600 !important;
+.sprout :is(.sprout-bulk-edit-panel > .modal-header, .sprout-bulk-edit-content > .modal-header) .modal-title {
+  font-size: var(--sprout-font-md-plus);
+  font-weight: 600;
 }
 
 .sprout .sprout-bulk-edit-content {
-  padding: 16px 20px 20px !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
+  padding: 16px 20px 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  border-radius: 0 !important;
+  flex: 1 1 auto;
+  min-height: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
 }
 
 .sprout .sprout-bulk-edit-panel .input,
 .sprout .sprout-bulk-edit-panel input[type="text"].input {
-  height: 36px !important;
-  min-height: 36px !important;
+  height: 100px;
+  min-height: 100px;
+}
+
+.sprout .sprout-bulk-edit-panel .sprout-flag-editor-overlay {
+  pointer-events: auto;
+}
+
+.sprout .sprout-bulk-edit-panel .sprout-single-edit-markdown-field {
+  position: relative;
+  width: 100%;
+}
+
+.sprout .sprout-bulk-edit-panel .sprout-single-edit-markdown-field textarea {
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border: 1px solid var(--sprout-border-color);
+}
+
+.sprout .sprout-bulk-edit-panel .sprout-single-edit-markdown-field.is-preview textarea {
+  display: none;
+}
+
+.sprout .sprout-bulk-edit-panel .sprout-single-edit-markdown-preview {
+  display: none;
+  border: 1px solid var(--sprout-border-color);
+  border-radius: var(--radius-md);
+  background: var(--background-modifier-form-field);
+  color: var(--text-normal);
+  padding: 6px 8px;
+  box-sizing: border-box;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  overflow: auto;
+  cursor: text;
+}
+
+.sprout .sprout-bulk-edit-panel .sprout-single-edit-markdown-field.is-preview .sprout-single-edit-markdown-preview {
+  display: block;
+}
+
+.sprout .sprout-bulk-edit-panel .sprout-single-edit-markdown-preview :is(ul, ol) {
+  margin: 0.15em 0;
+  padding-inline-start: 1.5em;
+}
+
+.sprout .sprout-bulk-edit-panel .sprout-single-edit-markdown-preview ul {
+  list-style-type: disc;
+}
+
+.sprout .sprout-bulk-edit-panel .sprout-single-edit-markdown-preview ol {
+  list-style-type: decimal;
+}
+
+.sprout .sprout-bulk-edit-panel .sprout-single-edit-markdown-preview li {
+  margin: 0;
+  padding: 0;
+}
+
+.sprout .sprout-bulk-edit-panel .sprout-single-edit-markdown-preview .sprout-inline-flag {
+  width: 1em;
+  height: 1em;
+  min-width: 1em;
+  min-height: 1em;
+  max-width: 1em;
+  max-height: 1em;
+  border-radius: 999px;
+  object-fit: cover;
+  vertical-align: text-bottom;
+  display: inline-block;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  box-sizing: content-box;
+  line-height: 1;
+  margin: 0 5px;
+}
+
+.sprout .sprout-bulk-edit-panel .sprout-single-edit-markdown-placeholder {
+  margin: 0;
+  color: var(--text-muted);
 }
 
 .sprout .sprout-bulk-tag-box {
-  height: 38px !important;
-  min-height: 38px !important;
-  max-height: 38px !important;
-  overflow: auto !important;
-  padding: 6px 8px !important;
-  box-sizing: border-box !important;
-  display: flex !important;
-  flex-wrap: wrap !important;
-  column-gap: 6px !important;
-  row-gap: 2px !important;
-  align-content: flex-start !important;
-  background: var(--background-modifier-form-field) !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
-  box-shadow: none !important;
+  height: 100px;
+  min-height: 100px;
+  max-height: 100px;
+  overflow: auto;
+  padding: 6px 8px;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 6px;
+  row-gap: 2px;
+  align-content: flex-start;
+  background: var(--background-modifier-form-field);
+  border: var(--sprout-border-width) solid var(--sprout-border-color);
+  box-shadow: none;
 }
 
 .sprout .sprout-bulk-popover {
-  position: absolute !important;
-  bottom: calc(100% + 6px) !important;
-  left: 0 !important;
-  right: auto !important;
-  z-index: 10000 !important;
-  width: 100% !important;
-  display: none !important;
-  pointer-events: auto !important;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  right: auto;
+  z-index: 10000;
+  width: 100%;
+  display: none;
+  pointer-events: auto;
 }
 
 .sprout .sprout-bulk-popover.is-open {
-  display: block !important;
+  display: block;
 }
 
 /* ---- Bulk edit modal (mobile) ---- */
 
 body.is-mobile .sprout .sprout-bulk-edit-panel {
-  width: min(640px, calc(100vw - 24px)) !important;
-  max-width: calc(100vw - 24px) !important;
-  max-height: 72vh !important;
-  margin: 0 !important;
-  position: absolute !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  overflow: hidden !important;
+  width: min(640px, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
+  max-height: 72vh;
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  overflow: hidden;
 }
 
 body.is-mobile .sprout .sprout-bulk-edit-content {
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
+  overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile: card creator & quick edit — match bulk-edit sizing */
+body.is-mobile .sprout .sprout-card-creator-modal,
+body.is-mobile .sprout .sprout-edit-modal {
+  width: min(640px, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
+  max-height: 72vh;
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  overflow: hidden;
 }
 
 /* ---- Image occlusion creator modal ---- */
 
 .sprout .sprout-io-creator-modal {
-  width: min(96vw, 900px) !important;
-  max-width: 96% !important;
-  height: auto !important;
-  max-height: 90% !important;
-  overflow: visible !important;
-  padding: 0 !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
+  width: min(96vw, 900px);
+  max-width: 96%;
+  height: auto;
+  max-height: 90%;
+  overflow: visible;
+  padding: 0;
+  border: var(--sprout-border-width) solid var(--sprout-border-color);
+}
+
+.sprout :is(.sprout-io-creator-modal > .modal-header, .sprout-io-creator-content > .modal-header) {
+  padding: 12px 20px;
+  border-bottom: none;
+  background: var(--background);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.sprout :is(.sprout-io-creator-modal > .modal-header, .sprout-io-creator-content > .modal-header) .modal-title {
+  font-size: var(--sprout-font-md-plus);
+  font-weight: 600;
 }
 
 .sprout .sprout-io-creator-root {
-  width: 100% !important;
-  height: auto !important;
-  max-width: 100% !important;
-  overflow-y: visible !important;
-  overflow-x: hidden !important;
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 16px !important;
-  box-sizing: border-box !important;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  overflow-y: visible;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-sizing: border-box;
 }
 
 .sprout .sprout-io-title-field {
-  padding-top: 0 !important;
+  padding-top: 0;
 }
 
 .sprout .sprout-io-title-input {
-  resize: none !important;
-  min-height: 60px !important;
+  resize: none;
+  min-height: 60px;
 }
 
 .sprout .sprout-io-info-input {
-  resize: none !important;
-  min-height: 80px !important;
+  resize: none;
+  min-height: 80px;
 }
 
 .sprout .sprout-io-canvas {
-  height: var(--sprout-io-canvas-height, auto) !important;
-  min-height: var(--sprout-io-canvas-min-height, 0px) !important;
-  max-height: var(--sprout-io-canvas-max-height, none) !important;
+  height: var(--sprout-io-canvas-height, auto);
+  min-height: var(--sprout-io-canvas-min-height, 0px);
+  max-height: var(--sprout-io-canvas-max-height, none);
 }
 
 .sprout .sprout-io-toolbar {
-  width: fit-content !important;
-  max-width: 100% !important;
-  align-self: flex-start !important;
+  width: fit-content;
+  max-width: 100%;
+  align-self: flex-start;
 }
 
 .sprout .sprout-io-file-input {
-  display: none !important;
+  display: none;
 }
 
 .sprout .sprout-io-canvas-container {
-  position: relative !important;
-  width: 100% !important;
-  max-width: 1500px !important;
-  overflow: hidden !important;
-  flex-shrink: 0 !important;
-  background-color: var(--background-secondary) !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
-  border-radius: var(--button-radius, var(--radius-m)) !important;
+  position: relative;
+  width: 100%;
+  max-width: 1500px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background-color: var(--background-secondary);
+  border: var(--sprout-border-width) solid var(--sprout-border-color);
+  border-radius: var(--radius-md, var(--radius-md));
 }
 
 .sprout .sprout-io-canvas-placeholder {
-  position: absolute !important;
-  inset: 0 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  pointer-events: auto !important;
-  cursor: pointer !important;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  cursor: pointer;
 }
 
 .sprout .sprout-io-viewport {
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  overflow: hidden !important;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 .sprout .sprout-io-stage {
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-  transform-origin: 0 0 !important;
-  width: var(--sprout-io-stage-w, 1px) !important;
-  height: var(--sprout-io-stage-h, 1px) !important;
-  transform: var(--sprout-io-stage-transform, none) !important;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  width: var(--sprout-io-stage-w, 1px);
+  height: var(--sprout-io-stage-h, 1px);
+  transform: var(--sprout-io-stage-transform, none);
 }
 
 .sprout .sprout-stage-transform {
-  transform: var(--sprout-stage-transform, none) !important;
+  transform: var(--sprout-stage-transform, none);
 }
 
 .sprout .sprout-io-stage-image {
-  display: block !important;
-  user-select: none !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
-  box-sizing: border-box !important;
+  display: block;
+  user-select: none;
+  border: var(--sprout-border-width) solid var(--sprout-border-color);
+  box-sizing: border-box;
 }
 
 .sprout .sprout-io-stage-overlay {
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  pointer-events: auto !important;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
 }
 
 .sprout .sprout-io-footer {
-  margin-top: 16px !important;
-  padding-top: 16px !important;
-  border-top: var(--sprout-border-width) solid var(--sprout-border-color) !important;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: none;
+}
+
+/* Ensure modal widths are based on workspace container width, not viewport width. */
+.workspace-tab-container .sprout .lk-modals.modal,
+.workspace-tab-container .sprout .modal-container .modal {
+  max-width: min(1080px, 95%);
 }
 
 /* IO mode picker — button-style dropdown menu */
 .sprout .sprout-io-mode-menu {
-  position: fixed !important;
-  z-index: 1000002 !important;
-  min-width: 132px !important;
-  max-width: min(320px, calc(100vw - 16px)) !important;
-  padding: 4px !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
-  border-radius: var(--button-radius, var(--radius-m)) !important;
-  background-color: var(--background) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+  position: fixed;
+  z-index: var(--lk-z-modal-menu);
+  min-width: 132px;
+  max-width: min(320px, calc(100vw - 16px));
+  padding: 4px;
+  border: var(--sprout-border-width) solid var(--sprout-border-color);
+  border-radius: var(--radius-md, var(--radius-md));
+  background-color: var(--background);
+  box-shadow: var(--lk-shadow-popover-sm);
 }
 
 .sprout .sprout-io-mode-trigger {
-  min-width: 112px !important;
-  justify-content: space-between !important;
+  min-width: 112px;
+  justify-content: space-between;
 }
 
 .sprout .sprout-io-mode-menu.hidden {
-  display: none !important;
+  display: none;
 }
 
 .sprout .sprout-io-mode-menu-item {
-  padding: 5px 10px !important;
-  border-radius: var(--radius-s) !important;
-  font-size: var(--sprout-font-xs) !important;
-  color: var(--foreground) !important;
-  cursor: pointer !important;
-  white-space: nowrap !important;
+  padding: 5px 10px;
+  border-radius: var(--radius-s);
+  font-size: var(--sprout-font-xs);
+  color: var(--foreground);
+  cursor: pointer;
+  white-space: nowrap;
 }
 
 .sprout .sprout-io-mode-menu-item:hover {
-  background-color: var(--accent) !important;
-  color: var(--accent-foreground) !important;
+  background-color: var(--accent);
+  color: var(--accent-foreground);
 }
 
 .sprout .sprout-io-mode-menu-item.is-selected {
-  font-weight: 600 !important;
+  font-weight: 600;
 }
 
 .sprout .sprout-io-dlg-cancel {
-  background-color: #000 !important;
-  color: #fff !important;
-  border: 1px solid #000 !important;
+  background-color: #000;
+  color: #fff;
+  border: 1px solid #000;
 }
 
 .sprout .sprout-io-dlg-delete {
-  background-color: #fff !important;
-  color: var(--foreground) !important;
+  background-color: #fff;
+  color: var(--foreground);
 }
 
 .sprout .sprout-io-close-btn {
-  border: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-  cursor: pointer !important;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  cursor: pointer;
 }
 
 .sprout .sprout-io-text-wrap {
-  position: absolute !important;
-  left: var(--sprout-io-text-x, 0) !important;
-  top: var(--sprout-io-text-y, 0) !important;
-  z-index: 20 !important;
+  position: absolute;
+  left: var(--sprout-io-text-x, 0);
+  top: var(--sprout-io-text-y, 0);
+  z-index: 20;
 }
 
 .sprout .sprout-io-text-input {
-  width: var(--sprout-io-text-w, 40px) !important;
-  height: var(--sprout-io-text-h, 30px) !important;
-  padding: 6px 8px !important;
-  resize: none !important;
-  font-size: var(--sprout-io-text-size, var(--sprout-font-xs)) !important;
-  line-height: 1.3 !important;
-  color: var(--sprout-io-text-color, #111) !important;
-  border: 1px dashed rgba(16, 185, 129, 0.6) !important;
-  border-radius: var(--button-radius, var(--radius-m)) !important;
-  outline: none !important;
-  background: var(--sprout-io-text-bg, transparent) !important;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12) !important;
+  width: var(--sprout-io-text-w, 40px);
+  height: var(--sprout-io-text-h, 30px);
+  padding: 6px 8px;
+  resize: none;
+  font-size: var(--sprout-io-text-size, var(--sprout-font-xs));
+  line-height: 1.3;
+  color: var(--sprout-io-text-color, #111);
+  border: 1px dashed rgba(16, 185, 129, 0.6);
+  border-radius: var(--radius-md, var(--radius-md));
+  outline: none;
+  background: var(--sprout-io-text-bg, transparent);
+  box-shadow: var(--lk-shadow-input-sm);
 }
 
 .sprout .sprout-io-text-preview {
-  position: absolute !important;
-  border: 2px dashed #10b981 !important;
-  background-color: rgba(16, 185, 129, 0.08) !important;
-  pointer-events: none !important;
-  border-radius: var(--button-radius, var(--radius-m)) !important;
-  left: var(--sprout-io-preview-x, 0) !important;
-  top: var(--sprout-io-preview-y, 0) !important;
-  width: var(--sprout-io-preview-w, 1px) !important;
-  height: var(--sprout-io-preview-h, 1px) !important;
+  position: absolute;
+  border: 2px dashed #10b981;
+  background-color: rgba(16, 185, 129, 0.08);
+  pointer-events: none;
+  border-radius: var(--radius-md, var(--radius-md));
+  left: var(--sprout-io-preview-x, 0);
+  top: var(--sprout-io-preview-y, 0);
+  width: var(--sprout-io-preview-w, 1px);
+  height: var(--sprout-io-preview-h, 1px);
 }
 
 .sprout .sprout-io-crop-preview {
-  position: absolute !important;
-  border: 2px dashed #10b981 !important;
-  background-color: rgba(16, 185, 129, 0.12) !important;
-  pointer-events: none !important;
-  border-radius: var(--radius-s) !important;
-  left: var(--sprout-io-crop-x, 0) !important;
-  top: var(--sprout-io-crop-y, 0) !important;
-  width: var(--sprout-io-crop-w, 1px) !important;
-  height: var(--sprout-io-crop-h, 1px) !important;
+  position: absolute;
+  border: 2px dashed #10b981;
+  background-color: rgba(16, 185, 129, 0.12);
+  pointer-events: none;
+  border-radius: var(--radius-s);
+  left: var(--sprout-io-crop-x, 0);
+  top: var(--sprout-io-crop-y, 0);
+  width: var(--sprout-io-crop-w, 1px);
+  height: var(--sprout-io-crop-h, 1px);
 }
 
 .sprout .sprout-io-mask-preview {
-  position: absolute !important;
-  border: 3px dashed #3b82f6 !important;
-  background-color: rgba(59, 130, 246, 0.12) !important;
-  pointer-events: none !important;
-  left: var(--sprout-io-mask-x, 0) !important;
-  top: var(--sprout-io-mask-y, 0) !important;
-  width: var(--sprout-io-mask-w, 1px) !important;
-  height: var(--sprout-io-mask-h, 1px) !important;
-  border-radius: var(--sprout-io-mask-radius, 4px) !important;
+  position: absolute;
+  border: 3px dashed #3b82f6;
+  background-color: rgba(59, 130, 246, 0.12);
+  pointer-events: none;
+  left: var(--sprout-io-mask-x, 0);
+  top: var(--sprout-io-mask-y, 0);
+  width: var(--sprout-io-mask-w, 1px);
+  height: var(--sprout-io-mask-h, 1px);
+  border-radius: var(--sprout-io-mask-radius, 4px);
 }
 
 .sprout .sprout-io-overlay-item {
-  position: absolute !important;
-  left: var(--sprout-io-left, 0) !important;
-  top: var(--sprout-io-top, 0) !important;
-  width: var(--sprout-io-width, 1px) !important;
-  height: var(--sprout-io-height, 1px) !important;
+  position: absolute;
+  left: var(--sprout-io-left, 0);
+  top: var(--sprout-io-top, 0);
+  width: var(--sprout-io-width, 1px);
+  height: var(--sprout-io-height, 1px);
 }
 
 .sprout .sprout-io-rect {
-  pointer-events: auto !important;
-  border: 3px dashed #ef4444 !important;
-  background-color: rgba(239, 68, 68, 0.08) !important;
-  border-radius: var(--radius-s) !important;
+  pointer-events: auto;
+  border: 3px dashed #ef4444;
+  background-color: rgba(239, 68, 68, 0.08);
+  border-radius: var(--radius-s);
 }
 
 .sprout .sprout-io-rect.is-selected {
-  border: 3px dashed #3b82f6 !important;
-  background-color: rgba(59, 130, 246, 0.12) !important;
+  border: 3px dashed #3b82f6;
+  background-color: rgba(59, 130, 246, 0.12);
 }
 
 .sprout .sprout-io-rect.is-circle {
-  border-radius: 50% !important;
+  border-radius: 50%;
 }
 
 .sprout .sprout-io-group-ui {
-  position: absolute !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) scale(var(--sprout-io-ui-inverse-scale, 1)) !important;
-  transform-origin: center center !important;
-  z-index: 10 !important;
-  pointer-events: auto !important;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(var(--sprout-io-ui-inverse-scale, 1));
+  transform-origin: center center;
+  z-index: 10;
+  pointer-events: auto;
 }
 
 .sprout .sprout-io-group-input {
-  height: 1.5rem !important;
-  width: 3rem !important;
-  max-width: 3rem !important;
-  min-height: 1.5rem !important;
-  text-align: center !important;
-  border-radius: var(--button-radius, var(--radius-m)) !important;
-  color: #000 !important;
-  cursor: text !important;
-  z-index: 10 !important;
-  background-color: #fffffff2 !important;
-  border: 1.5px solid #0000004d !important;
-  font-size: 0.9rem !important;
-  font-weight: 400 !important;
-  line-height: 1.1 !important;
-  padding: 0 !important;
-  box-sizing: border-box !important;
-  position: relative !important;
+  height: 1.5rem;
+  width: 3rem;
+  max-width: 3rem;
+  min-height: 1.5rem;
+  text-align: center;
+  border-radius: var(--radius-md, var(--radius-md));
+  color: #000;
+  cursor: text;
+  z-index: 10;
+  background-color: #fffffff2;
+  border: 1.5px solid #0000004d;
+  font-size: 0.9rem;
+  font-weight: 400;
+  line-height: 1.1;
+  padding: 0;
+  box-sizing: border-box;
+  position: relative;
 }
 
 .sprout .sprout-io-mask-delete {
-  position: absolute !important;
-left: 50px !important;
-  width: 24px !important;
-  height: 24px !important;
-  min-width: 24px !important;
-  min-height: 24px !important;
-  border-radius: 50% !important;
-  z-index: 11 !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 0 !important;
-  line-height: 1 !important;
+  position: absolute;
+left: 50px;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  border-radius: 50%;
+  z-index: 11;
+  opacity: 0;
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
 }
 
 .sprout .sprout-io-mask-delete:hover {
@@ -1037,74 +1308,74 @@ left: 50px !important;
 }
 
 .sprout .sprout-io-mask-delete .svg-icon {
-  width: 14px !important;
-  height: 14px !important;
+  width: 14px;
+  height: 14px;
 }
 
 .sprout .sprout-io-group-ui:focus-within .sprout-io-mask-delete {
-  opacity: 1 !important;
-  pointer-events: auto !important;
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .sprout .sprout-io-corner {
-  position: absolute !important;
-  width: var(--sprout-io-corner-size, 10px) !important;
-  height: var(--sprout-io-corner-size, 10px) !important;
-  background: rgba(0, 0, 0, 0.25) !important;
-  border: 1px solid rgba(255, 255, 255, 0.7) !important;
-  border-radius: var(--radius-s) !important;
-  pointer-events: auto !important;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08) !important;
+  position: absolute;
+  width: var(--sprout-io-corner-size, 10px);
+  height: var(--sprout-io-corner-size, 10px);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: var(--radius-s);
+  pointer-events: auto;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
 }
 
 .sprout .sprout-io-corner.is-left {
-  left: -5px !important;
+  left: -5px;
 }
 
 .sprout .sprout-io-corner.is-right {
-  right: -5px !important;
+  right: -5px;
 }
 
 .sprout .sprout-io-corner.is-top {
-  top: -5px !important;
+  top: -5px;
 }
 
 .sprout .sprout-io-corner.is-bottom {
-  bottom: -5px !important;
+  bottom: -5px;
 }
 
 .sprout .sprout-io-text-box {
-  pointer-events: auto !important;
-  border: var(--sprout-io-text-border, 1px dashed rgba(16, 185, 129, 0.6)) !important;
-  background-color: var(--sprout-io-text-bg, transparent) !important;
-  box-shadow: var(--sprout-io-text-shadow, none) !important;
-  border-radius: var(--button-radius, var(--radius-m)) !important;
-  padding: 6px 8px !important;
-  box-sizing: border-box !important;
-  display: flex !important;
-  align-items: flex-start !important;
-  justify-content: flex-start !important;
+  pointer-events: auto;
+  border: var(--sprout-io-text-border, 1px dashed rgba(16, 185, 129, 0.6));
+  background-color: var(--sprout-io-text-bg, transparent);
+  box-shadow: var(--sprout-io-text-shadow, none);
+  border-radius: var(--radius-md, var(--radius-md));
+  padding: 6px 8px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 
 .sprout .sprout-io-text-content {
-  white-space: pre-wrap !important;
-  word-break: break-word !important;
-  font-size: var(--sprout-io-text-size, var(--sprout-font-xs)) !important;
-  line-height: 1.3 !important;
-  color: var(--sprout-io-text-color, #111111) !important;
-  pointer-events: none !important;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: var(--sprout-io-text-size, var(--sprout-font-xs));
+  line-height: 1.3;
+  color: var(--sprout-io-text-color, #111111);
+  pointer-events: none;
 }
 
 /* ---- Close button ---- */
 
-.sprout .sprout-modals.modal .modal-close-button {
-  position: relative !important;
-  top: auto !important;
-  right: auto !important;
+.sprout .lk-modals.modal .modal-close-button {
+  position: relative;
+  top: auto;
+  right: auto;
   flex-shrink: 0;
   margin-left: auto;
 
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-md);
   border: 1px solid transparent;
   background: transparent;
   width: 34px;
@@ -1120,7 +1391,7 @@ left: 50px !important;
   position: absolute;
   top: 12px;
   right: 12px;
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-md);
   border: 1px solid transparent;
   background: transparent;
   width: 34px;
@@ -1142,54 +1413,119 @@ left: 50px !important;
   border-color: rgba(255, 255, 255, 0.10);
 }
 
-.sprout .sprout-modals.modal .modal-close-button:hover {
+.sprout .lk-modals.modal .modal-close-button:hover {
   background: rgba(0, 0, 0, 0.06);
   border-color: rgba(0, 0, 0, 0.08);
 }
 
-.theme-dark .sprout .sprout-modals.modal .modal-close-button:hover {
+.theme-dark .sprout .lk-modals.modal .modal-close-button:hover {
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.10);
 }
 
+/* Close button: inline in header for card modals (moved into .modal-header via JS) */
+.sprout :is(.sprout-card-creator-modal, .sprout-bulk-edit-panel, .sprout-edit-modal, .sprout-io-creator-modal) > .modal-header > .modal-close-button {
+  position: relative;
+  top: auto;
+  right: auto;
+  flex-shrink: 0;
+  margin-left: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background: transparent;
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.sprout :is(.sprout-card-creator-content, .sprout-bulk-edit-content, .sprout-io-creator-content) > .modal-header > .modal-close-button,
+.sprout .sprout-edit-modal > .modal-content > .modal-header > .modal-close-button {
+  position: relative;
+  top: auto;
+  right: auto;
+  flex-shrink: 0;
+  margin-left: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background: transparent;
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.sprout .sprout-card-creator-content > .modal-header > .modal-close-button {
+  position: relative;
+  top: auto;
+  right: auto;
+  flex-shrink: 0;
+  margin-left: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background: transparent;
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* Tag-box: ensure visible border inside modals */
+.sprout :is(.sprout-card-creator-modal, .sprout-bulk-edit-panel, .sprout-edit-modal) .sprout-tag-box {
+  border: var(--sprout-border-width) solid var(--sprout-border-color);
+  border-radius: var(--radius-md);
+}
+
 /* Optional: tighten default modal title spacing if Obsidian inserts one */
-.sprout .sprout-modals.modal .modal-title {
+.sprout .lk-modals.modal .modal-title {
   margin: 0;
+      font-size: 1.2rem !important;
+    font-weight: 600;
 }
 
 /* ---- Generic modal containers ---- */
 
-.sprout-modal-container {
-  background: transparent !important;
-  background-color: transparent !important;
-  backdrop-filter: none !important;
+.lk-modal-container {
+  background: transparent;
+  background-color: transparent;
+  backdrop-filter: none;
 }
 
-.sprout-modal, .sprout-modals {
+.lk-modals {
   background-color: var(--background);
   backdrop-filter: none;
   padding: 0;
   max-width: 600px;
   border-radius: var(--radius-l);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.24), 0 2px 8px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--lk-shadow-modal);
 }
 
 /* ---- Modal content overflow ---- */
 
-/* Ensure modal-content includes padding in width to prevent horizontal scrollbar */
-.modal-content {
-  box-sizing: border-box !important;
+/* Ensure Sprout modal-content includes padding in width to prevent horizontal scrollbar */
+.sprout .modal-content,
+.lk-modals .modal-content {
+  box-sizing: border-box;
 }
 /* Ensure child modal-content never exceeds parent width (including padding) */
-.sprout-modals > .modal-content {
-  box-sizing: border-box !important;
-  max-width: 100% !important;
-  width: 100% !important;
+.lk-modals > .modal-content {
+  box-sizing: border-box;
+  max-width: 100%;
+  width: 100%;
 }
 /* Export result view: avoid empty scrollbars on small content */
 .sprout .sprout-anki-export-modal .modal-content.sprout-export-result {
-  overflow-y: visible !important;
-  max-height: none !important;
+  overflow-y: visible;
+  max-height: none;
 }
 
 /* ---- Anki export / import: popover z-index ---- */
@@ -1200,89 +1536,87 @@ left: 50px !important;
 .sprout-anki-export-modal .sprout-group-picker:has(.sprout-popover-dropdown.is-open),
 .sprout-anki-import-modal .sprout-deck-picker:has(.sprout-popover-dropdown.is-open),
 .sprout-anki-import-modal .sprout-group-picker:has(.sprout-popover-dropdown.is-open) {
-  z-index: 999999 !important;
-  position: relative !important;
+  z-index: var(--lk-z-popover-overlay);
+  position: relative;
 }
 
 .sprout-anki-export-modal .sprout-popover-dropdown,
 .sprout-anki-import-modal .sprout-popover-dropdown {
-  z-index: 999999 !important;
+  z-index: var(--lk-z-popover-overlay);
 }
 
 /* ---- Anki import progress bar ---- */
 .sprout .sprout-anki-import-progress-fill {
-  width: var(--sprout-anki-import-progress, 0%) !important;
-  background-color: var(--sprout-anki-import-progress-color, var(--theme-accent)) !important;
+  width: var(--sprout-anki-import-progress, 0%);
+  background-color: var(--sprout-anki-import-progress-color, var(--theme-accent));
 }
 /* IO modal content: match outer modal width */
 .sprout-io-creator .modal-content {
-  max-width: 100% !important;
-  width: 100% !important;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 16px 20px 20px !important;
+  max-width: 100%;
+  width: 100%;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 16px 20px 20px;
 }
 
 /* Keep tooltip hosts neutral globally; only raise tooltip layer inside modals */
 .sprout .modal-container [data-tooltip],
-.sprout .sprout-modals [data-tooltip],
-.sprout .sprout-modal [data-tooltip] {
-  overflow: visible !important;
+.sprout .lk-modals [data-tooltip] {
+  overflow: visible;
 }
 
 .sprout .modal-container [data-tooltip]::after,
-.sprout .sprout-modals [data-tooltip]::after,
-.sprout .sprout-modal [data-tooltip]::after {
-  z-index: 2147483647 !important;
+.sprout .lk-modals [data-tooltip]::after {
+  z-index: var(--lk-z-max);
 }
 
 /* ---- Image zoom modal ---- */
 /* Replaces inline styles on zoom overlay across image-occlusion-review-render.ts */
 
 .sprout .sprout-zoom-overlay {
-  background: transparent !important;
-  backdrop-filter: none !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  width: 100vw !important;
-  max-width: 100vw !important;
-  height: 100vh !important;
-  max-height: 100vh !important;
+  background: transparent;
+  backdrop-filter: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+  width: 100vw;
+  max-width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
 }
 
 .sprout .sprout-zoom-content {
-  padding: 0 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 100% !important;
-  height: 100% !important;
-  min-height: 100vh !important;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
 }
 
 .sprout .sprout-zoom-host {
-  position: relative !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--foreground);
   opacity: 0.8;
   cursor: pointer;
-  max-width: 98vw !important;
-  max-height: 96vh !important;
-  overflow: visible !important;
+  max-width: 98vw;
+  max-height: 96vh;
+  overflow: visible;
 }
 
 .sprout .sprout-zoom-img {
-  max-width: 98vw !important;
-  max-height: 96vh !important;
-  width: auto !important;
-  height: auto !important;
-  object-fit: contain !important;
-  display: block !important;
+  max-width: 98vw;
+  max-height: 96vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
 }
 
 .sprout .sprout-zoom-close {
@@ -1318,13 +1652,39 @@ left: 50px !important;
 /* ---- Confirm modals (settings) ---- */
 
 .sprout-confirm-modal .modal {
-  box-shadow: var(--shadow-s) !important;
-  max-width: min(500px, 90%) !important;
+  box-shadow: var(--shadow-s);
+  max-width: min(500px, 90%);
+}
+
+.sprout-confirm-modal .modal-header {
+  padding-bottom: 6px;
+}
+
+.sprout-confirm-modal .modal-title {
+  font-size: var(--font-ui-medium);
+  font-weight: 700;
+}
+
+.sprout-confirm-modal .modal-content {
+  padding-top: 2px;
+}
+
+.sprout-confirm-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sprout-confirm-modal-copy {
+  margin: 0;
+  font-size: var(--font-ui-small);
+  line-height: 1.55;
+  color: var(--text-muted);
 }
 
 .sprout-confirm-modal .modal-content,
 .sprout-confirm-modal .modal-content p {
-  text-align: left !important;
+  text-align: left;
 }
 
 .sprout-confirm-row {
@@ -1344,6 +1704,19 @@ left: 50px !important;
 .sprout-btn-danger {
   background: var(--background-modifier-error);
   color: var(--text-on-accent);
+}
+
+.sprout-confirm-modal .sprout-settings-action-btn.sprout-btn-danger {
+  background: var(--background-modifier-error) !important;
+  border-color: var(--background-modifier-error-hover, var(--background-modifier-error)) !important;
+  color: var(--text-on-accent) !important;
+}
+
+.sprout-confirm-modal .sprout-settings-action-btn.sprout-btn-danger:hover,
+.sprout-confirm-modal .sprout-settings-action-btn.sprout-btn-danger:focus-visible {
+  background: var(--background-modifier-error-hover, var(--background-modifier-error)) !important;
+  border-color: var(--background-modifier-error-hover, var(--background-modifier-error)) !important;
+  color: var(--text-on-accent) !important;
 }
 
 .sprout-confirm-box {
@@ -1382,7 +1755,7 @@ left: 50px !important;
   margin-top: 10px;
   padding: 10px;
   border: var(--sprout-border-width) solid var(--sprout-border-color);
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-md);
   background: var(--background-secondary, var(--background));
   font-size: var(--sprout-font-2xs);
   color: var(--text-normal);
@@ -1405,7 +1778,7 @@ left: 50px !important;
   margin-top: 10px;
   padding: 10px 12px;
   border: var(--sprout-border-width) solid var(--sprout-border-color);
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-md);
   background: var(--background-modifier-message);
 }
 
@@ -1431,13 +1804,14 @@ left: 50px !important;
 .sprout .modal-container .modal-content p {
   margin: 8px 0;
   line-height: 1.5;
+  font-size: 0.9rem;;
   color: var(--text-normal);
 }
 
 /* Remove box shadow from backup table */
 .sprout-backup-table,
 .sprout-backup-table * {
-  box-shadow: none !important;
+  box-shadow: none;
 }
 
 /* ---- IO Editor Modal (moved from inline <style> in image-mask-renderer.ts) ---- */
@@ -1457,8 +1831,8 @@ left: 50px !important;
 
 .sprout-io-editor-modal .modal {
   z-index: 3000;
-  width: 90% !important;
-  max-width: 800px !important;
+  width: 90%;
+  max-width: 800px;
 }
 
 .sprout-io-root {
@@ -1515,52 +1889,52 @@ left: 50px !important;
 }
 
 .sprout-io-editor-modal .sprout-io-viewport {
-  position: relative !important;
-  top: auto !important;
-  left: auto !important;
-  width: 100% !important;
-  height: var(--sprout-io-viewport-h, auto) !important;
-  overflow: hidden !important;
+  position: relative;
+  top: auto;
+  left: auto;
+  width: 100%;
+  height: var(--sprout-io-viewport-h, auto);
+  overflow: hidden;
 }
 
 .sprout-io-editor-modal .sprout-io-stage {
-  position: absolute !important;
-  left: 0 !important;
-  top: 0 !important;
-  transform-origin: 0 0 !important;
-  width: var(--sprout-io-stage-w, 1px) !important;
-  height: var(--sprout-io-stage-h, 1px) !important;
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  width: var(--sprout-io-stage-w, 1px);
+  height: var(--sprout-io-stage-h, 1px);
 }
 
 .sprout-io-editor-modal .sprout-stage-transform {
-  transform: var(--sprout-stage-transform, none) !important;
+  transform: var(--sprout-stage-transform, none);
 }
 
 .sprout .sprout-io-editor-modal .sprout-io-overlay {
-  left: 0 !important;
-  top: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  max-width: none !important;
-  max-height: none !important;
-  border-radius: 0 !important;
-  overflow: visible !important;
-  pointer-events: auto !important;
-  z-index: 10 !important;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  border-radius: 0;
+  overflow: visible;
+  pointer-events: auto;
+  z-index: 10;
 }
 
 .sprout-io-editor-modal .sprout-io-overlay {
-  position: absolute !important;
-  left: 0 !important;
-  top: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  max-width: none !important;
-  max-height: none !important;
-  border-radius: 0 !important;
-  overflow: visible !important;
-  pointer-events: auto !important;
-  z-index: 10 !important;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  border-radius: 0;
+  overflow: visible;
+  pointer-events: auto;
+  z-index: 10;
 }
 
 .sprout-io-preview {
@@ -1571,7 +1945,7 @@ left: 50px !important;
   height: var(--sprout-io-height, 0);
   box-sizing: border-box;
   border: 2px dashed var(--interactive-accent);
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-md);
   background: rgba(0, 0, 0, 0.06);
   pointer-events: none;
 }
@@ -1584,16 +1958,16 @@ left: 50px !important;
   height: var(--sprout-io-height, 0);
   box-sizing: border-box;
   border: 2px solid var(--interactive-accent);
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-md);
   background: rgba(0, 0, 0, 0.06);
 }
 
 .sprout .sprout-io-editor-modal .sprout-io-rect {
-  pointer-events: auto !important;
+  pointer-events: auto;
 }
 
 .sprout-io-editor-modal .sprout-io-rect {
-  pointer-events: auto !important;
+  pointer-events: auto;
 }
 
 .sprout-io-rect.selected {
@@ -1609,7 +1983,7 @@ left: 50px !important;
   font-weight: 700;
   font-size: var(--sprout-font-xs);
   padding: 2px 8px;
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-md);
   background: rgba(0, 0, 0, 0.55);
   color: white;
   pointer-events: none;
@@ -1654,7 +2028,7 @@ left: 50px !important;
   align-items: center;
   gap: 6px;
   padding: 6px;
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-md);
   background: var(--background);
   border: var(--sprout-border-width) solid var(--sprout-border-color);
   box-shadow: 0 1px 2px color-mix(in srgb, var(--foreground) 6%, transparent);
@@ -1669,7 +2043,7 @@ left: 50px !important;
   max-width: 100%;
   gap: 4px;
   padding: 4px;
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-md);
   border: var(--sprout-border-width) solid var(--sprout-border-color);
   background: var(--background-secondary);
 }
@@ -1683,7 +2057,7 @@ left: 50px !important;
 
 .sprout-io-btn {
   height: 28px;
-  border-radius: var(--button-radius);
+  border-radius: var(--radius-sm);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1698,8 +2072,8 @@ left: 50px !important;
 }
 
 .sprout-io-btn.is-active {
-  background: color-mix(in srgb, var(--theme-accent) 18%, transparent);
-  border-color: color-mix(in srgb, var(--theme-accent) 40%, transparent);
+  background: var(--theme-base-20);
+  border-color: var(--theme-base-40);
   color: var(--theme-accent);
 }
 
@@ -1726,7 +2100,7 @@ left: 50px !important;
   align-items: center;
   gap: 6px;
   padding: 3px 6px;
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-md);
   border: var(--sprout-border-width) solid var(--sprout-border-color);
   background: var(--background);
 }
@@ -1740,7 +2114,7 @@ left: 50px !important;
   height: 26px;
   font-size: var(--sprout-font-2xs);
   padding: 2px 6px;
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-md);
   border: var(--sprout-border-width) solid var(--sprout-border-color);
   background: var(--background);
   color: var(--foreground);
@@ -1760,7 +2134,7 @@ left: 50px !important;
   width: 26px;
   height: 26px;
   padding: 2px;
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-md);
   border: var(--sprout-border-width) solid var(--sprout-border-color);
   background: var(--background);
   cursor: pointer;

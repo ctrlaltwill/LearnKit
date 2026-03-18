@@ -40,7 +40,7 @@ export const IO_EDITOR_STYLES = `
 
   .sprout-io-btn {
     height: 28px;
-    border-radius: var(--button-radius);
+    border-radius: var(--radius-sm);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -55,8 +55,8 @@ export const IO_EDITOR_STYLES = `
   }
 
   .sprout-io-btn.is-active {
-    background: color-mix(in srgb, var(--theme-accent) 18%, transparent);
-    border-color: color-mix(in srgb, var(--theme-accent) 40%, transparent);
+    background: var(--theme-base-20);
+    border-color: var(--theme-base-40);
     color: var(--theme-accent);
   }
 

@@ -20,25 +20,25 @@
 
 /* Widget popover root should be transparent so rounded menu doesn't bleed */
 .sprout[id^="bc-widget-menu-"][id$="-popover"] {
-  background: transparent !important;
-  background-color: transparent !important;
-  box-shadow: none !important;
+  background: transparent;
+  background-color: transparent;
+  box-shadow: none;
 }
 
 .sprout-widget.sprout {
-  background: none !important;
-  background-color: transparent !important;
+  background: none;
+  background-color: transparent;
   zoom: var(--sprout-leaf-zoom, 1);
 }
 
 /* Layout model: header/top controls fixed, card body adaptive + scrollable, footer pinned near bottom. */
 .sprout.sprout-widget {
-  display: flex !important;
-  flex-direction: column !important;
-  height: 100% !important;
-  min-height: 0 !important;
-  overflow: hidden !important;
-  box-sizing: border-box !important;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .sprout.sprout-widget > .sprout-widget-header,
@@ -50,73 +50,51 @@
 /* Widget: remove all box-shadows (cards + buttons + any child) */
 .sprout.sprout-widget,
 .sprout.sprout-widget * {
-  box-shadow: none !important;
+  box-shadow: none;
 }
 
 /* ---- Widget buttons ---- */
 
 .sprout-widget-hover-darken {
-  background-color: var(--background) !important;
-  border-color: var(--sprout-border-color) !important;
+  background-color: var(--background);
+  border-color: var(--sprout-border-color);
   transition: background-color 0.15s, border-color 0.15s;
 }
 
 .sprout-widget-hover-darken:hover,
 .sprout-widget-hover-darken:focus {
-  background-color: var(--color-base-25) !important;
-  border-color: var(--color-base-30) !important;
+  background-color: var(--color-base-25);
+  border-color: var(--color-base-30);
 }
 
 .sprout.sprout-widget button,
 .sprout.sprout-widget button.bc,
 .sprout.sprout-widget .btn,
-.sprout.sprout-widget .btn-outline,
+.sprout.sprout-widget .sprout-btn-toolbar,
 .sprout.sprout-widget .btn-primary,
 .sprout.sprout-widget .btn-destructive,
 .sprout.sprout-widget .sprout-widget-back-btn,
 .sprout.sprout-widget .sprout-widget-action-btn {
-  background-color: var(--background) !important;
-  color: var(--foreground) !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
-  box-shadow: none !important;
-  outline: none !important;
+  background-color: var(--background);
+  color: var(--foreground);
+  border: var(--sprout-border-width) solid var(--sprout-border-color);
+  box-shadow: none;
+  outline: none;
   transition: background-color 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .sprout.sprout-widget .sprout-widget-action-btn {
-  font-size: var(--sprout-widget-font-button) !important;
-}
-
-.sprout.sprout-widget .sprout-grade-btn-with-interval {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  text-align: center !important;
-}
-
-.sprout.sprout-widget .sprout-grade-btn-label-wrap {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  line-height: 1.05;
-}
-
-.sprout.sprout-widget .sprout-grade-btn-subtitle {
-  font-size: 0.78em;
-  opacity: 0.9;
-  font-weight: 500;
+  font-size: var(--sprout-widget-font-button);
 }
 
 /* Match study/gatekeeper spacing for label + keycap in widget grading buttons. */
 .sprout.sprout-widget .sprout-widget-action-btn:is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy) {
-  column-gap: 0 !important;
+  column-gap: 0;
 }
 
 .sprout.sprout-widget kbd,
 .sprout.sprout-widget .kbd {
-  font-size: var(--sprout-widget-font-kbd) !important;
+  font-size: var(--sprout-widget-font-kbd);
 }
 
 .sprout.sprout-widget .sprout-widget-back-btn {
@@ -124,14 +102,14 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  padding: 2px 10px !important;
-  border-radius: var(--radius-m);
+  padding: 2px 10px;
+  border-radius: var(--radius-md);
 }
 
 .sprout.sprout-widget button:hover,
 .sprout.sprout-widget button.bc:hover,
 .sprout.sprout-widget .btn:hover,
-.sprout.sprout-widget .btn-outline:hover,
+.sprout.sprout-widget .sprout-btn-toolbar:hover,
 .sprout.sprout-widget .btn-primary:hover,
 .sprout.sprout-widget .btn-destructive:hover,
 .sprout.sprout-widget .sprout-widget-back-btn:hover,
@@ -139,20 +117,20 @@
 .sprout.sprout-widget button:focus-visible,
 .sprout.sprout-widget button.bc:focus-visible,
 .sprout.sprout-widget .btn:focus-visible,
-.sprout.sprout-widget .btn-outline:focus-visible,
+.sprout.sprout-widget .sprout-btn-toolbar:focus-visible,
 .sprout.sprout-widget .btn-primary:focus-visible,
 .sprout.sprout-widget .btn-destructive:focus-visible,
 .sprout.sprout-widget .sprout-widget-back-btn:focus-visible,
 .sprout.sprout-widget .sprout-widget-action-btn:focus-visible {
-  background-color: var(--color-base-25) !important;
-  border-color: var(--color-base-30) !important;
-  box-shadow: none !important;
+  background-color: var(--color-base-25);
+  border-color: var(--color-base-30);
+  box-shadow: none;
 }
 
 .sprout.sprout-widget button:active,
 .sprout.sprout-widget button.bc:active,
 .sprout.sprout-widget .btn:active,
-.sprout.sprout-widget .btn-outline:active,
+.sprout.sprout-widget .sprout-btn-toolbar:active,
 .sprout.sprout-widget .btn-primary:active,
 .sprout.sprout-widget .btn-destructive:active,
 .sprout.sprout-widget .sprout-widget-back-btn:active,
@@ -160,27 +138,27 @@
 .sprout.sprout-widget button:focus,
 .sprout.sprout-widget button.bc:focus,
 .sprout.sprout-widget .btn:focus,
-.sprout.sprout-widget .btn-outline:focus,
+.sprout.sprout-widget .sprout-btn-toolbar:focus,
 .sprout.sprout-widget .btn-primary:focus,
 .sprout.sprout-widget .btn-destructive:focus,
 .sprout.sprout-widget .sprout-widget-back-btn:focus,
 .sprout.sprout-widget .sprout-widget-action-btn:focus {
-  background-color: var(--muted) !important;
-  border-color: var(--muted) !important;
-  box-shadow: none !important;
+  background-color: var(--muted);
+  border-color: var(--muted);
+  box-shadow: none;
 }
 
 /* Force Sprout custom buttons to override global button rules */
-.sprout :is(button.sprout-card-edit-btn, .sprout-widget button, .sprout-widget .btn, .sprout-widget .btn-outline) {
-  box-shadow: none !important;
-  outline: none !important;
-  background-color: var(--background) !important;
-  border-radius: var(--button-radius, var(--radius-m)) !important;
+.sprout :is(button.sprout-card-edit-btn, .sprout-widget button, .sprout-widget .btn, .sprout-widget .sprout-btn-toolbar) {
+  box-shadow: none;
+  outline: none;
+  background-color: var(--background);
+  border-radius: var(--radius-md, var(--radius-md));
 }
 
-.sprout :is(.sprout-widget button, .sprout-widget .btn, .sprout-widget .btn-outline) {
-  background-color: var(--background) !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
+.sprout :is(.sprout-widget button, .sprout-widget .btn, .sprout-widget .sprout-btn-toolbar) {
+  background-color: var(--background);
+  border: var(--sprout-border-width) solid var(--sprout-border-color);
 }
 
 /* Widget grading palette should follow theme-aware button tints */
@@ -210,21 +188,21 @@
   --sprout-btn-border-mix: 45%;
   --sprout-kbd-tint: var(--sprout-btn-tint);
 
-  background: color-mix(in srgb, var(--sprout-btn-tint) var(--sprout-btn-bg-mix), var(--background)) !important;
-  color: color-mix(in srgb, var(--sprout-btn-tint) var(--sprout-btn-fg-mix), var(--foreground)) !important;
-  border: var(--sprout-border-width) solid color-mix(in srgb, var(--sprout-btn-tint) var(--sprout-btn-border-mix), transparent) !important;
+  background: color-mix(in srgb, var(--sprout-btn-tint) var(--sprout-btn-bg-mix), var(--background));
+  color: color-mix(in srgb, var(--sprout-btn-tint) var(--sprout-btn-fg-mix), var(--foreground));
+  border: var(--sprout-border-width) solid color-mix(in srgb, var(--sprout-btn-tint) var(--sprout-btn-border-mix), transparent);
 }
 
 .sprout.sprout-widget .sprout-widget-action-btn:is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy) :is(kbd, .kbd) {
-  background: color-mix(in srgb, var(--sprout-kbd-tint) 50%, transparent) !important;
-  border-color: color-mix(in srgb, var(--sprout-kbd-tint) 48%, transparent) !important;
-  color: color-mix(in srgb, rgb(255, 255, 255) 88%, var(--sprout-kbd-tint) 12%) !important;
+  background: color-mix(in srgb, var(--sprout-kbd-tint) 50%, transparent);
+  border-color: color-mix(in srgb, var(--sprout-kbd-tint) 48%, transparent);
+  color: color-mix(in srgb, rgb(255, 255, 255) 88%, var(--sprout-kbd-tint) 12%);
 }
 
 .sprout.sprout-widget .sprout-widget-action-btn:is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy):hover,
 .sprout.sprout-widget .sprout-widget-action-btn:is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy):focus-visible {
-  background: color-mix(in srgb, var(--sprout-btn-tint) 24%, var(--background)) !important;
-  border-color: color-mix(in srgb, var(--sprout-btn-tint) 60%, transparent) !important;
+  background: color-mix(in srgb, var(--sprout-btn-tint) 24%, var(--background));
+  border-color: color-mix(in srgb, var(--sprout-btn-tint) 60%, transparent);
 }
 
 .theme-dark .sprout.sprout-widget .sprout-widget-action-btn.sprout-btn-again {
@@ -252,9 +230,9 @@
 }
 
 .theme-dark .sprout.sprout-widget .sprout-widget-action-btn:is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy) :is(kbd, .kbd) {
-  background: color-mix(in srgb, var(--sprout-kbd-tint) 38%, transparent) !important;
-  border-color: color-mix(in srgb, var(--sprout-kbd-tint) 58%, transparent) !important;
-  color: rgb(255, 255, 255) !important;
+  background: color-mix(in srgb, var(--sprout-kbd-tint) 38%, transparent);
+  border-color: color-mix(in srgb, var(--sprout-kbd-tint) 58%, transparent);
+  color: rgb(255, 255, 255);
 }
 
 .theme-dark .sprout.sprout-widget .sprout-widget-action-btn:is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy):hover,
@@ -278,64 +256,64 @@
 }
 
 .sprout.sprout-widget :is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy) {
-  background: color-mix(in srgb, var(--sprout-widget-btn-tint) 16%, var(--background)) !important;
-  color: color-mix(in srgb, var(--sprout-widget-btn-tint) 72%, var(--foreground)) !important;
-  border: var(--sprout-border-width) solid color-mix(in srgb, var(--sprout-widget-btn-tint) 45%, transparent) !important;
+  background: color-mix(in srgb, var(--sprout-widget-btn-tint) 16%, var(--background));
+  color: color-mix(in srgb, var(--sprout-widget-btn-tint) 72%, var(--foreground));
+  border: var(--sprout-border-width) solid color-mix(in srgb, var(--sprout-widget-btn-tint) 45%, transparent);
 }
 
 .sprout.sprout-widget :is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy):hover,
 .sprout.sprout-widget :is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy):focus-visible {
-  background: color-mix(in srgb, var(--sprout-widget-btn-tint) 24%, var(--background)) !important;
-  border-color: color-mix(in srgb, var(--sprout-widget-btn-tint) 60%, transparent) !important;
+  background: color-mix(in srgb, var(--sprout-widget-btn-tint) 24%, var(--background));
+  border-color: color-mix(in srgb, var(--sprout-widget-btn-tint) 60%, transparent);
 }
 
 .sprout.sprout-widget :is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy) :is(kbd, .kbd) {
-  background: color-mix(in srgb, var(--sprout-widget-btn-tint) 50%, transparent) !important;
-  border-color: color-mix(in srgb, var(--sprout-widget-btn-tint) 48%, transparent) !important;
+  background: color-mix(in srgb, var(--sprout-widget-btn-tint) 50%, transparent);
+  border-color: color-mix(in srgb, var(--sprout-widget-btn-tint) 48%, transparent);
 }
 
 /* Ensure rating buttons keep tinted faces even with .sprout-widget-hover-darken */
 .sprout-widget-action-btn.sprout-widget-hover-darken:is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy) {
-  background-color: color-mix(in srgb, var(--sprout-widget-btn-tint) 16%, var(--background)) !important;
-  color: color-mix(in srgb, var(--sprout-widget-btn-tint) 72%, var(--foreground)) !important;
-  border-color: color-mix(in srgb, var(--sprout-widget-btn-tint) 45%, transparent) !important;
+  background-color: color-mix(in srgb, var(--sprout-widget-btn-tint) 16%, var(--background));
+  color: color-mix(in srgb, var(--sprout-widget-btn-tint) 72%, var(--foreground));
+  border-color: color-mix(in srgb, var(--sprout-widget-btn-tint) 45%, transparent);
 }
 
 .sprout-widget-action-btn.sprout-widget-hover-darken:is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy):hover,
 .sprout-widget-action-btn.sprout-widget-hover-darken:is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy):focus,
 .sprout-widget-action-btn.sprout-widget-hover-darken:is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy):focus-visible {
-  background-color: color-mix(in srgb, var(--sprout-widget-btn-tint) 24%, var(--background)) !important;
-  border-color: color-mix(in srgb, var(--sprout-widget-btn-tint) 60%, transparent) !important;
+  background-color: color-mix(in srgb, var(--sprout-widget-btn-tint) 24%, var(--background));
+  border-color: color-mix(in srgb, var(--sprout-widget-btn-tint) 60%, transparent);
 }
 
 /* Explicit per-rating rules to beat neutral widget button reset in all builds */
 .sprout.sprout-widget .sprout-widget-action-btn.sprout-btn-again {
-  background-color: color-mix(in srgb, var(--destructive) 16%, var(--background)) !important;
-  color: color-mix(in srgb, var(--destructive) 72%, var(--foreground)) !important;
-  border-color: color-mix(in srgb, var(--destructive) 45%, transparent) !important;
+  background-color: color-mix(in srgb, var(--destructive) 16%, var(--background));
+  color: color-mix(in srgb, var(--destructive) 72%, var(--foreground));
+  border-color: color-mix(in srgb, var(--destructive) 45%, transparent);
 }
 
 .sprout.sprout-widget .sprout-widget-action-btn.sprout-btn-hard {
-  background-color: color-mix(in srgb, var(--sprout-hard-bg) 22%, var(--background)) !important;
-  color: color-mix(in srgb, var(--sprout-hard-bg) 72%, var(--foreground)) !important;
-  border-color: color-mix(in srgb, var(--sprout-hard-bg) 50%, transparent) !important;
+  background-color: color-mix(in srgb, var(--sprout-hard-bg) 22%, var(--background));
+  color: color-mix(in srgb, var(--sprout-hard-bg) 72%, var(--foreground));
+  border-color: color-mix(in srgb, var(--sprout-hard-bg) 50%, transparent);
 }
 
 .theme-dark .sprout.sprout-widget .sprout-widget-action-btn.sprout-btn-hard {
-  background-color: color-mix(in srgb, var(--sprout-hard-bg) 14%, var(--background)) !important;
-  border-color: color-mix(in srgb, var(--sprout-hard-bg) 40%, transparent) !important;
+  background-color: color-mix(in srgb, var(--sprout-hard-bg) 14%, var(--background));
+  border-color: color-mix(in srgb, var(--sprout-hard-bg) 40%, transparent);
 }
 
 .sprout.sprout-widget .sprout-widget-action-btn.sprout-btn-good {
-  background-color: color-mix(in srgb, var(--sprout-good-bg) 16%, var(--background)) !important;
-  color: color-mix(in srgb, var(--sprout-good-bg) 72%, var(--foreground)) !important;
-  border-color: color-mix(in srgb, var(--sprout-good-bg) 45%, transparent) !important;
+  background-color: color-mix(in srgb, var(--sprout-good-bg) 16%, var(--background));
+  color: color-mix(in srgb, var(--sprout-good-bg) 72%, var(--foreground));
+  border-color: color-mix(in srgb, var(--sprout-good-bg) 45%, transparent);
 }
 
 .sprout.sprout-widget .sprout-widget-action-btn.sprout-btn-easy {
-  background-color: color-mix(in srgb, rgb(var(--interactive-accent-rgb, 138, 92, 245)) 16%, var(--background)) !important;
-  color: color-mix(in srgb, rgb(var(--interactive-accent-rgb, 138, 92, 245)) 72%, var(--foreground)) !important;
-  border-color: color-mix(in srgb, rgb(var(--interactive-accent-rgb, 138, 92, 245)) 45%, transparent) !important;
+  background-color: color-mix(in srgb, rgb(var(--interactive-accent-rgb, 138, 92, 245)) 16%, var(--background));
+  color: color-mix(in srgb, rgb(var(--interactive-accent-rgb, 138, 92, 245)) 72%, var(--foreground));
+  border-color: color-mix(in srgb, rgb(var(--interactive-accent-rgb, 138, 92, 245)) 45%, transparent);
 }
 
 .sprout.sprout-widget .sprout-widget-action-btn.sprout-btn-again:hover,
@@ -360,13 +338,13 @@
 }
 
 .sprout.sprout-widget .sprout-widget-action-btn.sprout-btn-hard:is(:hover, :focus, :focus-visible) {
-  background-color: color-mix(in srgb, var(--sprout-hard-bg) 30%, var(--background)) !important;
-  border-color: color-mix(in srgb, var(--sprout-hard-bg) 60%, transparent) !important;
+  background-color: color-mix(in srgb, var(--sprout-hard-bg) 30%, var(--background));
+  border-color: color-mix(in srgb, var(--sprout-hard-bg) 60%, transparent);
 }
 
 .theme-dark .sprout.sprout-widget .sprout-widget-action-btn.sprout-btn-hard:is(:hover, :focus, :focus-visible) {
-  background-color: color-mix(in srgb, var(--sprout-hard-bg) 20%, var(--background)) !important;
-  border-color: color-mix(in srgb, var(--sprout-hard-bg) 52%, transparent) !important;
+  background-color: color-mix(in srgb, var(--sprout-hard-bg) 20%, var(--background));
+  border-color: color-mix(in srgb, var(--sprout-hard-bg) 52%, transparent);
 }
 
 .sprout.sprout-widget .sprout-widget-action-btn.sprout-btn-good:hover,
@@ -382,30 +360,30 @@
 }
 
 .sprout.sprout-widget .sprout-widget-action-btn:is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy):is(:hover, :focus, :focus-visible) {
-  background-color: color-mix(in srgb, var(--sprout-widget-hover-tint) 24%, var(--background)) !important;
-  border-color: color-mix(in srgb, var(--sprout-widget-hover-tint) 60%, transparent) !important;
+  background-color: color-mix(in srgb, var(--sprout-widget-hover-tint) 24%, var(--background));
+  border-color: color-mix(in srgb, var(--sprout-widget-hover-tint) 60%, transparent);
 }
 
 /* Final Hard tuning: light default uses prior hover intensity; dark default sits between prior default/hover */
 .sprout.sprout-widget .sprout-widget-action-btn.sprout-btn-hard {
-  background-color: color-mix(in srgb, var(--sprout-hard-bg) 24%, var(--background)) !important;
-  border-color: color-mix(in srgb, var(--sprout-hard-bg) 60%, transparent) !important;
-  color: color-mix(in srgb, var(--sprout-hard-bg) 72%, var(--foreground)) !important;
+  background-color: color-mix(in srgb, var(--sprout-hard-bg) 24%, var(--background));
+  border-color: color-mix(in srgb, var(--sprout-hard-bg) 60%, transparent);
+  color: color-mix(in srgb, var(--sprout-hard-bg) 72%, var(--foreground));
 }
 
 .sprout.sprout-widget .sprout-widget-action-btn.sprout-btn-hard:is(:hover, :focus, :focus-visible) {
-  background-color: color-mix(in srgb, var(--sprout-hard-bg) 32%, var(--background)) !important;
-  border-color: color-mix(in srgb, var(--sprout-hard-bg) 68%, transparent) !important;
+  background-color: color-mix(in srgb, var(--sprout-hard-bg) 32%, var(--background));
+  border-color: color-mix(in srgb, var(--sprout-hard-bg) 68%, transparent);
 }
 
 .theme-dark .sprout.sprout-widget .sprout-widget-action-btn.sprout-btn-hard {
-  background-color: color-mix(in srgb, var(--sprout-hard-bg) 17%, var(--background)) !important;
-  border-color: color-mix(in srgb, var(--sprout-hard-bg) 46%, transparent) !important;
+  background-color: color-mix(in srgb, var(--sprout-hard-bg) 17%, var(--background));
+  border-color: color-mix(in srgb, var(--sprout-hard-bg) 46%, transparent);
 }
 
 .theme-dark .sprout.sprout-widget .sprout-widget-action-btn.sprout-btn-hard:is(:hover, :focus, :focus-visible) {
-  background-color: color-mix(in srgb, var(--sprout-hard-bg) 24%, var(--background)) !important;
-  border-color: color-mix(in srgb, var(--sprout-hard-bg) 56%, transparent) !important;
+  background-color: color-mix(in srgb, var(--sprout-hard-bg) 24%, var(--background));
+  border-color: color-mix(in srgb, var(--sprout-hard-bg) 56%, transparent);
 }
 
 /* Canonical solid grading surfaces in widget (match study + gatekeeper) */
@@ -432,15 +410,15 @@
   --sprout-btn-bg-hover-mix: 24%;
   --sprout-btn-border-hover-mix: 60%;
 
-  background-color: color-mix(in srgb, var(--sprout-btn-tint) var(--sprout-btn-bg-mix), var(--background-primary)) !important;
-  color: color-mix(in srgb, var(--sprout-btn-tint) var(--sprout-btn-fg-mix), var(--foreground)) !important;
-  border-color: color-mix(in srgb, var(--sprout-btn-tint) var(--sprout-btn-border-mix), var(--background-primary)) !important;
+  background-color: color-mix(in srgb, var(--sprout-btn-tint) var(--sprout-btn-bg-mix), var(--background-primary));
+  color: color-mix(in srgb, var(--sprout-btn-tint) var(--sprout-btn-fg-mix), var(--foreground));
+  border-color: color-mix(in srgb, var(--sprout-btn-tint) var(--sprout-btn-border-mix), var(--background-primary));
 }
 
 .sprout.sprout-widget .sprout-widget-action-btn:is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy):hover,
 .sprout.sprout-widget .sprout-widget-action-btn:is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy):focus-visible {
-  background-color: color-mix(in srgb, var(--sprout-btn-tint) var(--sprout-btn-bg-hover-mix), var(--background-primary)) !important;
-  border-color: color-mix(in srgb, var(--sprout-btn-tint) var(--sprout-btn-border-hover-mix), var(--background-primary)) !important;
+  background-color: color-mix(in srgb, var(--sprout-btn-tint) var(--sprout-btn-bg-hover-mix), var(--background-primary));
+  border-color: color-mix(in srgb, var(--sprout-btn-tint) var(--sprout-btn-border-hover-mix), var(--background-primary));
 }
 
 .theme-dark .sprout.sprout-widget .sprout-widget-action-btn.sprout-btn-again {
@@ -477,68 +455,69 @@
 
 .theme-dark .sprout.sprout-widget .sprout-widget-action-btn:is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy):hover,
 .theme-dark .sprout.sprout-widget .sprout-widget-action-btn:is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy):focus-visible {
-  filter: none !important;
+  filter: none;
 }
 
 /* Final parity override: force widget dark Hard to match study-session values */
 .theme-dark .sprout.sprout-widget .sprout-widget-action-btn.sprout-btn-hard {
-  background-color: color-mix(in srgb, var(--sprout-hard-bg) 54%, var(--background-primary)) !important;
-  color: color-mix(in srgb, var(--sprout-hard-bg) 64%, var(--foreground)) !important;
-  border-color: color-mix(in srgb, var(--sprout-hard-bg) 58%, var(--background-primary)) !important;
+  background-color: color-mix(in srgb, var(--sprout-hard-bg) 54%, var(--background-primary));
+  color: color-mix(in srgb, var(--sprout-hard-bg) 64%, var(--foreground));
+  border-color: color-mix(in srgb, var(--sprout-hard-bg) 58%, var(--background-primary));
 }
 
 .theme-dark .sprout.sprout-widget .sprout-widget-action-btn.sprout-btn-hard:hover,
 .theme-dark .sprout.sprout-widget .sprout-widget-action-btn.sprout-btn-hard:focus-visible {
-  background-color: color-mix(in srgb, var(--sprout-hard-bg) 62%, var(--background-primary)) !important;
-  border-color: color-mix(in srgb, var(--sprout-hard-bg) 66%, var(--background-primary)) !important;
+  background-color: color-mix(in srgb, var(--sprout-hard-bg) 62%, var(--background-primary));
+  border-color: color-mix(in srgb, var(--sprout-hard-bg) 66%, var(--background-primary));
 }
 
 /* Keep grading kbd text aligned with button text color in both themes */
 .sprout.sprout-widget .sprout-widget-action-btn:is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy) :is(kbd, .kbd) {
-  color: inherit !important;
+  color: inherit;
 }
 
 /* Widget grading buttons: use neutral default widget styling (match Edit/More) */
 .sprout.sprout-widget .sprout-widget-action-btn:is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy) {
-  background-color: var(--background) !important;
-  color: var(--foreground) !important;
-  border-color: var(--sprout-border-color) !important;
+  background-color: var(--background);
+  color: var(--foreground);
+  border-color: var(--sprout-border-color);
 }
 
 .sprout.sprout-widget .sprout-widget-action-btn:is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy):hover,
 .sprout.sprout-widget .sprout-widget-action-btn:is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy):focus,
 .sprout.sprout-widget .sprout-widget-action-btn:is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy):focus-visible {
-  background-color: var(--color-base-25) !important;
-  border-color: var(--color-base-30) !important;
-  filter: none !important;
+  background-color: var(--color-base-25);
+  border-color: var(--color-base-30);
+  filter: none;
 }
 
 .sprout.sprout-widget .sprout-widget-action-btn:is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy):is(:active) {
-  background-color: var(--muted) !important;
-  border-color: var(--muted) !important;
+  background-color: var(--muted);
+  border-color: var(--muted);
 }
 
 .sprout.sprout-widget .sprout-widget-action-btn:is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy) :is(kbd, .kbd) {
-  background: transparent !important;
-  border-color: var(--sprout-border-color) !important;
-  color: inherit !important;
+  background: transparent;
+  border-color: var(--sprout-border-color);
+  color: inherit;
 }
 
 /* ---- Widget cloze styling ---- */
 
 /* Widget-only cloze reveal styling */
 .sprout .sprout-widget-cloze .sprout-cloze-revealed {
-  background-color: var(--theme-accent);
-  color: #fff;
-  border-radius: var(--radius-s);
-  margin: 0px 2px 0px 0px;
-  padding: 0.5px 5px;
-  font-weight: 500;
+margin: 0 1px;
+    padding: 2px 5px;
+    font-weight: 500;
+    border: 1px solid var(--theme-base-35);
+    border-radius: var(--radius-md);
+    background-color: var(--theme-base-15);
+    color: var(--theme-base-95);
 }
 
 /* Widget-only cloze blanks: fixed width */
 .sprout .sprout-widget-cloze .sprout-cloze-blank {
-  width: 30px !important;
+  width: 30px;
 }
 
 /* ---- Widget text ---- */
@@ -548,40 +527,40 @@
 .sprout .sprout-widget-text {
   font-size: var(--sprout-widget-font-card-text);
   line-height: 1.75;
-  color: var(--foreground) !important;
+  color: var(--foreground);
 }
 
 /* Widget section spacing (replaces applySectionStyles inline helper) */
 .sprout .sprout-widget-section {
-  padding: 6px 0 !important;
-  margin: 0 !important;
+  padding: 6px 0;
+  margin: 0;
 }
 
 /* Widget divider (replaces makeDivider inline helper) */
 .sprout .sprout-widget-divider {
-  border-top: 1px solid var(--foreground) !important;
+  border-top: 1px solid var(--foreground);
   opacity: 0.3;
-  margin: 6px 0 !important;
+  margin: 6px 0;
 }
 
 /* Widget card body (replaces body inline styles) */
 .sprout .sprout-widget-card-body {
-  margin: 10px auto 0 auto !important;
-  gap: 0 !important;
-  border-radius: var(--radius-l) !important;
-  background: var(--background) !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
-  padding: 20px !important;
-  width: 90% !important;
+  margin: 10px auto 0 auto;
+  gap: 0;
+  border-radius: var(--radius-l);
+  background: var(--background);
+  border: var(--sprout-border-width) solid var(--sprout-border-color);
+  padding: 20px;
+  width: 90%;
   /* Content-sized by default; only shrink and scroll when viewport space is tight. */
-  flex: 0 1 auto !important;
-  min-height: 0 !important;
-  height: auto !important;
-  max-height: none !important;
-  overflow-y: auto !important;
-  box-shadow: none !important;
-  user-select: text !important;
-  -webkit-user-select: text !important;
+  flex: 0 1 auto;
+  min-height: 0;
+  height: auto;
+  max-height: none;
+  overflow-y: auto;
+  box-shadow: none;
+  user-select: text;
+  -webkit-user-select: text;
   scrollbar-width: auto;
   -ms-overflow-style: auto;
 }
@@ -593,7 +572,7 @@
 
 .sprout .sprout-widget-card-body::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--foreground) 40%, transparent);
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-md);
 }
 
 .sprout .sprout-widget-card-body::-webkit-scrollbar-track {
@@ -602,113 +581,113 @@
 
 /* Widget header (replaces header inline styles) */
 .sprout .sprout-widget-header {
-  border: none !important;
-  border-radius: 0 !important;
-  margin: 0 20px !important;
-  padding: 15px 0 10px 0 !important;
+  border: none;
+  border-radius: 0;
+  margin: 0 20px;
+  padding: 15px 0 10px 0;
 }
 
 /* Widget footer (replaces footer inline styles) */
 .sprout .sprout-widget-footer {
-  border: none !important;
-  max-width: 90% !important;
-  margin: 16px auto 0 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 4px !important;
-  padding: 0 !important;
+  border: none;
+  max-width: 90%;
+  margin: 16px auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0;
 }
 
 .sprout .sprout-widget-footer > :not([hidden]) ~ :not([hidden]) {
-  margin-top: 0 !important;
+  margin-top: 0;
 }
 
 /* Widget progress bar (replaces progress bar inline styles) */
 .sprout .sprout-widget-progress {
-  border: none !important;
-  border-radius: 0 !important;
-  margin: auto auto 0 !important;
-  padding: 16px 0px 20px !important;
-  max-width: 200px !important;
-  width: 80% !important;
+  border: none;
+  border-radius: 0;
+  margin: auto auto 0;
+  padding: 16px 0px 20px;
+  max-width: 200px;
+  width: 80%;
 }
 
 .sprout .sprout-widget-progress-track {
-  height: 1.5px !important;
-  background-color: color-mix(in srgb, var(--foreground) 10%, transparent) !important;
+  height: 1.5px;
+  background-color: color-mix(in srgb, var(--foreground) 10%, transparent);
 }
 
 /* Widget info block (extra info text, dimmed) */
 .sprout .sprout-widget-info {
   font-size: var(--sprout-widget-font-info);
   line-height: 1.75;
-  color: var(--foreground) !important;
-  opacity: 0.6 !important;
+  color: var(--foreground);
+  opacity: 0.6;
 }
 
 /* Paragraph margin reset — widget text and info blocks */
 .sprout .sprout-widget-text p,
 .sprout .sprout-widget-info p {
-  margin: 0 !important;
-  margin-block-start: 0em !important;
-  margin-block-end: 0em !important;
+  margin: 0;
+  margin-block-start: 0em;
+  margin-block-end: 0em;
 }
 
 /* ---- Lists inside widget / gatekeeper text blocks ---- */
 .sprout .sprout-widget-text :is(ul, ol),
 .sprout .sprout-widget-info :is(ul, ol),
 .sprout .sprout-gatekeeper-body :is(ul, ol) {
-  margin-top: 0.3rem !important;
-  margin-bottom: 0.3rem !important;
-  padding-inline-start: 1.5em !important;
-  line-height: 1.15 !important;
+  margin-top: 0.3rem;
+  margin-bottom: 0.3rem;
+  padding-inline-start: 1.5em;
+  line-height: 1.15;
 }
 
 .sprout .sprout-widget-text ul,
 .sprout .sprout-widget-info ul,
 .sprout .sprout-gatekeeper-body ul {
-  list-style-type: disc !important;
+  list-style-type: disc;
 }
 
 .sprout .sprout-widget-text ol,
 .sprout .sprout-widget-info ol,
 .sprout .sprout-gatekeeper-body ol {
-  list-style-type: decimal !important;
+  list-style-type: decimal;
 }
 
 .sprout .sprout-widget-text li,
 .sprout .sprout-widget-info li,
 .sprout .sprout-gatekeeper-body li {
-  margin: 0.3rem 0 !important;
-  padding: 0 !important;
-  line-height: 1.15 !important;
+  margin: 0.3rem 0;
+  padding: 0;
+  line-height: 1.15;
 }
 
 .sprout .sprout-widget-text li > p,
 .sprout .sprout-widget-info li > p,
 .sprout .sprout-gatekeeper-body li > p {
-  margin: 0 !important;
-  line-height: inherit !important;
+  margin: 0;
+  line-height: inherit;
 }
 
 .sprout .sprout-widget-text li > :is(ul, ol),
 .sprout .sprout-widget-info li > :is(ul, ol),
 .sprout .sprout-gatekeeper-body li > :is(ul, ol) {
-  margin-top: 0.3rem !important;
-  margin-bottom: 0.3rem !important;
+  margin-top: 0.3rem;
+  margin-bottom: 0.3rem;
 }
 
 /* Override markdown wrapper line-height in gatekeeper/widget markdown containers. */
 .sprout .sprout-gatekeeper-body .whitespace-pre-wrap.break-words :is(ul, ol, li),
 .sprout .sprout-widget-text .whitespace-pre-wrap.break-words :is(ul, ol, li),
 .sprout .sprout-widget-info .whitespace-pre-wrap.break-words :is(ul, ol, li) {
-  line-height: 1.15 !important;
+  line-height: 1.15;
 }
 
 .sprout .sprout-gatekeeper-body .whitespace-pre-wrap.break-words :is(ul, ol),
 .sprout .sprout-widget-text .whitespace-pre-wrap.break-words :is(ul, ol),
 .sprout .sprout-widget-info .whitespace-pre-wrap.break-words :is(ul, ol) {
-  margin-block: 0.3rem !important;
+  margin-block: 0.3rem;
 }
 
 /* MarkdownRenderer wrappers keep `pre-wrap`, which preserves whitespace text
@@ -717,94 +696,94 @@
 .sprout .sprout-gatekeeper-body .whitespace-pre-wrap.break-words[data-bc-md-rid],
 .sprout .sprout-widget-text .whitespace-pre-wrap.break-words[data-bc-md-rid],
 .sprout .sprout-widget-info .whitespace-pre-wrap.break-words[data-bc-md-rid] {
-  white-space: normal !important;
+  white-space: normal;
 }
 
 .sprout .sprout-gatekeeper-body .whitespace-pre-wrap.break-words[data-bc-md-rid] :is(ul, ol, li),
 .sprout .sprout-widget-text .whitespace-pre-wrap.break-words[data-bc-md-rid] :is(ul, ol, li),
 .sprout .sprout-widget-info .whitespace-pre-wrap.break-words[data-bc-md-rid] :is(ul, ol, li) {
-  white-space: normal !important;
+  white-space: normal;
 }
 
 /* ---- Markdown heading scale inside widget/gatekeeper blocks ---- */
 .sprout .sprout-widget-text :is(h1, h2, h3, h4, h5, h6),
 .sprout .sprout-widget-info :is(h1, h2, h3, h4, h5, h6),
 .sprout .sprout-gatekeeper-body :is(h1, h2, h3, h4, h5, h6) {
-  margin: 0.3rem 0 !important;
-  line-height: 1.35 !important;
-  font-weight: 700 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  background: transparent !important;
+  margin: 0.3rem 0;
+  line-height: 1.35;
+  font-weight: 700;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
 }
 
 /* Match paragraph rhythm with heading spacing inside widget/gatekeeper markdown blocks. */
 .sprout .sprout-widget-text .sprout-md-block > p,
 .sprout .sprout-widget-info .sprout-md-block > p,
 .sprout .sprout-gatekeeper-body .sprout-md-block > p {
-  margin: 0.3rem 0 !important;
+  margin: 0.3rem 0;
 }
 
 .sprout .sprout-widget-text h1,
 .sprout .sprout-widget-info h1,
-.sprout .sprout-gatekeeper-body h1 { font-size: 1.2rem !important; }
+.sprout .sprout-gatekeeper-body h1 { font-size: 1.2rem; }
 
 .sprout .sprout-widget-text h2,
 .sprout .sprout-widget-info h2,
-.sprout .sprout-gatekeeper-body h2 { font-size: 1.15rem !important; }
+.sprout .sprout-gatekeeper-body h2 { font-size: 1.15rem; }
 
 .sprout .sprout-widget-text h3,
 .sprout .sprout-widget-info h3,
-.sprout .sprout-gatekeeper-body h3 { font-size: 1.1rem !important; }
+.sprout .sprout-gatekeeper-body h3 { font-size: 1.1rem; }
 
 .sprout .sprout-widget-text h4,
 .sprout .sprout-widget-info h4,
-.sprout .sprout-gatekeeper-body h4 { font-size: 1.05rem !important; }
+.sprout .sprout-gatekeeper-body h4 { font-size: 1.05rem; }
 
 .sprout .sprout-widget-text h5,
 .sprout .sprout-widget-info h5,
-.sprout .sprout-gatekeeper-body h5 { font-size: 1rem !important; }
+.sprout .sprout-gatekeeper-body h5 { font-size: 1rem; }
 
 .sprout .sprout-widget-text h6,
 .sprout .sprout-widget-info h6,
-.sprout .sprout-gatekeeper-body h6 { font-size: 0.95rem !important; }
+.sprout .sprout-gatekeeper-body h6 { font-size: 0.95rem; }
 
 /* Widget header labels wrapper */
 .sprout.sprout-widget .sprout-widget-header-labels {
-  gap: 8px !important;
+  gap: 8px;
 }
 
 /* Widget studying label (header title line) */
 .sprout.sprout-widget .sprout-widget-study-label {
-  font-size: var(--sprout-widget-font-study-label) !important;
-  color: var(--foreground) !important;
-  font-weight: 600 !important;
+  font-size: var(--sprout-widget-font-study-label);
+  color: var(--foreground);
+  font-weight: 600;
 }
 
 /* Widget remaining count line */
 .sprout.sprout-widget .sprout-widget-remaining-label {
-  font-size: var(--sprout-widget-font-remaining) !important;
-  color: var(--foreground) !important;
-  font-weight: 400 !important;
+  font-size: var(--sprout-widget-font-remaining);
+  color: var(--foreground);
+  font-weight: 400;
 }
 
 /* Widget IO container */
 .sprout .sprout-widget-io-container {
-  width: 100% !important;
-  padding: 0 !important;
-  margin: 6px 0 !important;
+  width: 100%;
+  padding: 0;
+  margin: 6px 0;
 }
 
 /* MCQ option bottom spacing */
 .sprout .sprout-widget-mcq-option {
-  margin-bottom: 8px !important;
+  margin-bottom: 8px;
 }
 
 .sprout .sprout-widget-mcq-option:hover,
 .sprout .sprout-widget-mcq-option:focus-visible {
-  background-color: var(--background-modifier-hover) !important;
-  color: var(--foreground) !important;
+  background-color: var(--background-modifier-hover);
+  color: var(--foreground);
 }
 
 /* MCQ option text span */
@@ -823,111 +802,84 @@
 
 /* Widget progress fill — dynamic width via CSS custom property */
 .sprout .sprout-widget-progress-fill {
-  background-color: var(--theme-accent) !important;
+  background-color: var(--theme-accent);
   width: var(--sprout-progress, 0%);
 }
 
 /* ---- Widget badges ---- */
 
 .sprout .sprout-widget-badge {
-  border: 1px solid var(--theme-accent) !important;
-  color: var(--theme-accent) !important;
-  background-color: color-mix(in srgb, var(--theme-accent) 12%, transparent) !important;
-  border-radius: var(--radius-xl) !important;
-  padding: 3px 10px !important;
-  font-size: var(--sprout-widget-font-badge) !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 6px !important;
+  border: 1px solid var(--theme-accent);
+  color: var(--theme-accent);
+  background-color: var(--theme-base-10);
+  border-radius: var(--radius-xl);
+  padding: 3px 10px;
+  font-size: var(--sprout-widget-font-badge);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 /* ---- Widget summary-mode ---- */
 
-.sprout-widget-summary-header {
-  border: none !important;
-  border-radius: 0 !important;
-  margin: 0 20px !important;
-  padding: 15px 0 10px 0 !important;
-}
-
-.sprout-widget-summary-title {
-  font-size: var(--sprout-widget-font-summary-title) !important;
-  color: var(--foreground) !important;
-  font-weight: 600 !important;
-  margin: 0 !important;
-}
-
-/* Gap between summary title and remaining line */
-.sprout-widget-summary-header > div {
-  gap: 8px !important;
-}
-
-.sprout-widget-remaining-line {
-  font-size: var(--sprout-widget-font-summary-count) !important;
-  color: var(--foreground) !important;
-  font-weight: 400 !important;
-  margin-top: 0 !important;
-}
-
-.sprout-widget-empty-body {
-  border-radius: 0 !important;
-  margin: 0 10px !important;
-  padding: 15px 5px !important;
-  text-align: center !important;
-}
-
-.sprout-widget-teaser {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 10px !important;
-  margin: 10px auto 10px !important;
-  border-radius: var(--radius-l) !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
-  padding: 20px !important;
-  width: 90% !important;
-  flex: 0 0 auto !important;
-  flex-grow: 0 !important;
-  height: auto !important;
-  min-height: 0 !important;
-  max-height: calc(100% - 170px) !important;
-  overflow-y: auto !important;
-  box-shadow: none !important;
-  font-size: var(--sprout-widget-font-teaser-title) !important;
-}
-
-.sprout-widget-teaser-title {
-  color: var(--foreground) !important;
-  margin-bottom: 0 !important;
-}
-
-.sprout-widget-info-line {
-  color: var(--foreground) !important;
-  opacity: 0.7 !important;
-  line-height: 1.5 !important;
-}
-
-.sprout-widget-counts-line {
-  color: var(--foreground) !important;
-  opacity: 0.7 !important;
-  margin: 0px!important;}
-
-.sprout-widget-summary-footer {
-  border: none !important;
-  border-radius: 0 !important;
-  max-width: 90% !important;
-  margin: 8px auto 10px auto !important;
-  padding: 0 !important;
-}
-
 /* Session-complete text colors should be stable across light/dark themes. */
 .sprout .sprout-widget-session-complete-title {
-  color: var(--foreground) !important;
+  color: var(--foreground);
 }
 
 .sprout .sprout-widget-session-complete-meta {
-  color: color-mix(in srgb, var(--foreground) 72%, transparent) !important;
+  color: color-mix(in srgb, var(--foreground) 72%, transparent);
 }
 
 .theme-dark .sprout .sprout-widget-session-complete-meta {
-  color: color-mix(in srgb, var(--foreground) 78%, transparent) !important;
+  color: color-mix(in srgb, var(--foreground) 78%, transparent);
+}
+
+/* Summary mode layout: keep teaser centered and content-sized in tall panes. */
+.sprout.sprout-widget .sprout-widget-summary-header {
+  border: none;
+  border-radius: 0;
+  margin: 0 20px;
+  padding: 15px 0 10px;
+  flex: 0 0 auto;
+}
+
+.sprout.sprout-widget .sprout-widget-summary-title {
+  font-size: var(--sprout-widget-font-summary-title);
+  color: var(--foreground);
+  font-weight: 600;
+  margin: 0;
+}
+
+.sprout.sprout-widget .sprout-widget-remaining-line {
+  font-size: var(--sprout-widget-font-summary-count);
+  color: var(--foreground);
+  font-weight: 400;
+  margin: 0;
+}
+
+.sprout.sprout-widget .sprout-widget-teaser {
+  width: 90%;
+  margin: 10px auto;
+  align-self: center;
+  border-radius: var(--radius-l);
+  border: var(--sprout-border-width) solid var(--sprout-border-color);
+  padding: 20px;
+  gap: 10px;
+  font-size: var(--sprout-widget-font-teaser-title);
+  flex: 0 1 auto;
+  min-height: 0;
+  height: auto;
+  max-height: calc(100% - 170px);
+  overflow-y: auto;
+}
+
+.sprout.sprout-widget .sprout-widget-summary-footer {
+  border: none;
+  border-radius: 0;
+  width: 90%;
+  max-width: 90%;
+  margin: 8px auto 10px;
+  padding: 0;
+  flex: 0 0 auto;
 }

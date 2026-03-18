@@ -1,0 +1,16 @@
+export type {
+  AssistantLeafSession,
+  AssistantLeafSessionMap,
+  AssistantMode,
+  ChatLogSyncEventDetail,
+  ChatMessage,
+  GenerateSuggestionBatch,
+  IoSuggestionRect,
+  ModeConversationRefs,
+  PendingReplyByMode,
+  SpeechRecognitionConstructorLike,
+  SpeechRecognitionLike,
+  StudyAssistantLocation,
+  StudyAssistantModalButtonVisibility,
+  SuggestionValidationResult,
+} from "./types/assistant-popup-types";

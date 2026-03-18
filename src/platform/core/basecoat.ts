@@ -96,21 +96,22 @@ export function patchBasecoatNullGuards(api: BasecoatApi): void {
       else openPopover(false);
     });
 
-    dropdownMenuComponent.addEventListener("keydown", (event: KeyboardEvent) => {
+    dropdownMenuComponent.addEventListener("keydown", (event: Event) => {
+      const keyEvent = event as KeyboardEvent;
       const isExpanded = trigger.getAttribute("aria-expanded") === "true";
-      if (event.key === "Escape") {
+      if (keyEvent.key === "Escape") {
         if (isExpanded) closePopover();
         return;
       }
       if (!isExpanded) {
-        if (["Enter", " "].includes(event.key)) {
-          event.preventDefault();
+        if (["Enter", " "].includes(keyEvent.key)) {
+          keyEvent.preventDefault();
           openPopover(false);
-        } else if (event.key === "ArrowDown") {
-          event.preventDefault();
+        } else if (keyEvent.key === "ArrowDown") {
+          keyEvent.preventDefault();
           openPopover("first");
-        } else if (event.key === "ArrowUp") {
-          event.preventDefault();
+        } else if (keyEvent.key === "ArrowUp") {
+          keyEvent.preventDefault();
           openPopover("last");
         }
         return;
@@ -118,26 +119,26 @@ export function patchBasecoatNullGuards(api: BasecoatApi): void {
       if (menuItems.length === 0) return;
 
       let nextIndex = activeIndex;
-      switch (event.key) {
+      switch (keyEvent.key) {
         case "ArrowDown":
-          event.preventDefault();
+          keyEvent.preventDefault();
           nextIndex = activeIndex === -1 ? 0 : Math.min(activeIndex + 1, menuItems.length - 1);
           break;
         case "ArrowUp":
-          event.preventDefault();
+          keyEvent.preventDefault();
           nextIndex = activeIndex === -1 ? menuItems.length - 1 : Math.max(activeIndex - 1, 0);
           break;
         case "Home":
-          event.preventDefault();
+          keyEvent.preventDefault();
           nextIndex = 0;
           break;
         case "End":
-          event.preventDefault();
+          keyEvent.preventDefault();
           nextIndex = menuItems.length - 1;
           break;
         case "Enter":
         case " ":
-          event.preventDefault();
+          keyEvent.preventDefault();
           menuItems[activeIndex]?.click();
           closePopover();
           return;

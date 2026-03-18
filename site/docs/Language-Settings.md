@@ -1,13 +1,13 @@
 # Language Settings
 
-Last modified: 13/02/2026
+Last modified: 17/03/2026
 
-## Overview
+## Purpose
 
-These settings control text-to-speech (TTS) in **Settings → Audio**.
+These settings control text-to-speech (TTS) in Settings -> Audio.
 Flag-based routing uses Circle Flags assets from [HatScripts/circle-flags](https://github.com/HatScripts/circle-flags) (MIT).
 
-## Available settings
+## Audio Settings
 
 | Setting | Description |
 |---|---|
@@ -16,18 +16,18 @@ Flag-based routing uses Circle Flags assets from [HatScripts/circle-flags](https
 | **Speech rate** | How fast the text is read (0.5× to 2.0×). Default is 1.0×. |
 | **Pitch** | Voice pitch adjustment. Default is 1.0. |
 
-## Script-based voice selection
+## Script Voices
 
-Sprout can map different voices to different writing scripts (for example Latin, Cyrillic, CJK, Arabic).
+LearnKit can map different voices to different writing scripts (for example Latin, Cyrillic, CJK, Arabic).
 
 How it works:
-- Sprout examines the script (alphabet) of the card text and selects the voice you have assigned to that script.
-- Sprout cannot distinguish languages that share the same script. Example: a Latin-script word shared by English and Italian uses your Latin-script voice, not language-specific detection.
+- LearnKit examines the script (alphabet) of the card text and selects the voice you have assigned to that script.
+- LearnKit cannot distinguish languages that share the same script. Example: a Latin-script word shared by English and Italian uses your Latin-script voice, not language-specific detection.
 - Your configured default voice is used as a fallback when no script-specific voice is set.
 
-For flag-based language and accent routing, see [Flags](./Flags.md) and [Flag Codes](./Flag-Codes.md).
+For flag-based language and accent routing, see [Flags](./Flags) and [Flag Codes](./Flag-Codes).
 
-## Adding voices
+## Add Voices
 
 ### macOS
 

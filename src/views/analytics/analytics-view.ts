@@ -21,22 +21,28 @@ import { log } from "../../platform/core/logger";
 import type { CardState, ReviewLogEntry } from "../../platform/core/store";
 import { AOS_DURATION, MAX_CONTENT_WIDTH_PX, MS_DAY, VIEW_TYPE_ANALYTICS } from "../../platform/core/constants";
 import { placePopover, queryFirst, setCssProps } from "../../platform/core/ui";
+import { createTitleStripFrame } from "../../platform/core/view-primitives";
+import { SPROUT_HOME_CONTENT_SHELL_CLASS } from "../../platform/core/ui-classes";
 import type SproutPlugin from "../../main";
 import { isParentCard } from "../../platform/core/card-utils";
-import { StagePieCard } from "./pie-charts";
-import { FutureDueChart } from "./future-due-chart";
-import { NewCardsPerDayChart } from "./new-cards-per-day-chart";
-import { StackedReviewButtonsChart } from "./stacked-review-buttons-chart";
-import { ReviewCalendarHeatmap } from "./review-calendar-heatmap";
-import { StabilityDistributionChart } from "./stability-distribution-chart";
-import { ForgettingCurveChart } from "./forgetting-curve-chart";
+import { StagePieCard } from "./charts/pie-charts";
+import { FutureDueChart } from "./charts/future-due-chart";
+import { NewCardsPerDayChart } from "./charts/new-cards-per-day-chart";
+import { StackedReviewButtonsChart } from "./charts/stacked-review-buttons-chart";
+import { ReviewCalendarHeatmap } from "./charts/review-calendar-heatmap";
+import { StabilityDistributionChart } from "./charts/stability-distribution-chart";
+import { ForgettingCurveChart } from "./charts/forgetting-curve-chart";
 import { ChartErrorBoundary } from "./error-boundary";
+import { TestsAnalyticsCard } from "./cards/tests-analytics-card";
+import { NoteReviewAnalyticsCard } from "./cards/note-review-analytics-card";
 import { t } from "../../platform/translations/translator";
+import { ExamTestsSqlite, type SavedExamAttemptRecord } from "../../platform/core/exam-tests-sqlite";
+import { NoteReviewSqlite } from "../../platform/core/note-review-sqlite";
 
 /**
  * IMPORTANT:
  * - Add `bc` to every element you want Basecoat (and scoped utilities) to style.
- * - Your PostCSS scoper produces selectors like `.btn-outline.bc`, `.flex.bc`, `table.bc`, etc.
+ * - Your PostCSS scoper produces selectors like `.sprout-btn-toolbar.bc`, `.flex.bc`, `table.bc`, etc.
  */
 
 function localDayIndex(ts: number, timeZone: string) {
@@ -56,6 +62,8 @@ function localDayIndex(ts: number, timeZone: string) {
 export class SproutAnalyticsView extends ItemView {
   plugin: SproutPlugin;
 
+  private _activeSection: "flashcards" | "notes" | "tests" = "flashcards";
+
   private _header: SproutHeader | null = null;
   private _rootEl: HTMLElement | null = null;
   // Removed: now uses plugin.isWideMode
@@ -67,6 +75,10 @@ export class SproutAnalyticsView extends ItemView {
   private _stackedButtonsRoot: ReactRoot | null = null;
   private _stabilityDistributionRoot: ReactRoot | null = null;
   private _forgettingCurveRoot: ReactRoot | null = null;
+  private _testsAnalyticsRoot: ReactRoot | null = null;
+  private _noteReviewAnalyticsRoot: ReactRoot | null = null;
+  private _examAttemptsCache: SavedExamAttemptRecord[] = [];
+  private _examAttemptsHydrated = false;
   private _aosInitTimer: number | null = null;
 
   constructor(leaf: WorkspaceLeaf, plugin: SproutPlugin) {
@@ -88,6 +100,7 @@ export class SproutAnalyticsView extends ItemView {
 
   async onOpen() {
     this.render();
+    void this._hydrateExamAttempts();
     // Init AOS after render completes (DOM ready)
     if (this.plugin.settings?.general?.enableAnimations ?? true) {
       // Delay init to ensure DOM is fully rendered
@@ -149,12 +162,34 @@ export class SproutAnalyticsView extends ItemView {
       this._forgettingCurveRoot?.unmount();
     } catch (e: unknown) { log.swallow("unmount forgetting curve root", e); }
     this._forgettingCurveRoot = null;
+    try {
+      this._testsAnalyticsRoot?.unmount();
+    } catch (e: unknown) { log.swallow("unmount tests analytics root", e); }
+    this._testsAnalyticsRoot = null;
+    try {
+      this._noteReviewAnalyticsRoot?.unmount();
+    } catch (e: unknown) { log.swallow("unmount note-review analytics root", e); }
+    this._noteReviewAnalyticsRoot = null;
     resetAOS();
     await Promise.resolve();
   }
 
   onRefresh() {
     this.render();
+    void this._hydrateExamAttempts();
+  }
+
+  private async _hydrateExamAttempts(): Promise<void> {
+    try {
+      const db = new ExamTestsSqlite(this.plugin);
+      await db.open();
+      this._examAttemptsCache = db.listAttempts(2000);
+      await db.close();
+      this._examAttemptsHydrated = true;
+      this.render();
+    } catch (e: unknown) {
+      log.swallow("hydrate exam attempts", e);
+    }
   }
 
   private _applyWidthMode() {
@@ -165,7 +200,18 @@ export class SproutAnalyticsView extends ItemView {
     if (!root) return;
 
     const maxWidth = this.plugin.isWideMode ? "none" : MAX_CONTENT_WIDTH_PX;
+    setCssProps(root, "--lk-home-max-width", maxWidth);
     setCssProps(root, "--sprout-analytics-max-width", maxWidth);
+  }
+
+  private _setActiveSection(section: "flashcards" | "notes" | "tests") {
+    if (this._activeSection === section) return;
+    this._activeSection = section;
+    this.render();
+  }
+
+  private _isSectionVisible(section: "flashcards" | "notes" | "tests") {
+    return this._activeSection === section;
   }
 
   render() {
@@ -220,14 +266,25 @@ export class SproutAnalyticsView extends ItemView {
       } catch (e: unknown) { log.swallow("unmount forgetting curve root", e); }
       this._forgettingCurveRoot = null;
     }
-
+    if (this._testsAnalyticsRoot) {
+      try {
+        this._testsAnalyticsRoot.unmount();
+      } catch (e: unknown) { log.swallow("unmount tests analytics root", e); }
+      this._testsAnalyticsRoot = null;
+    }
+    if (this._noteReviewAnalyticsRoot) {
+      try {
+        this._noteReviewAnalyticsRoot.unmount();
+      } catch (e: unknown) { log.swallow("unmount note-review analytics root", e); }
+      this._noteReviewAnalyticsRoot = null;
+    }
     this._rootEl = root;
 
     root.classList.add(
       "bc",
       "sprout-view-content",
       "sprout-analytics-root",
-      "sprout-analytics-width",
+      "w-full",
       "flex",
       "flex-col",
     );
@@ -263,21 +320,78 @@ export class SproutAnalyticsView extends ItemView {
     const rowBaseDelay = statsCardDelay + 50;
     const rowStep = 50;
 
-    const applyAos = (el: HTMLElement, delay?: number, animation = "fade-up") => {
+    const applyAos = (_el: HTMLElement, _delay?: number, _animation = "fade-up") => {
+      // Analytics uses a strict two-step AOS sequence: title strip then content shell.
+      // Keep this helper as a no-op to avoid nested section/row animations.
+      return;
+    };
+    const applyRootAos = (el: HTMLElement, delay?: number, animation = "fade-up") => {
       if (!animationsEnabled) return;
       el.setAttribute("data-aos", animation);
       if (Number.isFinite(delay)) el.setAttribute("data-aos-delay", String(delay));
     };
 
-    const title = document.createElement("div");
-    title.className = "text-xl font-semibold tracking-tight";
-    applyAos(title, titleDelay);
+    const titleFrame = createTitleStripFrame({
+      root,
+      stripClassName: "lk-home-title-strip sprout-analytics-title-strip",
+      rowClassName: "flex items-center justify-between gap-2.5 max-md:flex-col max-md:items-start",
+      leftClassName: "flex min-w-0 flex-col gap-1",
+      prepend: false,
+    });
+    const { strip: titleStrip, right: titleRight, title, subtitle } = titleFrame;
     title.textContent = tx("ui.view.analytics.title", "Analytics");
-    root.appendChild(title);
+    subtitle.className = "text-[0.95rem] leading-[1.35] text-muted-foreground";
+    subtitle.textContent = tx(
+      "ui.analytics.header.subtitle",
+      "See trends, forecast due cards, and tune your study plan.",
+    );
+
+    const filtersWrap = document.createElement("div");
+    filtersWrap.className = "flex flex-wrap items-center gap-2 ml-auto max-md:ml-0";
+
+    const mkFilterBtn = (
+      section: "flashcards" | "notes" | "tests",
+      label: string,
+      iconName: string,
+    ) => {
+      const active = this._isSectionVisible(section);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "bc sprout-btn-toolbar inline-flex items-center gap-2 h-8 px-3 text-sm";
+      btn.classList.toggle("is-active", active);
+      btn.classList.toggle("sprout-btn-control", active);
+      btn.classList.toggle("sprout-btn-outline-muted", !active);
+      btn.setAttribute("aria-pressed", active ? "true" : "false");
+      btn.setAttribute("data-tooltip-position", "top");
+
+      const icon = document.createElement("span");
+      icon.className = "inline-flex items-center justify-center [&_svg]:size-3.5";
+      setIcon(icon, iconName);
+      btn.appendChild(icon);
+
+      const text = document.createElement("span");
+      text.textContent = label;
+      btn.appendChild(text);
+
+      btn.addEventListener("click", () => this._setActiveSection(section));
+      return btn;
+    };
+
+    filtersWrap.appendChild(mkFilterBtn("flashcards", tx("ui.analytics.filter.flashcards", "Flashcards"), "layers"));
+    filtersWrap.appendChild(mkFilterBtn("notes", tx("ui.analytics.filter.notes", "Notes"), "notebook-text"));
+    filtersWrap.appendChild(mkFilterBtn("tests", tx("ui.analytics.filter.tests", "Tests"), "clipboard-check"));
+    titleRight.appendChild(filtersWrap);
+
+    const contentShell = document.createElement("div");
+    contentShell.className = `${SPROUT_HOME_CONTENT_SHELL_CLASS} sprout-analytics-content-shell`;
+    root.appendChild(contentShell);
+
+    applyRootAos(titleStrip, 0);
+    applyRootAos(contentShell, titleDelay);
 
     const body = document.createElement("div");
     body.className = "w-full space-y-4";
-    root.appendChild(body);
+    contentShell.appendChild(body);
 
     const now = Date.now();
     const events = this.plugin.store.getAnalyticsEvents?.() ?? [];
@@ -384,26 +498,43 @@ export class SproutAnalyticsView extends ItemView {
       ? streakMessages[Math.floor(Math.random() * streakMessages.length)]
       : tx("ui.analytics.badge.allTime", "All time");
 
-    this._renderKpiCards(body, applyAos, kpiBaseDelay, kpiStep,
-      currentStreak, longestStreak,
-      avgCardsPerDay, avgTimePerDayMinutes,
-      prevAvgCardsPerDay, prevAvgTimePerDayMinutes,
-      prevActiveDaysReviews, prevActiveDaysTime,
-      streakMatches, streakNote, todayIndex, dayMap,
-      tx,
-    );
+    const showFlashcards = this._isSectionVisible("flashcards");
+    const showTests = this._isSectionVisible("tests");
+    const showNotes = this._isSectionVisible("notes");
+
+    if (showFlashcards) {
+      this._renderKpiCards(body, applyAos, kpiBaseDelay, kpiStep,
+        currentStreak, longestStreak,
+        avgCardsPerDay, avgTimePerDayMinutes,
+        prevAvgCardsPerDay, prevAvgTimePerDayMinutes,
+        prevActiveDaysReviews, prevActiveDaysTime,
+        streakMatches, streakNote, todayIndex, dayMap,
+        tx,
+      );
+    }
+
+    if (showTests) {
+      this._renderTestKpiCards(body, events, timezone, todayIndex, tx);
+    }
+
+    if (showNotes) {
+      void this._renderNoteKpiCards(body, events, timezone, todayIndex, tx);
+    }
 
     this._renderCharts(body, applyAos, animationsEnabled,
       heatmapDelay, heroRowDelay, graphsGridDelay, stabilityRowDelay,
       events, cards, states, reviewLog, timezone, todayIndex, now, dayMap, dueByDay, parentIds,
+      showFlashcards, showTests, showNotes,
       tx,
     );
 
-    this._renderStatsTable(body, applyAos, animationsEnabled,
-      statsCardDelay, rowBaseDelay, rowStep,
-      events, reviewLog, timezone, todayIndex, dayMap, dueByDay, parentIds,
-      tx,
-    );
+    if (showFlashcards) {
+      this._renderStatsTable(body, applyAos, animationsEnabled,
+        statsCardDelay, rowBaseDelay, rowStep,
+        events, reviewLog, timezone, todayIndex, dayMap, dueByDay, parentIds,
+        tx,
+      );
+    }
 
     if (animationsEnabled) refreshAOS();
   }
@@ -473,12 +604,10 @@ export class SproutAnalyticsView extends ItemView {
       valueEl.textContent = trend.dir === 0 ? "0%" : `${trend.dir > 0 ? "+" : ""}0%`;
       badge.appendChild(valueEl);
 
-      // Animate count-up with subtle spin
+      // Animate count-up value only (no badge rotation)
       const durationMs = 800;
       const start = performance.now();
       const target = trend.value;
-      const startAngle = 0;
-      const endAngle = trend.dir === 0 ? 0 : trend.dir > 0 ? 180 : -180;
 
       const animate = (t: number) => {
         const elapsed = t - start;
@@ -486,13 +615,8 @@ export class SproutAnalyticsView extends ItemView {
         const eased = p < 0.5 ? 2 * p * p : -1 + (4 - 2 * p) * p; // easeInOut
         const currentVal = (trend.dir === 0 ? 0 : eased * Math.abs(target)) * (trend.dir >= 0 ? 1 : -1);
         valueEl.textContent = `${currentVal >= 0 ? "+" : ""}${currentVal.toFixed(0)}%`;
-        const angle = startAngle + (endAngle - startAngle) * eased;
-        setCssProps(badge as HTMLElement, "--sprout-rotate", `${angle}deg`);
         if (p < 1) requestAnimationFrame(animate);
-        else {
-          setCssProps(badge as HTMLElement, "--sprout-rotate", "0deg");
-          valueEl.textContent = trend.text;
-        }
+        else valueEl.textContent = trend.text;
       };
 
       requestAnimationFrame(animate);
@@ -529,7 +653,7 @@ export class SproutAnalyticsView extends ItemView {
       ? makeBadge({ text: tx("ui.analytics.badge.live", "Live"), live: true, className: "sprout-trend-badge sprout-live-badge sprout-live-badge-orange" })
       : (() => {
           const badge = document.createElement("span");
-          badge.className = "sprout-trend-badge inline-flex items-center gap-1 sprout-analytics-badge-compact";
+          badge.className = "sprout-trend-badge inline-flex items-center gap-1 px-2 py-0";
           badge.textContent = tx("ui.analytics.badge.allTime", "All time");
           return badge;
         })();
@@ -562,9 +686,16 @@ export class SproutAnalyticsView extends ItemView {
     );
 
     const timeBadge = buildTrendBadge(formatTrend(avgTimePerDayMinutes, prevAvgTimePerDayMinutes, prevActiveDaysTime));
+    const dailyTimeValue = (() => {
+      const minutes = Math.max(0, Math.ceil(avgTimePerDayMinutes));
+      if (minutes < 60) return `${minutes} min`;
+      const hours = minutes / 60;
+      const roundedHours = hours >= 10 ? Math.round(hours) : Math.round(hours * 10) / 10;
+      return `${roundedHours} ${roundedHours === 1 ? "hour" : "hours"}`;
+    })();
     makeCard(
       tx("ui.analytics.card.dailyTime", "Daily time"),
-      tx("ui.analytics.card.minutesSuffix", "{count} min", { count: Math.ceil(avgTimePerDayMinutes) }),
+      dailyTimeValue,
       timeBadge,
       tx("ui.analytics.note.last7Days", "Last 7 days"),
     );
@@ -575,6 +706,347 @@ export class SproutAnalyticsView extends ItemView {
       `${Math.round(avgCardsPerDay)}`,
       cardsBadge,
       tx("ui.analytics.note.last7Days", "Last 7 days"),
+    );
+  }
+
+  private _renderTestKpiCards(
+    body: HTMLElement,
+    events: ReturnType<NonNullable<typeof this.plugin.store.getAnalyticsEvents>>,
+    timezone: string,
+    todayIndex: number,
+    tx: (token: string, fallback: string, vars?: Record<string, string | number>) => string,
+  ): void {
+    const kpiRow = document.createElement("div");
+    kpiRow.className = "sprout-ana-grid grid grid-cols-1 md:grid-cols-3 gap-4";
+    body.appendChild(kpiRow);
+
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+      timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit",
+    });
+    const dayIdx = (ts: number): number => {
+      const parts = formatter.formatToParts(new Date(ts));
+      const m = new Map(parts.map(p => [p.type, p.value]));
+      return Math.floor(Date.UTC(Number(m.get("year")), Number(m.get("month")) - 1, Number(m.get("day"))) / MS_DAY);
+    };
+
+    const seen = new Set<string>();
+    const attempts: Array<{ at: number; score: number }> = [];
+    for (const ev of events) {
+      if (!ev || ev.kind !== "exam-attempt") continue;
+      const at = Number(ev.at);
+      const score = Number(ev.finalPercent);
+      if (!Number.isFinite(at) || !Number.isFinite(score)) continue;
+      const id = String(ev.attemptId || `${ev.testId || "test"}-${at}-${score.toFixed(2)}`);
+      if (seen.has(id)) continue;
+      seen.add(id);
+      attempts.push({ at, score: Math.max(0, Math.min(100, score)) });
+    }
+    for (const row of (this._examAttemptsHydrated ? this._examAttemptsCache : [])) {
+      const at = Number(row.createdAt);
+      const score = Number(row.finalPercent);
+      if (!Number.isFinite(at) || !Number.isFinite(score)) continue;
+      const id = String(row.attemptId || `${row.testId}-${at}-${score.toFixed(2)}`);
+      if (seen.has(id)) continue;
+      seen.add(id);
+      attempts.push({ at, score: Math.max(0, Math.min(100, score)) });
+    }
+
+    let attempts7d = 0, scoreSum7d = 0;
+    let prevAttempts7d = 0, prevScoreSum7d = 0;
+    let lastScore = 0, lastAt = 0;
+    for (const a of attempts) {
+      const idx = dayIdx(a.at);
+      if (idx >= todayIndex - 6 && idx <= todayIndex) {
+        attempts7d++;
+        scoreSum7d += a.score;
+      } else if (idx >= todayIndex - 13 && idx < todayIndex - 6) {
+        prevAttempts7d++;
+        prevScoreSum7d += a.score;
+      }
+      if (a.at > lastAt) { lastAt = a.at; lastScore = a.score; }
+    }
+    const avgScore7d = attempts7d > 0 ? scoreSum7d / attempts7d : 0;
+    const prevAvgScore7d = prevAttempts7d > 0 ? prevScoreSum7d / prevAttempts7d : 0;
+
+    const formatTrend = (cur: number, prev: number, hasData: boolean) => {
+      if (!hasData || prev <= 0) return { value: 0, text: "0%", dir: 0 };
+      const raw = ((cur - prev) / prev) * 100;
+      const capped = Math.min(Math.max(raw, -1000), 1000);
+      const dir = capped > 0 ? 1 : capped < 0 ? -1 : 0;
+      return { value: capped, text: `${capped > 0 ? "+" : ""}${capped.toFixed(0)}%`, dir };
+    };
+
+    const buildTrendBadge = (trend: { value: number; text: string; dir: number }) => {
+      const badge = document.createElement("span");
+      badge.className = "sprout-trend-badge sprout-analytics-rotatable";
+      const icon = document.createElement("span");
+      icon.className = "inline-flex items-center justify-center";
+      setIcon(icon, trend.dir > 0 ? "trending-up" : trend.dir < 0 ? "trending-down" : "minus");
+      const svg = queryFirst(icon, "svg");
+      if (svg) (svg as SVGElement).setAttribute("stroke", "currentColor");
+      badge.appendChild(icon);
+      const valueEl = document.createElement("span");
+      valueEl.textContent = "0%";
+      badge.appendChild(valueEl);
+      const durationMs = 800;
+      const startTime = performance.now();
+      const target = trend.value;
+      const animate = (t: number) => {
+        const elapsed = t - startTime;
+        const p = Math.min(Math.max(elapsed / durationMs, 0), 1);
+        const eased = p < 0.5 ? 2 * p * p : -1 + (4 - 2 * p) * p;
+        const cur = (trend.dir === 0 ? 0 : eased * Math.abs(target)) * (trend.dir >= 0 ? 1 : -1);
+        valueEl.textContent = `${cur >= 0 ? "+" : ""}${cur.toFixed(0)}%`;
+        if (p < 1) requestAnimationFrame(animate);
+        else valueEl.textContent = trend.text;
+      };
+      requestAnimationFrame(animate);
+      return badge;
+    };
+
+    const makeCard = (title: string, value: string, badge: HTMLElement | null, note: string) => {
+      const card = document.createElement("div");
+      card.className = "card sprout-ana-card small-card flex flex-col gap-2";
+      kpiRow.appendChild(card);
+      const top = document.createElement("div");
+      top.className = "flex items-center justify-between text-sm text-muted-foreground";
+      card.appendChild(top);
+      top.appendChild(Object.assign(document.createElement("div"), { textContent: title }));
+      if (badge) top.appendChild(badge);
+      const big = document.createElement("div");
+      big.className = "mt-2 text-2xl font-semibold";
+      big.textContent = value;
+      card.appendChild(big);
+      const sub = document.createElement("div");
+      sub.className = "mt-2 text-xs text-muted-foreground text-right";
+      sub.textContent = note;
+      card.appendChild(sub);
+    };
+
+    makeCard(
+      tx("ui.analytics.card.testAttempts", "Attempts"),
+      `${attempts7d}`,
+      buildTrendBadge(formatTrend(attempts7d, prevAttempts7d, prevAttempts7d > 0)),
+      tx("ui.analytics.note.last7Days", "Last 7 days"),
+    );
+    makeCard(
+      tx("ui.analytics.card.testAvgScore", "Avg score"),
+      attempts7d > 0 ? `${avgScore7d.toFixed(1)}%` : "\u2014",
+      buildTrendBadge(formatTrend(avgScore7d, prevAvgScore7d, prevAttempts7d > 0)),
+      tx("ui.analytics.note.last7Days", "Last 7 days"),
+    );
+    makeCard(
+      tx("ui.analytics.card.testRecentScore", "Most recent score"),
+      lastAt > 0 ? `${lastScore.toFixed(1)}%` : "\u2014",
+      null,
+      lastAt > 0 ? tx("ui.analytics.note.latestAttempt", "Latest attempt") : tx("ui.analytics.note.noAttemptsYet", "No attempts yet"),
+    );
+  }
+
+  private async _renderNoteKpiCards(
+    body: HTMLElement,
+    events: ReturnType<NonNullable<typeof this.plugin.store.getAnalyticsEvents>>,
+    timezone: string,
+    todayIndex: number,
+    tx: (token: string, fallback: string, vars?: Record<string, string | number>) => string,
+  ): Promise<void> {
+    const kpiRow = document.createElement("div");
+    kpiRow.className = "sprout-ana-grid grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4";
+    body.appendChild(kpiRow);
+
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+      timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit",
+    });
+    const dayIdx = (ts: number): number => {
+      const parts = formatter.formatToParts(new Date(ts));
+      const m = new Map(parts.map(p => [p.type, p.value]));
+      return Math.floor(Date.UTC(Number(m.get("year")), Number(m.get("month")) - 1, Number(m.get("day"))) / MS_DAY);
+    };
+
+    // Build per-day map of note review activity for streaks and counts
+    const noteDayMap = new Map<number, { count: number }>();
+    let reviewed7d = 0;
+    let prevReviewed7d = 0;
+    for (const ev of events) {
+      if (!ev || ev.kind !== "note-review") continue;
+      const at = Number(ev.at);
+      if (!Number.isFinite(at)) continue;
+      const idx = dayIdx(at);
+      const action = String(ev.action || "");
+      const entry = noteDayMap.get(idx) ?? { count: 0 };
+      entry.count += 1;
+      noteDayMap.set(idx, entry);
+      if (action === "pass" || action === "read") {
+        if (idx >= todayIndex - 6 && idx <= todayIndex) reviewed7d++;
+        else if (idx >= todayIndex - 13 && idx < todayIndex - 6) prevReviewed7d++;
+      }
+    }
+
+    // Compute current streak
+    let currentStreak = 0;
+    let cursor = todayIndex;
+    while (noteDayMap.get(cursor)?.count) {
+      currentStreak += 1;
+      cursor -= 1;
+    }
+
+    // Compute longest streak
+    let longestStreak = 0;
+    const sortedDays = Array.from(noteDayMap.keys())
+      .filter((k) => (noteDayMap.get(k)?.count ?? 0) > 0)
+      .sort((a, b) => a - b);
+    let run = 0;
+    let prev = Number.NaN;
+    for (const d of sortedDays) {
+      if (!Number.isFinite(prev) || d === prev + 1) run += 1;
+      else run = 1;
+      if (run > longestStreak) longestStreak = run;
+      prev = d;
+    }
+
+    const streakMatches = currentStreak > 0 && currentStreak === longestStreak;
+    const streakMessages = [
+      tx("ui.analytics.note.streakRecordBooks", "One for the record books!"),
+      tx("ui.analytics.note.streakRollin", "Keep the streak rollin!"),
+      tx("ui.analytics.note.streakDontBreak", "Don't break the chain!"),
+      tx("ui.analytics.note.streakOnFire", "You're on fire!"),
+    ];
+    const streakNote = streakMatches
+      ? streakMessages[Math.floor(Math.random() * streakMessages.length)]
+      : tx("ui.analytics.badge.allTime", "All time");
+
+    // Query note DB for scheduled next 7 days
+    let scheduledNext7d = 0;
+    try {
+      const notesDb = new NoteReviewSqlite(this.plugin);
+      await notesDb.open();
+      const now = Date.now();
+      const in7days = now + 7 * MS_DAY;
+      scheduledNext7d = notesDb.countDueInRange(now, in7days);
+      await notesDb.close();
+    } catch { /* graceful fallback */ }
+
+    const formatTrend = (cur: number, prev: number, hasData: boolean) => {
+      if (!hasData || prev <= 0) return { value: 0, text: "0%", dir: 0 };
+      const raw = ((cur - prev) / prev) * 100;
+      const capped = Math.min(Math.max(raw, -1000), 1000);
+      const dir = capped > 0 ? 1 : capped < 0 ? -1 : 0;
+      return { value: capped, text: `${capped > 0 ? "+" : ""}${capped.toFixed(0)}%`, dir };
+    };
+
+    const buildTrendBadge = (trend: { value: number; text: string; dir: number }) => {
+      const badge = document.createElement("span");
+      badge.className = "sprout-trend-badge sprout-analytics-rotatable";
+      const icon = document.createElement("span");
+      icon.className = "inline-flex items-center justify-center";
+      setIcon(icon, trend.dir > 0 ? "trending-up" : trend.dir < 0 ? "trending-down" : "minus");
+      const svg = queryFirst(icon, "svg");
+      if (svg) (svg as SVGElement).setAttribute("stroke", "currentColor");
+      badge.appendChild(icon);
+      const valueEl = document.createElement("span");
+      valueEl.textContent = "0%";
+      badge.appendChild(valueEl);
+      const durationMs = 800;
+      const startTime = performance.now();
+      const target = trend.value;
+      const animate = (t: number) => {
+        const elapsed = t - startTime;
+        const p = Math.min(Math.max(elapsed / durationMs, 0), 1);
+        const eased = p < 0.5 ? 2 * p * p : -1 + (4 - 2 * p) * p;
+        const cur = (trend.dir === 0 ? 0 : eased * Math.abs(target)) * (trend.dir >= 0 ? 1 : -1);
+        valueEl.textContent = `${cur >= 0 ? "+" : ""}${cur.toFixed(0)}%`;
+        if (p < 1) requestAnimationFrame(animate);
+        else valueEl.textContent = trend.text;
+      };
+      requestAnimationFrame(animate);
+      return badge;
+    };
+
+    const makeBadge = (opts: { text: string; bg?: string; color?: string; border?: string; live?: boolean; className?: string }) => {
+      const badge = document.createElement("span");
+      badge.className = `sprout-badge sprout-analytics-badge inline-flex items-center gap-1${opts.className ? ` ${opts.className}` : ""}`;
+      if (opts.bg) setCssProps(badge, "--sprout-badge-bg", opts.bg);
+      else if (!opts.className) setCssProps(badge, "--sprout-badge-bg", "var(--theme-accent)");
+      if (opts.color) setCssProps(badge, "--sprout-badge-color", opts.color);
+      if (opts.border) setCssProps(badge, "--sprout-badge-border", opts.border);
+      if (opts.live) {
+        const circle = document.createElement("span");
+        circle.className = "inline-block w-1.5 h-1.5 rounded-full bg-white sprout-analytics-live-pulse";
+        badge.appendChild(circle);
+      }
+      badge.appendChild(document.createTextNode(opts.text));
+      return badge;
+    };
+
+    const makeCard = (title: string, value: string, badge: HTMLElement | null, note: string) => {
+      const card = document.createElement("div");
+      card.className = "card sprout-ana-card small-card flex flex-col gap-2";
+      kpiRow.appendChild(card);
+      const top = document.createElement("div");
+      top.className = "flex items-center justify-between text-sm text-muted-foreground";
+      card.appendChild(top);
+      top.appendChild(Object.assign(document.createElement("div"), { textContent: title }));
+      if (badge) top.appendChild(badge);
+      const big = document.createElement("div");
+      big.className = "mt-2 text-2xl font-semibold";
+      big.textContent = value;
+      card.appendChild(big);
+      const sub = document.createElement("div");
+      sub.className = "mt-2 text-xs text-muted-foreground text-right";
+      sub.textContent = note;
+      card.appendChild(sub);
+    };
+
+    // Card 1: Longest streak
+    const longestBadge = streakMatches
+      ? makeBadge({ text: tx("ui.analytics.badge.live", "Live"), live: true, className: "sprout-trend-badge sprout-live-badge sprout-live-badge-orange" })
+      : (() => {
+          const badge = document.createElement("span");
+          badge.className = "sprout-trend-badge inline-flex items-center gap-1 px-2 py-0";
+          badge.textContent = tx("ui.analytics.badge.allTime", "All time");
+          return badge;
+        })();
+    makeCard(
+      tx("ui.analytics.card.noteLongestStreak", "Longest streak"),
+      tx("ui.analytics.card.daysSuffix", "{count} day{suffix}", { count: longestStreak, suffix: longestStreak === 1 ? "" : "s" }),
+      longestBadge,
+      streakNote,
+    );
+
+    // Card 2: Current streak
+    const includesToday = (noteDayMap.get(todayIndex)?.count ?? 0) > 0;
+    const currentBadge = includesToday
+      ? makeBadge({ text: tx("ui.analytics.badge.live", "Live"), live: true, className: "sprout-trend-badge sprout-live-badge sprout-live-badge-dark" })
+      : null;
+    const currentNote =
+      currentStreak > 0
+        ? (streakMatches
+            ? tx("ui.analytics.note.longestActive", "Longest streak active")
+            : includesToday
+              ? tx("ui.analytics.note.keepGoing", "Keep it going!")
+              : tx("ui.analytics.note.streakActive", "Streak active."))
+        : tx("ui.analytics.note.noReviews", "No reviews yet");
+    makeCard(
+      tx("ui.analytics.card.noteCurrentStreak", "Current streak"),
+      tx("ui.analytics.card.daysSuffix", "{count} day{suffix}", { count: currentStreak, suffix: currentStreak === 1 ? "" : "s" }),
+      currentBadge,
+      currentNote,
+    );
+
+    // Card 3: Notes reviewed
+    makeCard(
+      tx("ui.analytics.card.noteReviewed", "Notes reviewed"),
+      `${reviewed7d}`,
+      buildTrendBadge(formatTrend(reviewed7d, prevReviewed7d, prevReviewed7d > 0)),
+      tx("ui.analytics.note.last7Days", "Last 7 days"),
+    );
+
+    // Card 4: Scheduled next 7 days
+    makeCard(
+      tx("ui.analytics.card.noteScheduledNext7", "Scheduled next 7 days"),
+      `${scheduledNext7d}`,
+      null,
+      tx("ui.analytics.note.upcoming", "Upcoming"),
     );
   }
 
@@ -597,6 +1069,9 @@ export class SproutAnalyticsView extends ItemView {
     dayMap: Map<number, { count: number; totalMs: number }>,
     dueByDay: Map<number, number>,
     parentIds: Set<string>,
+    showFlashcards: boolean,
+    showTests: boolean,
+    showNotes: boolean,
     tx: (token: string, fallback: string, vars?: Record<string, string | number>) => string,
   ): void {
     const renderChartMountFallback = (host: HTMLElement, chartName: string, error: unknown) => {
@@ -605,7 +1080,7 @@ export class SproutAnalyticsView extends ItemView {
       const card = document.createElement("div");
       card.className = "bc card sprout-ana-card p-6 flex flex-col items-center justify-center gap-2 text-center";
       const titleEl = document.createElement("div");
-      titleEl.className = "bc font-semibold text-foreground";
+      titleEl.className = "bc font-semibold lk-home-section-title text-foreground";
       titleEl.textContent = tx("ui.analytics.chart.unavailable", "{chart} unavailable", { chart: chartName });
       const hintEl = document.createElement("div");
       hintEl.className = "bc text-sm text-muted-foreground";
@@ -626,154 +1101,193 @@ export class SproutAnalyticsView extends ItemView {
       }
     };
 
-    const heroRow = document.createElement("div");
-    heroRow.className = "grid grid-cols-1 xl:grid-cols-2 gap-4";
-    body.appendChild(heroRow);
+    if (showFlashcards) {
+      const heroRow = document.createElement("div");
+      heroRow.className = "grid grid-cols-1 xl:grid-cols-2 gap-4";
+      body.appendChild(heroRow);
 
-    const heatmapHost = document.createElement("div");
-    heatmapHost.className = "xl:col-span-2 sprout-analytics-heatmap-host";
-    applyAos(heatmapHost, heatmapDelay);
-    heroRow.appendChild(heatmapHost);
+      const heatmapHost = document.createElement("div");
+      heatmapHost.className = "xl:col-span-2 min-h-[200px]";
+      applyAos(heatmapHost, heatmapDelay);
+      heroRow.appendChild(heatmapHost);
 
-    const reviewEvents = events.filter((ev) => ev && ev.kind === "review");
-    this._heatmapRoot = mountChartRoot(heatmapHost, tx("ui.analytics.chart.reviewHeatmap", "Review Calendar Heatmap"), (rootNode) => {
-      rootNode.render(
-        React.createElement(ChartErrorBoundary, { chartName: tx("ui.analytics.chart.reviewHeatmap", "Review Calendar Heatmap") },
-          React.createElement(ReviewCalendarHeatmap, {
-            revlog: reviewEvents,
-            timezone,
-            rangeDays: 365,
-            filters: {},
-          }),
-        ),
-      );
-    });
+      const reviewEvents = events.filter((ev) => ev && ev.kind === "review");
+      this._heatmapRoot = mountChartRoot(heatmapHost, tx("ui.analytics.chart.reviewHeatmap", "Review Calendar Heatmap"), (rootNode) => {
+        rootNode.render(
+          React.createElement(ChartErrorBoundary, { chartName: tx("ui.analytics.chart.reviewHeatmap", "Review Calendar Heatmap") },
+            React.createElement(ReviewCalendarHeatmap, {
+              revlog: reviewEvents,
+              timezone,
+              rangeDays: 365,
+              filters: {},
+            }),
+          ),
+        );
+      });
 
-    // 2x2 graphs grid
-    const graphsGrid = document.createElement("div");
-    graphsGrid.className = "grid grid-cols-1 lg:grid-cols-2 gap-4 sprout-analytics-grid-rows";
-    applyAos(graphsGrid, graphsGridDelay);
-    body.appendChild(graphsGrid);
+      const graphsGrid = document.createElement("div");
+      graphsGrid.className = "grid grid-cols-1 auto-rows-fr gap-4 lg:grid-cols-2";
+      applyAos(graphsGrid, graphsGridDelay);
+      body.appendChild(graphsGrid);
 
-    // Top-left: Stage pie
-    const stagePieHost = document.createElement("div");
-    stagePieHost.className = "h-full";
-    graphsGrid.appendChild(stagePieHost);
-    this._stagePieRoot = mountChartRoot(stagePieHost, tx("ui.analytics.chart.cardStageDistribution", "Card Stage Distribution"), (rootNode) => {
-      rootNode.render(
-        React.createElement(ChartErrorBoundary, { chartName: tx("ui.analytics.chart.cardStageDistribution", "Card Stage Distribution") },
-          React.createElement(StagePieCard, { cards, states, enableAnimations: animationsEnabled }),
-        ),
-      );
-    });
+      const stagePieHost = document.createElement("div");
+      stagePieHost.className = "h-full";
+      graphsGrid.appendChild(stagePieHost);
+      this._stagePieRoot = mountChartRoot(stagePieHost, tx("ui.analytics.chart.cardStageDistribution", "Card Stage Distribution"), (rootNode) => {
+        rootNode.render(
+          React.createElement(ChartErrorBoundary, { chartName: tx("ui.analytics.chart.cardStageDistribution", "Card Stage Distribution") },
+            React.createElement(StagePieCard, { cards, states, enableAnimations: animationsEnabled }),
+          ),
+        );
+      });
 
-    // Top-right: Study forecast
-    const futureDueHost = document.createElement("div");
-    futureDueHost.className = "h-full";
-    graphsGrid.appendChild(futureDueHost);
+      const futureDueHost = document.createElement("div");
+      futureDueHost.className = "h-full";
+      graphsGrid.appendChild(futureDueHost);
 
-    const futureCards = cards.map((c) => {
-      const stateData = (states[String(c.id)] as Record<string, unknown> | undefined) || {};
-      const due = stateData.due as number | undefined;
-      const stage = stateData.stage as string | undefined;
-      return {
-        id: String(c.id),
-        due: Number(due ?? 0) || null,
-        suspended: String(stage ?? "") === "suspended",
-        stage: String(stage ?? "new"),
-        type: String(c?.type ?? ""),
-        sourceNotePath: String(c?.sourceNotePath ?? ""),
-        groups: Array.isArray(c?.groups) ? c.groups : [],
-      };
-    });
+      const futureCards = cards.map((c) => {
+        const stateData = (states[String(c.id)] as Record<string, unknown> | undefined) || {};
+        const due = stateData.due as number | undefined;
+        const stage = stateData.stage as string | undefined;
+        return {
+          id: String(c.id),
+          due: Number(due ?? 0) || null,
+          suspended: String(stage ?? "") === "suspended",
+          stage: String(stage ?? "new"),
+          type: String(c?.type ?? ""),
+          sourceNotePath: String(c?.sourceNotePath ?? ""),
+          groups: Array.isArray(c?.groups) ? c.groups : [],
+        };
+      });
 
-    this._futureDueRoot = mountChartRoot(futureDueHost, tx("ui.analytics.chart.studyForecast", "Study Forecast"), (rootNode) => {
-      rootNode.render(
-        React.createElement(ChartErrorBoundary, { chartName: tx("ui.analytics.chart.studyForecast", "Study Forecast") },
-          React.createElement(FutureDueChart, {
-            cards: futureCards,
-            nowMs: now,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            horizonDays: 30,
-            enableAnimations: animationsEnabled,
-          }),
-        ),
-      );
-    });
+      this._futureDueRoot = mountChartRoot(futureDueHost, tx("ui.analytics.chart.studyForecast", "Study Forecast"), (rootNode) => {
+        rootNode.render(
+          React.createElement(ChartErrorBoundary, { chartName: tx("ui.analytics.chart.studyForecast", "Study Forecast") },
+            React.createElement(FutureDueChart, {
+              cards: futureCards,
+              nowMs: now,
+              timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+              horizonDays: 30,
+              enableAnimations: animationsEnabled,
+            }),
+          ),
+        );
+      });
 
-    // Bottom-left: Answer buttons histogram
-    const stackedButtonsHost = document.createElement("div");
-    stackedButtonsHost.className = "h-full";
-    graphsGrid.appendChild(stackedButtonsHost);
-    this._stackedButtonsRoot = mountChartRoot(stackedButtonsHost, tx("ui.analytics.chart.answerButtons", "Answer Buttons"), (rootNode) => {
-      rootNode.render(
-        React.createElement(ChartErrorBoundary, { chartName: tx("ui.analytics.chart.answerButtons", "Answer Buttons") },
-          React.createElement(StackedReviewButtonsChart, {
-            events,
-            cards,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            days: 30,
-            enableAnimations: animationsEnabled,
-          }),
-        ),
-      );
-    });
+      const stackedButtonsHost = document.createElement("div");
+      stackedButtonsHost.className = "h-full";
+      graphsGrid.appendChild(stackedButtonsHost);
+      this._stackedButtonsRoot = mountChartRoot(stackedButtonsHost, tx("ui.analytics.chart.answerButtons", "Answer Buttons"), (rootNode) => {
+        rootNode.render(
+          React.createElement(ChartErrorBoundary, { chartName: tx("ui.analytics.chart.answerButtons", "Answer Buttons") },
+            React.createElement(StackedReviewButtonsChart, {
+              events,
+              cards,
+              timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+              days: 30,
+              enableAnimations: animationsEnabled,
+            }),
+          ),
+        );
+      });
 
-    // Bottom-right: New cards per day
-    const newCardsHost = document.createElement("div");
-    newCardsHost.className = "h-full";
-    graphsGrid.appendChild(newCardsHost);
-    this._newCardsRoot = mountChartRoot(newCardsHost, tx("ui.analytics.chart.newCardsPerDay", "New Cards Per Day"), (rootNode) => {
-      rootNode.render(
-        React.createElement(ChartErrorBoundary, { chartName: tx("ui.analytics.chart.newCardsPerDay", "New Cards Per Day") },
-          React.createElement(NewCardsPerDayChart, {
-            cards,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            days: 30,
-            enableAnimations: animationsEnabled,
-          }),
-        ),
-      );
-    });
+      const newCardsHost = document.createElement("div");
+      newCardsHost.className = "h-full";
+      graphsGrid.appendChild(newCardsHost);
+      this._newCardsRoot = mountChartRoot(newCardsHost, tx("ui.analytics.chart.newCardsPerDay", "New Cards Per Day"), (rootNode) => {
+        rootNode.render(
+          React.createElement(ChartErrorBoundary, { chartName: tx("ui.analytics.chart.newCardsPerDay", "New Cards Per Day") },
+            React.createElement(NewCardsPerDayChart, {
+              cards,
+              timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+              days: 30,
+              enableAnimations: animationsEnabled,
+            }),
+          ),
+        );
+      });
 
-    // Stability Distribution + Placeholder
-    const stabilityRow = document.createElement("div");
-    stabilityRow.className = "grid grid-cols-1 lg:grid-cols-2 gap-4 sprout-analytics-grid-rows";
-    applyAos(stabilityRow, stabilityRowDelay);
-    body.appendChild(stabilityRow);
+      const stabilityRow = document.createElement("div");
+      stabilityRow.className = "grid grid-cols-1 auto-rows-fr gap-4 lg:grid-cols-2";
+      applyAos(stabilityRow, stabilityRowDelay);
+      body.appendChild(stabilityRow);
 
-    const stabilityDistributionHost = document.createElement("div");
-    stabilityDistributionHost.className = "h-full";
-    stabilityRow.appendChild(stabilityDistributionHost);
-    this._stabilityDistributionRoot = mountChartRoot(stabilityDistributionHost, tx("ui.analytics.chart.stabilityDistribution", "Stability Distribution"), (rootNode) => {
-      rootNode.render(
-        React.createElement(ChartErrorBoundary, { chartName: tx("ui.analytics.chart.stabilityDistribution", "Stability Distribution") },
-          React.createElement(StabilityDistributionChart, {
-            cards: cards.map(c => ({ ...c, groups: c.groups ?? undefined })),
-            states,
-            enableAnimations: animationsEnabled,
-          }),
-        ),
-      );
-    });
+      const stabilityDistributionHost = document.createElement("div");
+      stabilityDistributionHost.className = "h-full";
+      stabilityRow.appendChild(stabilityDistributionHost);
+      this._stabilityDistributionRoot = mountChartRoot(stabilityDistributionHost, tx("ui.analytics.chart.stabilityDistribution", "Stability Distribution"), (rootNode) => {
+        rootNode.render(
+          React.createElement(ChartErrorBoundary, { chartName: tx("ui.analytics.chart.stabilityDistribution", "Stability Distribution") },
+            React.createElement(StabilityDistributionChart, {
+              cards: cards.map(c => ({ ...c, groups: c.groups ?? undefined })),
+              states,
+              enableAnimations: animationsEnabled,
+            }),
+          ),
+        );
+      });
 
-    const forgettingCurveHost = document.createElement("div");
-    forgettingCurveHost.className = "h-full";
-    stabilityRow.appendChild(forgettingCurveHost);
-    this._forgettingCurveRoot = mountChartRoot(forgettingCurveHost, tx("ui.analytics.chart.forgettingCurve", "Forgetting Curve"), (rootNode) => {
-      rootNode.render(
-        React.createElement(ChartErrorBoundary, { chartName: tx("ui.analytics.chart.forgettingCurve", "Forgetting Curve") },
-          React.createElement(ForgettingCurveChart, {
-            cards,
-            states,
-            reviewLog,
-            scheduler: this.plugin.settings?.scheduling,
-            nowMs: now,
-            enableAnimations: animationsEnabled,
-          }),
-        ),
-      );
-    });
+      const forgettingCurveHost = document.createElement("div");
+      forgettingCurveHost.className = "h-full";
+      stabilityRow.appendChild(forgettingCurveHost);
+      this._forgettingCurveRoot = mountChartRoot(forgettingCurveHost, tx("ui.analytics.chart.forgettingCurve", "Forgetting Curve"), (rootNode) => {
+        rootNode.render(
+          React.createElement(ChartErrorBoundary, { chartName: tx("ui.analytics.chart.forgettingCurve", "Forgetting Curve") },
+            React.createElement(ForgettingCurveChart, {
+              cards,
+              states,
+              reviewLog,
+              scheduler: this.plugin.settings?.scheduling,
+              nowMs: now,
+              enableAnimations: animationsEnabled,
+            }),
+          ),
+        );
+      });
+    }
+
+    if (showTests) {
+      const testsRow = document.createElement("div");
+      testsRow.className = "grid grid-cols-1 gap-4";
+      body.appendChild(testsRow);
+
+      const testsHost = document.createElement("div");
+      testsHost.className = "h-full";
+      testsRow.appendChild(testsHost);
+      this._testsAnalyticsRoot = mountChartRoot(testsHost, tx("ui.analytics.chart.testsPerformance", "Tests Performance"), (rootNode) => {
+        rootNode.render(
+          React.createElement(ChartErrorBoundary, { chartName: tx("ui.analytics.chart.testsPerformance", "Tests Performance") },
+            React.createElement(TestsAnalyticsCard, {
+              events: events.filter((ev) => ev && ev.kind === "exam-attempt") as Array<Record<string, unknown>>,
+              dbAttempts: this._examAttemptsHydrated ? this._examAttemptsCache : [],
+              timezone,
+            }),
+          ),
+        );
+      });
+    }
+
+    if (showNotes) {
+      const noteReviewRow = document.createElement("div");
+      noteReviewRow.className = "grid grid-cols-1 gap-4";
+      body.appendChild(noteReviewRow);
+
+      const noteReviewHost = document.createElement("div");
+      noteReviewHost.className = "h-full";
+      noteReviewRow.appendChild(noteReviewHost);
+      this._noteReviewAnalyticsRoot = mountChartRoot(noteReviewHost, tx("ui.analytics.chart.noteReviewActivity", "Note Review Activity"), (rootNode) => {
+        rootNode.render(
+          React.createElement(ChartErrorBoundary, { chartName: tx("ui.analytics.chart.noteReviewActivity", "Note Review Activity") },
+            React.createElement(NoteReviewAnalyticsCard, {
+              events: events.filter((ev) => ev && ev.kind === "note-review") as Array<Record<string, unknown>>,
+              includePracticeDefault: this.plugin.settings?.study?.analyticsIncludePracticeNoteReview !== false,
+              timezone,
+            }),
+          ),
+        );
+      });
+    }
+
   }
 
 
@@ -795,12 +1309,12 @@ export class SproutAnalyticsView extends ItemView {
   ): void {
     // Daily stats table card
     const statsCard = document.createElement("div");
-    statsCard.className = "card sprout-ana-card p-4 flex flex-col gap-3 sprout-analytics-stats-card hidden md:flex";
+    statsCard.className = "card sprout-ana-card sprout-analytics-stats-card mt-2.5 hidden flex-col gap-3 p-4 md:flex";
     applyAos(statsCard, statsCardDelay);
     body.appendChild(statsCard);
 
     const statsTitle = document.createElement("div");
-    statsTitle.className = "bc text-xl font-semibold tracking-tight";
+    statsTitle.className = "bc font-semibold lk-home-section-title";
     statsTitle.textContent = tx("ui.analytics.table.dailyStats", "Daily stats");
     statsCard.appendChild(statsTitle);
 
@@ -881,7 +1395,7 @@ export class SproutAnalyticsView extends ItemView {
 
     // Bottom controls need summary declared before first renderTable() call.
     const bottom = document.createElement("div");
-    bottom.className = "bc flex flex-row flex-wrap items-center gap-2 sprout-analytics-bottom-row";
+    bottom.className = "bc mt-2.5 flex flex-row flex-wrap items-center gap-2";
     statsCard.appendChild(bottom);
 
     const summaryWrap = document.createElement("div");
@@ -893,11 +1407,11 @@ export class SproutAnalyticsView extends ItemView {
     bottom.appendChild(summaryWrap);
 
     const center = document.createElement("div");
-    center.className = "bc flex items-center justify-center sprout-analytics-center";
+    center.className = "bc mx-auto flex items-center justify-center";
     bottom.appendChild(center);
 
     const right = document.createElement("div");
-    right.className = "bc flex flex-row flex-wrap items-center gap-2 sprout-analytics-controls";
+    right.className = "bc flex flex-row flex-nowrap items-center gap-2";
     bottom.appendChild(right);
 
     const formatStudyTime = (minutes: number) => {
@@ -944,11 +1458,11 @@ export class SproutAnalyticsView extends ItemView {
 
     const exportBtn = document.createElement("button");
     exportBtn.type = "button";
-    exportBtn.className = "bc inline-flex items-center gap-1 font-semibold text-muted-foreground cursor-pointer sprout-analytics-export-btn";
+    exportBtn.className = "bc sprout-analytics-export-btn inline-flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-[var(--sprout-font-2xs)] font-semibold text-muted-foreground shadow-none hover:text-foreground focus:text-foreground focus-visible:text-foreground";
     const exportIcon = document.createElement("span");
     exportIcon.className = "bc inline-flex items-center justify-center [&_svg]:size-3";
     setIcon(exportIcon, "download");
-    exportIcon.classList.add("sprout-icon-scale-90");
+    exportIcon.classList.add("scale-[0.9]");
     const exportText = document.createElement("span");
     exportText.textContent = tx("ui.analytics.export.csv", "Export as CSV");
     exportBtn.appendChild(exportIcon);
@@ -1030,7 +1544,7 @@ export class SproutAnalyticsView extends ItemView {
     rowsLbl.textContent = tx("ui.analytics.table.rows", "Rows");
 
     const rowsWrap = right.createDiv({ cls: "bc sprout relative inline-flex" });
-    const rowsBtn = rowsWrap.createEl("button", { cls: "bc btn-outline h-7 px-2 text-sm inline-flex items-center gap-2 sprout-analytics-rows-btn" });
+    const rowsBtn = rowsWrap.createEl("button", { cls: "bc sprout-btn-toolbar inline-flex h-7 min-w-11 items-center justify-center gap-2 px-2 text-sm" });
     rowsBtn.setAttribute("aria-haspopup", "menu");
     rowsBtn.setAttribute("aria-expanded", "false");
 
@@ -1048,7 +1562,7 @@ export class SproutAnalyticsView extends ItemView {
     sproutWrapper.appendChild(rowsPopover);
 
     const rowsPanel = document.createElement("div");
-    rowsPanel.className = "bc rounded-lg border border-border bg-popover text-popover-foreground shadow-lg p-1 sprout-pointer-auto";
+    rowsPanel.className = "bc rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 sprout-pointer-auto";
     rowsPopover.appendChild(rowsPanel);
 
     const rowsMenu = document.createElement("div");
@@ -1208,7 +1722,7 @@ export class SproutAnalyticsView extends ItemView {
       const mkBtn = (label: string, tooltip: string, disabled: boolean, active: boolean, onClick: () => void) => {
         const b = document.createElement("button");
         b.type = "button";
-        b.className = `bc ${active ? "btn" : "btn-outline"} h-8 px-2`;
+        b.className = `bc sprout-btn-toolbar h-8 px-2${active ? " sprout-btn-control" : ""}`;
         b.textContent = label;
         b.setAttribute("aria-label", tooltip);
         b.setAttribute("data-tooltip-position", "top");
@@ -1226,7 +1740,7 @@ export class SproutAnalyticsView extends ItemView {
       const mkEllipsisBtn = (targetPage: number) => {
         const b = document.createElement("button");
         b.type = "button";
-        b.className = "bc btn-outline h-8 px-2";
+        b.className = "bc sprout-btn-toolbar h-8 px-2";
         b.textContent = "…";
         b.setAttribute("aria-label", tx("ui.analytics.table.pageN", "Page {page}", { page: targetPage }));
         b.setAttribute("data-tooltip-position", "top");
@@ -1252,7 +1766,7 @@ export class SproutAnalyticsView extends ItemView {
 
       const prev = document.createElement("button");
       prev.type = "button";
-      prev.className = "bc btn-outline h-8 px-2";
+      prev.className = "bc sprout-btn-toolbar h-8 px-2";
       prev.setAttribute("aria-label", tx("ui.analytics.table.prevPage", "Previous page"));
       prev.setAttribute("data-tooltip-position", "top");
       prev.disabled = currentPage <= 0;
@@ -1319,7 +1833,7 @@ export class SproutAnalyticsView extends ItemView {
 
       const next = document.createElement("button");
       next.type = "button";
-      next.className = "bc btn-outline h-8 px-2";
+      next.className = "bc sprout-btn-toolbar h-8 px-2";
       next.setAttribute("aria-label", tx("ui.analytics.table.nextPage", "Next page"));
       next.setAttribute("data-tooltip-position", "top");
       next.disabled = currentPage >= totalPagesLocal - 1;

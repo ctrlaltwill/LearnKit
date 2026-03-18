@@ -1,0 +1,33 @@
+/* ============================================================================
+   TOKENS / TYPOGRAPHY — semantic text scale and legacy aliases
+   ========================================================================== */
+
+.sprout {
+  /* Semantic typography tokens */
+  --lk-font-size-3xs: 0.65rem;
+  --lk-font-size-2xs: 0.75rem;
+  --lk-font-size-xs: 0.9rem;
+  --lk-font-size-sm: 1rem;
+  --lk-font-size-sm-plus: 1.0625rem;
+  --lk-font-size-md-minus: 1.08rem;
+  --lk-font-size-md-plus: 1.125rem;
+  --lk-font-size-md: 1.25rem;
+  --lk-font-size-xl-minus: 1.3rem;
+  --lk-font-size-xl: 1.3125rem;
+  --lk-font-size-lg: 1.5rem;
+
+  /* Legacy Sprout aliases (kept for compatibility) */
+  --sprout-font-3xs: var(--lk-font-size-3xs);
+  --sprout-font-2xs: var(--lk-font-size-2xs);
+  --sprout-font-xs: var(--lk-font-size-xs);
+  --sprout-font-sm: var(--lk-font-size-sm);
+  --sprout-font-sm-plus: var(--lk-font-size-sm-plus);
+  --sprout-font-md-minus: var(--lk-font-size-md-minus);
+  --sprout-font-md-plus: var(--lk-font-size-md-plus);
+  --sprout-font-md: var(--lk-font-size-md);
+  --sprout-font-xl-minus: var(--lk-font-size-xl-minus);
+  --sprout-font-xl: var(--lk-font-size-xl);
+  --sprout-font-lg: var(--lk-font-size-lg);
+
+  --font-ui-small: var(--sprout-font-xs);
+}

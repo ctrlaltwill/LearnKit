@@ -1,27 +1,27 @@
 # Settings
 
-Last modified: 10/03/2026
+Last modified: 17/03/2026
 
-## Overview
+## Settings Hub
 
-Open **Settings → Community plugins → Sprout** to configure the plugin.
+Open **Settings → Community plugins → LearnKit** to configure the plugin.
 
 Settings are grouped by tab.
 
-## Storage & Sync
+## Storage Sync
 
-Sprout stores its scheduling database in **SQLite**.
+LearnKit stores its scheduling database in **SQLite**.
 
 - Markdown note content remains in your vault files.
-- Scheduling and review state are stored in the Sprout database.
+- Scheduling and review state are stored in the LearnKit database.
 - Backups in the Data backup section are restore points for scheduling data.
 
-## User details
+## User Details
 
 | Setting | Default | Description |
 |---------|---------|-------------|
 | User name | *(empty)* | Name shown in greetings on the home page |
-| Show Sprout information on the homepage | On | Display developer info on the home view |
+| Show LearnKit information on the homepage | On | Display developer info on the home view |
 | Show greeting text | On | Personalised greeting vs plain "Home" title |
 
 ## General
@@ -30,12 +30,12 @@ Sprout stores its scheduling database in **SQLite**.
 |---------|---------|-------------|
 | Enable animations | On | Page-load fade-up animations |
 
-## Reminders and Gatekeeper
+## Reminder Tools
 
 Reminders and Gatekeeper are documented on dedicated pages:
 
-- [Reminders](./Reminders.md) — gentle launch/routine nudges
-- [Gatekeeper](./Gatekeeper.md) — enforced review popups and bypass behavior
+- [Reminders](./Reminders) — gentle launch/routine nudges
+- [Gatekeeper](./Gatekeeper) — enforced review popups and bypass behavior
 
 ## Image Occlusion
 
@@ -50,7 +50,7 @@ Reminders and Gatekeeper are documented on dedicated pages:
 |---------|---------|-------------|
 | Card attachment folder | `Attachments/Cards/` | Where card media (images, audio) is saved |
 
-## Data backup
+## Data Backup
 
 | Setting | Default | Description |
 |---------|---------|-------------|
@@ -58,7 +58,7 @@ Reminders and Gatekeeper are documented on dedicated pages:
 
 Use **Create manual backup** before risky changes (large imports, schema/migration changes, or major cleanup).
 
-For restore flow, integrity status, and backup behavior details, see [Backups](./Backups.md).
+For restore flow, integrity status, and backup behavior details, see [Backups](./Backups).
 
 ## Study
 
@@ -68,7 +68,7 @@ For restore flow, integrity status, and backup behavior details, see [Backups](.
 | Daily review limit | 200 | Max due cards per scope per day |
 | Auto-advance | Off | Auto-fail and advance unanswered cards |
 | Auto-advance after | 60 s | Seconds before auto-advancing (3–60) |
-| Grading buttons | Two buttons | **Two** (Again / Good) or **Four** (Again / Hard / Good / Easy). See [Grading](./Grading.md). |
+| Grading buttons | Two buttons | **Two** (Again / Good) or **Four** (Again / Hard / Good / Easy). See [Grading](./Grading). |
 | Skip button | Off | Show a Skip button (Enter) in the reviewer |
 | Randomise MCQ options | Off | Shuffle MCQ option order each time |
 | Show info by default | Off | Expand the info field on the card back |
@@ -79,13 +79,13 @@ Daily limits reset at midnight and are tracked per scope.
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| Treat folder notes as decks | On | Folder notes act as deck roots for their folder. See [Widget](./Widget.md). |
+| Treat folder notes as decks | On | Folder notes act as deck roots for their folder. See [Widget](./Widget). |
 
-## Scheduling (FSRS)
+## Scheduling FSRS
 
-Sprout uses **FSRS**. Choose a preset or edit values manually.
+LearnKit uses **FSRS**. Choose a preset or edit values manually.
 
-See [Scheduling](./Scheduling.md) for details.
+See [Scheduling](./Scheduling) for details.
 
 ### Presets
 
@@ -96,7 +96,7 @@ See [Scheduling](./Scheduling.md) for details.
 | Aggressive | 5 min, 30 min, 1 day | 10 min | 0.92 |
 | Custom | *(user-defined)* | *(user-defined)* | *(user-defined)* |
 
-### Manual options
+### Manual Options
 
 | Setting | Default | Description |
 |---------|---------|-------------|
@@ -109,19 +109,25 @@ See [Scheduling](./Scheduling.md) for details.
 | Setting | Default | Description |
 |---------|---------|-------------|
 | Ignore fenced code blocks | On | Skip card syntax inside fenced code blocks |
-| Card delimiter | Pipe `\|` | Character used to separate card fields. See [Custom Delimiters](./Custom-Delimiters.md). |
+| Card delimiter | Pipe `\|` | Character used to separate card fields. See [Custom Delimiters](./Custom-Delimiters). |
 | ID placement | Above | Place card anchors above or below the card block |
 
 If the delimiter is changed, card parsing behavior changes on next sync.
 
-## Danger zone
+## Danger Zone
 
 | Button | Effect |
 |--------|--------|
-| Delete all flashcards | Removes **all** Sprout data from every note and the plugin store. This cannot be undone. |
+| Delete all flashcards | Removes **all** LearnKit data from every note and the plugin store. This cannot be undone. |
 
-## Quarantined cards
+## Quarantine
 
 If a card cannot be parsed (for example, malformed syntax), it is listed here with its ID and error.
 
-Use **Open note** to jump to the source, fix the syntax, then sync again. See [Syncing](./Syncing.md).
+Use **Open note** to jump to the source, fix the syntax, then sync again. See [Syncing](./Syncing).
+
+## Related
+
+- [Settings Explained](./Settings-Explained)
+- [Reminders](./Reminders)
+- [Gatekeeper](./Gatekeeper)

@@ -1,0 +1,64 @@
+/* ============================================================================
+   TOKENS / CORE — foundational, theme-agnostic design tokens
+   These are stable aliases intended for future theme packs.
+   ========================================================================== */
+
+:root {
+  /* Spacing scale (Tailwind-compatible values) */
+  --lk-space-0: 0rem;
+  --lk-space-px: 1px;
+  --lk-space-0_5: 0.125rem;
+  --lk-space-1: 0.25rem;
+  --lk-space-1_5: 0.375rem;
+  --lk-space-2: 0.5rem;
+  --lk-space-2_5: 0.625rem;
+  --lk-space-3: 0.75rem;
+  --lk-space-3_5: 0.875rem;
+  --lk-space-4: 1rem;
+  --lk-space-5: 1.25rem;
+  --lk-space-6: 1.5rem;
+  --lk-space-8: 2rem;
+  --lk-space-10: 2.5rem;
+
+  /* Radius scale */
+  --lk-radius-sm: 8px;
+  --lk-radius-md: 12px;
+  --lk-radius-lg: 16px;
+  --lk-radius-xl: 30px;
+
+  /* Sizing */
+  --lk-row-height-default: 42px;
+  --lk-shell-gutter-desktop: 80px;
+  --lk-shell-padding-desktop: 16px;
+  --lk-shell-padding-mobile: 16px;
+  --lk-title-strip-padding-desktop: 40px 20px 20px;
+  --lk-view-title-strip-padding-desktop: 50px 80px 30px;
+  --lk-title-strip-padding-mobile: 16px 16px 12px;
+
+  /* Elevation tokens */
+  --lk-shadow-modal: 0 16px 48px rgba(0, 0, 0, 0.24), 0 2px 8px rgba(0, 0, 0, 0.12);
+  --lk-shadow-popover-sm: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --lk-shadow-input-sm: 0 4px 10px rgba(0, 0, 0, 0.12);
+  --lk-shadow-popover-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --lk-shadow-popover-md-dark: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --lk-shadow-popover-subtle: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --lk-shadow-popover-subtle-dark: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+  /* Z-index tokens */
+  --lk-z-modal-container: 1000;
+  --lk-z-popover-overlay: 999999;
+  --lk-z-modal-top: 2147483001; /* existing value */
+  --lk-z-modal-menu: 1000002; /* new token for modal menu */
+  --lk-z-max-minus-1: 2147483646;
+  --lk-z-max: 2147483647;
+
+  --lk-z-analytics-card-open: 1000000;
+  --lk-z-analytics-popover: 1000001;
+  --lk-z-analytics-row-open: 1000002;
+  --lk-z-analytics-info: 1000003;
+  --lk-z-analytics-info-hover: 1000004;
+}
+
+body {
+  --radius-m: var(--lk-radius-lg);
+}

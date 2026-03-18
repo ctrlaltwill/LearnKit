@@ -148,12 +148,12 @@ export function createMobileClozeButtons(textarea: HTMLTextAreaElement): HTMLEle
 
   const repeatBtn = document.createElement("button");
   repeatBtn.type = "button";
-  repeatBtn.className = "bc btn-outline h-7 px-2 text-sm inline-flex items-center justify-center sprout-cloze-mobile-btn sprout-is-hidden";
+  repeatBtn.className = "bc sprout-btn-toolbar h-7 px-2 text-sm inline-flex items-center justify-center sprout-cloze-mobile-btn sprout-is-hidden";
   repeatBtn.textContent = "Repeat cloze";
 
   const addBtn = document.createElement("button");
   addBtn.type = "button";
-  addBtn.className = "bc btn-outline h-7 px-2 text-sm inline-flex items-center justify-center sprout-cloze-mobile-btn";
+  addBtn.className = "bc sprout-btn-toolbar h-7 px-2 text-sm inline-flex items-center justify-center sprout-cloze-mobile-btn";
   addBtn.textContent = "Add cloze";
 
   const refreshState = () => {
@@ -183,16 +183,19 @@ export function createMobileClozeButtons(textarea: HTMLTextAreaElement): HTMLEle
   return wrap;
 }
 
-function remToPx(rem: number): number {
-  const rootFontPx = Number.parseFloat(window.getComputedStyle(document.documentElement).fontSize || "16");
-  return Math.max(1, Math.round(rem * (Number.isFinite(rootFontPx) ? rootFontPx : 16)));
-}
-
 function fieldMinHeightPx(field: "title" | "question" | "answer" | "info"): number {
-  return remToPx(4.5);
+  return 100;
 }
 
-function attachFlagPreviewOverlay(control: HTMLInputElement | HTMLTextAreaElement, minControlHeight = 38): HTMLElement {
+function fieldMaxHeightPx(field: "title" | "question" | "answer" | "info"): number {
+  return 100;
+}
+
+export function attachFlagPreviewOverlay(
+  control: HTMLInputElement | HTMLTextAreaElement,
+  minControlHeight = 100,
+  maxControlHeight = Number.POSITIVE_INFINITY,
+): HTMLElement {
   const wrap = document.createElement("div");
   wrap.className = `bc sprout-flag-editor-wrap${control instanceof HTMLTextAreaElement ? " sprout-flag-editor-wrap--multiline" : ""}`;
 
@@ -217,8 +220,14 @@ function attachFlagPreviewOverlay(control: HTMLInputElement | HTMLTextAreaElemen
   const applyControlHeight = (height: number) => {
     setCssProps(control, "min-height", `${height}px`);
     setCssProps(control, "height", `${height}px`);
+    if (Number.isFinite(maxControlHeight)) {
+      setCssProps(control, "max-height", `${Math.max(minControlHeight, Math.floor(maxControlHeight))}px`);
+    }
     if (control instanceof HTMLInputElement) {
       setCssProps(control, "max-height", `${height}px`);
+    }
+    if (control instanceof HTMLTextAreaElement) {
+      setCssProps(control, "overflow-y", "auto");
     }
   };
 
@@ -229,14 +238,20 @@ function attachFlagPreviewOverlay(control: HTMLInputElement | HTMLTextAreaElemen
     const scrollbarFudgePx = 5;
     const controlHeight = measureControlHeight();
     const overlayHeight = Math.ceil(overlay.scrollHeight || 0);
-    const previewHeight = Math.max(
+    const rawPreviewHeight = Math.max(
       minControlHeight,
       controlHeight + scrollbarFudgePx,
       overlayHeight,
     );
+    const previewHeight = Number.isFinite(maxControlHeight)
+      ? Math.min(Math.max(minControlHeight, Math.floor(maxControlHeight)), rawPreviewHeight)
+      : rawPreviewHeight;
     if (previewHeight === lastPreviewHeight) return;
     lastPreviewHeight = previewHeight;
     wrap.style.setProperty("--sprout-flag-preview-height", `${previewHeight}px`);
+    if (Number.isFinite(maxControlHeight)) {
+      wrap.style.setProperty("--sprout-flag-preview-max-height", `${Math.max(minControlHeight, Math.floor(maxControlHeight))}px`);
+    }
     applyControlHeight(previewHeight);
   };
 
@@ -255,13 +270,38 @@ function attachFlagPreviewOverlay(control: HTMLInputElement | HTMLTextAreaElemen
     window.setTimeout(syncPreviewHeight, 80);
   };
 
+  const focusEditorFromPreview = () => {
+    control.focus({ preventScroll: true });
+    if (control instanceof HTMLInputElement || control instanceof HTMLTextAreaElement) {
+      const end = control.value.length;
+      control.setSelectionRange(end, end);
+    }
+  };
+
+  wrap.addEventListener("mousedown", (ev: MouseEvent) => {
+    if (ev.button !== 0) return;
+    if (document.activeElement === control) return;
+    ev.preventDefault();
+    focusEditorFromPreview();
+  });
+
   overlay.addEventListener("pointerdown", (ev: PointerEvent) => {
     if (ev.button !== 0) return;
     ev.preventDefault();
-    control.focus();
+    focusEditorFromPreview();
   }, true);
 
-  overlay.addEventListener("click", () => control.focus());
+  overlay.addEventListener("click", () => focusEditorFromPreview());
+
+  const handleDocumentPointerDown = (ev: PointerEvent) => {
+    const target = ev.target;
+    if (!(target instanceof Node)) return;
+    if (wrap.contains(target)) return;
+    if (document.activeElement === control) {
+      control.blur();
+    }
+  };
+  document.addEventListener("pointerdown", handleDocumentPointerDown, true);
 
   control.addEventListener("focus", () => {
     wrap.classList.add("sprout-flag-editor--focused");
@@ -285,6 +325,7 @@ function attachFlagPreviewOverlay(control: HTMLInputElement | HTMLTextAreaElemen
       window.cancelAnimationFrame(pendingSyncRaf);
       pendingSyncRaf = 0;
     }
+    document.removeEventListener("pointerdown", handleDocumentPointerDown, true);
     ro?.disconnect();
     ro = null;
     detachObserver?.disconnect();
@@ -314,7 +355,7 @@ function attachFlagPreviewOverlay(control: HTMLInputElement | HTMLTextAreaElemen
 // ── Inline formatting shortcuts ────────────────────────────────────────────
 // Wrap selected text (or insert empty markers) for standard Obsidian markdown:
 //   Cmd/Ctrl+B  → **bold**
-//   Cmd/Ctrl+I  → *italic*
+//   Cmd/Ctrl+I  → _italic_
 
 type FormatMarker = { marker: string };
 
@@ -324,7 +365,7 @@ const FORMAT_SHORTCUTS: Array<{
   marker: string;
 }> = [
   { key: "b", shift: false, marker: "**" },
-  { key: "i", shift: false, marker: "*" },
+  { key: "i", shift: false, marker: "_" },
 ];
 
 function getFormatShortcut(ev: KeyboardEvent): FormatMarker | null {
@@ -393,6 +434,14 @@ function currentLineInfo(textarea: HTMLTextAreaElement) {
  * Returns true if the event was handled (and should not propagate).
  */
 export function handleTabInTextarea(textarea: HTMLTextAreaElement, ev: KeyboardEvent): boolean {
+  const fmt = getFormatShortcut(ev);
+  if (fmt) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    applyFormatShortcut(textarea, fmt);
+    return true;
+  }
+
   // Enforce tab-only indentation for markdown lists.
   if (ev.key === " " && !ev.shiftKey && !ev.ctrlKey && !ev.metaKey && !ev.altKey) {
     const { line, cursorCol } = currentLineInfo(textarea);
@@ -796,8 +845,12 @@ export function createCardEditor(config: CardEditorConfig): CardEditorResult {
       field.editable && (field.key === "title" || field.key === "question" || field.key === "answer" || field.key === "info")
         ? fieldMinHeightPx(field.key)
         : 38;
+    const modalFieldMax =
+      field.editable && (field.key === "title" || field.key === "question" || field.key === "answer" || field.key === "info")
+        ? fieldMaxHeightPx(field.key)
+        : Number.POSITIVE_INFINITY;
 
-    wrapper.appendChild(shouldPreviewFlags ? attachFlagPreviewOverlay(input, modalFieldMin) : input);
+    wrapper.appendChild(shouldPreviewFlags ? attachFlagPreviewOverlay(input, modalFieldMin, modalFieldMax) : input);
     inputEls[field.key] = input;
     if (input instanceof HTMLTextAreaElement) {
       attachFormatShortcuts(input);
@@ -973,7 +1026,7 @@ export function createGroupPickerField(initialValue: string, cardsCount: number,
   searchWrap.appendChild(search);
 
   const panel = document.createElement("div");
-  panel.className = "bc rounded-lg border border-border bg-popover text-popover-foreground p-0 flex flex-col sprout-pointer-auto";
+  panel.className = "bc rounded-md border border-border bg-popover text-popover-foreground p-0 flex flex-col sprout-pointer-auto";
   panel.appendChild(searchWrap);
   panel.appendChild(list);
 
@@ -1190,7 +1243,7 @@ function createOqEditor(card: CardRecord) {
   const initialSteps = Array.isArray(card.oqSteps) ? [...card.oqSteps] : ["", ""];
 
   const container = document.createElement("div");
-  container.className = "bc flex flex-col gap-1";
+  container.className = "bc flex flex-col gap-2";
 
   const label = document.createElement("label");
   label.className = "bc text-sm font-medium inline-flex items-center gap-1";
@@ -1259,13 +1312,12 @@ function createOqEditor(card: CardRecord) {
     input.rows = 1;
     input.placeholder = `Step ${idx + 1}`;
     input.value = value;
-    const autoGrow = () => {
-      setCssProps(input, "height", "auto");
-      setCssProps(input, "height", `${Math.max(38, input.scrollHeight)}px`);
-    };
-    input.addEventListener("input", autoGrow);
-    autoGrow();
-    row.appendChild(attachFlagPreviewOverlay(input));
+      setCssProps(input, {
+        "min-height": "36px",
+        height: "36px",
+        "max-height": "36px",
+      });
+      row.appendChild(attachFlagPreviewOverlay(input, 36, 36));
 
     // Delete button
     const delBtn = document.createElement("button");
@@ -1338,7 +1390,7 @@ function createOqEditor(card: CardRecord) {
 
   // "Add step" button
   const addRow = document.createElement("div");
-  addRow.className = "bc flex items-center gap-2";
+  addRow.className = "bc flex items-center gap-2 sprout-oq-add-row";
   const addInput = document.createElement("input");
   addInput.type = "text";
   addInput.className = "bc input flex-1 text-sm sprout-input-fixed";
@@ -1363,7 +1415,7 @@ function createOqEditor(card: CardRecord) {
     renumber();
     addInput.value = "";
   });
-  addRow.appendChild(attachFlagPreviewOverlay(addInput));
+  addRow.appendChild(attachFlagPreviewOverlay(addInput, 36, 36));
   container.appendChild(addRow);
 
   const getSteps = (): string[] => {
@@ -1381,7 +1433,7 @@ function createMcqEditor(card: CardRecord) {
   const correctSet = new Set(getCorrectIndices(card));
 
   const container = document.createElement("div");
-  container.className = "bc flex flex-col gap-1";
+  container.className = "bc flex flex-col gap-2";
 
   const label = document.createElement("label");
   label.className = "bc text-sm font-medium inline-flex items-center gap-1";
@@ -1427,7 +1479,7 @@ function createMcqEditor(card: CardRecord) {
     input.className = "bc input flex-1 text-sm sprout-input-fixed";
     input.placeholder = "Enter an answer option";
     input.value = value;
-    row.appendChild(attachFlagPreviewOverlay(input));
+    row.appendChild(attachFlagPreviewOverlay(input, 36, 36));
 
     const removeBtn = document.createElement("button");
     removeBtn.type = "button";
@@ -1477,8 +1529,8 @@ function createMcqEditor(card: CardRecord) {
   });
 
   const addInputWrap = document.createElement("div");
-  addInputWrap.className = "bc flex items-center gap-2";
-  addInputWrap.appendChild(attachFlagPreviewOverlay(addInput));
+  addInputWrap.className = "bc flex items-center gap-2 sprout-mcq-add-row";
+  addInputWrap.appendChild(attachFlagPreviewOverlay(addInput, 36, 36));
   container.appendChild(addInputWrap);
 
   // Populate from existing card

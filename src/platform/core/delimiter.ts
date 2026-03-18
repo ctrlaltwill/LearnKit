@@ -39,7 +39,7 @@ export type DelimiterChar = "|" | "@" | "~" | ";";
 
 /** Labels shown in the settings dropdown. */
 export const DELIMITER_OPTIONS: Record<DelimiterChar, string> = {
-  "|": "|  Pipe (default)",
+  "|": "|  Pipe",
   "@": "@  At sign",
   "~": "~  Tilde",
   ";": ";  Semicolon",
@@ -205,6 +205,8 @@ let _FIELD_LINE_SETTINGS_RE: RegExp;
 let _FLASHCARD_HEADER_CARD_RE: RegExp;
 let _FLASHCARD_HEADER_FIELD_RE: RegExp;
 
+const ANCHOR_PREFIX_PATTERN = "(?:learnkit|sprout)";
+
 function _rebuildRegexes() {
   const d = escapeDelimiterRe(_delim);
 
@@ -219,7 +221,7 @@ function _rebuildRegexes() {
 
   // parser.ts — any header/anchor: ^(?:\^sprout-\d{9}|(?:RQ|Q|MCQ|CQ|IO|OQ|T|A|O|I|G|C|\d{1,2})\s*<d>)\s*
   _ANY_HEADER_DELIM_RE = new RegExp(
-    `^(?:\\^sprout-\\d{9}|(?:RQ|Q|MCQ|CQ|IO|OQ|T|A|O|I|G|C|\\d{1,2})\\s*${d})\\s*`,
+    `^(?:\\^${ANCHOR_PREFIX_PATTERN}-\\d{9}|(?:RQ|Q|MCQ|CQ|IO|OQ|T|A|O|I|G|C|\\d{1,2})\\s*${d})\\s*`,
   );
 
   // reading-helpers.ts — field start (relaxed): ^([A-Za-z]+|\d{1,2})\s*<d>\s*(.*)$

@@ -108,7 +108,7 @@ In **Settings → Cards**, you can configure how IO cards are revealed during re
 ## How cards are generated
 
 - The original `IO` card block becomes a **parent** card (not reviewable itself).
-- Sprout generates one **child** card per mask or group (depending on save mode).
+- LearnKit generates one **child** card per mask or group (depending on save mode).
 - Children inherit the parent's title and info fields.
 
 ## Review

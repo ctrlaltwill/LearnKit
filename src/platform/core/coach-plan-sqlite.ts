@@ -1,0 +1,335 @@
+import type { Database } from "sql.js";
+import type SproutPlugin from "../../main";
+import { getSqlJs } from "../integrations/anki/anki-sql";
+import { getSchedulingDirPath, copyDbToVaultSyncFolder, reconcileFromVaultSync } from "./sqlite-store";
+
+const COACH_DB = "coach.db";
+
+export type CoachScopeType = "vault" | "folder" | "note" | "group";
+export type CoachIntensity = "relaxed" | "balanced" | "aggressive";
+
+export type CoachPlanRow = {
+  scope_type: CoachScopeType;
+  scope_key: string;
+  scope_name: string;
+  plan_name: string;
+  scope_data: string;
+  exam_date_utc: number;
+  intensity: CoachIntensity;
+  daily_flashcard_target: number;
+  daily_note_target: number;
+  status: "on-track" | "at-risk" | "behind";
+  updated_at: number;
+};
+
+export type CoachProgressRow = {
+  day_utc: number;
+  scope_type: CoachScopeType;
+  scope_key: string;
+  kind: "flashcard" | "note";
+  count: number;
+};
+
+function asText(value: unknown, fallback = ""): string {
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean" || typeof value === "bigint") return String(value);
+  return fallback;
+}
+
+function joinPath(...parts: string[]): string {
+  return parts
+    .filter((p) => typeof p === "string" && p.length)
+    .join("/")
+    .replace(/\/+/g, "/");
+}
+
+function getCoachDbPath(plugin: SproutPlugin): string {
+  return joinPath(getSchedulingDirPath(plugin), COACH_DB);
+}
+
+async function ensureDir(adapter: { exists?: (path: string) => Promise<boolean>; mkdir?: (path: string) => Promise<void> }, path: string): Promise<void> {
+  if (!adapter.exists || !adapter.mkdir) return;
+  if (await adapter.exists(path)) return;
+  await adapter.mkdir(path);
+}
+
+async function readBinary(adapter: {
+  readBinary?: (path: string) => Promise<ArrayBuffer>;
+}, path: string): Promise<Uint8Array | null> {
+  if (!adapter.readBinary) return null;
+  try {
+    const buff = await adapter.readBinary(path);
+    return new Uint8Array(buff);
+  } catch {
+    return null;
+  }
+}
+
+async function writeBinary(adapter: {
+  writeBinary?: (path: string, data: ArrayBuffer) => Promise<void>;
+}, path: string, bytes: Uint8Array): Promise<void> {
+  if (!adapter.writeBinary) throw new Error("No binary write support in adapter");
+  await adapter.writeBinary(path, bytes.slice().buffer);
+}
+
+function runSchema(db: Database): void {
+  db.run("PRAGMA journal_mode = DELETE;");
+  db.run("PRAGMA foreign_keys = ON;");
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS coach_plan (
+      scope_type TEXT NOT NULL,
+      scope_key TEXT NOT NULL,
+      scope_name TEXT NOT NULL,
+      plan_name TEXT NOT NULL DEFAULT '',
+      exam_date_utc INTEGER NOT NULL,
+      intensity TEXT NOT NULL DEFAULT 'balanced',
+      daily_flashcard_target INTEGER NOT NULL DEFAULT 0,
+      daily_note_target INTEGER NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'on-track',
+      updated_at INTEGER NOT NULL,
+      PRIMARY KEY (scope_type, scope_key)
+    );
+  `);
+
+  // Migration: add plan_name if missing (existing databases)
+  try {
+    db.run("ALTER TABLE coach_plan ADD COLUMN plan_name TEXT NOT NULL DEFAULT ''");
+  } catch {
+    // Column already exists
+  }
+
+  // Migration: add scope_data if missing (existing databases)
+  try {
+    db.run("ALTER TABLE coach_plan ADD COLUMN scope_data TEXT NOT NULL DEFAULT ''");
+  } catch {
+    // Column already exists
+  }
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS coach_progress (
+      day_utc INTEGER NOT NULL,
+      scope_type TEXT NOT NULL,
+      scope_key TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      count INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (day_utc, scope_type, scope_key, kind)
+    );
+  `);
+
+  db.run("CREATE INDEX IF NOT EXISTS idx_coach_plan_exam ON coach_plan(exam_date_utc);");
+  db.run("CREATE INDEX IF NOT EXISTS idx_coach_progress_day ON coach_progress(day_utc);");
+}
+
+export class CoachPlanSqlite {
+  private plugin: SproutPlugin;
+  private db: Database | null = null;
+  private opened = false;
+
+  constructor(plugin: SproutPlugin) {
+    this.plugin = plugin;
+  }
+
+  async open(): Promise<void> {
+    if (this.opened) return;
+
+    const adapter = this.plugin.app?.vault?.adapter as {
+      exists?: (path: string) => Promise<boolean>;
+      mkdir?: (path: string) => Promise<void>;
+      readBinary?: (path: string) => Promise<ArrayBuffer>;
+      writeBinary?: (path: string, data: ArrayBuffer) => Promise<void>;
+    } | null;
+
+    if (!adapter) throw new Error("No vault adapter available");
+
+    const SQL = await getSqlJs();
+    const dir = getSchedulingDirPath(this.plugin);
+    const path = getCoachDbPath(this.plugin);
+
+    await ensureDir(adapter, dir);
+    await reconcileFromVaultSync(this.plugin, COACH_DB, path);
+
+    const exists = adapter.exists ? await adapter.exists(path) : false;
+    if (exists) {
+      const bytes = await readBinary(adapter, path);
+      this.db = bytes && bytes.byteLength > 0 ? new SQL.Database(bytes) : new SQL.Database();
+    } else {
+      this.db = new SQL.Database();
+    }
+
+    runSchema(this.db);
+    this.opened = true;
+  }
+
+  async persist(): Promise<void> {
+    if (!this.opened) await this.open();
+    if (!this.db) return;
+
+    const adapter = this.plugin.app?.vault?.adapter as {
+      mkdir?: (path: string) => Promise<void>;
+      exists?: (path: string) => Promise<boolean>;
+      writeBinary?: (path: string, data: ArrayBuffer) => Promise<void>;
+    } | null;
+    if (!adapter) return;
+
+    const dir = getSchedulingDirPath(this.plugin);
+    const path = getCoachDbPath(this.plugin);
+
+    await ensureDir(adapter, dir);
+
+    const bytes = this.db.export();
+    await writeBinary(adapter, path, bytes);
+    await copyDbToVaultSyncFolder(this.plugin, COACH_DB, bytes);
+  }
+
+  async close(): Promise<void> {
+    if (!this.opened) return;
+    await this.persist();
+    this.db?.close();
+    this.db = null;
+    this.opened = false;
+  }
+
+  /**
+   * Close the in-memory database **without** persisting to disk.
+   * Use this when you want to discard a stale in-memory snapshot
+   * and re-open from disk to pick up writes made by another instance.
+   */
+  discard(): void {
+    if (!this.opened) return;
+    this.db?.close();
+    this.db = null;
+    this.opened = false;
+  }
+
+  listPlans(): CoachPlanRow[] {
+    if (!this.db) return [];
+    const out: CoachPlanRow[] = [];
+    const stmt = this.db.prepare(
+      `SELECT scope_type, scope_key, scope_name, plan_name, scope_data, exam_date_utc, intensity,
+              daily_flashcard_target, daily_note_target, status, updated_at
+         FROM coach_plan
+        ORDER BY exam_date_utc ASC, scope_name ASC`,
+    );
+
+    try {
+      while (stmt.step()) {
+        const row = stmt.getAsObject() as Record<string, unknown>;
+        out.push({
+          scope_type: asText(row.scope_type, "vault") as CoachScopeType,
+          scope_key: asText(row.scope_key),
+          scope_name: asText(row.scope_name),
+          plan_name: asText(row.plan_name),
+          scope_data: asText(row.scope_data),
+          exam_date_utc: Number(row.exam_date_utc || 0),
+          intensity: asText(row.intensity, "balanced") as CoachIntensity,
+          daily_flashcard_target: Number(row.daily_flashcard_target || 0),
+          daily_note_target: Number(row.daily_note_target || 0),
+          status: asText(row.status, "on-track") as CoachPlanRow["status"],
+          updated_at: Number(row.updated_at || 0),
+        });
+      }
+    } finally {
+      stmt.free();
+    }
+
+    return out;
+  }
+
+  upsertPlan(row: CoachPlanRow): void {
+    if (!this.db) return;
+    this.db.run(
+      `INSERT INTO coach_plan(
+         scope_type, scope_key, scope_name, plan_name, scope_data, exam_date_utc, intensity,
+         daily_flashcard_target, daily_note_target, status, updated_at
+       ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(scope_type, scope_key) DO UPDATE SET
+         scope_name=excluded.scope_name,
+         plan_name=excluded.plan_name,
+         scope_data=excluded.scope_data,
+         exam_date_utc=excluded.exam_date_utc,
+         intensity=excluded.intensity,
+         daily_flashcard_target=excluded.daily_flashcard_target,
+         daily_note_target=excluded.daily_note_target,
+         status=excluded.status,
+         updated_at=excluded.updated_at`,
+      [
+        row.scope_type,
+        row.scope_key,
+        row.scope_name,
+        row.plan_name,
+        row.scope_data,
+        row.exam_date_utc,
+        row.intensity,
+        row.daily_flashcard_target,
+        row.daily_note_target,
+        row.status,
+        row.updated_at,
+      ],
+    );
+  }
+
+  deletePlan(scopeType: CoachScopeType, scopeKey: string): void {
+    if (!this.db) return;
+    this.db.run("DELETE FROM coach_plan WHERE scope_type = ? AND scope_key = ?", [scopeType, scopeKey]);
+  }
+
+  incrementProgress(dayUtc: number, scopeType: CoachScopeType, scopeKey: string, kind: CoachProgressRow["kind"], by = 1): void {
+    if (!this.db) return;
+    const delta = Math.max(1, Math.floor(Number(by) || 1));
+    this.db.run(
+      `INSERT INTO coach_progress(day_utc, scope_type, scope_key, kind, count)
+       VALUES(?, ?, ?, ?, ?)
+       ON CONFLICT(day_utc, scope_type, scope_key, kind) DO UPDATE SET
+         count = count + excluded.count`,
+      [dayUtc, scopeType, scopeKey, kind, delta],
+    );
+  }
+
+  getProgress(dayUtc: number, scopeType: CoachScopeType, scopeKey: string): { flashcard: number; note: number } {
+    if (!this.db) return { flashcard: 0, note: 0 };
+
+    let flashcard = 0;
+    let note = 0;
+
+    const stmt = this.db.prepare(
+      `SELECT kind, count
+         FROM coach_progress
+        WHERE day_utc = ? AND scope_type = ? AND scope_key = ?`,
+    );
+
+    try {
+      stmt.bind([dayUtc, scopeType, scopeKey]);
+      while (stmt.step()) {
+        const row = stmt.getAsObject() as Record<string, unknown>;
+        const kind = asText(row.kind);
+        const count = Number(row.count || 0);
+        if (kind === "flashcard") flashcard += count;
+        if (kind === "note") note += count;
+      }
+    } finally {
+      stmt.free();
+    }
+
+    return { flashcard, note };
+  }
+
+  countProgressDays(scopeType: CoachScopeType, scopeKey: string): number {
+    if (!this.db) return 0;
+    const stmt = this.db.prepare(
+      `SELECT COUNT(DISTINCT day_utc) AS cnt
+         FROM coach_progress
+        WHERE scope_type = ? AND scope_key = ? AND count > 0`,
+    );
+    try {
+      stmt.bind([scopeType, scopeKey]);
+      if (stmt.step()) {
+        const row = stmt.getAsObject() as Record<string, unknown>;
+        return Number(row.cnt || 0);
+      }
+    } finally {
+      stmt.free();
+    }
+    return 0;
+  }
+}

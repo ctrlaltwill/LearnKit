@@ -6,1019 +6,1298 @@
 /* ---- Browser table ---- */
 
 /* Browser table should align with other content */
-.sprout .sprout-browser-table-wrap {
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-  margin-left: 40px;
-  margin-right: 40px;
-  box-sizing: border-box;
-  flex: 1 1 0% !important;
-  min-height: 0 !important;
-  max-height: 100% !important;
-  overflow: auto !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-  position: relative !important;
-  isolation: isolate !important;
+.sprout .lk-browser-card {
+  margin: 0;
+  border: 1px solid var(--color-base-30);
+  border-radius: var(--radius-m);
+  background-color: color-mix(in oklab, var(--background) 80%, transparent 20%);
+  transition: background-color 0.2s ease;
 }
 
-.sprout .sprout-browser-view {
+.sprout .lk-browser-card:hover {
+  background-color: var(--background);
+}
+
+.sprout .lk-browser-search-card,
+.sprout .lk-browser-controls-card,
+.sprout .lk-browser-bottom-card {
+  padding: 10px 20px;
+}
+
+.sprout .lk-browser-table-card {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1 1 0%;
+}
+
+.sprout .lk-browser-table-wrap {
+  padding-left: 0;
+  padding-right: 0;
+  margin-left: 0;
+  margin-right: 0;
+  box-sizing: border-box;
+  flex: 1 1 0%;
   min-height: 0;
   max-height: 100%;
-  gap: calc(var(--spacing)*4) !important;
+  overflow: auto;
+  max-width: 100%;
+  position: relative;
+  isolation: isolate;
+  background-color: transparent;
+  border: 0;
+  border-radius: 0;
 }
 
-.sprout .sprout-browser-width {
-  width: 100% !important;
-  max-width: var(--sprout-browser-max-width, none) !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
+.sprout .lk-browser-view {
+  min-height: 0;
+  max-height: none;
+  margin-top: 0;
+  gap: 16px;
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+  --lk-browser-surface: var(--background);
+  --lk-browser-surface-hover: var(--background);
+  --lk-browser-header-bg: color-mix(in oklab, var(--theme-base-10) 30%, var(--background) 70%);
+  --lk-browser-border-soft: var(--color-base-15);
+  --lk-browser-border-strong: var(--color-base-25);
+  --lk-browser-row-hover: var(--color-base-00);
+  --lk-browser-row-hover-border: var(--color-base-35);
 }
 
-.sprout .sprout-pointer-none {
-  pointer-events: none !important;
+/* ---- Density toggle ---- */
+
+.sprout .lk-browser-density-toggle {
+  align-self: center;
 }
 
-.sprout .sprout-is-invisible {
-  visibility: hidden !important;
+.sprout .lk-browser-density-btn {
+  min-width: 0;
+  white-space: nowrap;
+  font-size: var(--font-ui-small) !important;
+  padding: 6px 14px !important;
+  min-height: 32px !important;
+  height: 32px !important;
+  border-radius: var(--radius-md) !important;
 }
 
-.sprout .sprout-opacity-60 {
-  opacity: 0.6 !important;
+.sprout .lk-browser-density-btn-active {
+  pointer-events: none;
 }
 
-.sprout .sprout-icon-scale-85 {
-  transform: scale(0.85) !important;
+/* ---- Compact density overrides ---- */
+
+.sprout [data-lk-browser-density="compact"] .lk-browser-th {
+  padding-top: 4px;
+  padding-bottom: 4px;
+  font-size: var(--sprout-font-2xs);
 }
 
-.sprout .sprout-browser-sort-icon {
-  display: inline-flex;
-  opacity: 1;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+.sprout [data-lk-browser-density="compact"] .lk-browser-cell {
+  padding-top: 2px;
+  padding-bottom: 2px;
+  font-size: var(--sprout-font-2xs);
+  height: auto;
+  vertical-align: top;
 }
 
-.sprout .sprout-browser-sort-desc {
-  transform: rotate(180deg);
+.sprout [data-lk-browser-density="compact"] .lk-browser-row {
+  height: auto;
 }
 
-.sprout .sprout-browser-row {
-  height: var(--sprout-row-height, auto) !important;
+.sprout [data-lk-browser-density="compact"] .lk-browser-textarea,
+.sprout [data-lk-browser-density="compact"] .lk-browser-contenteditable,
+.sprout [data-lk-browser-density="compact"] .lk-browser-flag-editor-wrap--multiline,
+.sprout [data-lk-browser-density="compact"] .lk-browser-tag-box {
+  padding-top: 2px;
+  padding-bottom: 2px;
+  height: var(--sprout-editor-height, 38px);
+  min-height: var(--sprout-editor-height, 38px);
+  max-height: var(--sprout-editor-height, 38px);
 }
 
-.sprout .sprout-browser-cell {
-  height: var(--sprout-row-height, auto) !important;
-  vertical-align: top !important;
+.sprout [data-lk-browser-density="compact"] .lk-browser-flag-editor-wrap {
+  height: var(--sprout-editor-height, 38px);
+  min-height: var(--sprout-editor-height, 38px);
+  max-height: var(--sprout-editor-height, 38px);
 }
 
-.sprout .sprout-browser-tbody td[data-col="location"] {
-  font-size: var(--sprout-font-2xs) !important;
-  line-height: 1.25 !important;
+.sprout [data-lk-browser-density="compact"] .lk-browser-mcq-cell,
+.sprout [data-lk-browser-density="compact"] .lk-browser-oq-cell {
+  padding: 2px 3px;
+  gap: 1px;
+  height: var(--sprout-editor-height, 56px);
+  min-height: var(--sprout-editor-height, 56px);
+  max-height: var(--sprout-editor-height, 56px);
+  overflow-y: auto;
+}
+
+.sprout [data-lk-browser-density="compact"] .lk-browser-mcq-row,
+.sprout [data-lk-browser-density="compact"] .lk-browser-oq-row {
+  min-height: 22px;
+  gap: 3px;
+}
+
+.sprout [data-lk-browser-density="compact"] .lk-browser-mcq-input,
+.sprout [data-lk-browser-density="compact"] .lk-browser-mcq-add,
+.sprout [data-lk-browser-density="compact"] .lk-browser-oq-input,
+.sprout [data-lk-browser-density="compact"] .lk-browser-oq-add {
+  height: 22px;
+  min-height: 22px;
+  padding: 1px 4px;
+  font-size: var(--sprout-font-3xs);
+}
+
+.sprout [data-lk-browser-density="compact"] .sprout-oq-grip-sm {
+  width: 12px;
+  height: 12px;
+}
+
+.sprout [data-lk-browser-density="compact"] .sprout-oq-grip-sm svg {
+  width: 10px;
+  height: 10px;
+}
+
+.sprout [data-lk-browser-density="compact"] .lk-browser-io-box {
+  padding: 2px;
+}
+
+/* Compact textarea font: override the hardcoded 0.85rem so typed-in
+   markdown text matches the compact cell density. */
+.sprout [data-lk-browser-density="compact"] textarea.lk-browser-textarea,
+.sprout [data-lk-browser-density="compact"] textarea.lk-browser-textarea--editable,
+.sprout [data-lk-browser-density="compact"] textarea.lk-browser-flag-textarea {
+  font-size: var(--sprout-font-2xs);
+  line-height: 1.35;
+}
+
+.sprout [data-lk-browser-density="compact"] .lk-browser-flag-overlay {
+  padding: 3px 6px;
+  font-size: var(--sprout-font-2xs);
+  line-height: 1.3;
+  height: 100%;
+  min-height: 100%;
+  max-height: 100%;
+}
+
+.sprout [data-lk-browser-density="compact"] .lk-browser-flag-overlay:not(.lk-browser-flag-overlay--multiline) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sprout [data-lk-browser-density="compact"] .lk-browser-img-editor-wrap,
+.sprout [data-lk-browser-density="compact"] .lk-browser-io-box {
+  height: auto;
+  min-height: 0;
+  max-height: none;
+}
+
+.sprout [data-lk-browser-density="compact"] .sprout-sticky-th {
+  height: 34px;
+  min-height: 34px;
+}
+
+.sprout [data-lk-browser-density="compact"] .lk-browser-th-inner {
+  min-height: 34px;
+}
+
+.sprout [data-lk-browser-density="compact"] .lk-browser-inline-img {
+  max-height: 60px;
+}
+
+.sprout [data-lk-browser-density="compact"] .lk-browser-select-col {
+  width: 34px;
+}
+
+.sprout [data-lk-browser-density="compact"] .lk-browser-select-th {
+  width: 34px;
+}
+
+/* Compact groups: comma-separated text, no badges */
+.sprout [data-lk-browser-density="compact"] .lk-browser-tag-box {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 2px 6px;
+  background: transparent;
+  border: none;
+}
+
+.sprout .lk-browser-tag-compact-text {
+  color: var(--text-normal);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sprout .lk-browser-tag-empty-compact {
+  color: var(--text-faint);
+}
+
+.sprout .lk-browser-width {
+  width: 100%;
+  max-width: var(--lk-browser-max-width, 1280px);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.sprout .lk-browser-row {
+  height: var(--sprout-row-height, auto);
+}
+
+.sprout .lk-browser-cell {
+  height: var(--sprout-row-height, auto);
+  vertical-align: top;
+}
+
+.sprout .lk-browser-tbody td[data-col="location"] {
+  font-size: var(--sprout-font-2xs);
+  line-height: 1.25;
 }
 
 /* Allow tooltips to overflow browser cells */
-.sprout .sprout-browser-cell[data-tooltip],
-.sprout .sprout-browser-cell:has([data-tooltip]) {
-  overflow: visible !important;
+.sprout .lk-browser-cell[data-tooltip],
+.sprout .lk-browser-cell:has([data-tooltip]) {
+  overflow: visible;
 }
 
-.sprout .sprout-browser-cell-middle {
-  vertical-align: middle !important;
+.sprout .lk-browser-empty-message {
+  width: var(--sprout-empty-width, 100%);
+  box-sizing: border-box;
+  position: absolute;
+  left: var(--sprout-empty-left, 0);
+  top: var(--sprout-empty-top, 0);
+  background: var(--background);
+  z-index: 2;
+  pointer-events: none;
 }
 
-.sprout .sprout-browser-cell-center {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+.sprout .lk-browser-textarea {
+  height: var(--sprout-editor-height, auto);
+  min-height: var(--sprout-editor-height, auto);
+  max-height: var(--sprout-editor-height, auto);
+  resize: none;
+  position: relative;
+  z-index: 0;
 }
 
-.sprout .sprout-browser-checkbox {
-  accent-color: var(--text-normal) !important;
+.sprout .lk-browser-textarea--readonly {
+  overflow: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
-.sprout .sprout-browser-id-link {
-  font-size: var(--sprout-font-2xs) !important;
-  line-height: 1 !important;
-  text-decoration: none !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 4px !important;
-  color: var(--text-normal) !important;
-  position: relative !important;
-  z-index: 0 !important;
-}
-
-.sprout .sprout-browser-id-link:hover {
-  text-decoration: underline !important;
-}
-
-.sprout .sprout-browser-id-link--suspended,
-.sprout .sprout-browser-id-link--quarantined {
-  color: rgb(239, 68, 68) !important;
-}
-
-.sprout .sprout-scale {
-  transform: scale(var(--sprout-scale, 1));
-  transform-origin: center;
-  display: inline-flex;
-  position: relative !important;
-  z-index: 0 !important;
-}
-
-.sprout .sprout-browser-empty-message {
-  width: var(--sprout-empty-width, 100%) !important;
-  box-sizing: border-box !important;
-  position: absolute !important;
-  left: var(--sprout-empty-left, 0) !important;
-  top: var(--sprout-empty-top, 0) !important;
-  background: var(--background) !important;
-  z-index: 2 !important;
-  pointer-events: none !important;
-}
-
-.sprout .sprout-browser-textarea {
-  height: var(--sprout-editor-height, auto) !important;
-  min-height: var(--sprout-editor-height, auto) !important;
-  max-height: var(--sprout-editor-height, auto) !important;
-  resize: none !important;
-  position: relative !important;
-  z-index: 0 !important;
-}
-
-.sprout .sprout-browser-textarea--readonly {
-  overflow: hidden !important;
-  white-space: pre-wrap !important;
-  overflow-wrap: anywhere !important;
-  word-break: break-word !important;
-}
-
-.sprout .sprout-browser-textarea--editable {
-  overflow: auto !important;
+.sprout .lk-browser-textarea--editable {
+  overflow: auto;
 }
 
 /* Keep browser-edit textareas at readable monospace size even when utility
    classes like .text-xs/.text-sm apply. */
-.sprout textarea.sprout-browser-textarea,
-.sprout textarea.sprout-browser-textarea--editable,
-.sprout textarea.sprout-browser-flag-textarea {
-  font-size: 0.85rem !important;
+.sprout textarea.lk-browser-textarea,
+.sprout textarea.lk-browser-textarea--editable,
+.sprout textarea.lk-browser-flag-textarea {
+  font-size: 0.85rem;
 }
 
 /* Contenteditable cells with image support */
-.sprout .sprout-browser-contenteditable {
-  height: var(--sprout-editor-height, auto) !important;
-  min-height: var(--sprout-editor-height, auto) !important;
-  max-height: var(--sprout-editor-height, auto) !important;
-  overflow: auto !important;
-  white-space: pre-wrap !important;
-  overflow-wrap: anywhere !important;
-  word-break: break-word !important;
-  position: relative !important;
-  z-index: 0 !important;
+.sprout .lk-browser-contenteditable {
+  height: var(--sprout-editor-height, auto);
+  min-height: var(--sprout-editor-height, auto);
+  max-height: var(--sprout-editor-height, auto);
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  position: relative;
+  z-index: 0;
 }
 
-.sprout .sprout-browser-contenteditable[data-placeholder]:empty::before {
-  content: attr(data-placeholder) !important;
-  color: var(--text-faint) !important;
-  pointer-events: none !important;
+.sprout .lk-browser-contenteditable[data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-faint);
+  pointer-events: none;
 }
 
 /* Inline images in browser cells */
-.sprout .sprout-browser-inline-img {
-  display: inline-block !important;
-  max-width: 100% !important;
-  max-height: 120px !important;
-  object-fit: contain !important;
-  vertical-align: middle !important;
-  margin: 4px 0 !important;
-  border-radius: var(--button-radius, var(--radius-m)) !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
-  background: var(--background-secondary) !important;
-  cursor: default !important;
-  user-select: none !important;
+.sprout .lk-browser-inline-img {
+  display: inline-block;
+  max-width: 100%;
+  max-height: 120px;
+  object-fit: contain;
+  vertical-align: middle;
+  margin: 4px 0;
+  border-radius: var(--radius-md, var(--radius-md));
+  border: var(--sprout-border-width) solid var(--sprout-border-color);
+  background: var(--background-secondary);
+  cursor: default;
+  user-select: none;
 }
 
-.sprout .sprout-browser-inline-img:hover {
-  opacity: 0.8 !important;
+.sprout .lk-browser-inline-img:hover {
+  opacity: 0.8;
 }
 
 .sprout .sprout-inline-flag {
-  width: 1em !important;
-  height: 1em !important;
-  min-width: 1em !important;
-  min-height: 1em !important;
-  border-radius: 999px !important;
-  object-fit: cover !important;
-  vertical-align: text-bottom !important;
-  display: inline-block !important;
-  margin: 0 5px !important;
+  width: 1em;
+  height: 1em;
+  min-width: 1em;
+  min-height: 1em;
+  border-radius: 999px;
+  object-fit: cover;
+  vertical-align: text-bottom;
+  display: inline-block;
+  margin: 0 5px;
 }
 
-.sprout .sprout-browser-flag-editor-wrap {
-  position: relative !important;
-  width: 100% !important;
+.sprout .lk-browser-flag-editor-wrap {
+  position: relative;
+  width: 100%;
 }
 
-.sprout .sprout-browser-flag-editor-wrap--multiline {
-  height: var(--sprout-editor-height, auto) !important;
-  min-height: var(--sprout-editor-height, auto) !important;
-  max-height: var(--sprout-editor-height, auto) !important;
+.sprout .lk-browser-flag-editor-wrap--multiline {
+  height: var(--sprout-editor-height, auto);
+  min-height: var(--sprout-editor-height, auto);
+  max-height: var(--sprout-editor-height, auto);
 }
 
-.sprout .sprout-browser-flag-input {
-  position: relative !important;
-  z-index: 0 !important;
+.sprout .lk-browser-flag-input {
+  position: relative;
+  z-index: 0;
 }
 
-.sprout .sprout-browser-flag-overlay {
-  position: absolute !important;
-  inset: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  padding: 6px 8px !important;
-  box-sizing: border-box !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
-  border-radius: var(--input-radius) !important;
-  background: var(--background-modifier-form-field) !important;
-  color: var(--text-normal) !important;
-  cursor: text !important;
-  z-index: 1 !important;
+.sprout .lk-browser-flag-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 6px 8px;
+  box-sizing: border-box;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border: var(--sprout-border-width) solid var(--sprout-border-color);
+  border-radius: var(--radius-md);
+  background: var(--background-modifier-form-field);
+  color: var(--text-normal);
+  cursor: text;
+  z-index: 1;
 }
 
-.sprout .sprout-browser-flag-overlay--multiline {
-  overflow: auto !important;
-  white-space: pre-wrap !important;
-  overflow-wrap: anywhere !important;
-  word-break: break-word !important;
-  font-size: 0.85rem !important;
-  line-height: 1.4 !important;
+.sprout .lk-browser-flag-overlay--multiline {
+  overflow: auto;
+  white-space: pre-wrap;
+  border: 1px solid var(--color-base-40) !important;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  font-size: 0.85rem;
+  line-height: 1.4;
 }
 
-.sprout .sprout-browser-flag-textarea {
-  position: absolute !important;
-  inset: 0 !important;
-  width: 100% !important;
-  opacity: 0 !important;
-  z-index: 0 !important;
-  pointer-events: none !important;
+.sprout .lk-browser-flag-textarea {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  z-index: 0;
+  pointer-events: none;
 }
 
-.sprout .sprout-browser-flag-editor--focused .sprout-browser-flag-input,
-.sprout .sprout-browser-flag-editor--focused .sprout-browser-flag-textarea {
-  opacity: 1 !important;
-  z-index: 2 !important;
-  pointer-events: auto !important;
+.sprout .lk-browser-flag-editor--focused .lk-browser-flag-input,
+.sprout .lk-browser-flag-editor--focused .lk-browser-flag-textarea {
+  opacity: 1;
+  z-index: 2;
+  pointer-events: auto;
 }
 
-.sprout .sprout-browser-flag-editor--focused .sprout-browser-flag-overlay {
-  opacity: 0 !important;
-  pointer-events: none !important;
-  z-index: 0 !important;
+.sprout .lk-browser-flag-editor--focused .lk-browser-flag-overlay {
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* ---- Markdown preview in browser overlay (rendered on blur) ---- */
-.sprout .sprout-browser-flag-overlay :is(ul, ol) {
-  margin: 0.15em 0 !important;
-  padding-inline-start: 1.5em !important;
+.sprout .lk-browser-flag-overlay :is(ul, ol) {
+  margin: 0.15em 0;
+  padding-inline-start: 1.5em;
 }
 
-.sprout .sprout-browser-flag-overlay ul { list-style-type: disc !important; }
-.sprout .sprout-browser-flag-overlay ol { list-style-type: decimal !important; }
-.sprout .sprout-browser-flag-overlay li { margin: 0 !important; padding: 0 !important; }
+.sprout .lk-browser-flag-overlay ul { list-style-type: disc; }
+.sprout .lk-browser-flag-overlay ol { list-style-type: decimal; }
+.sprout .lk-browser-flag-overlay li { margin: 0; padding: 0; }
 
-.sprout .sprout-browser-flag-overlay strong { font-weight: 700; }
-.sprout .sprout-browser-flag-overlay em { font-style: italic; }
-.sprout .sprout-browser-flag-overlay mark {
+.sprout .lk-browser-flag-overlay strong { font-weight: 700; }
+.sprout .lk-browser-flag-overlay em { font-style: italic; }
+.sprout .lk-browser-flag-overlay mark {
   background-color: var(--text-highlight-bg, rgba(255, 208, 0, 0.4));
   padding: 0 2px;
   border-radius: 2px;
 }
-.sprout .sprout-browser-flag-overlay code {
-  font-family: var(--font-monospace) !important;
+.sprout .lk-browser-flag-overlay code {
+  font-family: var(--font-monospace);
   font-size: 0.9em;
   background: var(--code-background, rgba(0, 0, 0, 0.05));
   padding: 1px 4px;
   border-radius: 3px;
 }
-.sprout .sprout-browser-flag-overlay s { text-decoration: line-through; }
-.sprout .sprout-browser-flag-overlay .internal-link {
+.sprout .lk-browser-flag-overlay s { text-decoration: line-through; }
+.sprout .lk-browser-flag-overlay .internal-link {
   color: var(--link-color, var(--text-accent));
   text-decoration: underline;
   text-decoration-style: dotted;
 }
 
-.sprout .sprout-browser-flag-overlay :is(h1, h2, h3, h4, h5, h6) {
-  margin: 0.15em 0 !important;
-  line-height: 1.35 !important;
-  font-weight: 700 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  background: transparent !important;
+.sprout .lk-browser-flag-overlay :is(h1, h2, h3, h4, h5, h6) {
+  margin: 0.15em 0;
+  line-height: 1.35;
+  font-weight: 700;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
 }
 
-.sprout .sprout-browser-flag-overlay h1 { font-size: 1.2rem !important; }
-.sprout .sprout-browser-flag-overlay h2 { font-size: 1.15rem !important; }
-.sprout .sprout-browser-flag-overlay h3 { font-size: 1.1rem !important; }
-.sprout .sprout-browser-flag-overlay h4 { font-size: 1.05rem !important; }
-.sprout .sprout-browser-flag-overlay h5 { font-size: 1rem !important; }
-.sprout .sprout-browser-flag-overlay h6 { font-size: 0.95rem !important; }
+.sprout .lk-browser-flag-overlay h1 { font-size: 1.2rem; }
+.sprout .lk-browser-flag-overlay h2 { font-size: 1.15rem; }
+.sprout .lk-browser-flag-overlay h3 { font-size: 1.1rem; }
+.sprout .lk-browser-flag-overlay h4 { font-size: 1.05rem; }
+.sprout .lk-browser-flag-overlay h5 { font-size: 1rem; }
+.sprout .lk-browser-flag-overlay h6 { font-size: 0.95rem; }
 
 /* ── Image-editor: textarea + overlay toggle ── */
-.sprout .sprout-browser-img-editor-wrap {
-  position: relative !important;
-  height: var(--sprout-editor-height, auto) !important;
-  min-height: var(--sprout-editor-height, auto) !important;
-  max-height: var(--sprout-editor-height, auto) !important;
-  width: 100% !important;
+.sprout .lk-browser-img-editor-wrap {
+  position: relative;
+  height: var(--sprout-editor-height, auto);
+  min-height: var(--sprout-editor-height, auto);
+  max-height: var(--sprout-editor-height, auto);
+  width: 100%;
 }
 
 /* Textarea sits behind, hidden until focused */
-.sprout .sprout-browser-img-textarea {
-  position: absolute !important;
-  inset: 0 !important;
-  width: 100% !important;
-  opacity: 0 !important;
-  z-index: 0 !important;
-  pointer-events: none !important;
+.sprout .lk-browser-img-textarea {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  z-index: 0;
+  pointer-events: none;
 }
 
 /* Overlay (rendered images) sits on top */
-.sprout .sprout-browser-img-overlay {
-  position: absolute !important;
-  inset: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  overflow: auto !important;
-  padding: 6px 8px !important;
-  box-sizing: border-box !important;
-  white-space: pre-wrap !important;
-  overflow-wrap: anywhere !important;
-  word-break: break-word !important;
-  font-size: var(--font-ui-small) !important;
-  line-height: 1.4 !important;
-  color: var(--text-normal) !important;
-  background: var(--background-modifier-form-field) !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
-  border-radius: var(--input-radius) !important;
-  z-index: 1 !important;
-  cursor: text !important;
+.sprout .lk-browser-img-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  padding: 6px 8px;
+  box-sizing: border-box;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  font-size: var(--font-ui-small);
+  line-height: 1.4;
+  color: var(--text-normal);
+  background: var(--background-modifier-form-field);
+  border: var(--sprout-border-width) solid var(--sprout-border-color);
+  border-radius: var(--radius-md);
+  z-index: 1;
+  cursor: text;
 }
 
 /* When focused: show textarea, hide overlay */
-.sprout .sprout-browser-img-editor--focused .sprout-browser-img-textarea {
-  opacity: 1 !important;
-  z-index: 2 !important;
-  pointer-events: auto !important;
+.sprout .lk-browser-img-editor--focused .lk-browser-img-textarea {
+  opacity: 1;
+  z-index: 2;
+  pointer-events: auto;
 }
 
-.sprout .sprout-browser-img-editor--focused .sprout-browser-img-overlay {
-  opacity: 0 !important;
-  pointer-events: none !important;
-  z-index: 0 !important;
+.sprout .lk-browser-img-editor--focused .lk-browser-img-overlay {
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* ── IO cell – textarea-styled box ── */
-.sprout .sprout-browser-io-box {
-  height: var(--sprout-editor-height, auto) !important;
-  min-height: var(--sprout-editor-height, auto) !important;
-  max-height: var(--sprout-editor-height, auto) !important;
-  overflow: auto !important;
-  padding: 4px !important;
-  box-sizing: border-box !important;
-  background: var(--background-modifier-form-field) !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
-  border-radius: var(--input-radius) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  cursor: pointer !important;
+.sprout .lk-browser-io-box {
+  height: var(--sprout-editor-height, auto);
+  min-height: var(--sprout-editor-height, auto);
+  max-height: var(--sprout-editor-height, auto);
+  overflow: auto;
+  padding: 4px;
+  box-sizing: border-box;
+  background: var(--background-modifier-form-field);
+  border: var(--sprout-border-width) solid var(--sprout-border-color);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
 
-.sprout .sprout-browser-io-box:hover {
-  border-color: var(--background-modifier-border-hover, var(--background-modifier-border)) !important;
+.sprout .lk-browser-io-box:hover {
+  border-color: var(--border, var(--background-modifier-border));
 }
 
-.sprout .sprout-browser-io-cell {
-  cursor: pointer !important;
+.sprout .lk-browser-io-cell {
+  cursor: pointer;
 }
 
-.sprout .sprout-browser-tag-cell {
-  overflow: visible !important;
-  position: relative !important;
-  z-index: 0 !important;
+.sprout .lk-browser-tag-cell {
+  overflow: visible;
+  position: relative;
+  z-index: 0;
 }
 
-.sprout .sprout-browser-tag-box {
-  height: var(--sprout-editor-height, auto) !important;
-  min-height: var(--sprout-editor-height, auto) !important;
-  max-height: var(--sprout-editor-height, auto) !important;
-  overflow: auto !important;
-  padding: 6px 8px !important;
-  box-sizing: border-box !important;
-  display: flex !important;
-  flex-wrap: wrap !important;
-  column-gap: 6px !important;
-  row-gap: 2px !important;
-  align-content: flex-start !important;
-  background: var(--background-modifier-form-field) !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
+.sprout .lk-browser-tag-box {
+  height: var(--sprout-editor-height, auto);
+  min-height: var(--sprout-editor-height, auto);
+  max-height: var(--sprout-editor-height, auto);
+  overflow: auto;
+  padding: 6px 8px;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 6px;
+  row-gap: 2px;
+  align-content: flex-start;
+  background: var(--background-modifier-form-field);
+  border: var(--sprout-border-width) solid var(--sprout-border-color);
+  box-shadow: none;
+}
+
+.sprout .lk-browser-tag-empty {
+  display: inline-flex;
+  color: #fff;
+}
+
+.sprout .lk-browser-tag-badge {
+  display: inline-flex;
+  position: relative;
+  z-index: 0;
+}
+
+.sprout .lk-browser-search-wrap {
+  width: 100%;
+}
+
+.sprout .lk-browser-search-input {
+  flex: 1 1 300px;
+  min-width: 200px;
+  width: 100%;
+  height: 36px;
+  box-sizing: border-box;
+  align-self: stretch;
+  background: var(--background) !important;
+  border: none !important;
+  border-radius: var(--radius-md) !important;
+  color: var(--text-normal);
   box-shadow: none !important;
 }
 
-.sprout .sprout-browser-tag-empty {
-  display: inline-flex !important;
-  color: #fff !important;
-}
-
-.sprout .sprout-browser-tag-badge {
-  display: inline-flex !important;
-  position: relative !important;
-  z-index: 0 !important;
-}
-
-.sprout .sprout-browser-search-wrap {
-  width: 100% !important;
-}
-
-.sprout .sprout-browser-search-input {
-  flex: 1 1 300px !important;
-  min-width: 300px !important;
-  width: 100% !important;
-  height: 36px !important;
-  box-sizing: border-box !important;
-  align-self: stretch !important;
+.sprout .lk-browser-search-input::placeholder {
+  color: var(--text-faint);
 }
 
 /* Browser search input focus */
-.sprout .sprout-browser-search-input:focus {
-  border: 1.5px solid var(--theme-accent) !important;
+.sprout .lk-browser-search-input:focus {
+  border: none !important;
   box-shadow: none !important;
-  outline: none !important;
+  outline: none;
 }
 
 /* Browser textarea focus */
-.sprout .sprout-browser-textarea:focus {
-  border: 1.5px solid var(--theme-accent) !important;
-  box-shadow: none !important;
-  outline: none !important;
+.sprout .lk-browser-textarea:focus {
+  border: 1.5px solid var(--theme-accent);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--theme-accent) 10%, transparent);
+  outline: none;
 }
 
 /* Browser tag box focus */
-.sprout .sprout-browser-tag-box:focus,
-.sprout .sprout-browser-tag-box:focus-within {
-  border: 1.5px solid var(--theme-accent) !important;
-  box-shadow: none !important;
-  outline: none !important;
+.sprout .lk-browser-tag-box:focus,
+.sprout .lk-browser-tag-box:focus-within {
+  border: 1.5px solid var(--theme-accent);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--theme-accent) 10%, transparent);
+  outline: none;
 }
 
-.sprout .sprout-browser-table {
-  table-layout: fixed !important;
-  position: relative !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
+.sprout .lk-browser-table {
+  table-layout: fixed;
+  position: relative;
+  max-width: 100%;
+  box-sizing: border-box;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
-.sprout .sprout-browser-select-col {
-  width: 42px !important;
+.sprout .lk-browser-select-col {
+  width: 42px;
 }
 
-.sprout .sprout-browser-col {
-  width: var(--sprout-col-width, 120px) !important;
+.sprout .lk-browser-col {
+  width: var(--sprout-col-width, 120px);
 }
 
-.sprout .sprout-browser-header-row {
-  vertical-align: middle !important;
-  width: 100% !important;
+.sprout .lk-browser-header-row {
+  vertical-align: middle;
+  width: 100%;
 }
 
-.sprout .sprout-browser-select-th {
-  vertical-align: middle !important;
-  width: 42px !important;
-  text-align: center !important;
+.sprout .lk-browser-select-th {
+  vertical-align: middle;
+  width: 42px;
+  text-align: center;
 }
 
-.sprout .sprout-browser-select-all {
-  margin: 0 !important;
-  accent-color: var(--text-normal) !important;
+.sprout .lk-browser-select-all {
+  margin: 0;
+  accent-color: var(--theme-accent);
 }
 
-.sprout .sprout-browser-th {
-  vertical-align: middle !important;
-  max-width: 100% !important;
-  overflow: visible !important;
-  text-overflow: clip !important;
-  white-space: normal !important;
-  box-sizing: border-box !important;
-  position: relative !important;
+.sprout .lk-browser-th {
+  vertical-align: middle;
+  max-width: 100%;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  box-sizing: border-box;
+  position: relative;
+  letter-spacing: 0.01em;
 }
 
 /* ---- Browser helper utilities ---- */
 
 .sprout .sprout-force-wrap {
-  white-space: normal !important;
-  overflow-wrap: anywhere !important;
-  word-break: keep-all !important;
-  hyphens: auto !important;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+  hyphens: auto;
 }
 
 .sprout .sprout-cell-clip {
-  overflow: hidden !important;
-  text-overflow: clip !important;
+  overflow: hidden;
+  text-overflow: clip;
 }
 
 /* Allow tooltips to overflow clipped cells */
 .sprout .sprout-cell-clip[data-tooltip],
 .sprout .sprout-cell-clip:has([data-tooltip]) {
-  overflow: visible !important;
+  overflow: visible;
 }
 
 .sprout .sprout-sticky-th {
-  position: sticky !important;
-  top: var(--sprout-sticky-top, 0px) !important;
-  z-index: 20 !important;
-  background-color: var(--background);
-  background-clip: padding-box !important;
-  box-shadow: 0 1px 0 var(--sprout-border-color) !important;
-  height: 44px !important;
-  vertical-align: middle !important;
-  padding: 0 !important;
+  position: sticky;
+  top: var(--sprout-sticky-top, 0px);
+  z-index: 20;
+  background-color: var(--lk-browser-header-bg);
+  background-clip: padding-box;
+  box-shadow: 0 1px 0 var(--lk-browser-border-soft);
+  height: 40px;
+  vertical-align: middle;
+  padding: 0;
 }
 
-.sprout .sprout-browser-io-wrap {
-  display: inline-block !important;
+.sprout .lk-browser-io-wrap {
+  display: inline-block;
 }
 
-.sprout .sprout-browser-io-frame {
-  position: relative !important;
-  display: inline-block !important;
-  border-radius: var(--radius-l) !important;
-  overflow: hidden !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
-  background: var(--background-secondary) !important;
+.sprout .lk-browser-io-frame {
+  position: relative;
+  display: inline-block;
+  border-radius: var(--radius-l);
+  overflow: hidden;
+  border: var(--sprout-border-width) solid var(--sprout-border-color);
+  background: var(--background-secondary);
 }
 
-.sprout .sprout-browser-io-img {
-  display: block !important;
-  max-width: 100% !important;
-  max-height: calc(var(--sprout-editor-height, 140px) - 12px) !important;
-  object-fit: contain !important;
-  border-radius: var(--radius-l) !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
-  background: var(--background-secondary) !important;
+.sprout .lk-browser-io-img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(var(--sprout-editor-height, 140px) - 12px);
+  object-fit: contain;
+  border-radius: var(--radius-l);
+  border: var(--sprout-border-width) solid var(--sprout-border-color);
+  background: var(--background-secondary);
 }
 
-.sprout .sprout-browser-io-img-inner {
-  display: block !important;
-  max-width: 100% !important;
-  max-height: calc(var(--sprout-editor-height, 140px) - 12px) !important;
-  object-fit: contain !important;
+.sprout .lk-browser-io-img-inner {
+  display: block;
+  max-width: 100%;
+  max-height: calc(var(--sprout-editor-height, 140px) - 12px);
+  object-fit: contain;
 }
 
-.sprout .sprout-browser-io-overlay {
-  position: absolute !important;
-  left: var(--sprout-io-left, 0) !important;
-  top: var(--sprout-io-top, 0) !important;
-  width: var(--sprout-io-width, 0) !important;
-  height: var(--sprout-io-height, 0) !important;
-  background: rgba(0, 0, 0, 0.55) !important;
-  border: 1px solid rgba(0, 0, 0, 0.25) !important;
-  border-radius: var(--button-radius, var(--radius-m)) !important;
-  pointer-events: none !important;
-  z-index: 1 !important;
+.sprout .lk-browser-io-overlay {
+  position: absolute;
+  left: var(--sprout-io-left, 0);
+  top: var(--sprout-io-top, 0);
+  width: var(--sprout-io-width, 0);
+  height: var(--sprout-io-height, 0);
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: var(--radius-md, var(--radius-md));
+  pointer-events: none;
+  z-index: 1;
 }
 
-.sprout .sprout-browser-th-inner {
-  position: absolute !important;
-  left: 0 !important;
-  top: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  min-height: 44px !important;
-  align-items: center !important;
-  display: flex !important;
-  justify-content: space-between !important;
-  height: 100% !important;
-  pointer-events: none !important;
+.sprout .lk-browser-th-inner {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  min-height: 40px;
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  height: 100%;
+  pointer-events: none;
 }
 
-.sprout .sprout-browser-th-label {
-  vertical-align: middle !important;
-  display: inline-block !important;
-  align-self: center !important;
-  justify-content: center !important;
-  width: auto !important;
-  flex: 0 1 auto !important;
-  min-width: 0 !important;
-  white-space: normal !important;
-  overflow-wrap: anywhere !important;
-  word-break: keep-all !important;
-  pointer-events: auto !important;
+.sprout .lk-browser-th-label {
+  vertical-align: middle;
+  display: inline-block;
+  align-self: center;
+  justify-content: center;
+  width: auto;
+  flex: 0 1 auto;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+  pointer-events: auto;
 }
 
-.sprout .sprout-browser-th-icon {
-  pointer-events: none !important;
+.sprout .lk-browser-th-icon {
+  pointer-events: none;
   opacity: 0;
   transition: opacity 0.2s ease, transform 0.2s ease;
-  flex-shrink: 0 !important;
-  margin-left: 10px !important;
+  flex-shrink: 0;
+  margin-left: 10px;
 }
 
-.sprout .sprout-browser-thead {
-  display: table-row-group !important;
+.sprout .lk-browser-thead {
+  display: table-row-group;
 }
 
-.sprout .sprout-browser-tbody {
-  display: block !important;
-  overflow-y: auto !important;
-  max-height: none !important;
-  width: 100% !important;
-  z-index: 1 !important;
-  position: relative !important;
-  background: var(--background) !important;
+.sprout .lk-browser-tbody {
+  display: block;
+  overflow-y: auto;
+  max-height: none;
+  width: 100%;
+  z-index: 1;
+  position: relative;
+  background: transparent;
 }
-
-
 
 .sprout .sprout-icon-scale-80 {
-  transform: scale(0.8) !important;
+  transform: scale(0.8);
 }
 
-/* Browser table hover: hide border seams by matching hover color */
-.sprout .sprout-browser-view .table tbody tr:hover {
-  background-color: var(--background-secondary) !important;
+/* Browser table hover */
+.sprout .lk-browser-view .table tbody tr {
+  background-color: var(--color-base-00);
+  transition: background-color 0.1s ease;
 }
-.sprout .sprout-browser-view .table tbody tr:hover,
-.sprout .sprout-browser-view .table tbody tr:hover td {
-  border-color: var(--background-secondary) !important;
-  border-bottom-color: var(--background-secondary) !important;
+
+.sprout .lk-browser-view .table tbody tr:hover {
+  background-color: var(--lk-browser-row-hover);
+}
+.sprout .lk-browser-view .table tbody tr:hover,
+.sprout .lk-browser-view .table tbody tr:hover td {
+  border-color: var(--lk-browser-row-hover-border);
+  border-bottom-color: var(--lk-browser-row-hover-border);
 }
 
 /* ---- Pagination + row buttons ---- */
 
-.sprout .sprout-browser-view nav[role="navigation"] .btn,
-.sprout .sprout-browser-view nav[role="navigation"] .btn-outline,
-.sprout .sprout-browser-view [data-tooltip="Rows per page"] {
-  height: 36px !important;
-  min-height: 36px !important;
+.sprout .lk-browser-view nav[role="navigation"] .btn,
+.sprout .lk-browser-view nav[role="navigation"] .sprout-btn-toolbar,
+.sprout .lk-browser-view [data-tooltip="Rows per page"] {
+  height: 32px;
+  min-height: 32px;
+  font-size: var(--font-ui-small);
 }
 
 /* ---- Search input alignment ---- */
 
-.sprout [data-sprout-browser-root="1"] .flex.items-start {
-  align-items: stretch !important;
+.sprout [data-lk-browser-root="1"] .flex.items-start {
+  align-items: stretch;
 }
-.sprout [data-sprout-browser-root="1"] .input.h-9,
-.sprout [data-sprout-browser-root="1"] input.h-9 {
-  height: 36px !important;
-  min-height: 36px !important;
-  align-self: stretch !important;
+.sprout [data-lk-browser-root="1"] .input.h-9,
+.sprout [data-lk-browser-root="1"] input.h-9 {
+  height: 36px;
+  min-height: 36px;
+  align-self: stretch;
 }
-.sprout [data-sprout-browser-root="1"] .btn-outline.h-9 {
-  height: 36px !important;
-  min-height: 36px !important;
+.sprout [data-lk-browser-root="1"] .sprout-btn-toolbar.h-9 {
+  height: 36px;
+  min-height: 36px;
 }
 
 /* ---- Table header ---- */
 
 .sprout .table thead tr:hover {
-    background-color: transparent !important;
-    color: var(--text-color);
+  background-color: transparent;
+  color: var(--text-color);
 }
 
-/* .sprout .table thead tr — padding removed: invalid declaration */
+.sprout .table th {
+  font-weight: 500;
+}
+
+.sprout .lk-browser-view .table thead th {
+  border-bottom: 1px solid var(--lk-browser-border-soft);
+  font-size: var(--font-ui-small);
+  color: var(--text-muted);
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+
+.sprout .lk-browser-view .table tbody td {
+  background-color: var(--color-base-00);
+  border-bottom: 1px solid var(--color-base-35);
+}
+
+.sprout .lk-browser-view .table tbody tr:nth-child(even) {
+  background-color: var(--color-base-00);
+}
+
+.sprout .lk-browser-view .table tbody tr:hover td {
+  color: var(--text-normal);
+}
 
 /* Deck browser table header uses muted text */
-.sprout .sprout-browser-view .table thead th,
-.sprout .sprout-browser-view .table thead th span {
-  color: var(--text-muted) !important;
+.sprout .lk-browser-view .table thead th span {
+  color: var(--text-muted);
 }
 
-/* Browser table header: selected/ordered column uses --foreground */
-.sprout-browser-header-active {
-  color: var(--foreground) !important;
+/* Browser table header: selected/ordered column uses foreground */
+.lk-browser-header-active {
+  color: var(--foreground);
 }
 
 /* Place chevron beside the word, not floated right */
-.sprout-browser-header-cell .sprout-browser-header-icon {
-  margin-left: 10px !important;
-  margin-right: 0 !important;
-  position: static !important;
-  opacity: 1 !important;
+.lk-browser-header-cell .lk-browser-header-icon {
+  margin-left: 6px;
+  margin-right: 0;
+  position: static;
+  opacity: 1;
   vertical-align: middle;
   flex-shrink: 0;
   transition: opacity 0.2s, transform 0.2s;
 }
-.sprout-browser-header-cell .items-center {
-  flex-direction: row !important;
-  justify-content: flex-start !important;
-  gap: 10px !important;
+.lk-browser-header-cell .items-center {
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 10px;
 }
 
 /* ---- Browser popover menu hover/focus/active overrides ---- */
 
-:where(.rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-0)
+.sprout :where(.rounded-md.border.border-border.bg-popover.text-popover-foreground.p-0)
   :is([role="menuitemcheckbox"], [role="menuitemradio"], [role="menuitem"]).group:hover,
-:where(.rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-0)
+.sprout :where(.rounded-md.border.border-border.bg-popover.text-popover-foreground.p-0)
   :is([role="menuitemcheckbox"], [role="menuitemradio"], [role="menuitem"]).group:focus,
-:where(.rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-0)
+.sprout :where(.rounded-md.border.border-border.bg-popover.text-popover-foreground.p-0)
   :is([role="menuitemcheckbox"], [role="menuitemradio"], [role="menuitem"]).group:active,
-:where(.rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-0)
+.sprout :where(.rounded-md.border.border-border.bg-popover.text-popover-foreground.p-0)
   :is([role="menuitemcheckbox"], [role="menuitemradio"], [role="menuitem"]).group:focus-visible {
-  background-color: var(--accent) !important;
-  color: var(--accent-foreground) !important;
+  background-color: var(--accent);
+  color: var(--accent-foreground);
 }
 
-.theme-dark :where(.rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-0)
+.theme-dark .sprout :where(.rounded-md.border.border-border.bg-popover.text-popover-foreground.p-0)
   :is([role="menuitemcheckbox"], [role="menuitemradio"], [role="menuitem"]).group:hover,
-.theme-dark :where(.rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-0)
+.theme-dark .sprout :where(.rounded-md.border.border-border.bg-popover.text-popover-foreground.p-0)
   :is([role="menuitemcheckbox"], [role="menuitemradio"], [role="menuitem"]).group:focus,
-.theme-dark :where(.rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-0)
+.theme-dark .sprout :where(.rounded-md.border.border-border.bg-popover.text-popover-foreground.p-0)
   :is([role="menuitemcheckbox"], [role="menuitemradio"], [role="menuitem"]).group:active,
-.theme-dark :where(.rounded-lg.border.border-border.bg-popover.text-popover-foreground.p-0)
+.theme-dark .sprout :where(.rounded-md.border.border-border.bg-popover.text-popover-foreground.p-0)
   :is([role="menuitemcheckbox"], [role="menuitemradio"], [role="menuitem"]).group:focus-visible {
-  background-color: #23272e !important;
-  color: var(--accent-foreground, #fff) !important;
+  background-color: #23272e;
+  color: var(--accent-foreground, #fff);
 }
 
 /* ---- IO toolbar ---- */
 
 /* Sprout IO Toolbar: Remove padding and border */
-[role="toolbar"][data-sprout-toolbar="1"] {
-  padding: 0 !important;
-  border: none !important;
+.sprout [role="toolbar"][data-sprout-toolbar="1"] {
+  padding: 0;
+  border: none;
 }
 
 /* Make Hide All and Hide One buttons black */
-.btn-outline[data-tooltip="Hide All"],
-.btn-outline[data-tooltip="Hide One"] {
-  background: #111 !important;
-  color: #fff !important;
-  border-color: #111 !important;
+.sprout .sprout-btn-toolbar[data-tooltip="Hide All"],
+.sprout .sprout-btn-toolbar[data-tooltip="Hide One"] {
+  background: #111;
+  color: #fff;
+  border-color: #111;
 }
 
 /* IO widget overflow */
-.bc-io-host[data-sprout-io-widget="1"] {
-  overflow: hidden !important;
+.sprout .bc-io-host[data-sprout-io-widget="1"] {
+  overflow: hidden;
 }
 
 /* ---- MCQ answer cell (multi-input) ---- */
 
-.sprout .sprout-browser-mcq-cell {
-  height: var(--sprout-editor-height, auto) !important;
-  min-height: var(--sprout-editor-height, auto) !important;
-  max-height: var(--sprout-editor-height, auto) !important;
-  overflow-y: auto !important;
-  padding: 4px !important;
-  box-sizing: border-box !important;
+.sprout .lk-browser-mcq-cell {
+  height: var(--sprout-editor-height, auto);
+  min-height: var(--sprout-editor-height, auto);
+  max-height: var(--sprout-editor-height, auto);
+  overflow-y: auto;
+  padding: 4px;
+  box-sizing: border-box;
 }
 
-.sprout .sprout-browser-mcq-row {
-  min-height: 32px !important;
-  pointer-events: auto !important;
+.sprout .lk-browser-mcq-row {
+  min-height: 32px;
+  pointer-events: auto;
 }
 
-.sprout .sprout-browser-mcq-row .sprout-mcq-correct-checkbox {
-  flex-shrink: 0 !important;
-  pointer-events: auto !important;
-  cursor: pointer !important;
+.sprout .lk-browser-mcq-row .sprout-mcq-correct-checkbox {
+  flex-shrink: 0;
+  pointer-events: auto;
+  cursor: pointer;
 }
 
-.sprout .sprout-browser-mcq-input {
-  height: 32px !important;
-  min-height: 32px !important;
-  padding: 2px 6px !important;
-  font-size: var(--sprout-font-2xs) !important;
+.sprout .lk-browser-mcq-input {
+  height: 32px;
+  min-height: 32px;
+  padding: 2px 6px;
+  font-size: var(--sprout-font-2xs);
 }
 
-.sprout .sprout-browser-mcq-input:focus {
-  border-color: var(--theme-accent) !important;
-  box-shadow: none !important;
-  outline: none !important;
+.sprout .lk-browser-mcq-input:focus {
+  border-color: var(--theme-accent);
+  box-shadow: none;
+  outline: none;
 }
 
 .sprout .sprout-mcq-correct-input {
-  border-color: rgb(34, 197, 94) !important;
+  border-color: var(--sprout-good-bg);
 }
 
 .sprout .sprout-mcq-correct-label {
-  color: rgb(34, 197, 94) !important;
-  font-weight: 700 !important;
+  color: var(--sprout-good-bg);
+  font-weight: 700;
 }
 
-.sprout .sprout-browser-mcq-add {
-  height: 32px !important;
-  min-height: 32px !important;
-  padding: 2px 6px !important;
-  font-size: var(--sprout-font-2xs) !important;
-  opacity: 0.6 !important;
+.sprout .lk-browser-mcq-add {
+  height: 32px;
+  min-height: 32px;
+  padding: 2px 6px;
+  font-size: var(--sprout-font-2xs);
+  opacity: 0.6;
 }
 
-.sprout .sprout-browser-mcq-add:focus {
-  opacity: 1 !important;
-  border-color: var(--theme-accent) !important;
-  box-shadow: none !important;
-  outline: none !important;
+.sprout .lk-browser-mcq-add:focus {
+  opacity: 1;
+  border-color: var(--theme-accent);
+  box-shadow: none;
+  outline: none;
 }
 
 /* ---- OQ steps cell (multi-input, draggable) ---- */
 
-.sprout .sprout-browser-oq-cell {
-  height: var(--sprout-editor-height, auto) !important;
-  min-height: var(--sprout-editor-height, auto) !important;
-  max-height: var(--sprout-editor-height, auto) !important;
-  overflow-y: auto !important;
-  padding: 4px !important;
-  box-sizing: border-box !important;
+.sprout .lk-browser-oq-cell {
+  height: var(--sprout-editor-height, auto);
+  min-height: var(--sprout-editor-height, auto);
+  max-height: var(--sprout-editor-height, auto);
+  overflow-y: auto;
+  padding: 4px;
+  box-sizing: border-box;
 }
 
-.sprout .sprout-browser-oq-row {
-  min-height: 32px !important;
+.sprout .lk-browser-oq-row {
+  min-height: 32px;
 }
 
-.sprout .sprout-browser-oq-row.sprout-oq-row-dragging {
-  opacity: 0.4 !important;
+.sprout .lk-browser-oq-row.sprout-oq-row-dragging {
+  opacity: 0.4;
 }
 
 .sprout .sprout-oq-grip-sm {
-  cursor: grab !important;
-  opacity: 0.4 !important;
-  flex-shrink: 0 !important;
+  cursor: grab;
+  opacity: 0.4;
+  flex-shrink: 0;
 }
 
 .sprout .sprout-oq-grip-sm:hover {
-  opacity: 0.8 !important;
+  opacity: 0.8;
 }
 
-.sprout .sprout-browser-oq-input {
-  height: 32px !important;
-  min-height: 32px !important;
-  padding: 2px 6px !important;
-  font-size: var(--sprout-font-2xs) !important;
+.sprout .lk-browser-oq-input {
+  height: 32px;
+  min-height: 32px;
+  padding: 2px 6px;
+  font-size: var(--sprout-font-2xs);
 }
 
-.sprout .sprout-browser-oq-input:focus {
-  border-color: var(--theme-accent) !important;
-  box-shadow: none !important;
-  outline: none !important;
+.sprout .lk-browser-oq-input:focus {
+  border-color: var(--theme-accent);
+  box-shadow: none;
+  outline: none;
 }
 
-.sprout .sprout-browser-oq-add {
-  height: 32px !important;
-  min-height: 32px !important;
-  padding: 2px 6px !important;
-  font-size: var(--sprout-font-2xs) !important;
-  opacity: 0.6 !important;
+.sprout .lk-browser-oq-add {
+  height: 32px;
+  min-height: 32px;
+  padding: 2px 6px;
+  font-size: var(--sprout-font-2xs);
+  opacity: 0.6;
 }
 
-.sprout .sprout-browser-oq-add:focus {
-  opacity: 1 !important;
-  border-color: var(--theme-accent) !important;
-  box-shadow: none !important;
-  outline: none !important;
+.sprout .lk-browser-oq-add:focus {
+  opacity: 1;
+  border-color: var(--theme-accent);
+  box-shadow: none;
+  outline: none;
 }
 
 /* ---- Mobile browser toolbar layout ---- */
 
-body.is-mobile .sprout .sprout-browser-toolbar-row {
-  align-items: stretch !important;
+body.is-mobile .sprout .lk-browser-toolbar-row {
+  align-items: stretch;
 }
 
-body.is-mobile .sprout .sprout-browser-search-group,
-body.is-mobile .sprout .sprout-browser-controls-row {
-  width: 100% !important;
-  min-width: 0 !important;
-  flex: 1 1 100% !important;
+body.is-mobile .sprout .lk-browser-search-card,
+body.is-mobile .sprout .lk-browser-controls-card,
+body.is-mobile .sprout .lk-browser-bottom-card {
+  padding: 8px;
 }
 
-body.is-mobile .sprout .sprout-browser-controls-row {
-  align-items: stretch !important;
+body.is-mobile .sprout .lk-browser-search-group,
+body.is-mobile .sprout .lk-browser-controls-row {
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 100%;
 }
 
-body.is-mobile .sprout .sprout-browser-filter {
-  width: 100% !important;
-  min-width: 0 !important;
-  flex: 1 1 100% !important;
+body.is-mobile .sprout .lk-browser-controls-row {
+  align-items: stretch;
 }
 
-body.is-mobile .sprout .sprout-browser-filter-columns-wrap {
-  width: calc((100% - 8px) / 2) !important;
-  min-width: 0 !important;
-  flex: 1 1 calc((100% - 8px) / 2) !important;
+body.is-mobile .sprout .lk-browser-density-toggle {
+  width: 100%;
+  justify-content: stretch;
 }
 
-body.is-mobile .sprout .sprout-browser-filter > button,
-body.is-mobile .sprout .sprout-browser-filter-columns-wrap .sprout-browser-filter > button {
-  width: 100% !important;
-  min-width: 0 !important;
-  justify-content: space-between !important;
+body.is-mobile .sprout .lk-browser-density-btn {
+  min-width: 0;
+  flex: 1 1 calc((100% - 8px) / 2);
 }
 
-body.is-mobile .sprout .sprout-browser-filter-columns-wrap .sprout-browser-filter > button {
-  justify-content: center !important;
+/* ---- Browser toolbar action buttons ---- */
+
+.sprout .lk-browser-action-btn {
+  font-size: var(--font-ui-small) !important;
+  border-radius: var(--radius-md) !important;
+  gap: 5px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  padding: 6px 12px !important;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
 }
 
-body.is-mobile .sprout .sprout-browser-action-btn {
-  min-width: 0 !important;
-  flex: 1 1 calc((100% - 8px) / 2) !important;
-  justify-content: center !important;
-  white-space: nowrap !important;
+.sprout .lk-browser-action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
-body.is-mobile .sprout .sprout-browser-action-btn-suspend,
-body.is-mobile .sprout .sprout-browser-action-btn-edit,
-body.is-mobile .sprout .sprout-browser-action-btn-reset {
-  width: calc((100% - 8px) / 2) !important;
+.sprout .lk-browser-action-btn [class*="svg-icon"],
+.sprout .lk-browser-action-btn svg {
+  width: 14px;
+  height: 14px;
 }
 
-body.is-mobile .sprout .sprout-browser-action-btn-suspend {
-  order: 4 !important;
+/* ---- Browser filter buttons ---- */
+
+.sprout .lk-browser-filter .sprout-btn-toolbar {
+  font-size: var(--font-ui-small) !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  padding: 6px 12px !important;
+  border-radius: var(--radius-md) !important;
 }
 
-body.is-mobile .sprout .sprout-browser-action-btn-reset {
-  order: 5 !important;
+/* ---- Browser bottom bar ---- */
+
+.sprout .lk-browser-bottom-bar {
+  padding: 0;
+  gap: 8px;
 }
 
-body.is-mobile .sprout .sprout-browser-action-btn-edit {
-  order: 6 !important;
+.sprout .lk-browser-summary {
+  font-size: var(--font-ui-smaller) !important;
+  color: var(--text-faint);
+}
+
+.sprout .lk-browser-selection-count {
+  font-size: var(--font-ui-smaller) !important;
+  color: var(--text-faint);
+}
+
+.sprout .lk-browser-rows-label {
+  font-size: var(--font-ui-smaller) !important;
+  color: var(--text-faint);
+}
+
+/* ---- Browser row checkbox ---- */
+
+.sprout .lk-browser-view input[type="checkbox"] {
+  accent-color: var(--theme-accent);
+  cursor: pointer;
+}
+
+/* ---- Dark theme browser overrides ---- */
+
+.theme-dark .sprout .lk-browser-view {
+  --lk-browser-surface: var(--background);
+  --lk-browser-header-bg: color-mix(in oklab, var(--theme-base-10) 25%, var(--background) 75%);
+  --lk-browser-border-soft: var(--color-base-25);
+  --lk-browser-border-strong: var(--color-base-30);
+  --lk-browser-row-hover: var(--color-base-00);
+  --lk-browser-row-hover-border: var(--color-base-35);
+}
+
+.theme-dark .sprout .lk-browser-search-input {
+  border-color: var(--color-base-30) !important;
+}
+
+body.is-mobile .sprout .lk-browser-density-btn {
+  min-width: 0;
+  flex: 1 1 calc((100% - 8px) / 2);
+}
+
+body.is-mobile .sprout .lk-browser-filter {
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 100%;
+}
+
+body.is-mobile .sprout .lk-browser-filter-columns-wrap {
+  width: calc((100% - 8px) / 2);
+  min-width: 0;
+  flex: 1 1 calc((100% - 8px) / 2);
+}
+
+body.is-mobile .sprout .lk-browser-filter > button,
+body.is-mobile .sprout .lk-browser-filter-columns-wrap .lk-browser-filter > button {
+  width: 100%;
+  min-width: 0;
+  justify-content: space-between;
+}
+
+body.is-mobile .sprout .lk-browser-filter-columns-wrap .lk-browser-filter > button {
+  justify-content: center;
+}
+
+body.is-mobile .sprout .lk-browser-action-btn {
+  min-width: 0;
+  flex: 1 1 calc((100% - 8px) / 2);
+  justify-content: center;
+  white-space: nowrap;
+}
+
+body.is-mobile .sprout .lk-browser-action-btn-suspend,
+body.is-mobile .sprout .lk-browser-action-btn-edit,
+body.is-mobile .sprout .lk-browser-action-btn-reset {
+  width: calc((100% - 8px) / 2);
+}
+
+body.is-mobile .sprout .lk-browser-action-btn-suspend {
+  order: 4;
+}
+
+body.is-mobile .sprout .lk-browser-action-btn-reset {
+  order: 5;
+}
+
+body.is-mobile .sprout .lk-browser-action-btn-edit {
+  order: 6;
 }
 
 /* Keep browser layout stable when mobile keyboard opens */
 @media (max-width: 767px) {
-body.is-mobile .sprout [data-sprout-browser-root="1"] {
-  --sprout-browser-kb-inset: 0px;
-  min-height: 100svh !important;
-  padding-bottom: calc(40px + 50px + env(safe-area-inset-bottom) + var(--sprout-browser-kb-inset, 0px)) !important;
-  scroll-padding-bottom: calc(24px + env(safe-area-inset-bottom) + var(--sprout-browser-kb-inset, 0px)) !important;
-  overflow-y: auto !important;
+body.is-mobile .sprout [data-lk-browser-root="1"] {
+  --lk-browser-kb-inset: 0px;
+  min-height: 100svh;
+  padding-bottom: calc(40px + 50px + env(safe-area-inset-bottom) + var(--lk-browser-kb-inset, 0px));
+  scroll-padding-bottom: calc(24px + env(safe-area-inset-bottom) + var(--lk-browser-kb-inset, 0px));
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
 
-body.is-mobile .sprout [data-sprout-browser-root="1"] .sprout-browser-table-wrap {
-  flex: 0 0 auto !important;
-  min-height: auto !important;
-  max-height: none !important;
-  overflow-x: auto !important;
-  overflow-y: visible !important;
+body.is-mobile .sprout [data-lk-browser-root="1"] .lk-browser-table-wrap {
+  flex: 0 0 auto;
+  min-height: auto;
+  max-height: none;
+  overflow-x: auto;
+  overflow-y: visible;
   -webkit-overflow-scrolling: touch;
 }
 
-body.is-mobile .sprout [data-sprout-browser-root="1"] .sprout-browser-tbody {
-  overflow-y: visible !important;
+body.is-mobile .sprout [data-lk-browser-root="1"] .lk-browser-tbody {
+  overflow-y: visible;
 }
 
-body.is-mobile .sprout .sprout-browser-bottom-bar {
-  align-items: flex-start !important;
-  justify-content: flex-start !important;
-  gap: 10px !important;
+body.is-mobile .sprout .lk-browser-bottom-bar {
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 10px;
 }
 
-body.is-mobile .sprout .sprout-browser-summary-wrap,
-body.is-mobile .sprout .sprout-browser-bottom-right {
-  width: 100% !important;
-  min-width: 0 !important;
-  margin-left: 0 !important;
+body.is-mobile .sprout .lk-browser-summary-wrap,
+body.is-mobile .sprout .lk-browser-bottom-right {
+  width: 100%;
+  min-width: 0;
+  margin-left: 0;
 }
 
-body.is-mobile .sprout .sprout-browser-summary-wrap {
-  gap: 4px !important;
+body.is-mobile .sprout .lk-browser-summary-wrap {
+  gap: 4px;
 }
 
-body.is-mobile .sprout .sprout-browser-selection-row {
-  align-items: center !important;
-  justify-content: flex-start !important;
-  gap: 8px !important;
-  flex-wrap: wrap !important;
+body.is-mobile .sprout .lk-browser-selection-row {
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-body.is-mobile .sprout .sprout-browser-bottom-right {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  flex-wrap: wrap !important;
-  gap: 8px !important;
+body.is-mobile .sprout .lk-browser-bottom-right {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-body.is-mobile .sprout .sprout-browser-rows-control {
-  flex: 0 0 auto !important;
+body.is-mobile .sprout .lk-browser-rows-control {
+  flex: 0 0 auto;
 }
 
-body.is-mobile .sprout .sprout-browser-pager-host {
-  width: 100% !important;
-  justify-content: flex-start !important;
+body.is-mobile .sprout .lk-browser-pager-host {
+  width: 100%;
+  justify-content: flex-start;
 }
 
-body.is-mobile .sprout .sprout-browser-pagination {
-  width: 100% !important;
-  overflow-x: auto !important;
-  white-space: nowrap !important;
+body.is-mobile .sprout .lk-browser-pagination {
+  width: 100%;
+  overflow-x: auto;
+  white-space: nowrap;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
 
-body.is-mobile .sprout .sprout-browser-pagination::-webkit-scrollbar {
+body.is-mobile .sprout .lk-browser-pagination::-webkit-scrollbar {
   display: none;
 }
 }

@@ -128,8 +128,8 @@ export function renderImageOcclusionReviewInto(args: {
       const modal = new (class extends Modal {
         onOpen() {
           scopeModalToWorkspace(this);
-          this.containerEl.addClass("sprout-modal-container", "sprout-modal-dim", "sprout");
-          this.modalEl.addClass("bc", "sprout-modals", "sprout-zoom-overlay");
+          this.containerEl.addClass("lk-modal-container", "lk-modal-dim", "sprout");
+          this.modalEl.addClass("bc", "lk-modals", "sprout-zoom-overlay");
           queryFirst(this.modalEl, ".modal-header")?.remove();
           queryFirst(this.modalEl, ".modal-close-button")?.remove();
 
@@ -173,8 +173,8 @@ export function renderImageOcclusionReviewInto(args: {
         }
         onClose() {
           this.contentEl.empty();
-          this.modalEl.removeClass("sprout-modals", "sprout-zoom-overlay");
-          this.containerEl.removeClass("sprout-modal-container", "sprout-modal-dim", "sprout");
+          this.modalEl.removeClass("lk-modals", "sprout-zoom-overlay");
+          this.containerEl.removeClass("lk-modal-container", "lk-modal-dim", "sprout");
         }
       })(app);
       modal.open();
@@ -351,8 +351,8 @@ export function renderImageOcclusionReviewInto(args: {
       const modal = new (class extends Modal {
         onOpen() {
           scopeModalToWorkspace(this);
-          this.containerEl.addClass("sprout-modal-container", "sprout-modal-dim", "sprout");
-          this.modalEl.addClass("bc", "sprout-modals", "sprout-zoom-overlay");
+          this.containerEl.addClass("lk-modal-container", "lk-modal-dim", "sprout");
+          this.modalEl.addClass("bc", "lk-modals", "sprout-zoom-overlay");
           queryFirst(this.modalEl, ".modal-header")?.remove();
           queryFirst(this.modalEl, ".modal-close-button")?.remove();
 
@@ -395,8 +395,8 @@ export function renderImageOcclusionReviewInto(args: {
 
         onClose() {
           this.contentEl.empty();
-          this.modalEl.removeClass("sprout-modals");
-          this.containerEl.removeClass("sprout-modal-container", "sprout-modal-dim", "sprout");
+          this.modalEl.removeClass("lk-modals");
+          this.containerEl.removeClass("lk-modal-container", "lk-modal-dim", "sprout");
         }
       })(app);
 

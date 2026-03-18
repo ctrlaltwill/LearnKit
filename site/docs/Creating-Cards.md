@@ -1,26 +1,24 @@
 # Creating Cards
 
-Last modified: 14/02/2026
+Last modified: 17/03/2026
 
-## Two ways to create cards
+## Creation Paths
 
-You can create cards by:
-- using Sprout modals, or
-- writing card fields directly in Markdown.
+You can create cards with guided modals or by writing fields directly in markdown.
 
-Modals are usually faster, especially for [Image Occlusion](./Image-Occlusion.md) and [Multiple Choice Questions](./Multiple-Choice-Questions.md).
+Modals are usually faster for [Image Occlusion](./Image-Occlusion) and [Multiple Choice Questions](./Multiple-Choice-Questions).
 
-## Create cards with a modal
+## Modal Method
 
 1. Right-click in a note, or open the command palette (`Cmd/Ctrl+P`).
 2. Choose an **Add flashcard** option.
 3. Fill in the fields and select **Save**.
 
-Sprout inserts the card block at your cursor.
+LearnKit inserts the card block at your cursor.
 
-## Write cards in Markdown
+## Markdown Method
 
-Card fields use the delimiter `|` by default (or your configured [delimiter](./Custom-Delimiters.md)).
+Card fields use the delimiter `|` by default (or your configured [delimiter](./Custom-Delimiters)).
 
 | Field | Use | Required |
 |---|---|---|
@@ -57,12 +55,12 @@ O | Berlin |
 ```
 
 See also:
-- [Basic & Reversed Cards](./Basic-&-Reversed-Cards.md)
-- [Cloze Cards](./Cloze-Cards.md)
-- [Image Occlusion](./Image-Occlusion.md)
-- [Multiple Choice Questions](./Multiple-Choice-Questions.md)
-- [Ordered Questions](./Ordered-Questions.md)
-- [Flags](./Flags.md)
+- [Basic & Reversed Cards](./Basic-&-Reversed-Cards)
+- [Cloze Cards](./Cloze-Cards)
+- [Image Occlusion](./Image-Occlusion)
+- [Multiple Choice Questions](./Multiple-Choice-Questions)
+- [Ordered Questions](./Ordered-Questions)
+- [Flags](./Flags)
 
 ## Multi-line fields
 
@@ -78,12 +76,18 @@ Feature two
 I | Keep answers structured. |
 ```
 
-## Card anchors
+## Card Anchors
 
 After sync, each card block gets an anchor like:
 
 ```
-^sprout-#########
+^learnkit-#########
 ```
 
 Do not edit or delete this line. It links the card to its scheduling data. If you remove it, the card is treated as new on sync and previous progress is lost. See [Syncing](./Syncing.md).
+
+## Related
+
+- [Cards](./Cards)
+- [Editing Cards](./Editing-Cards)
+- [Card Formatting](./Card-Formatting)

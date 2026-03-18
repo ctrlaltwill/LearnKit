@@ -76,7 +76,8 @@ export function buildQuestionFor(card: CardRecord): string {
   if (card.type === "basic") return card.q || "";
   if (card.type === "reversed") return card.a || "";
   if (card.type === "reversed-child") {
-    return (card as unknown).reversedDirection === "back" ? (card.a || "") : (card.q || "");
+    const reversedDirection = (card as Record<string, unknown>).reversedDirection;
+    return reversedDirection === "back" ? (card.a || "") : (card.q || "");
   }
   if (card.type === "mcq") return card.stem || "";
   if (card.type === "oq") return card.q || "";
@@ -87,7 +88,8 @@ export function buildAnswerOrOptionsFor(card: CardRecord): string {
   if (card.type === "basic") return card.a || "";
   if (card.type === "reversed") return card.q || "";
   if (card.type === "reversed-child") {
-    return (card as unknown).reversedDirection === "back" ? (card.q || "") : (card.a || "");
+    const reversedDirection = (card as Record<string, unknown>).reversedDirection;
+    return reversedDirection === "back" ? (card.q || "") : (card.a || "");
   }
 
   if (card.type === "mcq") {

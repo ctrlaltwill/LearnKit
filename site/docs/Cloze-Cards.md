@@ -1,12 +1,12 @@
 # Cloze Cards
 
-Last modified: 13/02/2026
+Last modified: 17/03/2026
 
-## Overview
+## Purpose
 
 Cloze cards hide words inside a sentence so you recall missing parts in context.
 
-## Basic cloze format
+## Cloze Format
 
 Use `CQ` with markers like `{{c1::...}}`:
 
@@ -17,7 +17,7 @@ I | Located on the River Seine |
 G | Geography |
 ```
 
-## Numbering rules
+## Numbering Rules
 
 - Different numbers (`c1`, `c2`) create separate cards.
 - Same number hides multiple parts on the same card.
@@ -34,7 +34,7 @@ Example with one card hiding two words:
 CQ | The {{c1::heart}} pumps {{c1::blood}} through the body |
 ```
 
-## Create with the modal
+## Modal Steps
 
 1. Right-click in a note → **Add flashcard → Cloze Card**.
 2. Enter text.
@@ -44,10 +44,15 @@ CQ | The {{c1::heart}} pumps {{c1::blood}} through the body |
 ## Grading
 
 Cloze cards use the same manual grading flow as other cards.
-See [Grading](./Grading.md).
+See [Grading](./Grading).
 
-## Edge cases and limits
+## Limits
 
 - Invalid cloze syntax can stop a card from rendering correctly.
 - Overlapping or inconsistent numbering can create unexpected card counts.
 - Very large numbers of deletions in one sentence can hurt readability and recall quality.
+
+## Related
+
+- [Creating Cards](./Creating-Cards)
+- [Reading View](./Reading-View)

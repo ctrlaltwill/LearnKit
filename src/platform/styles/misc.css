@@ -12,7 +12,7 @@
   padding: 8px 14px;
   font-size: var(--sprout-font-xs);
   font-weight: 600;
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-md);
   background: #111;
   color: #fff;
   transition: background 0.18s;
@@ -49,12 +49,12 @@
 }
 
 /* Force GitHub star to use accent color for fill */
-.sprout-github-stars-star svg {
-  fill: var(--theme-accent) !important;
-  color: var(--theme-accent) !important;
+.sprout .sprout-github-stars-star svg {
+  fill: var(--theme-accent);
+  color: var(--theme-accent);
 }
 /* Spin the GitHub star on hover */
-.sprout-github-stars:hover .sprout-github-stars-star {
+.sprout .sprout-github-stars:hover .sprout-github-stars-star {
   transition: transform 0.6s cubic-bezier(0.4,0.2,0.2,1);
   transform: rotate(360deg);
 }
@@ -90,13 +90,13 @@
   padding: 8px 14px;
   font-size: var(--sprout-font-xs);
   font-weight: 600;
-  border-radius: var(--radius-m);
-  background: #f4b400 !important;
-  color: #111 !important;
+  border-radius: var(--radius-md);
+  background: #f4b400;
+  color: #111;
   transition: background 0.18s;
 }
 .sprout .sprout-bmc:hover {
-  background: #e2a800 !important;
+  background: #e2a800;
   text-decoration: none;
   font-weight: 600;
   width: fit-content;
@@ -114,7 +114,7 @@
 }
 
 /* Rotate the coffee icon on hover */
-.sprout-bmc:hover .sprout-bmc-icon {
+.sprout .sprout-bmc:hover .sprout-bmc-icon {
   transition: transform 0.3s cubic-bezier(0.4,0.2,0.2,1);
   transform: rotate(-30deg);
 }
@@ -132,55 +132,55 @@
 }
 
 .sprout .sprout-cursor-grab {
-  cursor: grab !important;
+  cursor: grab;
 }
 
 .sprout .sprout-cursor-grabbing {
-  cursor: grabbing !important;
+  cursor: grabbing;
 }
 
 .sprout .sprout-cursor-crosshair {
-  cursor: crosshair !important;
+  cursor: crosshair;
 }
 
 .sprout .sprout-cursor-move {
-  cursor: move !important;
+  cursor: move;
 }
 
 .sprout .sprout-cursor-nwse-resize {
-  cursor: nwse-resize !important;
+  cursor: nwse-resize;
 }
 
 .sprout .sprout-cursor-nesw-resize {
-  cursor: nesw-resize !important;
+  cursor: nesw-resize;
 }
 
 .sprout .sprout-display-flex {
-  display: flex !important;
+  display: flex;
 }
 
 .sprout .sprout-opacity-35 {
-  opacity: 0.35 !important;
+  opacity: 0.35;
 }
 
 .sprout .sprout-pointer-none {
-  pointer-events: none !important;
+  pointer-events: none;
 }
 
 .sprout .sprout-hidden-important {
-  display: none !important;
+  display: none;
 }
 
-.bg-transparent {
-  background: transparent !important;
+.sprout .bg-transparent {
+  background: transparent;
 }
 
 /* ---- Global keyboard keycap shape ---- */
 
 .sprout kbd,
 .sprout .kbd {
-  padding: 0px 8px !important;
-  border-radius: 10px !important;
+  padding: 0px 8px;
+  border-radius: 6px;
 }
 
 /* ---- Mobile phones: hide keyboard hint badges ---- */
@@ -188,7 +188,7 @@
 @media (max-width: 767px) and (hover: none) and (pointer: coarse) {
   .sprout kbd,
   .sprout .kbd {
-    display: none !important;
+    display: none;
   }
 }
 
@@ -213,19 +213,23 @@
 /* ---- Utility: inline flex ---- */
 
 .sprout .sprout-inline-flex {
-  display: inline-flex !important;
+  display: inline-flex;
 }
 
 .sprout .sprout-items-center {
-  align-items: center !important;
+  align-items: center;
+}
+
+.sprout span.truncate {
+  overflow: visible;
 }
 
 .sprout .sprout-gap-8 {
-  gap: 8px !important;
+  gap: 8px;
 }
 
 .sprout .sprout-stage-transform {
-  transform: var(--sprout-stage-transform, none) !important;
+  transform: var(--sprout-stage-transform, none);
 }
 
 /* ---- Markdown code block spacing ---- */
@@ -239,63 +243,63 @@
 /* ---- Image Occlusion review ---- */
 
 .sprout .sprout-io-container {
-  position: relative !important;
-  display: inline-block !important;
-  max-width: 100% !important;
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
 }
 
 .sprout .sprout-io-container--clip {
-  overflow: hidden !important;
+  overflow: hidden;
 }
 
 .sprout .sprout-io-host-card {
-  position: relative !important;
-  display: inline-block !important;
-  border-radius: var(--radius-s) !important;
-  overflow: hidden !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
-  background: var(--background-secondary) !important;
-  max-width: 100% !important;
+  position: relative;
+  display: inline-block;
+  border-radius: var(--radius-s);
+  overflow: hidden;
+  border: var(--sprout-border-width) solid var(--sprout-border-color);
+  background: var(--background-secondary);
+  max-width: 100%;
 }
 
 .sprout .sprout-io-image {
-  display: block !important;
-  max-width: 100% !important;
-  height: auto !important;
+  display: block;
+  max-width: 100%;
+  height: auto;
 }
 
 .sprout .sprout-io-image-zoomed {
-  max-width: 98vw !important;
-  max-height: 96vh !important;
-  cursor: zoom-out !important;
-  display: block !important;
-  margin: 0 auto !important;
-  object-fit: contain !important;
-  width: auto !important;
-  height: auto !important;
+  max-width: 98vw;
+  max-height: 96vh;
+  cursor: zoom-out;
+  display: block;
+  margin: 0 auto;
+  object-fit: contain;
+  width: auto;
+  height: auto;
 }
 
 .sprout .sprout-io-image-inline {
-  max-height: 350px !important;
-  cursor: zoom-in !important;
+  max-height: 350px;
+  cursor: zoom-in;
 }
 
 .sprout .sprout-io-image-widget {
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
+  border: none;
+  outline: none;
+  box-shadow: none;
 }
 
 .sprout .sprout-io-zoom-in {
-  cursor: zoom-in !important;
+  cursor: zoom-in;
 }
 
 .sprout .sprout-io-zoom-out {
-  cursor: zoom-out !important;
+  cursor: zoom-out;
 }
 
 .sprout .sprout-io-overlay {
-  position: absolute !important;
+  position: absolute;
   left: var(--sprout-io-left, 0);
   top: var(--sprout-io-top, 0);
   width: var(--sprout-io-width, 0);
@@ -303,128 +307,130 @@
   max-width: var(--sprout-io-max-width, none);
   max-height: var(--sprout-io-max-height, none);
   border-radius: var(--sprout-io-radius, 0);
-  overflow: hidden !important;
-  pointer-events: none !important;
-  z-index: 2 !important;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
 }
 
 .sprout .sprout-io-mask {
-  position: absolute !important;
+  position: absolute;
   left: var(--sprout-io-x, 0);
   top: var(--sprout-io-y, 0);
   width: var(--sprout-io-w, 0);
   height: var(--sprout-io-h, 0);
-  pointer-events: none !important;
-  z-index: 1 !important;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .sprout .sprout-io-mask-target {
-  background: var(--sprout-io-mask-target-color, var(--theme-accent)) !important;
-  border: 1px solid var(--foreground) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  background: var(--sprout-io-mask-target-color, var(--theme-accent));
+  border: 1px solid var(--foreground);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .sprout .sprout-io-mask-other {
-  background: var(--sprout-io-mask-other-color, var(--foreground)) !important;
-  border: 2px solid var(--foreground) !important;
+  background: var(--sprout-io-mask-other-color, var(--foreground));
+  border: 2px solid var(--foreground);
 }
 
 .sprout .sprout-io-mask-hidden {
-  background: var(--background)00 !important;
-  border: none !important;
+  background: var(--background)00;
+  border: none;
 }
 
 .sprout .sprout-io-mask-circle {
-  border-radius: 50% !important;
+  border-radius: 50%;
 }
 
 .sprout .sprout-io-mask-rect {
-  border-radius: var(--radius-s) !important;
+  border-radius: var(--radius-s);
 }
 
 .sprout .sprout-io-mask-hint {
-  color: #fff !important;
-  font-weight: 600 !important;
-  line-height: 1 !important;
-  font-size: var(--sprout-io-hint-size, var(--sprout-font-2xs)) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  color: #fff;
+  font-weight: 600;
+  line-height: 1;
+  font-size: var(--sprout-io-hint-size, var(--sprout-font-2xs));
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* SVG icons rendered by setIcon inside the hint span */
 .sprout .sprout-io-mask-hint .svg-icon {
-  width: var(--sprout-io-hint-size, 12px) !important;
-  height: var(--sprout-io-hint-size, 12px) !important;
-  stroke: #fff !important;
+  width: var(--sprout-io-hint-size, 12px);
+  height: var(--sprout-io-hint-size, 12px);
+  stroke: #fff;
 }
 
 /* ── IO icon picker in settings ───────────────────────────────── */
-.sprout-io-icon-picker {
-  display: flex !important;
-  align-items: center !important;
-  gap: 6px !important;
+.sprout .sprout-io-icon-picker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.sprout-io-icon-chip {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  min-width: 32px !important;
-  height: 32px !important;
-  padding: 0 10px !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
-  border-radius: var(--radius-m) !important;
-  background-color: var(--background) !important;
-  color: var(--foreground) !important;
-  font-size: var(--sprout-font-xs) !important;
-  cursor: pointer !important;
-  transition: border-color 0.15s, background-color 0.15s !important;
+.sprout .sprout-io-icon-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--color-base-35);
+  border-radius: var(--radius-s, 4px);
+  background-color: var(--color-base-20);
+  color: var(--text-normal);
+  font-size: var(--font-ui-small);
+  cursor: pointer;
+  transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease;
 }
 
-.sprout-io-icon-chip:hover {
-  background-color: var(--secondary) !important;
+.sprout .sprout-io-icon-chip:hover {
+  background-color: var(--color-base-30);
+  border-color: var(--color-base-50);
+  color: var(--color-base-100);
 }
 
-.sprout-io-icon-chip.is-active {
-  border-color: var(--theme-accent) !important;
-  background-color: var(--theme-accent) !important;
-  color: #fff !important;
+.sprout .sprout-io-icon-chip.is-active {
+  border-color: var(--color-base-60);
+  background: linear-gradient(180deg, var(--color-base-35), var(--color-base-30));
+  color: var(--color-base-100);
 }
 
-.sprout-io-icon-chip.is-active .svg-icon {
-  stroke: #fff !important;
+.sprout .sprout-io-icon-chip.is-active .svg-icon {
+  stroke: currentColor;
 }
 
-.sprout-io-icon-chip .svg-icon {
-  width: 16px !important;
-  height: 16px !important;
+.sprout .sprout-io-icon-chip .svg-icon {
+  width: 16px;
+  height: 16px;
 }
 
-.sprout-io-icon-custom-input {
-  height: 32px !important;
-  width: 60px !important;
-  padding: 0 8px !important;
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
-  border-radius: var(--radius-m) !important;
-  background-color: var(--background) !important;
-  color: var(--foreground) !important;
-  font-size: var(--sprout-font-xs) !important;
+.sprout .sprout-io-icon-custom-input {
+  height: 32px;
+  width: 60px;
+  padding: 0 8px;
+  border: var(--sprout-border-width) solid var(--sprout-border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--background);
+  color: var(--foreground);
+  font-size: var(--sprout-font-xs);
 }
 
 .theme-dark .sprout .sprout-bmc {
-  color: #111214 !important;
-  background: #ffffff !important;
+  color: #111214;
+  background: #ffffff;
   transition: background 0.18s;
   box-shadow: 0 2px 8px #0000002e;
 }
 .theme-dark .sprout .sprout-bmc:hover {
-  background: #f2f2f2 !important;
+  background: #f2f2f2;
 }
 .theme-dark .sprout .sprout-bmc:active {
-  background: #e6e6e6 !important;
+  background: #e6e6e6;
 }
 .theme-dark .sprout .sprout-bmc-icon svg {
   color: #111214;
@@ -437,29 +443,29 @@
 }
 
 .sprout .badge.group {
-  font-family: var(--font-interface) !important;
-  font-size: 0.85rem !important;
+  font-family: var(--font-interface);
+  font-size: 0.85rem;
 }
 
-.sprout-badge-success {
+.sprout .sprout-badge-success {
   background-color: oklch(0.8 0.1 142);
   color: oklch(0.2 0 0);
 }
 
-.sprout-badge-info {
+.sprout .sprout-badge-info {
   background-color: var(--theme-accent);
   color: oklch(0.985 0 0);
 }
 
-.sprout-badge-default {
+.sprout .sprout-badge-default {
   background-color: var(--secondary);
   color: #111;
 }
 
 /* ---- Checkboxes / radio ---- */
 
-input[type="radio"]:checked:after,
-input[type="checkbox"]:checked:after {
+.sprout input[type="radio"]:checked:after,
+.sprout input[type="checkbox"]:checked:after {
   content: '';
   display: block;
   position: absolute;
@@ -475,51 +481,48 @@ input[type="checkbox"]:checked:after {
   background-color: var(--muted-foreground);
 }
 
-input[type="checkbox"]:checked:hover::after {
+.sprout input[type="checkbox"]:checked:hover::after {
   background-color: var(--foreground);
 }
 
 /* ---- Inline sorting icon hover ---- */
 
-.inline-flex.text-muted-foreground.cursor-pointer {
+.sprout .inline-flex.text-muted-foreground.cursor-pointer {
   transition: color 0.15s, fill 0.15s;
 }
-.inline-flex.text-muted-foreground.cursor-pointer:hover,
-.inline-flex.text-muted-foreground.cursor-pointer:focus,
-.inline-flex.text-muted-foreground.cursor-pointer:active {
-  color: var(--foreground) !important;
+.sprout .inline-flex.text-muted-foreground.cursor-pointer:hover,
+.sprout .inline-flex.text-muted-foreground.cursor-pointer:focus,
+.sprout .inline-flex.text-muted-foreground.cursor-pointer:active {
+  color: var(--foreground);
 }
-.inline-flex.text-muted-foreground.cursor-pointer:hover .svg-icon,
-.inline-flex.text-muted-foreground.cursor-pointer:focus .svg-icon,
-.inline-flex.text-muted-foreground.cursor-pointer:active .svg-icon {
-  stroke: var(--foreground) !important;
-  color: var(--foreground) !important;
+.sprout .inline-flex.text-muted-foreground.cursor-pointer:hover .svg-icon,
+.sprout .inline-flex.text-muted-foreground.cursor-pointer:focus .svg-icon,
+.sprout .inline-flex.text-muted-foreground.cursor-pointer:active .svg-icon {
+  stroke: var(--foreground);
+  color: var(--foreground);
 }
 
 /* ---- Tickbox inner dot ---- */
 
-.tickbox > span {
-  background-color: var(--foreground) !important;
+.sprout .tickbox > span {
+  background-color: var(--foreground);
 }
 
 /* ---- Selection highlight ---- */
 
 :where(.sprout) ::selection {
-  background-color: var(--theme-accent) !important;
-  color: #fff !important;
-}
-:where(.sprout) ::-moz-selection {
-  background-color: var(--theme-accent) !important;
-  color: #fff !important;
+    background-color: var(--theme-base-15);
+    color: var(--color-base-95);
+
 }
 
 /* ---- MathJax: remove block margins inside Sprout cards/widgets ---- */
 
-.sprout .sprout-session-card mjx-container[jax="CHTML"][display="true"],
+.sprout .lk-session-card mjx-container[jax="CHTML"][display="true"],
 .sprout.sprout-widget mjx-container[jax="CHTML"][display="true"],
 .sprout .sprout-widget mjx-container[jax="CHTML"][display="true"],
-.sprout-widget-card-body mjx-container[jax="CHTML"][display="true"] {
-  margin: 0 !important;
+.sprout .sprout-widget-card-body mjx-container[jax="CHTML"][display="true"] {
+  margin: 0;
 }
 
 .sprout .sprout-pretty-card mjx-container[jax="CHTML"][display="true"],
@@ -527,9 +530,9 @@ input[type="checkbox"]:checked:hover::after {
 .sprout .sprout-pretty-card mjx-math[display="true"],
 .sprout .sprout-pretty-card .MathJax,
 .sprout .sprout-pretty-card .MJX-TEX {
-  margin: 0 !important;
-  margin-block-start: 0 !important;
-  margin-block-end: 0 !important;
+  margin: 0;
+  margin-block-start: 0;
+  margin-block-end: 0;
 }
 
 /* ---- Override theme math-block styling inside Sprout card views ---- */
@@ -537,135 +540,161 @@ input[type="checkbox"]:checked:hover::after {
    .math.math-block.is-loaded which clashes with card/widget/gatekeeper layout.
    Reset those properties so Sprout cards look consistent regardless of theme. */
 
-.sprout .sprout-session-card .math.math-block.is-loaded,
+.sprout .lk-session-card .math.math-block.is-loaded,
 .sprout.sprout-widget .math.math-block.is-loaded,
 .sprout .sprout-widget .math.math-block.is-loaded,
-.sprout-widget-card-body .math.math-block.is-loaded,
+.sprout .sprout-widget-card-body .math.math-block.is-loaded,
 .sprout .sprout-gatekeeper-modal .math.math-block.is-loaded,
 .sprout .sprout-pretty-card .math.math-block.is-loaded {
-  background-color: transparent !important;
-  background: transparent !important;
-  border-radius: 0 !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  border: none !important;
-  box-shadow: none !important;
-  width: auto !important;
+  background-color: transparent;
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  border: none;
+  box-shadow: none;
+  width: auto;
 }
 
 /* ---- Inline math: slight left margin so LaTeX doesn't touch preceding text ---- */
-.sprout .sprout-session-card .math.is-loaded,
+.sprout .lk-session-card .math.is-loaded,
 .sprout.sprout-widget .math.is-loaded,
 .sprout .sprout-widget .math.is-loaded,
-.sprout-widget-card-body .math.is-loaded,
+.sprout .sprout-widget-card-body .math.is-loaded,
 .sprout .sprout-gatekeeper-modal .math.is-loaded,
 .sprout .sprout-pretty-card .math.is-loaded {
-  margin-left: 0.15em !important;
+  margin-left: 0.15em;
 }
 
 /* Also reset the inner MathJax container inside math blocks */
-.sprout .sprout-session-card .math.math-block.is-loaded mjx-container,
+.sprout .lk-session-card .math.math-block.is-loaded mjx-container,
 .sprout.sprout-widget .math.math-block.is-loaded mjx-container,
 .sprout .sprout-widget .math.math-block.is-loaded mjx-container,
-.sprout-widget-card-body .math.math-block.is-loaded mjx-container,
+.sprout .sprout-widget-card-body .math.math-block.is-loaded mjx-container,
 .sprout .sprout-gatekeeper-modal .math.math-block.is-loaded mjx-container,
 .sprout .sprout-pretty-card .math.math-block.is-loaded mjx-container {
-  margin: 0 !important;
-  padding: 0 !important;
+  margin: 0;
+  padding: 0;
 }
 
 /* Inline math: remove any theme-added background/padding */
-.sprout .sprout-session-card .math.math-inline.is-loaded,
+.sprout .lk-session-card .math.math-inline.is-loaded,
 .sprout.sprout-widget .math.math-inline.is-loaded,
 .sprout .sprout-widget .math.math-inline.is-loaded,
-.sprout-widget-card-body .math.math-inline.is-loaded,
+.sprout .sprout-widget-card-body .math.math-inline.is-loaded,
 .sprout .sprout-gatekeeper-modal .math.math-inline.is-loaded,
 .sprout .sprout-pretty-card .math.math-inline.is-loaded {
-  background-color: transparent !important;
-  background: transparent !important;
-  border-radius: 0 !important;
-  padding: 0 !important;
-  border: none !important;
-  box-shadow: none !important;
+  background-color: transparent;
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  border: none;
+  box-shadow: none;
 }
 
 /* ---- Background helper ---- */
 
-.sprout .bg-background, .sprout .bg-background {
+.sprout .bg-background {
     background-color: var(--background);
 }
 
 /* ---- Info text styling ---- */
 
-.sprout-info {
+.sprout .sprout-info {
     color: var(--text-color);
     opacity: 0.9;
     font-size: var(--sprout-font-2xs);
     line-height: 1.9;
 }
 
-.sprout-info br {
-    margin-bottom: 0.5em !important;
+.sprout .sprout-info br {
+  margin-bottom: 0.5em;
 }
 
-/* ---- Typography scale ---- */
-
-.sprout .text-xs {
-  font-size: var(--sprout-font-xs) !important;
-}
-.sprout .text-sm {
-  font-size: var(--sprout-font-xs) !important;
-}
-
-.sprout .text-md {font-size: var(--sprout-font-xs) !important;}
-.sprout .text-lg {font-size: var(--sprout-font-sm) !important;}
-.sprout .text-xl {font-size: var(--sprout-font-md) !important;}
-.sprout .text-2xl {font-size: var(--sprout-font-lg) !important;}
 
 /* ---- Global input and textarea focus styles ---- */
 
-.sprout input:not(.sprout-home-name-input):not(.sprout-ss-search-input):not(.sprout-search-naked):focus,
+.sprout input:not(.lk-home-name-input):not(.sprout-ss-search-input):not(.sprout-search-naked):focus,
 .sprout textarea:not(.sprout-assistant-popup-input):focus,
 .sprout .input:focus,
 .sprout .textarea:focus,
-.sprout input[type="text"]:not(.sprout-home-name-input):not(.sprout-ss-search-input):not(.sprout-search-naked):focus,
+.sprout input[type="text"]:not(.lk-home-name-input):not(.sprout-ss-search-input):not(.sprout-search-naked):focus,
 .sprout input[type="search"]:not(.sprout-ss-search-input):not(.sprout-search-naked):focus,
 .sprout input[type="number"]:focus,
 .sprout select:focus {
-  border: 1.5px solid var(--theme-accent) !important;
+  border: 1.5px solid var(--theme-accent);
+  box-shadow: none;
+  outline: none;
+}
+
+/* Ensure Obsidian/LearnKit input focus rings never leak into Sprout surfaces */
+.sprout :is(
+  textarea,
+  .multi-select-container,
+  input.metadata-input-text,
+  input[type='date'],
+  input[type='datetime-local'],
+  input[type='text'],
+  input[type='search'],
+  input[type='email'],
+  input[type='password'],
+  input[type='number']
+):is(:active, :focus, :focus-visible),
+.lk-modals :is(
+  textarea,
+  .multi-select-container,
+  input.metadata-input-text,
+  input[type='date'],
+  input[type='datetime-local'],
+  input[type='text'],
+  input[type='search'],
+  input[type='email'],
+  input[type='password'],
+  input[type='number']
+):is(:active, :focus, :focus-visible) {
   box-shadow: none !important;
   outline: none !important;
 }
 
 /* Typed cloze inputs override the global accent focus above */
-.sprout .sprout-cloze-typed-input,
-.sprout .sprout-cloze-typed-input:focus {
-  border-width: 1px !important;
+.sprout .sprout-cloze-typed-input {
+  border-width: 1px;
 }
+/* No state, focused → theme accent */
 .sprout .sprout-cloze-typed-input:focus {
-  border-color: var(--sprout-border-color) !important;
-  box-shadow: none !important;
+  border-color: var(--interactive-accent, #7c9dff);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--interactive-accent, #7c9dff) 20%, transparent);
 }
-.sprout .sprout-cloze-typed-input.sprout-cloze-typed--partial,
+/* Unfocused state borders (muted) */
+.sprout .sprout-cloze-typed-input.sprout-cloze-typed--partial {
+  border-color: color-mix(in srgb, var(--sprout-hard-bg) 55%, var(--sprout-border-color));
+}
+.sprout .sprout-cloze-typed-input.sprout-cloze-typed--correct {
+  border-color: color-mix(in srgb, var(--sprout-good-bg) 55%, var(--sprout-border-color));
+}
+.sprout .sprout-cloze-typed-input.sprout-cloze-typed--wrong {
+  border-color: color-mix(in srgb, var(--sprout-again-bg) 55%, var(--sprout-border-color));
+}
+/* Focused state borders (full colour + glow) */
 .sprout .sprout-cloze-typed-input.sprout-cloze-typed--partial:focus {
-  border-width: 1px !important;
   border-color: var(--sprout-hard-bg) !important;
 }
-.sprout .sprout-cloze-typed-input.sprout-cloze-typed--correct,
 .sprout .sprout-cloze-typed-input.sprout-cloze-typed--correct:focus {
-  border-width: 1px !important;
   border-color: var(--sprout-good-bg) !important;
 }
-.sprout .sprout-cloze-typed-input.sprout-cloze-typed--wrong,
 .sprout .sprout-cloze-typed-input.sprout-cloze-typed--wrong:focus {
-  border-width: 1px !important;
   border-color: var(--sprout-again-bg) !important;
 }
 
 .sprout .rounded-lg {
-    border-radius: var(--radius-m) !important;
+    border-radius: var(--radius-md);
 }
 
-.sprout h1, h2, h3, h4, h5, h6 {
+.sprout h1,
+.sprout h2,
+.sprout h3,
+.sprout h4,
+.sprout h5,
+.sprout h6 {
   letter-spacing: -0.02em;
 }

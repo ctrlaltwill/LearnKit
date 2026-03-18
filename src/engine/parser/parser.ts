@@ -17,8 +17,9 @@ import {
   unescapeDelimiterText,
   escapeDelimiterRe,
 } from "../../platform/core/delimiter";
+import { CARD_ANCHOR_LINE_RE } from "../../platform/core/identity";
 
-const ANCHOR_RE = /^\^sprout-(\d{9})$/;
+const ANCHOR_RE = CARD_ANCHOR_LINE_RE;
 
 type CardType = "basic" | "reversed" | "mcq" | "cloze" | "io" | "oq";
 
@@ -265,7 +266,7 @@ export function parseCardsFromText(
   let current: ParsedCard | null = null;
 
   let currentField: CurrentFieldKey | null = null;
-  let pipeField: CurrentFieldKey | "mcqOption" | "oqStepField" | null = null;
+  let pipeField: CurrentFieldKey | "mcqOption" | "oqStepField" | "maskMode" | null = null;
 
 
   const flush = () => {
@@ -377,7 +378,7 @@ export function parseCardsFromText(
       if (steps.length < 2) current.errors.push("OQ requires at least 2 numbered steps (1 | ... |, 2 | ... |).");
       if (steps.length > 20) current.errors.push("OQ supports a maximum of 20 steps.");
       // Clean up internal field
-      delete (current as unknown)._oqCurrentStepIdx;
+      delete current._oqCurrentStepIdx;
     }
 
     cards.push(current);
@@ -427,6 +428,15 @@ export function parseCardsFromText(
         const idx = (current as Record<string, unknown>)._oqCurrentStepIdx;
         if (current.oqSteps && typeof idx === "number" && idx >= 0 && idx < current.oqSteps.length) {
           current.oqSteps[idx] = (current.oqSteps[idx] ? current.oqSteps[idx] + "\n" : "") + chunk;
+        }
+      } else if (pipeField === "maskMode") {
+        const v = String(chunk ?? "").trim();
+        if (!v) {
+          current.maskMode = null;
+        } else if (v === "solo" || v === "all") {
+          current.maskMode = v;
+        } else {
+          current.errors.push('IO mask mode must be "solo" or "all".');
         }
       } else {
         appendToField(current, pipeField, chunk);

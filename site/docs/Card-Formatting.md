@@ -2,7 +2,7 @@
 
 Last modified: 05/03/2026
 
-Sprout card content supports standard Markdown, inline code, links, images, and math.
+LearnKit card content supports standard Markdown, inline code, links, images, and math.
 
 For practical formatting examples and card syntax patterns, see:
 

@@ -257,7 +257,7 @@ export interface FooterCallbacks {
 /** Build the modal footer with Cancel button, mask-mode picker, and Save button. */
 export function buildFooter(parent: HTMLElement, cb: FooterCallbacks, defaultMode: "solo" | "all" = "solo"): FooterRefs {
   const footer = parent.createDiv({ cls: "bc flex flex-col items-end gap-3" });
-  footer.classList.add("sprout-io-footer", "sprout-modal-footer");
+  footer.classList.add("sprout-io-footer", "lk-modal-footer");
 
   let selectedMode: "solo" | "all" = defaultMode;
   const options: { value: "solo" | "all"; label: string }[] = [
@@ -284,7 +284,7 @@ export function buildFooter(parent: HTMLElement, cb: FooterCallbacks, defaultMod
   // Button-style dropdown (matches other modal dropdowns)
   const dropRoot = modeRow.createDiv({ cls: "bc sprout relative inline-flex" });
   const trigger = dropRoot.createEl("button", {
-    cls: "bc btn-outline h-7 px-2 text-sm inline-flex items-center gap-2 sprout-io-mode-trigger",
+    cls: "bc sprout-btn-toolbar h-7 px-2 text-sm inline-flex items-center gap-2 sprout-io-mode-trigger",
     attr: { type: "button", "aria-haspopup": "menu", "aria-expanded": "false" },
   });
   const triggerLabel = trigger.createEl("span", { cls: "bc", text: options.find((o) => o.value === selectedMode)?.label ?? "Reveal group" });
@@ -372,7 +372,7 @@ export function buildFooter(parent: HTMLElement, cb: FooterCallbacks, defaultMod
   // Button row
   const buttonRow = footer.createDiv({ cls: "bc flex items-center gap-2" });
 
-  const cancelBtn = buttonRow.createEl("button", { cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm" });
+  const cancelBtn = buttonRow.createEl("button", { cls: "bc sprout-btn-toolbar sprout-btn-outline-muted inline-flex items-center gap-2 h-9 px-3 text-sm" });
   cancelBtn.type = "button";
   const cancelIcon = cancelBtn.createEl("span", { cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
   setIcon(cancelIcon, "x");
@@ -382,7 +382,7 @@ export function buildFooter(parent: HTMLElement, cb: FooterCallbacks, defaultMod
     cb.onCancel();
   };
 
-  const saveBtn = buttonRow.createEl("button", { cls: "bc btn-outline inline-flex items-center gap-2 h-9 px-3 text-sm" });
+  const saveBtn = buttonRow.createEl("button", { cls: "bc sprout-btn-toolbar sprout-io-save-btn inline-flex items-center gap-2 h-9 px-3 text-sm" });
   saveBtn.type = "button";
   saveBtn.createSpan({ text: "Save" });
   saveBtn.onclick = () => {
@@ -417,7 +417,7 @@ export function buildImageLimitDialog(
   dlgCancel.onclick = () => dialog.close();
 
   const dlgDelete = dlgFooter.createEl("button", {
-    cls: "bc btn-outline inline-flex items-center justify-center px-3 h-9 text-sm",
+    cls: "bc sprout-btn-toolbar inline-flex items-center justify-center px-3 h-9 text-sm",
     attr: { type: "button" },
     text: "Delete image",
   });

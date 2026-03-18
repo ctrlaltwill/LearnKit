@@ -1,6 +1,6 @@
 /**
  * @file src/home/home-helpers.ts
- * @summary Pure helper functions and constants used by the Sprout Home view. All functions are side-effect-free with no Obsidian dependencies, covering date/time formatting, scope construction from deck paths, and deck-label formatting for the dashboard UI.
+ * @summary Pure helper functions and constants used by the Home view. All functions are side-effect-free with no Obsidian dependencies, covering date/time formatting, scope construction from deck paths, and deck-label formatting for the dashboard UI.
  *
  * @exports
  *  - MS_DAY                    — re-exported constant for milliseconds in one day
