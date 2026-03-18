@@ -12,7 +12,6 @@ import { CoachPlanSqlite, type CoachIntensity, type CoachPlanRow } from "../../p
 import { NoteReviewSqlite } from "../../platform/core/note-review-sqlite";
 import { getGroupIndex } from "../../engine/indexing/group-index";
 import { isParentCard } from "../../platform/core/card-utils";
-import { createTitleStripFrame, type TitleStripFrame } from "../../platform/core/view-primitives";
 import { cascadeAOSOnLoad, initAOS, resetAOS } from "../../platform/core/aos-loader";
 import { CoachHealthPanel, CoachReadinessPanel, type ExamReadinessPoint } from "./coach-charts";
 import { forgetting_curve, generatorParameters } from "ts-fsrs";
@@ -140,7 +139,6 @@ export class SproutCoachView extends ItemView {
 
   private _header: SproutHeader | null = null;
   private _rootEl: HTMLElement | null = null;
-  private _titleStripEl: HTMLElement | null = null;
   private _coachDb: CoachPlanSqlite | null = null;
   private _notesDb: NoteReviewSqlite | null = null;
   private _chartsRoot: ReactRoot | null = null;
@@ -223,8 +221,6 @@ export class SproutCoachView extends ItemView {
   async onClose(): Promise<void> {
     this._header?.dispose();
     this._header = null;
-    this._titleStripEl?.remove();
-    this._titleStripEl = null;
 
     try {
       this._chartsRoot?.unmount();
@@ -283,26 +279,9 @@ export class SproutCoachView extends ItemView {
     if (this.plugin.isWideMode) this.containerEl.setAttribute("data-sprout-wide", "1");
     else this.containerEl.removeAttribute("data-sprout-wide");
 
-    if (!this._rootEl && !this._titleStripEl) return;
+    if (!this._rootEl) return;
     const maxWidth = this.plugin.isWideMode ? "none" : MAX_CONTENT_WIDTH_PX;
     if (this._rootEl) setCssProps(this._rootEl, "--lk-home-max-width", maxWidth);
-    if (this._titleStripEl) setCssProps(this._titleStripEl, "--lk-home-max-width", maxWidth);
-  }
-
-  private _ensureTitleStrip(root: HTMLElement): TitleStripFrame {
-    this._titleStripEl?.remove();
-    const frame = createTitleStripFrame({
-      root,
-      stripClassName: "lk-home-title-strip",
-      rowClassName: "sprout-inline-sentence w-full flex items-center justify-between gap-[10px]",
-      leftClassName: "min-w-0 flex-1 flex flex-col gap-[2px]",
-      rightClassName: "flex items-center gap-2",
-      prepend: true,
-    });
-    frame.title.className = "text-xl font-semibold tracking-tight";
-    frame.subtitle.className = "flex items-center gap-1 min-w-0 text-[0.95rem] font-normal leading-[1.3] text-muted-foreground";
-    this._titleStripEl = frame.strip;
-    return frame;
   }
 
   private _allFiles(): TFile[] {
@@ -568,29 +547,6 @@ export class SproutCoachView extends ItemView {
       }
     }
     return [this._scopeFromParts(plan.scope_type, plan.scope_key, plan.scope_name)];
-  }
-
-  private _renderHeader(frame: TitleStripFrame, plans: CoachPlanRow[]): void {
-    const plansCount = plans.length;
-    frame.title.textContent = "Study coach";
-    frame.subtitle.textContent = "Build focused study plans for your exams and tests.";
-
-    frame.right.empty();
-    if (plansCount > 0) {
-      const createBtn = frame.right.createEl("button", {
-        cls: "bc sprout-btn-toolbar sprout-btn-accent sprout-coach-switcher-create-btn",
-      });
-      createBtn.type = "button";
-      createBtn.createSpan({ text: "+" });
-      createBtn.createSpan({ text: "New plan" });
-      if (plansCount >= 5) createBtn.disabled = true;
-      createBtn.addEventListener("click", () => {
-        this._wizardVisible = true;
-        this._wizardStep = 0;
-        this._wizardSlide = "next";
-        void this._render();
-      });
-    }
   }
 
   private _renderEmptyCta(host: HTMLElement): void {
@@ -1042,8 +998,8 @@ export class SproutCoachView extends ItemView {
         const existingPlans = this._coachDb?.listPlans() ?? [];
         const primaryScope = selectedScopes[0];
         const isNew = !existingPlans.some((p) => planScopeId(p) === toScopeId(primaryScope));
-        if (isNew && existingPlans.length >= 3) {
-          new Notice("You can have up to 3 plans. Delete one to add another.");
+        if (isNew && existingPlans.length >= 4) {
+          new Notice("You can have up to 4 plans. Delete one to add another.");
           return;
         }
 
@@ -1307,19 +1263,6 @@ export class SproutCoachView extends ItemView {
     testBtn.addEventListener("click", () => {
       void this.plugin.openExamGeneratorScope(scope);
     });
-
-    const delBtn = actions.createEl("button", {
-      cls: "bc sprout-btn-outline-muted sprout-btn-danger h-9 inline-flex items-center gap-2",
-      text: "Delete",
-    });
-    delBtn.type = "button";
-    delBtn.addEventListener("click", () => {
-      void (async () => {
-        this._coachDb?.deletePlan(plan.scope_type, plan.scope_key);
-        await this._coachDb?.persist();
-        await this._render();
-      })();
-    });
   }
 
   private async _renderDashboard(shell: HTMLElement, plans: CoachPlanRow[]): Promise<void> {
@@ -1335,60 +1278,113 @@ export class SproutCoachView extends ItemView {
     }
 
     const freshPlans = this._coachDb.listPlans();
-    if (!freshPlans.length) {
-      this._renderEmptyCta(shell);
-      return;
-    }
-
-    const shownPlans = [...freshPlans].sort((a, b) => a.exam_date_utc - b.exam_date_utc || a.scope_name.localeCompare(b.scope_name)).slice(0, 5);
+    const maxPlans = 4;
+    const shownPlans = [...freshPlans].sort((a, b) => a.exam_date_utc - b.exam_date_utc || a.scope_name.localeCompare(b.scope_name)).slice(0, maxPlans);
     const shownIds = new Set(shownPlans.map((plan) => planScopeId(plan)));
     if (!this._selectedPlanScopeId || !shownIds.has(this._selectedPlanScopeId)) {
       this._selectedPlanScopeId = shownPlans[0] ? planScopeId(shownPlans[0]) : null;
     }
 
-    const selectedPlan = shownPlans.find((plan) => planScopeId(plan) === this._selectedPlanScopeId) ?? shownPlans[0];
-    if (!selectedPlan) return;
-
     const switcherCard = shell.createDiv({ cls: "sprout-coach-switcher-card" });
     const switcherHeader = switcherCard.createDiv({ cls: "sprout-coach-switcher-header" });
     switcherHeader.createDiv({ cls: "sprout-coach-switcher-heading", text: "Your Study Plans" });
 
-    const switcherStrip = switcherCard.createDiv({ cls: "sprout-coach-switcher-strip" });
-    const tabs: HTMLButtonElement[] = [];
+    const switcherGrid = switcherCard.createDiv({ cls: "sprout-coach-switcher-grid" });
+    const selectorCards: HTMLButtonElement[] = [];
+    const firstEmptySlot = shownPlans.length < maxPlans ? shownPlans.length : -1;
 
-    const refreshTabPressedState = () => {
-      for (const tab of tabs) {
-        const scopeId = tab.dataset.scopeId || "";
-        tab.setAttribute("aria-pressed", scopeId === this._selectedPlanScopeId ? "true" : "false");
+    const refreshSelectedCardState = () => {
+      for (const card of selectorCards) {
+        const scopeId = card.dataset.scopeId || "";
+        card.setAttribute("aria-pressed", scopeId === this._selectedPlanScopeId ? "true" : "false");
       }
     };
 
     const dashboardBody = shell.createDiv({ cls: "sprout-coach-dashboard-body" });
 
     const renderSelectedPlanBody = () => {
-      const activePlan = shownPlans.find((plan) => planScopeId(plan) === this._selectedPlanScopeId) ?? shownPlans[0];
-      if (!activePlan) return;
-      refreshTabPressedState();
+      const activePlan = shownPlans.find((plan) => planScopeId(plan) === this._selectedPlanScopeId) ?? shownPlans[0] ?? null;
+      refreshSelectedCardState();
       dashboardBody.empty();
+      if (!activePlan) return;
       this._renderSelectedPlanBody(dashboardBody, activePlan, now);
     };
 
-    for (const plan of shownPlans) {
-      const id = planScopeId(plan);
-      const scopeMeta = formatScopePlanTitle(plan.plan_name || plan.scope_name || "Plan");
-      const tab = switcherStrip.createEl("button", { cls: "sprout-coach-switcher-tab" });
-      tab.type = "button";
-      tab.dataset.scopeId = id;
-      tabs.push(tab);
-      const days = daysLeftToExam(plan.exam_date_utc, now);
-      tab.createSpan({ cls: "sprout-coach-switcher-tab-title", text: scopeMeta.title });
-      tab.createSpan({ cls: "sprout-coach-switcher-tab-meta", text: `${days}d left` });
-      tab.addEventListener("click", () => {
-        this._selectedPlanScopeId = id;
-        renderSelectedPlanBody();
-      });
+    for (let idx = 0; idx < maxPlans; idx += 1) {
+      const slot = switcherGrid.createDiv({ cls: "sprout-coach-switcher-slot" });
+      const plan = shownPlans[idx] ?? null;
+
+      if (plan) {
+        const id = planScopeId(plan);
+        const scopeMeta = formatScopePlanTitle(plan.plan_name || plan.scope_name || "Plan");
+        const days = daysLeftToExam(plan.exam_date_utc, now);
+        slot.classList.add("is-filled");
+
+        const planCard = slot.createEl("button", { cls: "card sprout-coach-switcher-plan-card" });
+        planCard.type = "button";
+        planCard.dataset.scopeId = id;
+        planCard.setAttr("aria-label", `${scopeMeta.title} ${days}d left`);
+        selectorCards.push(planCard);
+
+        const titleRow = planCard.createDiv({ cls: "sprout-coach-switcher-plan-top" });
+        titleRow.createSpan({ cls: "sprout-coach-switcher-plan-title", text: scopeMeta.title });
+        titleRow.createSpan({ cls: "sprout-coach-switcher-plan-days", text: `${days}d` });
+
+        planCard.createDiv({ cls: "sprout-coach-switcher-plan-date", text: `Exam ${formatShortDate(plan.exam_date_utc)}` });
+        planCard.createDiv({
+          cls: "sprout-coach-switcher-plan-overview",
+          text: `${titleCaseIntensity(plan.intensity)} intensity${scopeMeta.hierarchy ? ` • ${scopeMeta.hierarchy}` : ""}`,
+        });
+
+        planCard.addEventListener("click", () => {
+          this._selectedPlanScopeId = id;
+          renderSelectedPlanBody();
+        });
+
+        const deleteBtn = slot.createEl("button", {
+          cls: "bc sprout-btn-outline-muted sprout-btn-danger sprout-coach-switcher-delete",
+        });
+        deleteBtn.type = "button";
+        deleteBtn.setAttr("aria-label", `Remove ${scopeMeta.title}`);
+        setIcon(deleteBtn, "x");
+        deleteBtn.addEventListener("click", (evt) => {
+          evt.stopPropagation();
+          void (async () => {
+            this._coachDb?.deletePlan(plan.scope_type, plan.scope_key);
+            await this._coachDb?.persist();
+            await this._render();
+          })();
+        });
+        continue;
+      }
+
+      if (idx === firstEmptySlot && freshPlans.length < maxPlans) {
+        const addCard = slot.createEl("button", {
+          cls: "card sprout-coach-switcher-plan-card is-create",
+        });
+        addCard.type = "button";
+        addCard.setAttr("aria-label", "Add plan");
+        addCard.createSpan({ cls: "sprout-coach-switcher-slot-badge is-create", text: "Start here" });
+        const plus = addCard.createSpan({ cls: "sprout-coach-switcher-create-plus", text: "+" });
+        plus.setAttr("aria-hidden", "true");
+        addCard.createDiv({ cls: "sprout-coach-switcher-create-title", text: "Add plan" });
+        addCard.createDiv({ cls: "sprout-coach-switcher-create-copy", text: "Create a focused exam plan" });
+        addCard.addEventListener("click", () => {
+          this._wizardVisible = true;
+          this._wizardStep = 0;
+          this._wizardSlide = "next";
+          void this._render();
+        });
+        continue;
+      }
+
+      const placeholder = slot.createDiv({ cls: "card sprout-coach-switcher-plan-card is-placeholder" });
+      placeholder.createSpan({ cls: "sprout-coach-switcher-slot-badge is-available", text: "Available" });
+      placeholder.createDiv({ cls: "sprout-coach-switcher-placeholder-title", text: "Unused slot" });
+      placeholder.createDiv({ cls: "sprout-coach-switcher-placeholder-copy", text: "Add a plan to fill this card" });
     }
-    refreshTabPressedState();
+
+    refreshSelectedCardState();
 
     renderSelectedPlanBody();
   }
@@ -1521,14 +1517,9 @@ export class SproutCoachView extends ItemView {
     const plans = this._coachDb.listPlans();
     if (!plans.length && !this._wizardVisible) this._wizardVisible = false;
 
-    const titleFrame = this._ensureTitleStrip(root);
-    this._renderHeader(titleFrame, plans);
-
     const shell = root.createDiv({ cls: "sprout-view-content-shell lk-home-content-shell flex flex-col gap-4 sprout-coach-shell" });
 
     if (animationsEnabled) {
-      titleFrame.strip.setAttribute("data-aos", "fade-up");
-      titleFrame.strip.setAttribute("data-aos-anchor-placement", "top-top");
       shell.setAttribute("data-aos", "fade-up");
       shell.setAttribute("data-aos-anchor-placement", "top-top");
       shell.setAttribute("data-aos-delay", "100");
@@ -1538,8 +1529,6 @@ export class SproutCoachView extends ItemView {
 
     if (this._wizardVisible) {
       this._renderWizard(shell, scopeOptions, plans.length > 0);
-    } else if (!plans.length) {
-      this._renderEmptyCta(shell);
     } else {
       await this._renderDashboard(shell, plans);
     }

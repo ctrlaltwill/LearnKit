@@ -6,7 +6,7 @@
  *  - SproutHomeView — Obsidian ItemView subclass implementing the Home dashboard tab
  */
 
-import { ItemView, Notice, setIcon, type WorkspaceLeaf } from "obsidian";
+import { ItemView, Notice, setIcon, TFile, TFolder, type WorkspaceLeaf } from "obsidian";
 import * as React from "react";
 import { createRoot, type Root as ReactRoot } from "react-dom/client";
 import { type SproutHeader, createViewHeader } from "../../platform/core/header";
@@ -22,6 +22,7 @@ import { cascadeAOSOnLoad, initAOS, resetAOS } from "../../platform/core/aos-loa
 import { createListReorderPreviewController } from "../../platform/core/oq-reorder-preview";
 import { t } from "../../platform/translations/translator";
 import { createTitleStripFrame, type TitleStripFrame } from "../../platform/core/view-primitives";
+import { matchesScope } from "../../engine/indexing/scope-match";
 
 import {
   MS_DAY,
@@ -368,12 +369,40 @@ export class SproutHomeView extends ItemView {
       if (card?.id) cardsById.set(String(card.id), card);
     }
 
+    const activeStudyCards = cards.filter((card) => {
+      if (!card) return false;
+      if (isParentCard(card)) return false;
+      const source = String(card.sourceNotePath ?? "").trim();
+      return source.length > 0;
+    });
+
     const reviewEvents = events.filter((ev) => ev && ev.kind === "review");
     const sessionEvents = events.filter((ev) => ev && ev.kind === "session");
     reviewEvents.sort((a, b) => Number(b.at) - Number(a.at));
     sessionEvents.sort((a, b) => Number(b.at) - Number(a.at));
 
     const recentDecks: Array<{ scope: Scope; lastAt: number; label: string }> = [];
+    const scopeExists = (scope: Scope): boolean => {
+      if (!scope || typeof scope !== "object") return false;
+      const type = String(scope.type || "");
+      if (type === "vault") return true;
+      const key = String(scope.key || "").trim();
+      if (!key) return false;
+      const af = this.plugin.app.vault.getAbstractFileByPath(key);
+      if (!af) return false;
+      if (type === "note") return af instanceof TFile;
+      if (type === "folder") return af instanceof TFolder;
+      return false;
+    };
+    const scopeHasCards = (scope: Scope): boolean => {
+      if (!scope || typeof scope !== "object") return false;
+      for (const card of activeStudyCards) {
+        const path = String(card.sourceNotePath ?? "").trim();
+        if (!path) continue;
+        if (matchesScope(scope, path)) return true;
+      }
+      return false;
+    };
     const seenDecks = new Set<string>();
     for (const ev of sessionEvents) {
       const scope = ev?.scope;
@@ -384,8 +413,12 @@ export class SproutHomeView extends ItemView {
       if (!["vault", "folder", "note"].includes(type)) continue;
       const label = type === "vault" ? tx("ui.home.deck.allCards", "All cards") : (key || name).trim();
       if (!label) continue;
-      const dedupeKey = `${type}:${key || name}`;
+      const dedupeKey = type === "vault"
+        ? "vault"
+        : `${type}:${String(key || name).trim().toLowerCase()}`;
       if (seenDecks.has(dedupeKey)) continue;
+      if (!scopeExists(scope)) continue;
+      if (!scopeHasCards(scope)) continue;
       seenDecks.add(dedupeKey);
       recentDecks.push({ scope, lastAt: Number(ev.at) || nowMs, label });
       if (recentDecks.length >= 5) break;

@@ -1618,7 +1618,7 @@ export class SproutSettingsView extends ItemView {
     const releasePages = await fetchGithubReleasePages();
 
     const pages: ReleaseNotesPage[] = [
-      { key: "about-sprout", label: "About Sprout", markdown: supportMarkdown },
+      { key: "about-sprout", label: "About LearnKit", markdown: supportMarkdown },
       ...releasePages,
     ];
     this._releasePagesCache = { pages, ts: Date.now() };

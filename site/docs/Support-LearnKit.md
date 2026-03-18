@@ -8,7 +8,7 @@ LearnKit is proudly open source and will always remain free. No hidden fees. No 
 
 Companion, the AI companion introduced in LearnKit 1.1.0, runs on a bring-your-own API key model. You choose which provider to use and pay only for what you use, not a fixed monthly fee set by us.
 
-![William Guy](../branding/Founder.jpg)
+![William Guy](https://raw.githubusercontent.com/ctrlaltwill/LearnKit/main/site/branding/Founder.jpg)
 
 - [Find out more about Will](https://www.linkedin.com/in/williamguy/)
 
