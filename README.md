@@ -9,7 +9,7 @@
 ![LearnKit Banner One - Welcome](site/branding/Banner%20One%20-%20Welcome.png)
 
 > [!IMPORTANT]
-> **1.2.0 update:** This release introduces major new features, but it is not fully polished yet.
+> **1.2 update:** This release introduces major new features, but it is not fully polished yet.
 > LearnKit 1.2.0 is still a proof of concept. The immediate focus is on polishing the UI and fixing bugs; the longer-term focus is on improving stability and delivering a smooth mobile experience.
 >
 > As part of this update, scheduling storage has been migrated to SQLite for better stability and cross-compatibility.
