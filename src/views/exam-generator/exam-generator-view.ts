@@ -997,78 +997,75 @@ export class SproutExamGeneratorView extends ItemView {
       renderScopeList();
 
       // ---- Attachments (optional) ----
-      const attachmentsEnabled = !!this.plugin.settings.studyAssistant.privacy.includeAttachmentsInExam;
-      if (attachmentsEnabled) {
-        const attachArea = page.createDiv({ cls: "sprout-exam-generator-attachments" });
-        attachArea.createDiv({ cls: "sprout-coach-field-label", text: "Attachments are optional." });
-        attachArea.createEl("p", {
-          cls: "sprout-coach-step-copy",
-          text: "Attach files to include as reference material for test generation.",
-        });
-        const attachChips = attachArea.createDiv({ cls: "sprout-exam-generator-attachment-chips" });
-        const renderAttachChips = () => {
-          attachChips.empty();
-          for (let i = 0; i < this._attachedFiles.length; i++) {
-            const af = this._attachedFiles[i];
-            const chip = attachChips.createDiv({ cls: "sprout-assistant-popup-attachment-chip" });
-            chip.createSpan({ text: af.name, cls: "sprout-assistant-popup-attachment-name" });
-            const removeBtn = chip.createEl("button", { cls: "sprout-assistant-popup-attachment-remove" });
-            removeBtn.type = "button";
-            removeBtn.setAttribute("aria-label", "Remove");
-            setIcon(removeBtn, "x");
-            removeBtn.addEventListener("click", (e: MouseEvent) => {
-              e.preventDefault();
-              e.stopPropagation();
-              this._attachedFiles.splice(i, 1);
-              renderAttachChips();
-              syncFooter();
-            });
-          }
-        };
-        renderAttachChips();
+      const attachArea = page.createDiv({ cls: "sprout-exam-generator-attachments" });
+      attachArea.createDiv({ cls: "sprout-coach-field-label", text: "Attachments are optional." });
+      attachArea.createEl("p", {
+        cls: "sprout-coach-step-copy",
+        text: "Attach files to include as reference material for test generation.",
+      });
+      const attachChips = attachArea.createDiv({ cls: "sprout-exam-generator-attachment-chips" });
+      const renderAttachChips = () => {
+        attachChips.empty();
+        for (let i = 0; i < this._attachedFiles.length; i++) {
+          const af = this._attachedFiles[i];
+          const chip = attachChips.createDiv({ cls: "sprout-assistant-popup-attachment-chip" });
+          chip.createSpan({ text: af.name, cls: "sprout-assistant-popup-attachment-name" });
+          const removeBtn = chip.createEl("button", { cls: "sprout-assistant-popup-attachment-remove" });
+          removeBtn.type = "button";
+          removeBtn.setAttribute("aria-label", "Remove");
+          setIcon(removeBtn, "x");
+          removeBtn.addEventListener("click", (e: MouseEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this._attachedFiles.splice(i, 1);
+            renderAttachChips();
+            syncFooter();
+          });
+        }
+      };
+      renderAttachChips();
 
-        const addBtn = attachArea.createEl("button", {
-          cls: "bc sprout-btn-toolbar h-9 inline-flex items-center gap-2",
-        });
-        addBtn.type = "button";
-        const addBtnIcon = addBtn.createSpan({ cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
-        setIcon(addBtnIcon, "paperclip");
-        addBtn.createSpan({ text: "Attach file" });
-        addBtn.addEventListener("click", () => {
-          if (this._attachedFiles.length >= MAX_ATTACHMENTS) {
-            new Notice(`Maximum ${MAX_ATTACHMENTS} attachments.`);
-            return;
-          }
-          const allFiles = this.app.vault.getFiles().filter((f: TFile) => isSupportedAttachmentExt(f.extension));
-          const modal = new ExamAttachmentPickerModal(this.app, allFiles, (file: TFile) => {
-            void (async () => {
-              if (this._attachedFiles.length >= MAX_ATTACHMENTS) {
-                new Notice(`Maximum ${MAX_ATTACHMENTS} attachments.`);
-                return;
-              }
-              if (this._attachedFiles.some(af => af.name === file.name)) return;
-              const attached = await readVaultFileAsAttachment(this.app, file);
-              if (!attached) {
-                new Notice("Failed to read file or file too large.");
-                return;
-              }
-              this._attachedFiles.push(attached);
-              renderAttachChips();
-              syncFooter();
-            })();
-          }, (attached) => {
+      const addBtn = attachArea.createEl("button", {
+        cls: "bc sprout-btn-toolbar h-9 inline-flex items-center gap-2",
+      });
+      addBtn.type = "button";
+      const addBtnIcon = addBtn.createSpan({ cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
+      setIcon(addBtnIcon, "paperclip");
+      addBtn.createSpan({ text: "Attach file" });
+      addBtn.addEventListener("click", () => {
+        if (this._attachedFiles.length >= MAX_ATTACHMENTS) {
+          new Notice(`Maximum ${MAX_ATTACHMENTS} attachments.`);
+          return;
+        }
+        const allFiles = this.app.vault.getFiles().filter((f: TFile) => isSupportedAttachmentExt(f.extension));
+        const modal = new ExamAttachmentPickerModal(this.app, allFiles, (file: TFile) => {
+          void (async () => {
             if (this._attachedFiles.length >= MAX_ATTACHMENTS) {
               new Notice(`Maximum ${MAX_ATTACHMENTS} attachments.`);
               return;
             }
-            if (this._attachedFiles.some(af => af.name === attached.name)) return;
+            if (this._attachedFiles.some(af => af.name === file.name)) return;
+            const attached = await readVaultFileAsAttachment(this.app, file);
+            if (!attached) {
+              new Notice("Failed to read file or file too large.");
+              return;
+            }
             this._attachedFiles.push(attached);
             renderAttachChips();
             syncFooter();
-          });
-          modal.open();
+          })();
+        }, (attached) => {
+          if (this._attachedFiles.length >= MAX_ATTACHMENTS) {
+            new Notice(`Maximum ${MAX_ATTACHMENTS} attachments.`);
+            return;
+          }
+          if (this._attachedFiles.some(af => af.name === attached.name)) return;
+          this._attachedFiles.push(attached);
+          renderAttachChips();
+          syncFooter();
         });
-      }
+        modal.open();
+      });
 
       const footer = page.createDiv({ cls: "sprout-coach-wizard-footer" });
       nextBtn = footer.createEl("button", {

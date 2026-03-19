@@ -2507,7 +2507,7 @@ export class SproutAssistantPopup {
     try {
       const noteContent = await this.readActiveMarkdown(file);
       const settings = this.plugin.settings.studyAssistant;
-      const noteEmbedUrls = settings.privacy.includeAttachmentsInCompanion
+      const noteEmbedUrls = settings.privacy.includeAttachmentsInExam
         ? await this.buildNoteEmbedNonImageAttachmentUrls(file, this.extractImageRefs(noteContent))
         : [];
 
@@ -4166,16 +4166,13 @@ export class SproutAssistantPopup {
     this._renderAttachmentChips(composer);
     const shell = composer.createDiv({ cls: "sprout-assistant-popup-composer-shell" });
 
-    const attachmentsEnabled = !!this.plugin.settings.studyAssistant.privacy.includeAttachmentsInCompanion;
-    if (attachmentsEnabled) {
-      const attachBtn = shell.createEl("button", { cls: "sprout-assistant-popup-attach-btn" });
-      attachBtn.type = "button";
-      attachBtn.disabled = this._isAssistantBusy();
-      attachBtn.setAttribute("aria-label", this._tx("ui.studyAssistant.chat.attachFile", "Attach file"));
-      attachBtn.setAttribute("data-tooltip-position", "top");
-      setIcon(attachBtn, "paperclip");
-      attachBtn.addEventListener("click", () => void this._openAttachmentPicker());
-    }
+    const attachBtn = shell.createEl("button", { cls: "sprout-assistant-popup-attach-btn" });
+    attachBtn.type = "button";
+    attachBtn.disabled = this._isAssistantBusy();
+    attachBtn.setAttribute("aria-label", this._tx("ui.studyAssistant.chat.attachFile", "Attach file"));
+    attachBtn.setAttribute("data-tooltip-position", "top");
+    setIcon(attachBtn, "paperclip");
+    attachBtn.addEventListener("click", () => void this._openAttachmentPicker());
 
     const input = shell.createEl("textarea", { cls: "sprout-assistant-popup-input" });
     input.rows = 1;

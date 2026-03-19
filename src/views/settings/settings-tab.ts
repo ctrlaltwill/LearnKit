@@ -3020,8 +3020,8 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     withDependentSetting(
       new Setting(wrapper)
-        .setName(this._tx("ui.settings.studyAssistant.privacy.includeAttachmentsInCompanion.name", "Allow file attachments in Companion"))
-        .setDesc(this._tx("ui.settings.studyAssistant.privacy.includeAttachmentsInCompanion.desc", "Allow attaching vault files (images and PDFs) to Companion messages. This may increase token usage."))
+        .setName(this._tx("ui.settings.studyAssistant.privacy.includeAttachmentsInCompanion.name", "Always include file attachments in Companion"))
+        .setDesc(this._tx("ui.settings.studyAssistant.privacy.includeAttachmentsInCompanion.desc", "Automatically include embedded vault file attachments from the active note in Companion messages (for example images, PDFs, and docs; markdown links are excluded). This may increase token usage."))
         .addToggle((toggle) =>
           toggle.setValue(!!this.plugin.settings.studyAssistant.privacy.includeAttachmentsInCompanion).onChange(async (value) => {
             this.plugin.settings.studyAssistant.privacy.includeAttachmentsInCompanion = !!value;
@@ -3032,8 +3032,8 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     withDependentSetting(
       new Setting(wrapper)
-        .setName(this._tx("ui.settings.studyAssistant.privacy.includeAttachmentsInExam.name", "Allow file attachments in Tests"))
-        .setDesc(this._tx("ui.settings.studyAssistant.privacy.includeAttachmentsInExam.desc", "Allow attaching vault files (images and PDFs) when generating tests. This may increase token usage."))
+        .setName(this._tx("ui.settings.studyAssistant.privacy.includeAttachmentsInExam.name", "Always include file attachments in Tests"))
+        .setDesc(this._tx("ui.settings.studyAssistant.privacy.includeAttachmentsInExam.desc", "Automatically include embedded vault file attachments from test source notes (for example images, PDFs, and docs; markdown links are excluded). This may increase token usage."))
         .addToggle((toggle) =>
           toggle.setValue(!!this.plugin.settings.studyAssistant.privacy.includeAttachmentsInExam).onChange(async (value) => {
             this.plugin.settings.studyAssistant.privacy.includeAttachmentsInExam = !!value;
