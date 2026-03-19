@@ -79,3 +79,20 @@ export function allFlashcardsInsertedText(tx: Tx): string {
     "All flashcards inserted into the note.",
   );
 }
+
+export function isTestGenerationRequest(text: string): boolean {
+  const value = String(text || "").toLowerCase();
+  if (!value.trim()) return false;
+  if (/\b(make|create|generate|write|build|add)\b[\s\S]{0,30}\b(a\s+)?tests?\b/i.test(value)) return true;
+  if (/\btests?\s+(for|on|about|covering|from)\b/i.test(value)) return true;
+  if (/\b(unit\s*tests?|vitest|test\s*file|test\s*suite)\b/i.test(value)) return true;
+  return false;
+}
+
+export function testGeneratedText(tx: Tx, testName: string): string {
+  return tx(
+    "ui.studyAssistant.test.generated",
+    "I've made a test for {name}.",
+    { name: testName },
+  );
+}

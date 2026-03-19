@@ -14,6 +14,7 @@ export type ChatMessage = {
   role: "user" | "assistant";
   text: string;
   attachmentNames?: string[];
+  savedTestId?: string;
 };
 
 export type GenerateSuggestionBatch = {

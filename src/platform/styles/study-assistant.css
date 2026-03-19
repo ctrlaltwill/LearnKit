@@ -570,9 +570,6 @@
   animation: sprout-popup-in 0.18s ease-out;
 }
 
-.sprout.sprout-assistant-popup {
-  border: 1px solid var(--color-base-40) !important;
-}
 
 .sprout-assistant-popup.is-closing {
   animation: sprout-popup-out 0.18s ease-in;
@@ -640,10 +637,10 @@
 
 /* Widget-only: preserve emphasized user bubble styling. */
 .sprout-assistant-popup.sprout-assistant-popup-embedded .sprout-assistant-popup-message-bubble.is-user {
-  background: var(--theme-base-95);
   box-shadow: none;
-  border: 1px solid color-mix(in srgb, var(--theme-base-95) 60%, transparent);
-  color: #fff;
+  background: color-mix(in oklab, var(--theme-accent) 20%, var(--background));
+  color: var(--theme-base-95);
+  border: 1px solid var(--theme-base-95);
 }
 
 /* Widget-only: make header action buttons match teaser card surface. */
@@ -833,6 +830,7 @@
   right: 0;
   min-width: 220px;
   z-index: 30;
+  border: 1px solid var(--color-base-40);
   padding: 4px;
   background: var(--background-primary, #fff);
 }
@@ -858,7 +856,7 @@
   gap: 8px;
   padding: 6px 8px;
   border-radius: 8px;
-  border: 1px solid var(--color-base-40);
+  border: 1px solid transparent;
   cursor: pointer;
   user-select: none;
   outline: none;
@@ -1047,7 +1045,7 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  border: 1px solid var(--theme-base-40);
+  border: 1px solid var(--color-base-40);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1078,7 +1076,7 @@
 .sprout-assistant-popup-message-bubble {
   max-width: 85%;
   padding: 8px 12px 2px 12px;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   font-size: 0.9rem;
   line-height: 1.5;
   overflow-wrap: anywhere;
@@ -1088,7 +1086,7 @@
   background: var(--theme-base-20);
   color: var(--theme-base-95);
   border: 1px solid var(--theme-base-95);
-  border-top-right-radius: 4px;
+  border-top-right-radius: 1px;
 }
 
 /* ---- Attachment indicator tags (below user messages) ---- */
@@ -1130,7 +1128,7 @@
 }
 
 .sprout-assistant-popup-message-bubble.is-assistant {
-  border-top-left-radius: 4px;
+  border-top-left-radius: 1px;
   background: var(--background-secondary, #f5f5f5);
   border: 1px solid var(--color-base-40, rgba(0, 0, 0, 0.06));
   color: var(--text-normal);
@@ -1315,6 +1313,15 @@
 
 .sprout-assistant-popup-input::placeholder {
   color: var(--text-faint, var(--text-muted));
+}
+
+@media (hover: hover) {
+  .sprout-assistant-popup-input:hover {
+    background-color: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    transition: none !important;
+  }
 }
 
 .sprout-assistant-popup-send {
@@ -2040,7 +2047,7 @@
 }
 
 .sprout-assistant-popup-suggestion-card.sprout-assistant-popup-message-bubble.is-assistant {
-  border-top-left-radius: 14px;
+  border-top-left-radius: var(--radius-md);
 }
 
 .sprout-assistant-popup-suggestion-card:hover,

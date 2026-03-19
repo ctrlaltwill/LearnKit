@@ -176,6 +176,11 @@ export class SproutExamGeneratorView extends ItemView {
     this._applyCoachScope(scope);
   }
 
+  loadSavedTestById(testId: string): void {
+    this._savedTests = this._testsDb?.listTests(25) ?? [];
+    this._loadSavedTest(testId);
+  }
+
   private _tx(token: string, fallback: string): string {
     return t(this.plugin.settings?.general?.interfaceLanguage, token, fallback);
   }

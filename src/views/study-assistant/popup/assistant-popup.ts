@@ -20,6 +20,8 @@ import {
   generateStudyAssistantChatReply,
   generateStudyAssistantSuggestions,
 } from "../../../platform/integrations/ai/study-assistant-generator";
+import { generateExamQuestions } from "../../../platform/integrations/ai/exam-generator-ai";
+import { ExamTestsSqlite } from "../../../platform/core/exam-tests-sqlite";
 import { deleteStudyAssistantConversation } from "../../../platform/integrations/ai/study-assistant-provider";
 import type {
   StudyAssistantCardType,
@@ -57,6 +59,8 @@ import {
   extractRequestedGenerateCount,
   generateExcessiveCountHintText,
   allFlashcardsInsertedText,
+  isTestGenerationRequest,
+  testGeneratedText,
 } from "../chat/generation-helpers";
 import {
   ASSISTANT_MODES,
@@ -345,10 +349,36 @@ export class SproutAssistantPopup {
 
   /** Persist current chat state for the active note. */
   private _scheduleSave(): void {
+    const file = this.activeFile;
+    if (!file) return;
+    const snapshot = {
+      hasData: this.chatMessages.length > 0
+        || this.reviewMessages.length > 0
+        || this.generateMessages.length > 0
+        || this.generateSuggestionBatches.length > 0,
+      data: {
+        messages: [...this.chatMessages],
+        reviewMessages: [...this.reviewMessages],
+        reviewDraft: this.reviewDraft || undefined,
+        generateMessages: [...this.generateMessages],
+        generateDraft: this.generateDraft || undefined,
+        generateSuggestionBatches: this.generateSuggestionBatches.length
+          ? this.generateSuggestionBatches.map((batch) => ({
+            source: batch.source,
+            assistantMessageIndex: batch.assistantMessageIndex,
+            suggestions: [...batch.suggestions],
+          }))
+          : undefined,
+        remoteConversationsByMode: Object.keys(this.remoteConversationsByMode).length
+          ? { ...this.remoteConversationsByMode }
+          : undefined,
+        reviewDepth: this.reviewDepth,
+      },
+    };
     if (this._saveChatTimer != null) clearTimeout(this._saveChatTimer);
     this._saveChatTimer = setTimeout(() => {
       this._saveChatTimer = null;
-      void this._saveChatForActiveFile();
+      void this._saveChatForFile(file, snapshot.hasData, snapshot.data);
     }, 300);
   }
 
@@ -356,15 +386,50 @@ export class SproutAssistantPopup {
     if (!this.plugin.settings?.studyAssistant?.privacy?.saveChatHistory) return;
     const file = this.activeFile;
     if (!file) return;
+    const hasData = this.chatMessages.length > 0
+      || this.reviewMessages.length > 0
+      || this.generateMessages.length > 0
+      || this.generateSuggestionBatches.length > 0;
+    const data = {
+      messages: [...this.chatMessages],
+      reviewMessages: [...this.reviewMessages],
+      reviewDraft: this.reviewDraft || undefined,
+      generateMessages: [...this.generateMessages],
+      generateDraft: this.generateDraft || undefined,
+      generateSuggestionBatches: this.generateSuggestionBatches.length
+        ? this.generateSuggestionBatches.map((batch) => ({
+          source: batch.source,
+          assistantMessageIndex: batch.assistantMessageIndex,
+          suggestions: [...batch.suggestions],
+        }))
+        : undefined,
+      remoteConversationsByMode: Object.keys(this.remoteConversationsByMode).length
+        ? { ...this.remoteConversationsByMode }
+        : undefined,
+      reviewDepth: this.reviewDepth,
+    };
+    await this._saveChatForFile(file, hasData, data);
+  }
+
+  private async _saveChatForFile(
+    file: TFile,
+    hasData: boolean,
+    data: {
+      messages: ChatMessage[];
+      reviewMessages: ChatMessage[];
+      reviewDraft?: string;
+      generateMessages: ChatMessage[];
+      generateDraft?: string;
+      generateSuggestionBatches?: GenerateSuggestionBatch[];
+      remoteConversationsByMode?: ModeConversationRefs;
+      reviewDepth: StudyAssistantReviewDepth;
+    },
+  ): Promise<void> {
     const adapter = this.plugin.app?.vault?.adapter;
     const chatPath = this._getChatFilePath(file);
     const chatsFolder = this._getChatsFolderPath();
     if (!adapter || !chatPath || !chatsFolder) return;
 
-    const hasData = this.chatMessages.length > 0
-      || this.reviewMessages.length > 0
-      || this.generateMessages.length > 0
-      || this.generateSuggestionBatches.length > 0;
     if (!hasData) {
       // Remove stale file if nothing to save
       try {
@@ -380,18 +445,6 @@ export class SproutAssistantPopup {
       if (!(await adapter.exists(chatsFolder))) {
         await (adapter as { mkdir?: (p: string) => Promise<void> }).mkdir?.(chatsFolder);
       }
-      const data = {
-        messages: this.chatMessages,
-        reviewMessages: this.reviewMessages,
-        reviewDraft: this.reviewDraft || undefined,
-        generateMessages: this.generateMessages,
-        generateDraft: this.generateDraft || undefined,
-        generateSuggestionBatches: this.generateSuggestionBatches.length ? this.generateSuggestionBatches : undefined,
-        remoteConversationsByMode: Object.keys(this.remoteConversationsByMode).length
-          ? this.remoteConversationsByMode
-          : undefined,
-        reviewDepth: this.reviewDepth,
-      };
       await adapter.write(chatPath, JSON.stringify(data, null, 2));
       this._emitChatLogSynced(file.path);
     } catch (e) {
@@ -1175,6 +1228,39 @@ export class SproutAssistantPopup {
     return allFlashcardsInsertedText((token, fallback, vars) => this._tx(token, fallback, vars));
   }
 
+  private _isTestGenerationRequest(text: string): boolean {
+    return isTestGenerationRequest(text);
+  }
+
+  private _testGeneratedText(testName: string): string {
+    return testGeneratedText((token, fallback, vars) => this._tx(token, fallback, vars), testName);
+  }
+
+  private _looksLikeVitestTestCode(code: string): boolean {
+    const value = String(code || "");
+    if (!value.trim()) return false;
+    const hasDescribeOrIt = /\bdescribe\s*\(|\bit\s*\(/.test(value);
+    const hasVitestImport = /from\s+["']vitest["']/.test(value) || /\b(expect|vi|beforeEach|afterEach)\s*\(/.test(value);
+    return hasDescribeOrIt && hasVitestImport;
+  }
+
+  private _extractGeneratedCodeFromReply(reply: string): string {
+    const raw = String(reply || "").trim();
+    if (!raw) return "";
+    const fenceMatch = raw.match(/```(?:typescript|ts|javascript|js)?\s*\n([\s\S]*?)```/i);
+    if (fenceMatch?.[1]) return String(fenceMatch[1]).trim();
+    return raw;
+  }
+
+  private _toTestFileSlug(pathOrName: string): string {
+    const raw = String(pathOrName || "").replace(/\.(?:ts|tsx|js|jsx|md)$/i, "").replace(/[/\\]/g, "-").toLowerCase();
+    const normalized = raw
+      .replace(/[^a-z0-9-_]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^[-_]+|[-_]+$/g, "");
+    return normalized || "generated-note";
+  }
+
   private _formatGeneratedSuggestionsAsJsonMessage(suggestions: StudyAssistantSuggestion[]): string {
     const count = Array.isArray(suggestions) ? suggestions.length : 0;
     if (count <= 0) {
@@ -1495,6 +1581,11 @@ export class SproutAssistantPopup {
     // Preserve the current markdown session when focus moves to sidebars.
     if (!nextLeaf) return;
     if (nextLeaf === this._activeSessionLeaf) return;
+    if (this._saveChatTimer != null) {
+      clearTimeout(this._saveChatTimer);
+      this._saveChatTimer = null;
+    }
+    void this._saveChatForActiveFile();
     this._captureCurrentLeafSession();
     this._activeSessionLeaf = nextLeaf;
     const cached = this._leafSessions.get(nextLeaf);
@@ -2231,6 +2322,14 @@ export class SproutAssistantPopup {
     const hasAttachments = this._attachedFiles.length > 0;
     if (!draft && !hasAttachments) return;
 
+    if (draft && this._isTestGenerationRequest(draft)) {
+      this.chatDraft = "";
+      this.chatMessages.push({ role: "user", text: draft });
+      this._scheduleSave();
+      await this._generateTestForAssistantThread(draft);
+      return;
+    }
+
     if (draft && this._isGenerateFlashcardRequest(draft)) {
       this.chatDraft = "";
       this.chatMessages.push({ role: "user", text: draft });
@@ -2383,6 +2482,110 @@ export class SproutAssistantPopup {
       this.isReviewingNote = false;
       this._scheduleSave();
       this.render();
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  //  Test generation
+  // ---------------------------------------------------------------------------
+
+  private async _generateTestForAssistantThread(userMessage: string): Promise<void> {
+    if (this._isAssistantBusy()) return;
+    const file = this.getActiveMarkdownFile();
+    if (!file) {
+      this.chatError = this._tx("ui.studyAssistant.chat.noNote", "Open a markdown note to generate a test.");
+      this.render();
+      return;
+    }
+
+    this.isSendingChat = true;
+    this.chatError = "";
+    const threadTestAttachedUrls = this._collectAttachedFileDataUrls();
+    this._clearAttachments();
+    this.render();
+
+    try {
+      const noteContent = await this.readActiveMarkdown(file);
+      const settings = this.plugin.settings.studyAssistant;
+      const noteEmbedUrls = settings.privacy.includeAttachmentsInCompanion
+        ? await this.buildNoteEmbedNonImageAttachmentUrls(file, this.extractImageRefs(noteContent))
+        : [];
+
+      const config: import("../../exam-generator/exam-generator-types").ExamGeneratorConfig = {
+        difficulty: "medium",
+        questionMode: "mixed",
+        questionCount: 10,
+        timed: false,
+        durationMinutes: 15,
+        sourceMode: "selected",
+        folderPath: "",
+        includeSubfolders: false,
+        maxFolderNotes: 20,
+      };
+
+      const questions = await generateExamQuestions({
+        settings,
+        notes: [{ path: file.path, title: file.basename || file.name, content: noteContent }],
+        config,
+        attachedFileDataUrls: [...threadTestAttachedUrls, ...noteEmbedUrls],
+      });
+
+      if (!questions.length) {
+        this.chatMessages.push({
+          role: "assistant",
+          text: this._tx(
+            "ui.studyAssistant.test.noQuestions",
+            "I couldn't generate questions from this note. Try a note with more educational content.",
+          ),
+        });
+        this._scheduleSave();
+        this.render();
+        return;
+      }
+
+      // Save to tests.db
+      const testsDb = new ExamTestsSqlite(this.plugin);
+      await testsDb.open();
+      const displayName = file.basename || file.name || "note";
+      const testId = testsDb.saveTest({
+        label: `${displayName} - ${new Date().toLocaleString()}`,
+        sourceSummary: file.path,
+        configJson: JSON.stringify(config),
+        questionsJson: JSON.stringify(questions),
+      });
+      await testsDb.persist();
+      await testsDb.close();
+
+      if (!testId) {
+        this.chatError = this._tx("ui.studyAssistant.test.saveError", "Could not save the test.");
+        this.render();
+        return;
+      }
+
+      const replyText = this._testGeneratedText(displayName);
+      this.chatMessages.push({
+        role: "assistant",
+        text: replyText,
+        savedTestId: testId,
+      });
+      this._notifyIncomingAssistantReply("assistant");
+    } catch (e) {
+      const errMsg = formatAssistantError(e, (token, fallback, vars) => this._tx(token, fallback, vars));
+      logAssistantRequestError("test-generation", e, errMsg);
+      this.chatError = errMsg;
+    } finally {
+      this.isSendingChat = false;
+      this._scheduleSave();
+      this.render();
+    }
+  }
+
+  private async _openSavedTest(testId: string): Promise<void> {
+    try {
+      await this.plugin.openExamGeneratorTest(testId);
+    } catch (e) {
+      log.warn("open-test", e);
+      new Notice(this._tx("ui.studyAssistant.test.openError", "Could not open the test."));
     }
   }
 
@@ -3590,7 +3793,7 @@ export class SproutAssistantPopup {
     });
 
     const menuPopover = menuWrap.createDiv({
-      cls: "sprout-assistant-popup-header-popover rounded-md border border-border bg-popover text-popover-foreground shadow-lg",
+      cls: "sprout-assistant-popup-header-popover rounded-md bg-popover text-popover-foreground shadow-lg",
     });
     menuPopover.setAttribute("role", "menu");
     menuPopover.setAttribute("aria-hidden", this._headerMenuOpen ? "false" : "true");
@@ -3917,6 +4120,19 @@ export class SproutAssistantPopup {
             evt.stopPropagation();
             void this.insertSuggestion(suggestion, i, idx, "assistant");
           });
+        });
+      }
+
+      // Render "Open test" button for test-generation replies
+      if (msg.role === "assistant" && msg.savedTestId) {
+        const testActions = chatWrap.createDiv({ cls: "sprout-assistant-popup-review-starters" });
+        const openTestBtn = testActions.createEl("button", {
+          cls: "sprout-assistant-popup-btn",
+          text: this._tx("ui.studyAssistant.test.open", "Open test"),
+        });
+        openTestBtn.type = "button";
+        openTestBtn.addEventListener("click", () => {
+          void this._openSavedTest(msg.savedTestId!);
         });
       }
 

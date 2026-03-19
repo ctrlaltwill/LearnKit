@@ -1684,6 +1684,12 @@ export default class SproutPlugin extends Plugin {
     await this._openSingleTabView(VIEW_TYPE_EXAM_GENERATOR, forceNew);
   }
 
+  async openExamGeneratorTest(testId: string): Promise<void> {
+    const leaf = await this._openSingleTabView(VIEW_TYPE_EXAM_GENERATOR, false);
+    const view = leaf.view as { loadSavedTestById?: (id: string) => void } | undefined;
+    view?.loadSavedTestById?.(testId);
+  }
+
   async openExamGeneratorScope(scope: Scope): Promise<void> {
     const leaf = await this._openSingleTabView(VIEW_TYPE_EXAM_GENERATOR, false);
     const view = leaf.view as { setCoachScope?: (s: Scope | null) => void } | undefined;
