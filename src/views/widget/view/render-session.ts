@@ -456,12 +456,13 @@ function renderMcqCard(
     }
     if (graded) {
       if (isMulti) {
-        // Smart highlighting for multi-answer
+        // Multi-answer highlighting on reveal:
+        // - Any correct option is green
+        // - Any incorrect selected option is red
         const isCorrect = correctSet.has(origIdx);
         const wasChosen = chosenMulti.has(origIdx);
-        if (isCorrect && wasChosen) d.classList.add("sprout-mcq-correct-highlight");
-        else if (isCorrect && !wasChosen) d.classList.add("sprout-mcq-missed-correct");
-        else if (!isCorrect && wasChosen) d.classList.add("sprout-mcq-wrong-highlight");
+        if (isCorrect) d.classList.add("sprout-mcq-correct-highlight");
+        else if (wasChosen) d.classList.add("sprout-mcq-wrong-highlight");
       } else {
         if (origIdx === card.correctIndex) d.classList.add("sprout-mcq-correct-highlight");
         if (typeof chosen === "number" && chosen === origIdx && origIdx !== card.correctIndex)

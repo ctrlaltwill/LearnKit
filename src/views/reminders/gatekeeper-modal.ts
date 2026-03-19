@@ -695,9 +695,8 @@ export class GatekeeperModal extends Modal {
         if (isMulti) {
           const isCorrect = correctSet.has(idx);
           const wasChosen = chosenMulti.has(idx);
-          if (isCorrect && wasChosen) d.classList.add("sprout-mcq-correct-highlight");
-          else if (isCorrect && !wasChosen) d.classList.add("sprout-mcq-missed-correct");
-          else if (!isCorrect && wasChosen) d.classList.add("sprout-mcq-wrong-highlight");
+          if (isCorrect) d.classList.add("sprout-mcq-correct-highlight");
+          else if (wasChosen) d.classList.add("sprout-mcq-wrong-highlight");
         } else {
           if (idx === card.correctIndex) d.classList.add("sprout-mcq-correct-highlight");
           if (typeof chosenSingle === "number" && chosenSingle === idx && idx !== card.correctIndex) {

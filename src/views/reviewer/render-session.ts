@@ -630,19 +630,14 @@ function renderMcqContent(ctx: CardRenderCtx): void {
       const isChosen = chosenOrigIndices.has(origIdx);
 
       if (multiAnswer) {
-        // Multi-answer highlighting:
-        // - Correctly selected: green (chosen + correct)
-        // - Wrongly selected: red (chosen + not correct)
-        // - Missed correct: subtle green outline (correct + not chosen)
-        // - Correctly not selected: neutral (not correct + not chosen)
-        if (isCorrect && isChosen) {
+        // Multi-answer highlighting on reveal:
+        // - Any correct option is green
+        // - Any incorrect selected option is red
+        if (isCorrect) {
           btn.classList.add("bc-mcq-correct", "sprout-mcq-correct-highlight");
-        } else if (isCorrect && !isChosen) {
-          btn.classList.add("sprout-mcq-missed-correct");
-        } else if (!isCorrect && isChosen) {
+        } else if (isChosen) {
           btn.classList.add("bc-mcq-wrong", "sprout-mcq-wrong-highlight");
         }
-        // else: not correct, not chosen — stays neutral
       } else {
         // Single-answer highlighting (unchanged)
         const isChosenWrong = isChosen && !isCorrect;
