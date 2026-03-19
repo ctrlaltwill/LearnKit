@@ -39,7 +39,7 @@
 
 
 .sprout .sprout-note-review-panel {
-  --sprout-note-review-dock-space: 96px;
+  --sprout-note-review-dock-space: 86px;
   --sprout-note-review-edge-fade: 40px;
   position: relative;
   min-height: 0;
@@ -92,6 +92,7 @@
 }
 
 .sprout .sprout-note-review-article {
+  gap: 0;
   margin: 0;
   min-height: 100%;
   width: 100%;
@@ -109,6 +110,13 @@
   font-size: var(--sprout-font-sm);
   line-height: 1.7;
   width: 100%;
+  padding: 0 24px;
+}
+
+@media (max-width: 720px) {
+  .sprout .sprout-note-review-note-body {
+    padding: 0 16px;
+  }
 }
 
 .sprout .sprout-note-review-note-body > *:first-child {
