@@ -79,7 +79,6 @@ import { joinPath, safeStatMtime, createDataJsonBackupNow } from "./platform/int
 import { CardCreatorModal } from "./platform/modals/card-creator-modal";
 import { ImageOcclusionCreatorModal } from "./platform/modals/image-occlusion-creator-modal";
 import { ParseErrorModal } from "./platform/modals/parse-error-modal";
-import { LaunchNoticeModal } from "./platform/modals/launch-notice-modal";
 import { setDelimiter } from "./platform/core/delimiter";
 // Anki modals are lazy-loaded to defer sql.js WASM parsing until needed
 // import { AnkiImportModal } from "./platform/modals/anki-import-modal";
@@ -637,10 +636,6 @@ export default class SproutPlugin extends Plugin {
 
         // Check for version upgrades and show What's New modal if needed
         this._checkAndShowWhatsNewModal();
-
-        if (this.settings?.general?.showLaunchNoticeModal ?? true) {
-          new LaunchNoticeModal(this.app, this).open();
-        }
 
         // Mount per-leaf assistant popup triggers
         this._assistantPopup = new SproutAssistantPopup(this);
