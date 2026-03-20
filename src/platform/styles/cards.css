@@ -996,6 +996,7 @@
   padding: 6px 8px;
   font-size: var(--font-ui-small);
   font-weight: 400;
+  text-align: left;
   letter-spacing: 0;
   color: var(--text-muted);
 }

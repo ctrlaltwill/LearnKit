@@ -2753,7 +2753,7 @@ export class SproutSettingsTab extends PluginSettingTab {
             if (noteCfg.avoidFolderNotes !== false && isFolderNote(file)) return false;
             return true;
           }).length;
-          summaryEl.setText(`${included} ${included === 1 ? "note" : "notes"} included`);
+          summaryEl.setText(`${included} ${included === 1 ? "note" : "notes"} included for note review`);
         };
 
         const getMatchedNoteCount = (ids: string[], includeFolderNotes: boolean): number => {
