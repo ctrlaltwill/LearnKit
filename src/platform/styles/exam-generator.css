@@ -57,6 +57,7 @@
 .sprout .sprout-exam-generator-saved-tests-search-wrap {
   position: relative;
   margin-bottom: 4px;
+  width: 100%;
 }
 
 .sprout .sprout-exam-generator-saved-tests-search-icon {
@@ -68,6 +69,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  pointer-events: none;
+  line-height: 0;
+  z-index: 1;
 }
 
 .sprout .sprout-exam-generator-saved-tests-search-icon .svg-icon {
@@ -77,6 +81,8 @@
 
 .sprout .sprout-exam-generator-saved-tests-search {
   padding-left: 30px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .sprout .sprout-exam-generator-saved-tests-list {
@@ -94,6 +100,8 @@
 .sprout .sprout-exam-generator-saved-tests-line {
   flex: 1;
   width: 100%;
+  display: flex;
+  align-items: center;
   text-align: left;
   border-radius: 6px;
   border: 0;
@@ -127,6 +135,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  padding: 0px;
 }
 
 .sprout .sprout-exam-generator-saved-tests-delete:hover,
@@ -145,7 +154,7 @@
   flex-direction: column;
   gap: 14px;
   padding: var(--lk-shell-padding-desktop);
-  overflow-y: auto;
+  overflow: visible;
   flex: 1;
   min-height: 0;
 }
@@ -530,5 +539,5 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-bottom: 8px;
+  margin-bottom: 1rem;
 }

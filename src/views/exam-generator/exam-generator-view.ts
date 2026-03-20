@@ -28,6 +28,9 @@ import {
   SUPPORTED_FILE_ACCEPT,
 } from "../../platform/integrations/ai/attachment-helpers";
 import { resolveImageFile } from "../../platform/image-occlusion/io-helpers";
+import { mountSearchPopoverList, type SearchPopoverOption } from "../shared/search-popover-list";
+import { collectVaultTagAndPropertyPairs, decodePropertyPair, extractFilePropertyPairs, extractFileTags } from "../shared/scope-metadata";
+import { formatAttachmentChipLabel } from "../shared/attachment-chip-label";
 
 type ExamViewMode = "setup" | "generating" | "taking" | "grading" | "results" | "review";
 
@@ -46,10 +49,6 @@ type QuestionResult = {
   expectedAnswer?: string;
   saq?: SaqGradeResult;
 };
-
-type SourceSearchResult =
-  | { kind: "note"; note: TFile }
-  | { kind: "folder"; folder: string; noteCount: number };
 
 const MAX_SELECTABLE_NOTES = 5;
 const DEFAULT_MAX_FOLDER_NOTES = 20;
@@ -73,6 +72,9 @@ export class SproutExamGeneratorView extends ItemView {
   private _folders: string[] = [];
   private _selectedPaths = new Set<string>();
   private _selectedFolders = new Set<string>();
+  private _selectedVault = false;
+  private _selectedTags = new Set<string>();
+  private _selectedProperties = new Set<string>();
   private _noteSearchQuery = "";
   private _folderPreviewExpanded = false;
 
@@ -201,6 +203,9 @@ export class SproutExamGeneratorView extends ItemView {
     this._folderPreviewExpanded = false;
     this._selectedPaths.clear();
     this._selectedFolders.clear();
+    this._selectedVault = false;
+    this._selectedTags.clear();
+    this._selectedProperties.clear();
 
     if (scope.type === "vault") {
       this._config.sourceMode = "folder";
@@ -222,6 +227,18 @@ export class SproutExamGeneratorView extends ItemView {
 
     if (scope.type === "note") {
       this._selectedPaths.add(String(scope.key || ""));
+      this._render();
+      return;
+    }
+
+    if (scope.type === "tag") {
+      this._selectedTags.add(String(scope.key || "").trim().toLowerCase().replace(/^#+/, ""));
+      this._render();
+      return;
+    }
+
+    if (scope.type === "property") {
+      this._selectedProperties.add(String(scope.key || "").trim());
       this._render();
       return;
     }
@@ -274,6 +291,22 @@ export class SproutExamGeneratorView extends ItemView {
       if (!folder || this._folders.includes(folder)) nextSelectedFolders.add(folder);
     }
     this._selectedFolders = nextSelectedFolders;
+
+    const metadata = collectVaultTagAndPropertyPairs(this.app, this._notes);
+    const availableTags = new Set(metadata.tags.map((tag) => tag.token));
+    const availableProps = new Set(metadata.properties.map((pair) => `${encodeURIComponent(pair.key)}=${encodeURIComponent(pair.value)}`));
+
+    const nextTags = new Set<string>();
+    for (const token of this._selectedTags) {
+      if (availableTags.has(token)) nextTags.add(token);
+    }
+    this._selectedTags = nextTags;
+
+    const nextProps = new Set<string>();
+    for (const encoded of this._selectedProperties) {
+      if (availableProps.has(encoded)) nextProps.add(encoded);
+    }
+    this._selectedProperties = nextProps;
   }
 
   private _getFolderCandidates(): TFile[] {
@@ -318,6 +351,10 @@ export class SproutExamGeneratorView extends ItemView {
   }
 
   private _selectedModeCandidates(): TFile[] {
+    if (this._selectedVault) {
+      return [...this._notes].sort((a, b) => a.path.localeCompare(b.path));
+    }
+
     const byPath = new Map<string, TFile>();
     for (const note of this._notes) {
       if (this._selectedPaths.has(note.path)) byPath.set(note.path, note);
@@ -325,6 +362,24 @@ export class SproutExamGeneratorView extends ItemView {
     for (const folder of this._selectedFolders) {
       for (const note of this._notes) {
         if (this._folderIncludesPath(folder, note.path)) byPath.set(note.path, note);
+      }
+    }
+
+    if (this._selectedTags.size > 0 || this._selectedProperties.size > 0) {
+      for (const note of this._notes) {
+        const tags = extractFileTags(this.app, note);
+        const propPairs = extractFilePropertyPairs(this.app, note);
+        const propSet = new Set(propPairs.map((pair) => `${encodeURIComponent(pair.key)}=${encodeURIComponent(pair.value)}`));
+
+        const tagMatch = this._selectedTags.size > 0
+          ? Array.from(this._selectedTags).some((tag) => tags.has(tag))
+          : false;
+
+        const propMatch = this._selectedProperties.size > 0
+          ? Array.from(this._selectedProperties).some((pair) => propSet.has(pair))
+          : false;
+
+        if (tagMatch || propMatch) byPath.set(note.path, note);
       }
     }
     return Array.from(byPath.values()).sort((a, b) => a.path.localeCompare(b.path));
@@ -685,7 +740,7 @@ export class SproutExamGeneratorView extends ItemView {
 
     const folderCandidateCount = (): number => this._getFolderCandidates().length;
     const selectedCandidateCount = (): number => this._selectedModeCandidates().length;
-    const selectedScopeCount = (): number => this._selectedPaths.size + this._selectedFolders.size;
+    const selectedScopeCount = (): number => selectedCandidateCount();
 
     const canGenerateNow = (): boolean => {
       if (this._attachedFiles.length > 0) return true;
@@ -699,7 +754,7 @@ export class SproutExamGeneratorView extends ItemView {
       page.createEl("h3", { text: "Choose your source content" });
       page.createEl("p", {
         cls: "sprout-coach-step-copy",
-        text: "Select notes and folders, attach files, or use both to generate test questions.",
+        text: "Choose the content for this test, then optionally add files as reference material.",
       });
 
       let nextBtn: HTMLButtonElement | null = null;
@@ -707,25 +762,7 @@ export class SproutExamGeneratorView extends ItemView {
         if (nextBtn) nextBtn.disabled = !canGenerateNow();
       };
 
-      const scopeSummary = page.createDiv({ cls: "sprout-exam-generator-scope-summary" });
-      scopeSummary.createDiv({ cls: "sprout-coach-field-label", text: "In scope for this test" });
-
       if (this._config.sourceMode === "folder") {
-        const folderLabel = this._formatFolderLabel(this._config.folderPath);
-        const candidates = this._getFolderCandidates();
-        scopeSummary.createDiv({ cls: "sprout-settings-text-muted", text: `Folder: ${folderLabel}` });
-        scopeSummary.createDiv({ cls: "sprout-settings-text-muted", text: "Includes child notes: Yes" });
-        scopeSummary.createDiv({ cls: "sprout-settings-text-muted", text: `Notes matched: ${candidates.length}` });
-
-        const preview = scopeSummary.createDiv({ cls: "sprout-exam-generator-scope-preview" });
-        const previewItems = this._previewFolderSelection(candidates).slice(0, 5);
-        for (const note of previewItems) {
-          preview.createDiv({
-            cls: "sprout-settings-text-muted",
-            text: `Note: ${note.basename}`,
-          });
-        }
-
         const switchWrap = page.createDiv({ cls: "sprout-exam-generator-actions" });
         const useSelectedBtn = switchWrap.createEl("button", {
           cls: "bc sprout-btn-toolbar h-9 inline-flex items-center gap-2",
@@ -752,13 +789,13 @@ export class SproutExamGeneratorView extends ItemView {
         return;
       }
 
-      page.createDiv({ cls: "sprout-coach-field-label", text: "Notes and folders" });
+      page.createDiv({ cls: "sprout-coach-field-label", text: "Content sources" });
       const searchWrap = page.createDiv({ cls: "sprout-coach-search-wrap" });
       const searchIcon = searchWrap.createSpan({ cls: "sprout-coach-search-icon" });
       setIcon(searchIcon, "search");
       const search = searchWrap.createEl("input", {
         cls: "bc input h-9",
-        attr: { type: "search", placeholder: "Search notes or folders..." },
+        attr: { type: "search", placeholder: "Search notes, folders, tags, or properties..." },
       });
       search.value = this._noteSearchQuery;
       const popover = searchWrap.createDiv({ cls: "sprout-coach-scope-popover dropdown-menu hidden" });
@@ -772,39 +809,68 @@ export class SproutExamGeneratorView extends ItemView {
       const selectedTitle = chipsWrap.createDiv({ cls: "sprout-coach-selected-title" });
       const chips = chipsWrap.createDiv({ cls: "sprout-coach-selected-chips" });
 
-      let activeIndex = -1;
-      let filteredSources: SourceSearchResult[] = [];
+      const buildSearchOptions = (): SearchPopoverOption[] => {
+        const metadata = collectVaultTagAndPropertyPairs(this.app, this._notes);
+        const vaultOption = {
+          type: "vault" as const,
+          id: "vault::",
+          label: `Vault: ${this.app.vault.getName()} (${this._notes.length})`,
+          selected: this._selectedVault,
+          searchTexts: [this.app.vault.getName(), "vault", "all notes", "all content"],
+        } satisfies SearchPopoverOption;
 
-      const buildSearchResults = (): SourceSearchResult[] => {
-        const q = this._noteSearchQuery.trim().toLowerCase();
-        if (!q) return [];
-        const noteResults: SourceSearchResult[] = this._notes
-          .filter((note) => (
-            note.basename.toLowerCase().includes(q) || note.path.toLowerCase().includes(q)
-          ))
-          .sort((a, b) => {
-            const scoreDiff = this._searchRank(b, q) - this._searchRank(a, q);
-            if (scoreDiff !== 0) return scoreDiff;
-            return a.path.localeCompare(b.path);
-          })
-          .slice(0, 100)
-          .map((note) => ({ kind: "note", note }));
+        const folderOptions = this._folders
+          .map((folder) => {
+            const folderLabel = this._formatFolderLabel(folder);
+            const noteCount = this._notes.filter((n) => this._folderIncludesPath(folder, n.path)).length;
+            return {
+              type: "folder",
+              id: `folder::${folder}`,
+              label: `Folder: ${folderLabel} (${noteCount})`,
+              selected: this._selectedFolders.has(folder),
+              searchTexts: [folderLabel, folder],
+            } satisfies SearchPopoverOption;
+          });
 
-        const folderResults: SourceSearchResult[] = this._folders
-          .filter((folder) => this._folderSearchRank(folder, q) > 0)
-          .sort((a, b) => {
-            const scoreDiff = this._folderSearchRank(b, q) - this._folderSearchRank(a, q);
-            if (scoreDiff !== 0) return scoreDiff;
-            return a.localeCompare(b);
-          })
-          .slice(0, 40)
-          .map((folder) => ({
-            kind: "folder",
-            folder,
-            noteCount: this._notes.filter((n) => this._folderIncludesPath(folder, n.path)).length,
-          }));
+        const noteOptions = this._notes
+          .map((note) => ({
+            type: "note",
+            id: `note::${note.path}`,
+            label: `Note: ${note.basename}`,
+            selected: this._selectedPaths.has(note.path),
+            searchTexts: [note.basename, note.path],
+          } satisfies SearchPopoverOption));
 
-        return [...noteResults, ...folderResults].slice(0, 140);
+        const tagOptions = metadata.tags.map((tag) => ({
+          type: "tag",
+          id: `tag::${tag.token}`,
+          label: `Tag: ${tag.display} (${tag.count})`,
+          selected: this._selectedTags.has(tag.token),
+          searchTexts: [`#${tag.token}`, `tag:${tag.token}`, tag.display],
+        } satisfies SearchPopoverOption));
+
+        const propertyOptions = metadata.properties.map((pair) => ({
+          type: "property",
+          id: `prop::${encodeURIComponent(pair.key)}=${encodeURIComponent(pair.value)}`,
+          label: `${pair.displayKey}: ${pair.displayValue} (${pair.count})`,
+          selected: this._selectedProperties.has(`${encodeURIComponent(pair.key)}=${encodeURIComponent(pair.value)}`),
+          propertyKey: pair.displayKey,
+          propertyValue: pair.displayValue,
+          searchTexts: [
+            `${pair.key}:${pair.value}`,
+            `${pair.displayKey}:${pair.displayValue}`,
+            `prop:${pair.key}=${pair.value}`,
+          ],
+        } satisfies SearchPopoverOption));
+
+        return [vaultOption, ...folderOptions, ...noteOptions, ...tagOptions, ...propertyOptions];
+      };
+
+      const toggleVault = (): void => {
+        this._selectedVault = !this._selectedVault;
+        renderSelected();
+        scopePicker.render();
+        syncFooter();
       };
 
       const toggleNote = (path: string): void => {
@@ -818,7 +884,7 @@ export class SproutExamGeneratorView extends ItemView {
           this._selectedPaths.add(path);
         }
         renderSelected();
-        renderScopeList();
+        scopePicker.render();
         syncFooter();
       };
 
@@ -826,87 +892,77 @@ export class SproutExamGeneratorView extends ItemView {
         if (this._selectedFolders.has(folder)) this._selectedFolders.delete(folder);
         else this._selectedFolders.add(folder);
         renderSelected();
-        renderScopeList();
+        scopePicker.render();
         syncFooter();
       };
 
-      const closePopover = (): void => {
-        popover.classList.add("hidden");
+      const toggleTag = (tagToken: string): void => {
+        const token = String(tagToken || "").trim().toLowerCase().replace(/^#+/, "");
+        if (!token) return;
+        if (this._selectedTags.has(token)) this._selectedTags.delete(token);
+        else this._selectedTags.add(token);
+        renderSelected();
+        scopePicker.render();
+        syncFooter();
       };
 
-      const openPopover = (): void => {
-        popover.classList.remove("hidden");
+      const toggleProperty = (encodedPair: string): void => {
+        if (!decodePropertyPair(encodedPair)) return;
+        if (this._selectedProperties.has(encodedPair)) this._selectedProperties.delete(encodedPair);
+        else this._selectedProperties.add(encodedPair);
+        renderSelected();
+        scopePicker.render();
+        syncFooter();
       };
 
-      const shouldOpenPopover = (): boolean => {
-        if (!this._noteSearchQuery.trim()) return false;
-        const active = document.activeElement as Node | null;
-        return active === search || (active ? popover.contains(active) : false);
-      };
-
-      const renderScopeList = (): void => {
-        scopeList.empty();
-        filteredSources = buildSearchResults();
-
-        if (!filteredSources.length) {
-          activeIndex = -1;
-          const empty = scopeList.createDiv({
-            cls: "sprout-coach-scope-empty",
-            text: this._noteSearchQuery.trim() ? "No matching notes or folders found." : "Type to search notes or folders.",
-          });
-          empty.setAttr("role", "status");
-        } else {
-          if (activeIndex < 0) activeIndex = 0;
-          if (activeIndex >= filteredSources.length) activeIndex = filteredSources.length - 1;
-
-          for (let idx = 0; idx < filteredSources.length; idx += 1) {
-            const source = filteredSources[idx];
-            const isSelected = source.kind === "note"
-              ? this._selectedPaths.has(source.note.path)
-              : this._selectedFolders.has(source.folder);
-            const item = scopeList.createEl("button", {
-              cls: "bc sprout-coach-scope-item group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer select-none outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-            });
-            item.type = "button";
-            item.setAttr("role", "menuitemcheckbox");
-            item.setAttr("aria-checked", isSelected ? "true" : "false");
-            item.tabIndex = idx === activeIndex ? 0 : -1;
-            if (source.kind === "note") {
-              item.setAttr("aria-label", `Note: ${source.note.basename}`);
-              item.createSpan({ cls: "sprout-coach-scope-item-label", text: `Note: ${source.note.basename}` });
-            } else {
-              const folderLabel = this._formatFolderLabel(source.folder);
-              item.setAttr("aria-label", `Folder: ${folderLabel}`);
-              item.createSpan({ cls: "sprout-coach-scope-item-label", text: `Folder: ${folderLabel} (${source.noteCount})` });
-            }
-
-            if (idx === activeIndex) item.classList.add("is-active");
-            if (isSelected) item.classList.add("is-selected");
-            item.addEventListener("mousedown", (evt) => evt.preventDefault());
-            item.addEventListener("mouseenter", () => {
-              const prev = scopeList.querySelector<HTMLElement>(".sprout-coach-scope-item.is-active");
-              if (prev) { prev.classList.remove("is-active"); prev.tabIndex = -1; }
-              activeIndex = idx;
-              item.classList.add("is-active");
-              item.tabIndex = 0;
-            });
-            item.addEventListener("click", () => {
-              if (source.kind === "note") toggleNote(source.note.path);
-              else toggleFolder(source.folder);
-            });
-          }
-        }
-
-        if (shouldOpenPopover()) openPopover();
-        else closePopover();
-      };
+      const scopePicker = mountSearchPopoverList({
+        searchInput: search,
+        popoverEl: popover,
+        listEl: scopeList,
+        getQuery: () => this._noteSearchQuery,
+        setQuery: (query) => {
+          this._noteSearchQuery = query;
+        },
+        getOptions: buildSearchOptions,
+        onToggle: (id) => {
+          if (id === "vault::") toggleVault();
+          else if (id.startsWith("note::")) toggleNote(id.slice("note::".length));
+          else if (id.startsWith("folder::")) toggleFolder(id.slice("folder::".length));
+          else if (id.startsWith("tag::")) toggleTag(id.slice("tag::".length));
+          else if (id.startsWith("prop::")) toggleProperty(id.slice("prop::".length));
+        },
+        emptyTextWhenQuery: "No matching scope items found.",
+        emptyTextWhenIdle: "Type to search notes, folders, tags, or properties.",
+        typeFilters: [
+          { type: "folder", label: "Folders" },
+          { type: "note", label: "Notes" },
+          { type: "tag", label: "Tags" },
+          { type: "property", label: "Properties" },
+        ],
+      });
 
       const renderSelected = (): void => {
         selectedTitle.setText(`Selected (${selectedScopeCount()})`);
         chips.empty();
         if (!selectedScopeCount()) {
-          chips.createDiv({ cls: "text-xs text-muted-foreground", text: "No notes or folders selected yet." });
+          chips.createDiv({ cls: "text-xs text-muted-foreground", text: "No content selected yet." });
         } else {
+          if (this._selectedVault) {
+            const chip = chips.createDiv({ cls: "sprout-coach-chip" });
+            chip.createSpan({ text: `Vault: ${this.app.vault.getName()} (${this._notes.length})` });
+            const remove = chip.createEl("button", { cls: "sprout-coach-chip-remove" });
+            remove.type = "button";
+            remove.setAttr("aria-label", "Remove");
+            setIcon(remove, "x");
+            remove.addEventListener("click", (evt) => {
+              evt.stopPropagation();
+              this._selectedVault = false;
+              renderSelected();
+              scopePicker.render();
+              syncFooter();
+            });
+          }
+
           const selectedFolders = Array.from(this._selectedFolders).sort((a, b) => a.localeCompare(b));
           for (const folder of selectedFolders) {
             const chip = chips.createDiv({ cls: "sprout-coach-chip" });
@@ -921,7 +977,7 @@ export class SproutExamGeneratorView extends ItemView {
               evt.stopPropagation();
               this._selectedFolders.delete(folder);
               renderSelected();
-              renderScopeList();
+              scopePicker.render();
               syncFooter();
             });
           }
@@ -940,77 +996,79 @@ export class SproutExamGeneratorView extends ItemView {
               evt.stopPropagation();
               this._selectedPaths.delete(note.path);
               renderSelected();
-              renderScopeList();
+              scopePicker.render();
+              syncFooter();
+            });
+          }
+
+          const metadata = collectVaultTagAndPropertyPairs(this.app, this._notes);
+
+          const selectedTags = metadata.tags
+            .filter((tag) => this._selectedTags.has(tag.token))
+            .sort((a, b) => a.token.localeCompare(b.token));
+
+          for (const tag of selectedTags) {
+            const chip = chips.createDiv({ cls: "sprout-coach-chip" });
+            chip.createSpan({ text: `Tag: ${tag.display} (${tag.count})` });
+            const remove = chip.createEl("button", { cls: "sprout-coach-chip-remove" });
+            remove.type = "button";
+            remove.setAttr("aria-label", "Remove");
+            setIcon(remove, "x");
+            remove.addEventListener("click", (evt) => {
+              evt.stopPropagation();
+              this._selectedTags.delete(tag.token);
+              renderSelected();
+              scopePicker.render();
+              syncFooter();
+            });
+          }
+
+          const selectedProperties = metadata.properties
+            .filter((pair) => this._selectedProperties.has(`${encodeURIComponent(pair.key)}=${encodeURIComponent(pair.value)}`))
+            .sort((a, b) => {
+              const keyCmp = a.key.localeCompare(b.key);
+              if (keyCmp !== 0) return keyCmp;
+              return a.value.localeCompare(b.value);
+            });
+
+          for (const pair of selectedProperties) {
+            const encoded = `${encodeURIComponent(pair.key)}=${encodeURIComponent(pair.value)}`;
+            const chip = chips.createDiv({ cls: "sprout-coach-chip" });
+            chip.createSpan({ text: `${pair.displayKey}: ${pair.displayValue} (${pair.count})` });
+            const remove = chip.createEl("button", { cls: "sprout-coach-chip-remove" });
+            remove.type = "button";
+            remove.setAttr("aria-label", "Remove");
+            setIcon(remove, "x");
+            remove.addEventListener("click", (evt) => {
+              evt.stopPropagation();
+              this._selectedProperties.delete(encoded);
+              renderSelected();
+              scopePicker.render();
               syncFooter();
             });
           }
         }
       };
 
-      search.addEventListener("input", () => {
-        this._noteSearchQuery = String(search.value || "");
-        renderScopeList();
-      });
-
-      search.addEventListener("focus", () => {
-        if (this._noteSearchQuery.trim()) renderScopeList();
-      });
-
-      search.addEventListener("blur", () => {
-        window.setTimeout(() => {
-          if (!shouldOpenPopover()) closePopover();
-        }, 120);
-      });
-
-      search.addEventListener("keydown", (evt) => {
-        if ((evt.key === "ArrowDown" || evt.key === "ArrowUp") && this._noteSearchQuery.trim()) {
-          evt.preventDefault();
-          const max = filteredSources.length;
-          if (!max) return;
-          if (evt.key === "ArrowDown") activeIndex = (activeIndex + 1 + max) % max;
-          else activeIndex = (activeIndex - 1 + max) % max;
-          renderScopeList();
-          const activeItem = scopeList.querySelector<HTMLElement>(".sprout-coach-scope-item.is-active");
-          activeItem?.focus();
-          return;
-        }
-
-        if (evt.key === "Enter" && this._noteSearchQuery.trim()) {
-          if (filteredSources.length && activeIndex >= 0) {
-            evt.preventDefault();
-            const active = filteredSources[activeIndex];
-            if (active) {
-              if (active.kind === "note") toggleNote(active.note.path);
-              else toggleFolder(active.folder);
-            }
-          }
-          return;
-        }
-
-        if (evt.key === "Escape") {
-          evt.preventDefault();
-          closePopover();
-        }
-      });
-
       renderSelected();
-      renderScopeList();
+      scopePicker.render();
 
       // ---- Attachments (optional) ----
       const attachArea = page.createDiv({ cls: "sprout-exam-generator-attachments" });
-      attachArea.createDiv({ cls: "sprout-coach-field-label", text: "Attachments are optional." });
+      const attachmentsLabel = attachArea.createDiv({ cls: "sprout-coach-field-label" });
       attachArea.createEl("p", {
         cls: "sprout-coach-step-copy",
-        text: "Attach files to include as reference material for test generation.",
+        text: "Attach files, for example PowerPoint or PDF documents, to use as reference material for test generation.",
       });
       const attachChips = attachArea.createDiv({ cls: "sprout-exam-generator-attachment-chips" });
       const renderAttachChips = () => {
+        attachmentsLabel.setText(`Attachments (${this._attachedFiles.length})`);
         attachChips.empty();
         for (let i = 0; i < this._attachedFiles.length; i++) {
           const af = this._attachedFiles[i];
-          const chip = attachChips.createDiv({ cls: "sprout-assistant-popup-attachment-chip" });
-          chip.createSpan({ text: af.name, cls: "sprout-assistant-popup-attachment-name" });
-          const removeBtn = chip.createEl("button", { cls: "sprout-assistant-popup-attachment-remove" });
+          const chip = attachChips.createDiv({ cls: "sprout-coach-chip sprout-assistant-popup-attachment-chip" });
+          chip.createSpan({ text: formatAttachmentChipLabel(af.name, af.extension), cls: "sprout-assistant-popup-attachment-name" });
+          const removeBtn = chip.createEl("button", { cls: "sprout-coach-chip-remove sprout-assistant-popup-attachment-remove" });
           removeBtn.type = "button";
           removeBtn.setAttribute("aria-label", "Remove");
           setIcon(removeBtn, "x");
@@ -1026,7 +1084,7 @@ export class SproutExamGeneratorView extends ItemView {
       renderAttachChips();
 
       const addBtn = attachArea.createEl("button", {
-        cls: "bc sprout-btn-toolbar h-9 inline-flex items-center gap-2",
+        cls: "bc sprout-btn-toolbar sprout-btn-outline-muted h-9 px-3 text-sm inline-flex items-center gap-2",
       });
       addBtn.type = "button";
       const addBtnIcon = addBtn.createSpan({ cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
@@ -1177,6 +1235,7 @@ export class SproutExamGeneratorView extends ItemView {
 
   private async _generateExam(): Promise<void> {
     let selectedFiles = this._collectSourceFiles();
+    selectedFiles = Array.from(new Map(selectedFiles.map((file) => [file.path, file])).values());
     const hasAttachments = this._attachedFiles.length > 0;
     if (selectedFiles.length === 0 && !hasAttachments) {
       new Notice(this._config.sourceMode === "folder" ? "No notes found in that folder." : "Select at least one note or attach a file.");
@@ -1909,18 +1968,27 @@ class ExamAttachmentPickerModal extends Modal {
   private _pickSystemFile(): void {
     const input = document.createElement("input");
     input.type = "file";
+    input.multiple = true;
     input.accept = SUPPORTED_FILE_ACCEPT;
     setCssProps(input, "display", "none");
     input.addEventListener("change", () => {
       void (async () => {
-        const file = input.files?.[0];
-        if (!file) return;
-        const attached = await readFileInputAsAttachment(file);
-        if (!attached) {
-          new Notice("File is unsupported or too large.");
-          return;
+        const files = Array.from(input.files ?? []);
+        if (!files.length) return;
+
+        let rejectedCount = 0;
+        for (const file of files) {
+          const attached = await readFileInputAsAttachment(file);
+          if (!attached) {
+            rejectedCount += 1;
+            continue;
+          }
+          this._onPickExternal(attached);
         }
-        this._onPickExternal(attached);
+
+        if (rejectedCount > 0) {
+          new Notice(rejectedCount === 1 ? "1 file was unsupported or too large." : `${rejectedCount} files were unsupported or too large.`);
+        }
         this.close();
       })();
     });

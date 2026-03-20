@@ -11,6 +11,7 @@ import { computeLkrsLoadFactor, initialLkrsDueTime, reviewWithLkrs } from "../..
 import { defaultFsrsNoteRow, gradeNoteFsrs, gradeNoteFsrsPass } from "../../engine/note-review/fsrs";
 import { renderStudySessionHeader } from "../reviewer/study-session-header";
 import type { Scope } from "../reviewer/types";
+import { decodePropertyPair, extractFilePropertyPairs, extractFileTags } from "../shared/scope-metadata";
 
 const SUSPEND_FAR_DAYS = 36500;
 
@@ -152,39 +153,17 @@ export class SproutNoteReviewView extends ItemView {
     return now + SUSPEND_FAR_DAYS * 24 * 60 * 60 * 1000;
   }
 
-  private _normaliseTagToken(tag: string): string {
-    return String(tag || "").trim().toLowerCase().replace(/^#+/, "");
-  }
-
-  private _extractFileTags(file: TFile): Set<string> {
-    const tags = new Set<string>();
-    const cache = this.app.metadataCache.getFileCache(file);
-
-    const addTag = (raw: unknown) => {
-      const token = typeof raw === "string" ? raw : "";
-      const normalised = this._normaliseTagToken(token);
-      if (normalised) tags.add(normalised);
-    };
-
-    for (const tagRef of cache?.tags ?? []) {
-      addTag(tagRef.tag);
-    }
-
-    const fmTags: unknown = cache?.frontmatter?.tags;
-    if (typeof fmTags === "string") {
-      addTag(fmTags);
-    } else if (Array.isArray(fmTags)) {
-      for (const tag of fmTags) addTag(tag);
-    }
-
-    return tags;
-  }
-
   private _parseFilterQuery(query: string): {
     includePath: string[];
     excludePath: string[];
+    includeNote: string[];
+    excludeNote: string[];
+    includeVault: boolean;
+    excludeVault: boolean;
     includeTag: string[];
     excludeTag: string[];
+    includeProp: string[];
+    excludeProp: string[];
     includeText: string[];
     excludeText: string[];
   } {
@@ -195,21 +174,39 @@ export class SproutNoteReviewView extends ItemView {
 
     const includePath: string[] = [];
     const excludePath: string[] = [];
+    const includeNote: string[] = [];
+    const excludeNote: string[] = [];
     const includeTag: string[] = [];
     const excludeTag: string[] = [];
+    const includeProp: string[] = [];
+    const excludeProp: string[] = [];
     const includeText: string[] = [];
     const excludeText: string[] = [];
+    let includeVault = false;
+    let excludeVault = false;
 
     for (const part of parts) {
       const lowered = part.toLowerCase();
-      if (lowered.startsWith("path:")) {
+      if (lowered === "scope:vault" || lowered === "vault") {
+        includeVault = true;
+      } else if (lowered === "-scope:vault" || lowered === "-vault") {
+        excludeVault = true;
+      } else if (lowered.startsWith("path:")) {
         includePath.push(lowered.slice(5));
       } else if (lowered.startsWith("-path:")) {
         excludePath.push(lowered.slice(6));
+      } else if (lowered.startsWith("note:")) {
+        includeNote.push(String(part.slice(5)).trim());
+      } else if (lowered.startsWith("-note:")) {
+        excludeNote.push(String(part.slice(6)).trim());
       } else if (lowered.startsWith("tag:")) {
-        includeTag.push(this._normaliseTagToken(lowered.slice(4)));
+        includeTag.push(String(lowered.slice(4)).trim().replace(/^#+/, ""));
       } else if (lowered.startsWith("-tag:")) {
-        excludeTag.push(this._normaliseTagToken(lowered.slice(5)));
+        excludeTag.push(String(lowered.slice(5)).trim().replace(/^#+/, ""));
+      } else if (lowered.startsWith("prop:")) {
+        includeProp.push(String(part.slice(5)).trim().toLowerCase());
+      } else if (lowered.startsWith("-prop:")) {
+        excludeProp.push(String(part.slice(6)).trim().toLowerCase());
       } else if (lowered.startsWith("-")) {
         excludeText.push(lowered.slice(1));
       } else {
@@ -220,8 +217,14 @@ export class SproutNoteReviewView extends ItemView {
     return {
       includePath,
       excludePath,
+      includeNote: includeNote.filter(Boolean),
+      excludeNote: excludeNote.filter(Boolean),
+      includeVault,
+      excludeVault,
       includeTag: includeTag.filter(Boolean),
       excludeTag: excludeTag.filter(Boolean),
+      includeProp: includeProp.filter(Boolean),
+      excludeProp: excludeProp.filter(Boolean),
       includeText,
       excludeText,
     };
@@ -230,26 +233,34 @@ export class SproutNoteReviewView extends ItemView {
   private _matchesFilter(file: TFile, query: string): boolean {
     const p = file.path.toLowerCase();
     const f = this._parseFilterQuery(query);
-    const tags = this._extractFileTags(file);
+    const tags = extractFileTags(this.app, file);
+    const props = new Set(extractFilePropertyPairs(this.app, file).map((pair) => `${pair.key}=${pair.value}`));
 
-    for (const token of f.includePath) {
-      if (token && !p.includes(token)) return false;
-    }
-    for (const token of f.excludePath) {
-      if (token && p.includes(token)) return false;
-    }
-    for (const token of f.includeTag) {
-      if (token && !tags.has(token)) return false;
-    }
-    for (const token of f.excludeTag) {
-      if (token && tags.has(token)) return false;
-    }
-    for (const token of f.includeText) {
-      if (token && !p.includes(token)) return false;
-    }
-    for (const token of f.excludeText) {
-      if (token && p.includes(token)) return false;
-    }
+    const hasIncludeCriteria =
+      f.includeVault
+      || f.includePath.length > 0
+      || f.includeNote.length > 0
+      || f.includeTag.length > 0
+      || f.includeProp.length > 0
+      || f.includeText.length > 0;
+
+    const matchesInclude =
+      f.includeVault
+      || f.includePath.some((token) => token && p.includes(token))
+      || f.includeNote.some((token) => token && file.path === token)
+      || f.includeTag.some((token) => token && tags.has(token))
+      || f.includeProp.some((token) => token && props.has(token))
+      || f.includeText.some((token) => token && p.includes(token));
+
+    if (hasIncludeCriteria && !matchesInclude) return false;
+
+    if (f.excludeVault) return false;
+    if (f.excludePath.some((token) => token && p.includes(token))) return false;
+    if (f.excludeNote.some((token) => token && file.path === token)) return false;
+    if (f.excludeTag.some((token) => token && tags.has(token))) return false;
+    if (f.excludeProp.some((token) => token && props.has(token))) return false;
+    if (f.excludeText.some((token) => token && p.includes(token))) return false;
+
     return true;
   }
 
@@ -288,6 +299,17 @@ export class SproutNoteReviewView extends ItemView {
         if (this._coachScope.type === "folder") {
           const key = String(this._coachScope.key || "");
           if (!(file.path === key || file.path.startsWith(`${key}/`))) return false;
+        }
+        if (this._coachScope.type === "tag") {
+          const expected = String(this._coachScope.key || "").trim().toLowerCase().replace(/^#+/, "");
+          if (!extractFileTags(this.app, file).has(expected)) return false;
+        }
+        if (this._coachScope.type === "property") {
+          const pair = decodePropertyPair(this._coachScope.key);
+          if (!pair) return false;
+          const matches = extractFilePropertyPairs(this.app, file)
+            .some((entry) => entry.key === pair.key && entry.value === pair.value);
+          if (!matches) return false;
         }
       }
       if (shouldAvoidFolderNotes && this._isFolderNote(file)) return false;

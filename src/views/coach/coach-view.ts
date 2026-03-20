@@ -6,14 +6,22 @@ import { createViewHeader, type SproutHeader } from "../../platform/core/header"
 import { log } from "../../platform/core/logger";
 import { AOS_DURATION, MAX_CONTENT_WIDTH_PX, VIEW_TYPE_COACH } from "../../platform/core/constants";
 import { setCssProps } from "../../platform/core/ui";
+import { createTitleStripFrame } from "../../platform/core/view-primitives";
 import type { Scope } from "../reviewer/types";
 import { matchesScope } from "../../engine/indexing/scope-match";
 import { CoachPlanSqlite, type CoachIntensity, type CoachPlanRow } from "../../platform/core/coach-plan-sqlite";
 import { NoteReviewSqlite } from "../../platform/core/note-review-sqlite";
-import { getGroupIndex } from "../../engine/indexing/group-index";
 import { isParentCard } from "../../platform/core/card-utils";
 import { cascadeAOSOnLoad, initAOS, resetAOS } from "../../platform/core/aos-loader";
 import { CoachHealthPanel, CoachReadinessPanel, type ExamReadinessPoint } from "./coach-charts";
+import { mountSearchPopoverList, type SearchPopoverOption } from "../shared/search-popover-list";
+import {
+  collectVaultTagAndPropertyPairs,
+  decodePropertyPair,
+  encodePropertyPair,
+  extractFilePropertyPairs,
+  extractFileTags,
+} from "../shared/scope-metadata";
 import { forgetting_curve, generatorParameters } from "ts-fsrs";
 
 const MS_DAY = 24 * 60 * 60 * 1000;
@@ -292,47 +300,58 @@ export class SproutCoachView extends ItemView {
     if (scopeType === "folder") return { type: "folder", key: scopeKey, name: scopeName || scopeKey || "Folder" };
     if (scopeType === "note") return { type: "note", key: scopeKey, name: scopeName || scopeKey || "Note" };
     if (scopeType === "group") return { type: "group", key: scopeKey, name: scopeName || scopeKey || "Group" };
+    if (scopeType === "tag") return { type: "tag", key: scopeKey, name: scopeName || `#${scopeKey}` || "Tag" };
+    if (scopeType === "property") return { type: "property", key: scopeKey, name: scopeName || scopeKey || "Property" };
     return { type: "vault", key: "", name: scopeName || this.app.vault.getName() || "Vault" };
   }
 
   private _scopeOptions(): ScopeOption[] {
     const options: ScopeOption[] = [];
+    const allFiles = this._allFiles();
 
     options.push({
-      label: `Vault: ${this.app.vault.getName()}`,
+      label: `Vault: ${this.app.vault.getName()} (${allFiles.length})`,
       scope: { type: "vault", key: "", name: this.app.vault.getName() || "Vault" },
     });
 
     const folderSet = new Set<string>();
-    for (const file of this._allFiles()) {
+    for (const file of allFiles) {
       const slash = file.path.lastIndexOf("/");
       if (slash >= 0) folderSet.add(file.path.slice(0, slash));
     }
 
     for (const folder of Array.from(folderSet).sort((a, b) => a.localeCompare(b))) {
+      const count = allFiles.filter((file) => file.path.startsWith(`${folder}/`)).length;
       options.push({
-        label: `Folder: ${folder}`,
+        label: `Folder: ${folder} (${count})`,
         scope: { type: "folder", key: folder, name: folder },
       });
     }
 
-    for (const file of this._allFiles().sort((a, b) => a.path.localeCompare(b.path)).slice(0, 2500)) {
+    for (const file of allFiles.sort((a, b) => a.path.localeCompare(b.path)).slice(0, 2500)) {
       options.push({
-        label: `Note: ${file.path}`,
+        label: `Note: ${file.basename}`,
         scope: { type: "note", key: file.path, name: file.basename },
       });
     }
 
-    try {
-      const groups = getGroupIndex(this.plugin).getAllGroups().slice(0, 1500);
-      for (const g of groups) {
-        options.push({
-          label: `Group: ${g}`,
-          scope: { type: "group", key: g, name: g },
-        });
-      }
-    } catch {
-      // no-op
+    const metadata = collectVaultTagAndPropertyPairs(this.app, allFiles);
+    for (const tag of metadata.tags.slice(0, 1500)) {
+      options.push({
+        label: `Tag: ${tag.display} (${tag.count})`,
+        scope: { type: "tag", key: tag.token, name: `#${tag.token}` },
+      });
+    }
+
+    for (const pair of metadata.properties.slice(0, 2000)) {
+      options.push({
+        label: `${pair.displayKey}: ${pair.displayValue} (${pair.count})`,
+        scope: {
+          type: "property",
+          key: encodePropertyPair({ key: pair.key, value: pair.value }),
+          name: `${pair.displayKey}: ${pair.displayValue}`,
+        },
+      });
     }
 
     this._scopeLookup.clear();
@@ -352,6 +371,9 @@ export class SproutCoachView extends ItemView {
         if (scope.type === "group") {
           const groups = Array.isArray(card.groups) ? card.groups : [];
           return groups.some((g) => String(g || "") === scope.key);
+        }
+        if (scope.type === "tag" || scope.type === "property") {
+          return this._pathMatchesMetadataScope(String(card.sourceNotePath || ""), scope);
         }
         return matchesScope(scope, String(card.sourceNotePath || ""));
       })
@@ -386,8 +408,33 @@ export class SproutCoachView extends ItemView {
     return ids.filter((path) => {
       if (scope.type === "note") return path === scope.key;
       if (scope.type === "folder") return path === scope.key || path.startsWith(`${scope.key}/`);
+      if (scope.type === "tag" || scope.type === "property") return this._pathMatchesMetadataScope(path, scope);
       return false;
     });
+  }
+
+  private _pathMatchesMetadataScope(path: string, scope: Scope): boolean {
+    const abs = this.app.vault.getAbstractFileByPath(path);
+    if (!(abs instanceof TFile)) return false;
+    return this._fileMatchesMetadataScope(abs, scope);
+  }
+
+  private _fileMatchesMetadataScope(file: TFile, scope: Scope): boolean {
+    if (scope.type === "tag") {
+      const expected = String(scope.key || "").trim().toLowerCase().replace(/^#+/, "");
+      if (!expected) return false;
+      const tags = extractFileTags(this.app, file);
+      return tags.has(expected);
+    }
+
+    if (scope.type === "property") {
+      const target = decodePropertyPair(scope.key);
+      if (!target) return false;
+      const pairs = extractFilePropertyPairs(this.app, file);
+      return pairs.some((pair) => pair.key === target.key && pair.value === target.value);
+    }
+
+    return false;
   }
 
   private _computeStats(scope: Scope, now: number): PlannerStats {
@@ -668,7 +715,7 @@ export class SproutCoachView extends ItemView {
     card.createEl("h3", { text: "Select what you are studying" });
     card.createEl("p", {
       cls: "sprout-coach-step-copy",
-      text: "Choose one or more notes, folders, groups, or the whole vault to include in this exam plan.",
+      text: "Choose the content to include in your study plan, such as the notes or folders you need to revise.",
     });
 
     card.createDiv({ cls: "sprout-coach-field-label", text: "Plan name" });
@@ -678,16 +725,16 @@ export class SproutCoachView extends ItemView {
       this._planName = String(nameInput.value || "").trim();
     });
 
-    card.createDiv({ cls: "sprout-coach-field-label sprout-coach-field-label-gap", text: "Scope" });
+    card.createDiv({ cls: "sprout-coach-field-label sprout-coach-field-label-gap", text: "Content" });
     const searchWrap = card.createDiv({ cls: "sprout-coach-search-wrap" });
     const searchIcon = searchWrap.createSpan({ cls: "sprout-coach-search-icon" });
     setIcon(searchIcon, "search");
-    const search = searchWrap.createEl("input", { cls: "bc input h-9", attr: { type: "search", placeholder: "Search notes, folders, or groups..." } });
+    const search = searchWrap.createEl("input", { cls: "bc input h-9", attr: { type: "search", placeholder: "Search notes, folders, tags, or properties..." } });
     search.value = this._searchQuery;
     const popover = searchWrap.createDiv({ cls: "sprout-coach-scope-popover dropdown-menu hidden" });
     const list = popover.createDiv({ cls: "sprout-coach-scope-list min-w-56 rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 sprout-pointer-auto" });
     list.setAttr("role", "menu");
-    list.setAttr("aria-label", "Scope matches");
+    list.setAttr("aria-label", "Content matches");
 
     const chipsWrap = card.createDiv({ cls: "sprout-coach-selected-wrap" });
     const selectedTitle = chipsWrap.createDiv({ cls: "sprout-coach-selected-title", text: `Study content (${this._selectedScopeIds.size})` });
@@ -710,38 +757,25 @@ export class SproutCoachView extends ItemView {
       this._transitionWizardPage(1, "next");
     });
 
-    const queryMatches = (query: string): ScopeOption[] => {
-      const q = query.trim().toLowerCase();
-      if (!q) return [];
-      return options.filter((option) => (
-        option.label.toLowerCase().includes(q)
-        || option.scope.name.toLowerCase().includes(q)
-        || option.scope.key.toLowerCase().includes(q)
-      )).slice(0, 200);
-    };
-
-    let filteredScopeOptions: ScopeOption[] = [];
-    let activeScopeIndex = -1;
-
     const toggleScopeSelection = (scopeId: string): void => {
       if (this._selectedScopeIds.has(scopeId)) this._selectedScopeIds.delete(scopeId);
       else this._selectedScopeIds.add(scopeId);
       next.disabled = !this._selectedScopeIds.size;
       renderSelected();
-      renderScopeList();
+      scopePicker.render();
     };
 
     const renderSelected = (): void => {
       selectedTitle.setText(`Selected (${this._selectedScopeIds.size})`);
       chips.empty();
       if (!this._selectedScopeIds.size) {
-        chips.createDiv({ cls: "text-xs text-muted-foreground", text: "No scopes selected yet." });
+        chips.createDiv({ cls: "text-xs text-muted-foreground", text: "No content selected yet." });
       } else {
         for (const scopeId of this._selectedScopeIds) {
-          const scope = fromScopeId(scopeId, this._scopeLookup);
-          if (!scope) continue;
+          const option = options.find((entry) => toScopeId(entry.scope) === scopeId);
+          if (!option) continue;
           const chip = chips.createDiv({ cls: "sprout-coach-chip" });
-          chip.createSpan({ text: scope.name });
+          chip.createSpan({ text: option.label });
           const remove = chip.createEl("button", { cls: "sprout-coach-chip-remove" });
           remove.type = "button";
           remove.setAttr("aria-label", "Remove");
@@ -751,127 +785,50 @@ export class SproutCoachView extends ItemView {
             this._selectedScopeIds.delete(scopeId);
             next.disabled = !this._selectedScopeIds.size;
             renderSelected();
-            renderScopeList();
+            scopePicker.render();
           });
         }
       }
     };
 
-    const closePopover = (): void => {
-      popover.classList.add("hidden");
-    };
-
-    const openPopover = (): void => {
-      popover.classList.remove("hidden");
-    };
-
-    const shouldOpenPopover = (): boolean => {
-      if (!this._searchQuery.trim()) return false;
-      const active = document.activeElement as Node | null;
-      return active === search || (active ? popover.contains(active) : false);
-    };
-
-    const renderScopeList = (): void => {
-      list.empty();
-      filteredScopeOptions = queryMatches(this._searchQuery);
-
-      if (!filteredScopeOptions.length) {
-        activeScopeIndex = -1;
-        const noResults = list.createDiv({
-          cls: "sprout-coach-scope-empty",
-          text: this._searchQuery.trim() ? "No matching notes, folders, or groups." : "Type to search notes, folders, or groups.",
-        });
-        noResults.setAttr("role", "status");
-      } else {
-        if (activeScopeIndex < 0) activeScopeIndex = 0;
-        if (activeScopeIndex >= filteredScopeOptions.length) activeScopeIndex = filteredScopeOptions.length - 1;
-
-        for (let idx = 0; idx < filteredScopeOptions.length; idx += 1) {
-          const opt = filteredScopeOptions[idx];
-          const scopeId = toScopeId(opt.scope);
-          const isSelected = this._selectedScopeIds.has(scopeId);
-          const item = list.createEl("button", {
-            cls: "bc sprout-coach-scope-item group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer select-none outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-          });
-          item.type = "button";
-          item.setAttr("role", "menuitemcheckbox");
-          item.setAttr("aria-checked", isSelected ? "true" : "false");
-          item.tabIndex = idx === activeScopeIndex ? 0 : -1;
-          item.setAttr("aria-label", opt.label);
-          item.createSpan({ cls: "sprout-coach-scope-item-label", text: opt.label });
-          if (idx === activeScopeIndex) item.classList.add("is-active");
-          if (isSelected) item.classList.add("is-selected");
-          item.addEventListener("mousedown", (evt) => {
-            evt.preventDefault();
-          });
-          item.addEventListener("mouseenter", () => {
-            const prev = list.querySelector(".sprout-coach-scope-item.is-active");
-            if (prev instanceof HTMLElement) {
-              prev.classList.remove("is-active");
-              prev.tabIndex = -1;
-            }
-            activeScopeIndex = idx;
-            item.classList.add("is-active");
-            item.tabIndex = 0;
-          });
-          item.addEventListener("click", () => {
-            toggleScopeSelection(scopeId);
-          });
-        }
-      }
-
-      if (shouldOpenPopover()) openPopover();
-      else closePopover();
-    };
-
-    search.addEventListener("input", () => {
-      this._searchQuery = String(search.value || "");
-      renderScopeList();
-    });
-
-    search.addEventListener("focus", () => {
-      if (this._searchQuery.trim()) renderScopeList();
-    });
-
-    search.addEventListener("blur", () => {
-      window.setTimeout(() => {
-        if (!shouldOpenPopover()) closePopover();
-      }, 120);
-    });
-
-    search.addEventListener("keydown", (evt) => {
-      if ((evt.key === "ArrowDown" || evt.key === "ArrowUp") && this._searchQuery.trim()) {
-        evt.preventDefault();
-        const max = filteredScopeOptions.length;
-        if (!max) return;
-        if (evt.key === "ArrowDown") activeScopeIndex = (activeScopeIndex + 1 + max) % max;
-        else activeScopeIndex = (activeScopeIndex - 1 + max) % max;
-        renderScopeList();
-        const activeItem = list.querySelector(".sprout-coach-scope-item.is-active");
-        if (activeItem instanceof HTMLElement) activeItem.focus();
-        return;
-      }
-
-      if (evt.key === "Enter" && this._searchQuery.trim()) {
-        if (filteredScopeOptions.length && activeScopeIndex >= 0) {
-          evt.preventDefault();
-          const active = filteredScopeOptions[activeScopeIndex];
-          if (active) {
-            const scopeId = toScopeId(active.scope);
-            toggleScopeSelection(scopeId);
-          }
-        }
-        return;
-      }
-
-      if (evt.key === "Escape") {
-        evt.preventDefault();
-        closePopover();
-      }
+    const scopePicker = mountSearchPopoverList({
+      searchInput: search,
+      popoverEl: popover,
+      listEl: list,
+      getQuery: () => this._searchQuery,
+      setQuery: (query) => {
+        this._searchQuery = query;
+      },
+      getOptions: (): SearchPopoverOption[] => options.map((option) => {
+        const scopeId = toScopeId(option.scope);
+        const propertyParts = option.scope.type === "property" ? String(option.scope.name || "").split(":") : [];
+        const propertyKey = propertyParts.length ? propertyParts[0]?.trim() : undefined;
+        const propertyValue = propertyParts.length > 1 ? propertyParts.slice(1).join(":").trim() : undefined;
+        return {
+          id: scopeId,
+          label: option.label,
+          selected: this._selectedScopeIds.has(scopeId),
+          type: option.scope.type === "vault" || option.scope.type === "folder" || option.scope.type === "note" || option.scope.type === "tag" || option.scope.type === "property"
+            ? option.scope.type
+            : undefined,
+          propertyKey,
+          propertyValue,
+          searchTexts: [option.scope.name, option.scope.key],
+        };
+      }),
+      onToggle: toggleScopeSelection,
+      emptyTextWhenQuery: "No matching notes, folders, tags, or properties.",
+      emptyTextWhenIdle: "Type to search notes, folders, tags, or properties.",
+      typeFilters: [
+        { type: "folder", label: "Folders" },
+        { type: "note", label: "Notes" },
+        { type: "tag", label: "Tags" },
+        { type: "property", label: "Properties" },
+      ],
     });
 
     renderSelected();
-    renderScopeList();
+    scopePicker.render();
   }
 
   private _renderWizardScheduleStep(card: HTMLElement): void {
@@ -1516,6 +1473,25 @@ export class SproutCoachView extends ItemView {
 
     const plans = this._coachDb.listPlans();
     if (!plans.length && !this._wizardVisible) this._wizardVisible = false;
+
+    const titleFrame = createTitleStripFrame({
+      root,
+      stripClassName: "lk-home-title-strip sprout-coach-title-strip",
+      rowClassName: "sprout-inline-sentence w-full flex items-center justify-between gap-[10px]",
+      leftClassName: "min-w-0 flex-1 flex flex-col gap-[2px]",
+      rightClassName: "flex items-center gap-2",
+      prepend: true,
+    });
+    if (animationsEnabled) {
+      titleFrame.strip.setAttribute("data-aos", "fade-up");
+      titleFrame.strip.setAttribute("data-aos-anchor-placement", "top-top");
+      titleFrame.strip.setAttribute("data-aos-duration", String(AOS_DURATION));
+      titleFrame.strip.setAttribute("data-aos-delay", "0");
+    }
+    titleFrame.title.classList.add("text-xl", "font-semibold", "tracking-tight");
+    titleFrame.title.textContent = "Coach";
+    titleFrame.subtitle.classList.add("text-[0.95rem]", "font-normal", "leading-[1.3]", "text-muted-foreground");
+    titleFrame.subtitle.textContent = "Build and manage focused study plans.";
 
     const shell = root.createDiv({ cls: "sprout-view-content-shell lk-home-content-shell flex flex-col gap-4 sprout-coach-shell" });
 

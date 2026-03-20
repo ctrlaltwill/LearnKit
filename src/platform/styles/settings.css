@@ -1099,6 +1099,54 @@ body:not(.is-mobile) .sprout-guide-body pre button.copy-code-button.sprout-guide
   align-items: center;
 }
 
+/* ---- Note Review scope editor in Settings ---- */
+
+.sprout-settings .sprout-note-review-scope-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: min(760px, 100%);
+  min-width: min(560px, 100%);
+}
+
+.sprout-settings .sprout-note-review-scope-editor .sprout-note-review-scope-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sprout-settings .sprout-note-review-scope-editor .sprout-coach-selected-chips {
+  display: block;
+}
+
+.sprout-settings .sprout-note-review-scope-editor .sprout-coach-chip {
+  margin: 0 8px 8px 0;
+  width: fit-content;
+  max-width: 100%;
+  color: var(--theme-base-95);
+}
+
+.sprout-settings .sprout-note-review-scope-editor .sprout-coach-chip > span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sprout-settings .sprout-note-review-scope-editor .sprout-coach-chip .sprout-coach-chip-remove {
+  color: var(--theme-base-95);
+}
+
+.sprout-settings .sprout-note-review-scope-editor .sprout-coach-chip .sprout-coach-chip-remove .svg-icon {
+  stroke: currentColor;
+}
+
+@media (max-width: 920px) {
+  .sprout-settings .sprout-note-review-scope-editor {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
 .sprout .sprout-settings-icon-btn,
 .sprout-settings .sprout-settings-icon-btn {
   background: transparent;

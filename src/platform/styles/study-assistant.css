@@ -1463,24 +1463,13 @@
 }
 
 .sprout-assistant-popup-attachment-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  height: 22px;
-  padding: 0 6px 0 0 !important;
-  border: 1px solid var(--color-base-40);
-  border-radius: var(--radius-md, 12px) !important;
-  background: var(--theme-base-15, var(--background-modifier-hover, rgba(0, 0, 0, 0.04)));
-  font-size: var(--sprout-font-3xs, 0.72rem);
-  font-weight: 500;
-  line-height: 1;
-  color: var(--theme-base-95, var(--text-normal));
+  min-width: 0;
   max-width: 200px;
-  transition: background 0.15s ease;
+  box-sizing: border-box;
 }
 
 .sprout-assistant-popup-attachment-chip:hover {
-  background: var(--theme-base-25, var(--background-modifier-hover));
+  background: var(--theme-base-15);
 }
 
 .sprout-assistant-popup-attachment-ext {
@@ -1505,37 +1494,19 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
-  padding-left: 4px;
 }
 
 .sprout-assistant-popup-attachment-remove {
   flex-shrink: 0;
-  width: 14px !important;
-  height: 14px !important;
-  min-width: 14px !important;
-  min-height: 14px !important;
-  border: none !important;
-  background: none !important;
-  box-shadow: none !important;
-  outline: none !important;
-  color: var(--theme-base-95) !important;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 !important;
-  border-radius: 0 !important;
-  transition: color 0.12s ease;
 }
 
 .sprout-assistant-popup-attachment-remove:hover {
   color: var(--theme-base-95, var(--text-normal));
-  background: none !important;
 }
 
 .sprout-assistant-popup-attachment-remove .svg-icon {
-  width: 10px;
-  height: 10px;
+  width: 14px;
+  height: 14px;
 }
 
 .sprout .sprout-assistant-popup .sprout-assistant-popup-attach-btn {
@@ -1550,17 +1521,7 @@
 }
 
 .sprout .sprout-assistant-popup .sprout-assistant-popup-attachment-remove {
-  width: 14px !important;
-  height: 14px !important;
-  min-width: 14px !important;
-  min-height: 14px !important;
-  max-width: 14px !important;
-  max-height: 14px !important;
   padding: 0 !important;
-  border: none !important;
-  background: none !important;
-  box-shadow: none !important;
-  outline: none !important;
   line-height: 0 !important;
 }
 

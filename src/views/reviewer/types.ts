@@ -15,7 +15,9 @@ export type Scope =
   | { type: "vault"; key: string; name: string }
   | { type: "folder"; key: string; name: string }
   | { type: "note"; key: string; name: string }
-  | { type: "group"; key: string; name: string };
+  | { type: "group"; key: string; name: string }
+  | { type: "tag"; key: string; name: string }
+  | { type: "property"; key: string; name: string };
 
 /** Reviewer rating — alias for the scheduler's ReviewRating. */
 export type Rating = ReviewRating;

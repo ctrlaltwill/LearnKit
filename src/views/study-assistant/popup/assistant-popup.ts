@@ -98,6 +98,7 @@ import {
   readFileInputAsAttachment,
   SUPPORTED_FILE_ACCEPT,
 } from "../../../platform/integrations/ai/attachment-helpers";
+import { formatAttachmentChipLabel } from "../../shared/attachment-chip-label";
 
 // ---------------------------------------------------------------------------
 //  SproutAssistantPopup
@@ -1350,12 +1351,9 @@ export class SproutAssistantPopup {
     const strip = parent.createDiv({ cls: "sprout-assistant-popup-attachments" });
     for (let i = 0; i < this._attachedFiles.length; i++) {
       const af = this._attachedFiles[i];
-      const chip = strip.createDiv({ cls: "sprout-assistant-popup-attachment-chip" });
-      const ext = af.extension || af.name.split(".").pop() || "";
-      chip.createSpan({ text: ext.toUpperCase(), cls: "sprout-assistant-popup-attachment-ext" });
-      const baseName = af.name.includes(".") ? af.name.slice(0, af.name.lastIndexOf(".")) : af.name;
-      chip.createSpan({ text: baseName, cls: "sprout-assistant-popup-attachment-name" });
-      const removeBtn = chip.createEl("button", { cls: "sprout-assistant-popup-attachment-remove" });
+      const chip = strip.createDiv({ cls: "sprout-coach-chip sprout-assistant-popup-attachment-chip" });
+      chip.createSpan({ text: formatAttachmentChipLabel(af.name, af.extension), cls: "sprout-assistant-popup-attachment-name" });
+      const removeBtn = chip.createEl("button", { cls: "sprout-coach-chip-remove sprout-assistant-popup-attachment-remove" });
       removeBtn.type = "button";
       removeBtn.setAttribute("aria-label", "Remove");
       setIcon(removeBtn, "x");
@@ -4619,18 +4617,27 @@ class AttachmentPickerModal extends Modal {
   private _pickSystemFile(): void {
     const input = document.createElement("input");
     input.type = "file";
+    input.multiple = true;
     input.accept = SUPPORTED_FILE_ACCEPT;
     setCssProps(input, "display", "none");
     input.addEventListener("change", () => {
       void (async () => {
-        const file = input.files?.[0];
-        if (!file) return;
-        const attached = await readFileInputAsAttachment(file);
-        if (!attached) {
-          new Notice("File is unsupported or too large.");
-          return;
+        const files = Array.from(input.files ?? []);
+        if (!files.length) return;
+
+        let rejectedCount = 0;
+        for (const file of files) {
+          const attached = await readFileInputAsAttachment(file);
+          if (!attached) {
+            rejectedCount += 1;
+            continue;
+          }
+          this._onPickExternal(attached);
         }
-        this._onPickExternal(attached);
+
+        if (rejectedCount > 0) {
+          new Notice(rejectedCount === 1 ? "1 file was unsupported or too large." : `${rejectedCount} files were unsupported or too large.`);
+        }
         this.close();
       })();
     });

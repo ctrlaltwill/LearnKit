@@ -9,6 +9,7 @@
 import {
   PluginSettingTab,
   Setting,
+  TFile,
   type App,
   Notice,
   setIcon,
@@ -72,6 +73,8 @@ import type {
   BackupSchedulingStats,
   BackupIntegrityState,
 } from "./types/settings-tab-types";
+import { mountSearchPopoverList, type SearchPopoverOption } from "../shared/search-popover-list";
+import { collectVaultTagAndPropertyPairs, decodePropertyPair, encodePropertyPair } from "../shared/scope-metadata";
 
 // ────────────────────────────────────────────
 // SproutSettingsTab
@@ -2481,6 +2484,7 @@ export class SproutSettingsTab extends PluginSettingTab {
     };
 
     const noteCfg = this.plugin.settings.noteReview;
+    let refreshScopeBlocks: (() => void) | null = null;
 
     new Setting(wrapper)
       .setName(this._tx("ui.settings.noteReview.selection.heading", "Note selection"))
@@ -2498,6 +2502,7 @@ export class SproutSettingsTab extends PluginSettingTab {
         t.setValue(noteCfg.avoidFolderNotes !== false).onChange(async (v) => {
           noteCfg.avoidFolderNotes = !!v;
           await this.plugin.saveAll();
+          refreshScopeBlocks?.();
         }),
       );
 
@@ -2505,17 +2510,348 @@ export class SproutSettingsTab extends PluginSettingTab {
       .setName(this._tx("ui.settings.noteReview.filter.name", "Include or exclude notes"))
       .setDesc(this._tx(
         "ui.settings.noteReview.filter.desc",
-        "Use path: and tag: terms. Prefix a term with - to exclude. Example: path:Daily tag:biology -path:Archive -tag:draft",
+        "Search and select folders, notes, tags, and properties. Include selects matching notes; Exclude removes matching notes from that result.",
       ))
-      .addText((t) =>
-        t
-          .setPlaceholder(this._tx("ui.settings.noteReview.filter.placeholder", "path:Folder tag:topic -path:Archive -tag:draft"))
-          .setValue(String(noteCfg.filterQuery ?? ""))
-          .onChange(async (v) => {
-            noteCfg.filterQuery = String(v ?? "").trim();
-            await this.plugin.saveAll();
-          }),
-      );
+      .then((setting) => {
+        const files = this.app.vault.getMarkdownFiles();
+        const isFolderNote = (file: TFile): boolean => {
+          const path = String(file.path || "").trim();
+          if (!path.includes("/")) return false;
+          const parts = path.split("/").filter(Boolean);
+          if (parts.length < 2) return false;
+          const fileBase = String(file.basename || "").trim().toLowerCase();
+          const parentFolder = String(parts[parts.length - 2] || "").trim().toLowerCase();
+          if (!fileBase || !parentFolder) return false;
+          return fileBase === parentFolder;
+        };
+        const folderNoteCount = files.filter((file) => isFolderNote(file)).length;
+        const notePathSet = new Set(files.map((file) => file.path));
+        const folderSet = new Set<string>();
+        for (const file of files) {
+          const slash = file.path.lastIndexOf("/");
+          if (slash >= 0) folderSet.add(file.path.slice(0, slash));
+        }
+
+        const metadata = collectVaultTagAndPropertyPairs(this.app, files);
+        const baseOptions: SearchPopoverOption[] = [
+          {
+            type: "vault",
+            id: "vault::",
+            label: `Vault: ${this.app.vault.getName()} (${files.length})`,
+            selected: false,
+            searchTexts: [this.app.vault.getName(), "vault", "all notes", "all content"],
+          },
+          ...Array.from(folderSet)
+            .sort((a, b) => a.localeCompare(b))
+            .map((folder) => {
+              const folderName = folder.split("/").filter(Boolean).pop() ?? folder;
+              return {
+                type: "folder" as const,
+                id: `folder::${folder}`,
+                label: `Folder: ${folderName} (${files.filter((file) => file.path.startsWith(`${folder}/`)).length})`,
+                selected: false,
+                searchTexts: [folderName, folder],
+              };
+            }),
+          ...files
+            .sort((a, b) => a.path.localeCompare(b.path))
+            .map((file: TFile) => ({
+              type: "note" as const,
+              id: `note::${file.path}`,
+              label: `Note: ${file.basename}`,
+              selected: false,
+              searchTexts: [file.basename, file.path],
+            })),
+          ...metadata.tags.map((tag) => ({
+            type: "tag" as const,
+            id: `tag::${tag.token}`,
+            label: `Tag: ${tag.display} (${tag.count})`,
+            selected: false,
+            searchTexts: [`#${tag.token}`, `tag:${tag.token}`, tag.display],
+          })),
+          ...metadata.properties.map((pair) => ({
+            type: "property" as const,
+            id: `prop::${encodePropertyPair({ key: pair.key, value: pair.value })}`,
+            label: `${pair.displayKey}: ${pair.displayValue} (${pair.count})`,
+            selected: false,
+            propertyKey: pair.displayKey,
+            propertyValue: pair.displayValue,
+            searchTexts: [
+              `${pair.key}:${pair.value}`,
+              `${pair.key}=${pair.value}`,
+              `${pair.displayKey}:${pair.displayValue}`,
+              `prop:${pair.key}=${pair.value}`,
+            ],
+          })),
+        ];
+
+        const parseStoredQuery = (query: string): { include: Set<string>; exclude: Set<string>; passthrough: string[] } => {
+          const include = new Set<string>();
+          const exclude = new Set<string>();
+          const passthrough: string[] = [];
+          const parts = String(query || "")
+            .split(/\s+/)
+            .map((part) => part.trim())
+            .filter(Boolean);
+
+          for (const part of parts) {
+            const lowered = part.toLowerCase();
+            if (lowered === "scope:vault" || lowered === "vault") {
+              include.add("vault::");
+              continue;
+            }
+            if (lowered === "-scope:vault" || lowered === "-vault") {
+              exclude.add("vault::");
+              continue;
+            }
+            if (lowered.startsWith("path:")) {
+              const path = String(part.slice(5)).trim();
+              if (!path) continue;
+              include.add(notePathSet.has(path) ? `note::${path}` : `folder::${path}`);
+              continue;
+            }
+            if (lowered.startsWith("-path:")) {
+              const path = String(part.slice(6)).trim();
+              if (!path) continue;
+              exclude.add(notePathSet.has(path) ? `note::${path}` : `folder::${path}`);
+              continue;
+            }
+            if (lowered.startsWith("note:")) {
+              const path = String(part.slice(5)).trim();
+              if (!path) continue;
+              include.add(`note::${path}`);
+              continue;
+            }
+            if (lowered.startsWith("-note:")) {
+              const path = String(part.slice(6)).trim();
+              if (!path) continue;
+              exclude.add(`note::${path}`);
+              continue;
+            }
+            if (lowered.startsWith("tag:")) {
+              const token = String(part.slice(4)).trim().toLowerCase().replace(/^#+/, "");
+              if (!token) continue;
+              include.add(`tag::${token}`);
+              continue;
+            }
+            if (lowered.startsWith("-tag:")) {
+              const token = String(part.slice(5)).trim().toLowerCase().replace(/^#+/, "");
+              if (!token) continue;
+              exclude.add(`tag::${token}`);
+              continue;
+            }
+            if (lowered.startsWith("prop:")) {
+              const token = String(part.slice(5)).trim().toLowerCase();
+              if (!token) continue;
+              include.add(`prop::${token}`);
+              continue;
+            }
+            if (lowered.startsWith("-prop:")) {
+              const token = String(part.slice(6)).trim().toLowerCase();
+              if (!token) continue;
+              exclude.add(`prop::${token}`);
+              continue;
+            }
+            passthrough.push(part);
+          }
+
+          return { include, exclude, passthrough };
+        };
+
+        const toToken = (id: string, negate: boolean): string | null => {
+          const prefix = negate ? "-" : "";
+          if (id === "vault::") return `${prefix}scope:vault`;
+          if (id.startsWith("folder::")) return `${prefix}path:${id.slice("folder::".length)}`;
+          if (id.startsWith("note::")) return `${prefix}note:${id.slice("note::".length)}`;
+          if (id.startsWith("tag::")) return `${prefix}tag:${id.slice("tag::".length)}`;
+          if (id.startsWith("prop::")) {
+            const raw = id.slice("prop::".length);
+            const pair = decodePropertyPair(raw);
+            if (!pair) return null;
+            return `${prefix}prop:${pair.key}=${pair.value}`;
+          }
+          return null;
+        };
+
+        const parsed = parseStoredQuery(String(noteCfg.filterQuery ?? ""));
+        const includeSet = parsed.include;
+        const excludeSet = parsed.exclude;
+        const passthroughTokens = parsed.passthrough;
+        const validOptionIds = new Set(baseOptions.map((option) => option.id));
+        for (const id of Array.from(includeSet)) {
+          if (!validOptionIds.has(id)) includeSet.delete(id);
+        }
+        for (const id of Array.from(excludeSet)) {
+          if (!validOptionIds.has(id)) excludeSet.delete(id);
+        }
+
+        const controlHost = setting.controlEl.createDiv({ cls: "sprout-note-review-scope-editor" });
+        const includeHost = controlHost.createDiv({ cls: "sprout-note-review-scope-block" });
+        const excludeHost = controlHost.createDiv({ cls: "sprout-note-review-scope-block" });
+
+        const persistScopeQuery = async (): Promise<void> => {
+          const includeTokens = Array.from(includeSet)
+            .map((id) => toToken(id, false))
+            .filter((token): token is string => !!token)
+            .sort((a, b) => a.localeCompare(b));
+
+          const excludeTokens = Array.from(excludeSet)
+            .map((id) => toToken(id, true))
+            .filter((token): token is string => !!token)
+            .sort((a, b) => a.localeCompare(b));
+
+          noteCfg.filterQuery = [...includeTokens, ...excludeTokens, ...passthroughTokens]
+            .filter(Boolean)
+            .join(" ")
+            .trim();
+          await this.plugin.saveAll();
+        };
+
+        let renderInclude: (() => void) | null = null;
+        let renderExclude: (() => void) | null = null;
+
+        const mountScopeBlock = (
+          host: HTMLElement,
+          title: string,
+          activeSet: Set<string>,
+          oppositeSet: Set<string>,
+          emptyText: string,
+          includeFolderNotesChip: boolean,
+        ): { render: () => void } => {
+          host.empty();
+          host.createDiv({ cls: "sprout-coach-field-label", text: title });
+
+          const searchWrap = host.createDiv({ cls: "sprout-coach-search-wrap" });
+          const searchIcon = searchWrap.createSpan({ cls: "sprout-coach-search-icon" });
+          setIcon(searchIcon, "search");
+          const search = searchWrap.createEl("input", {
+            cls: "bc input h-9",
+            attr: { type: "search", placeholder: "Search..." },
+          });
+
+          const popover = searchWrap.createDiv({ cls: "sprout-coach-scope-popover dropdown-menu hidden" });
+          const list = popover.createDiv({ cls: "sprout-coach-scope-list min-w-56 rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 sprout-pointer-auto" });
+          list.setAttr("role", "menu");
+          list.setAttr("aria-label", `${title} matches`);
+
+          const selectedWrap = host.createDiv({ cls: "sprout-coach-selected-wrap" });
+          const selectedTitle = selectedWrap.createDiv({ cls: "sprout-coach-selected-title" });
+          const chips = selectedWrap.createDiv({ cls: "sprout-coach-selected-chips" });
+
+          let query = "";
+
+          const renderSelected = (): void => {
+            const sorted = Array.from(activeSet).sort((a, b) => a.localeCompare(b));
+            const optionById = new Map(baseOptions.map((option) => [option.id, option]));
+            const resolvedIds = sorted.filter((id) => optionById.has(id));
+            const extraCount = includeFolderNotesChip && noteCfg.avoidFolderNotes !== false ? 1 : 0;
+            selectedTitle.setText(`${title} (${resolvedIds.length + extraCount})`);
+            chips.empty();
+
+            if (!resolvedIds.length && extraCount === 0) {
+              chips.createDiv({ cls: "text-xs text-muted-foreground", text: emptyText });
+              return;
+            }
+
+            for (const id of resolvedIds) {
+              const option = optionById.get(id);
+              if (!option) continue;
+              const chip = chips.createDiv({ cls: "sprout-coach-chip" });
+              chip.createSpan({ text: option.label });
+              const remove = chip.createEl("button", { cls: "sprout-coach-chip-remove" });
+              remove.type = "button";
+              remove.setAttr("aria-label", "Remove");
+              setIcon(remove, "x");
+              remove.addEventListener("click", () => {
+                activeSet.delete(id);
+                scopePicker.render();
+                renderSelected();
+                void persistScopeQuery();
+              });
+            }
+
+            if (includeFolderNotesChip && noteCfg.avoidFolderNotes !== false) {
+              const chip = chips.createDiv({ cls: "sprout-coach-chip" });
+              chip.createSpan({ text: `Folder Notes (${folderNoteCount})` });
+              const remove = chip.createEl("button", { cls: "sprout-coach-chip-remove" });
+              remove.type = "button";
+              remove.setAttr("aria-label", "Remove");
+              setIcon(remove, "x");
+              remove.addEventListener("click", () => {
+                noteCfg.avoidFolderNotes = false;
+                void this.plugin.saveAll();
+                renderSelected();
+              });
+            }
+          };
+
+          const scopePicker = mountSearchPopoverList({
+            searchInput: search,
+            popoverEl: popover,
+            listEl: list,
+            getQuery: () => query,
+            setQuery: (next) => {
+              query = next;
+            },
+            getOptions: () => baseOptions.map((option) => ({
+              ...option,
+              selected: activeSet.has(option.id),
+            })),
+            onToggle: (id) => {
+              if (activeSet.has(id)) activeSet.delete(id);
+              else {
+                activeSet.add(id);
+                oppositeSet.delete(id);
+              }
+              renderSelected();
+              renderInclude?.();
+              renderExclude?.();
+              void persistScopeQuery();
+            },
+            emptyTextWhenQuery: "No matching scope items.",
+            emptyTextWhenIdle: "Type to search scope items.",
+            typeFilters: [
+              { type: "folder", label: "Folders" },
+              { type: "note", label: "Notes" },
+              { type: "tag", label: "Tags" },
+              { type: "property", label: "Properties" },
+            ],
+          });
+
+          const render = (): void => {
+            renderSelected();
+            scopePicker.render();
+          };
+
+          render();
+          return { render };
+        };
+
+        const includeBlock = mountScopeBlock(
+          includeHost,
+          this._tx("ui.settings.noteReview.filter.include.name", "Include"),
+          includeSet,
+          excludeSet,
+          this._tx("ui.settings.noteReview.filter.include.empty", "No include filters selected."),
+          false,
+        );
+
+        const excludeBlock = mountScopeBlock(
+          excludeHost,
+          this._tx("ui.settings.noteReview.filter.exclude.name", "Exclude"),
+          excludeSet,
+          includeSet,
+          this._tx("ui.settings.noteReview.filter.exclude.empty", "No exclude filters selected."),
+          true,
+        );
+
+        renderInclude = includeBlock.render;
+        renderExclude = excludeBlock.render;
+        refreshScopeBlocks = () => {
+          renderInclude?.();
+          renderExclude?.();
+        };
+      });
 
     new Setting(wrapper)
       .setName(this._tx("ui.settings.noteReview.scheduling.heading", "Scheduling"))
