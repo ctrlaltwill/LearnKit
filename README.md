@@ -1,4 +1,4 @@
-# LearnKit - Flashcards & Spaced Repetition
+# LearnKit — Flashcards, Spaced Repetition & Study Tools
 
 ![GitHub Release](https://img.shields.io/github/v/release/ctrlaltwill/LearnKit)
 [![GitHub issues](https://img.shields.io/github/issues/ctrlaltwill/LearnKit)](https://github.com/ctrlaltwill/LearnKit/issues)
