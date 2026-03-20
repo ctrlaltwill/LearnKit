@@ -469,7 +469,6 @@ export class SproutSettingsView extends ItemView {
         },
         { id: "study", label: tx("ui.settings.subTabs.study", "Card Study"), paneTitle: tx("ui.settings.subTabs.studyPane", "Card Study"), method: "renderStudyTab" },
       ];
-      settingsSubTabs.sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
 
       const methodMap: Record<string, RenderMethodName> = {
         about: "renderAboutTab",
@@ -513,6 +512,7 @@ export class SproutSettingsView extends ItemView {
 
           const btn = document.createElement("button");
           btn.className = "bc inline-flex items-center gap-2 h-9 px-3 text-sm sprout-guide-nav-btn sprout-settings-action-btn";
+          btn.type = "button";
           const tooltipMap: Record<string, string> = {
             audio: tx("ui.settings.subTabs.tooltip.audio", "Open audio options"),
             cards: tx("ui.settings.subTabs.tooltip.cards", "Open flashcards options"),
@@ -532,7 +532,8 @@ export class SproutSettingsView extends ItemView {
           btn.appendChild(label);
           const isActive = this._activeSettingsSubTab === sub.id;
           btn.classList.toggle("is-active", isActive);
-          btn.addEventListener("click", () => {
+          btn.addEventListener("click", (evt) => {
+            evt.preventDefault();
             this._activeSettingsSubTab = sub.id;
             this._renderActiveTabContent();
           });

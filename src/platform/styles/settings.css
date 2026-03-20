@@ -1105,14 +1105,27 @@ body:not(.is-mobile) .sprout-guide-body pre button.copy-code-button.sprout-guide
   display: flex;
   flex-direction: column;
   gap: 14px;
-  width: min(760px, 100%);
-  min-width: min(560px, 100%);
+  width: min(980px, 100%);
+  min-width: min(680px, 100%);
+}
+
+.sprout-settings .setting-item-control.sprout-note-review-scope-control {
+  width: min(980px, 100%);
+  max-width: 100%;
+  flex: 1 1 760px;
 }
 
 .sprout-settings .sprout-note-review-scope-editor .sprout-note-review-scope-block {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.sprout-settings .sprout-note-review-scope-editor .sprout-note-review-scope-summary {
+  margin-top: 2px;
+  font-size: var(--sprout-font-xs);
+  font-weight: 600;
+  color: var(--text-normal);
 }
 
 .sprout-settings .sprout-note-review-scope-editor .sprout-coach-selected-chips {
@@ -1133,7 +1146,30 @@ body:not(.is-mobile) .sprout-guide-body pre button.copy-code-button.sprout-guide
 }
 
 .sprout-settings .sprout-note-review-scope-editor .sprout-coach-chip .sprout-coach-chip-remove {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  border-radius: 0 !important;
+  gap: 0 !important;
   color: var(--theme-base-95);
+}
+
+.sprout .sprout-note-review-scope-editor .sprout-coach-chip .sprout-coach-chip-remove.sprout-settings-action-btn:not(.sprout-ss-trigger),
+.sprout-settings .sprout-note-review-scope-editor .sprout-coach-chip .sprout-coach-chip-remove.sprout-settings-action-btn:not(.sprout-ss-trigger) {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  border-radius: 0 !important;
 }
 
 .sprout-settings .sprout-note-review-scope-editor .sprout-coach-chip .sprout-coach-chip-remove .svg-icon {

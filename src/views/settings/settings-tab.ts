@@ -74,7 +74,13 @@ import type {
   BackupIntegrityState,
 } from "./types/settings-tab-types";
 import { mountSearchPopoverList, type SearchPopoverOption } from "../shared/search-popover-list";
-import { collectVaultTagAndPropertyPairs, decodePropertyPair, encodePropertyPair } from "../shared/scope-metadata";
+import {
+  collectVaultTagAndPropertyPairs,
+  decodePropertyPair,
+  encodePropertyPair,
+  extractFilePropertyPairs,
+  extractFileTags,
+} from "../shared/scope-metadata";
 
 // ────────────────────────────────────────────
 // SproutSettingsTab
@@ -2485,6 +2491,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     const noteCfg = this.plugin.settings.noteReview;
     let refreshScopeBlocks: (() => void) | null = null;
+    let avoidFolderNotesToggle: { setValue: (value: boolean) => unknown } | null = null;
 
     new Setting(wrapper)
       .setName(this._tx("ui.settings.noteReview.selection.heading", "Note selection"))
@@ -2498,13 +2505,14 @@ export class SproutSettingsTab extends PluginSettingTab {
           "Exclude notes whose filename matches their parent folder name.",
         ),
       )
-      .addToggle((t) =>
+      .addToggle((t) => {
+        avoidFolderNotesToggle = t;
         t.setValue(noteCfg.avoidFolderNotes !== false).onChange(async (v) => {
           noteCfg.avoidFolderNotes = !!v;
           await this.plugin.saveAll();
           refreshScopeBlocks?.();
-        }),
-      );
+        });
+      });
 
     new Setting(wrapper)
       .setName(this._tx("ui.settings.noteReview.filter.name", "Include or exclude notes"))
@@ -2685,9 +2693,11 @@ export class SproutSettingsTab extends PluginSettingTab {
           if (!validOptionIds.has(id)) excludeSet.delete(id);
         }
 
+        setting.controlEl.addClass("sprout-note-review-scope-control");
         const controlHost = setting.controlEl.createDiv({ cls: "sprout-note-review-scope-editor" });
         const includeHost = controlHost.createDiv({ cls: "sprout-note-review-scope-block" });
         const excludeHost = controlHost.createDiv({ cls: "sprout-note-review-scope-block" });
+        const summaryEl = controlHost.createDiv({ cls: "sprout-note-review-scope-summary text-xs text-muted-foreground" });
 
         const persistScopeQuery = async (): Promise<void> => {
           const includeTokens = Array.from(includeSet)
@@ -2710,6 +2720,52 @@ export class SproutSettingsTab extends PluginSettingTab {
         let renderInclude: (() => void) | null = null;
         let renderExclude: (() => void) | null = null;
 
+        const isOptionMatch = (id: string, file: TFile): boolean => {
+          if (id === "vault::") return true;
+          if (id.startsWith("folder::")) {
+            const folder = id.slice("folder::".length);
+            return file.path.startsWith(`${folder}/`);
+          }
+          if (id.startsWith("note::")) return file.path === id.slice("note::".length);
+          if (id.startsWith("tag::")) {
+            const token = id.slice("tag::".length).toLowerCase();
+            if (!token) return false;
+            const tags = new Set(extractFileTags(this.app, file));
+            return tags.has(token);
+          }
+          if (id.startsWith("prop::")) {
+            const pair = decodePropertyPair(id.slice("prop::".length));
+            if (!pair) return false;
+            const props = extractFilePropertyPairs(this.app, file);
+            return props.some((p) => p.key === pair.key && p.value === pair.value);
+          }
+          return false;
+        };
+
+        const renderIncludedNotesSummary = (): void => {
+          const includeIds = Array.from(includeSet);
+          const excludeIds = Array.from(excludeSet);
+          const included = files.filter((file) => {
+            const includeMatch = !includeIds.length || includeIds.some((id) => isOptionMatch(id, file));
+            if (!includeMatch) return false;
+            const excludedByScope = excludeIds.some((id) => isOptionMatch(id, file));
+            if (excludedByScope) return false;
+            if (noteCfg.avoidFolderNotes !== false && isFolderNote(file)) return false;
+            return true;
+          }).length;
+          summaryEl.setText(`${included} ${included === 1 ? "note" : "notes"} included`);
+        };
+
+        const getMatchedNoteCount = (ids: string[], includeFolderNotes: boolean): number => {
+          if (!ids.length && !includeFolderNotes) return 0;
+          const matched = new Set<string>();
+          for (const file of files) {
+            if (ids.length && ids.some((id) => isOptionMatch(id, file))) matched.add(file.path);
+            if (includeFolderNotes && noteCfg.avoidFolderNotes !== false && isFolderNote(file)) matched.add(file.path);
+          }
+          return matched.size;
+        };
+
         const mountScopeBlock = (
           host: HTMLElement,
           title: string,
@@ -2719,7 +2775,7 @@ export class SproutSettingsTab extends PluginSettingTab {
           includeFolderNotesChip: boolean,
         ): { render: () => void } => {
           host.empty();
-          host.createDiv({ cls: "sprout-coach-field-label", text: title });
+          const titleEl = host.createDiv({ cls: "sprout-coach-field-label", text: title });
 
           const searchWrap = host.createDiv({ cls: "sprout-coach-search-wrap" });
           const searchIcon = searchWrap.createSpan({ cls: "sprout-coach-search-icon" });
@@ -2735,7 +2791,6 @@ export class SproutSettingsTab extends PluginSettingTab {
           list.setAttr("aria-label", `${title} matches`);
 
           const selectedWrap = host.createDiv({ cls: "sprout-coach-selected-wrap" });
-          const selectedTitle = selectedWrap.createDiv({ cls: "sprout-coach-selected-title" });
           const chips = selectedWrap.createDiv({ cls: "sprout-coach-selected-chips" });
 
           let query = "";
@@ -2744,16 +2799,26 @@ export class SproutSettingsTab extends PluginSettingTab {
             const sorted = Array.from(activeSet).sort((a, b) => a.localeCompare(b));
             const optionById = new Map(baseOptions.map((option) => [option.id, option]));
             const resolvedIds = sorted.filter((id) => optionById.has(id));
-            const extraCount = includeFolderNotesChip && noteCfg.avoidFolderNotes !== false ? 1 : 0;
-            selectedTitle.setText(`${title} (${resolvedIds.length + extraCount})`);
+            const uniqueResolvedIds: string[] = [];
+            const seenLabels = new Set<string>();
+            for (const id of resolvedIds) {
+              const option = optionById.get(id);
+              if (!option) continue;
+              const label = String(option.label || "").trim().toLowerCase();
+              if (label && seenLabels.has(label)) continue;
+              if (label) seenLabels.add(label);
+              uniqueResolvedIds.push(id);
+            }
+            const matchedCount = getMatchedNoteCount(uniqueResolvedIds, includeFolderNotesChip);
+            titleEl.setText(`${title} (${matchedCount})`);
             chips.empty();
 
-            if (!resolvedIds.length && extraCount === 0) {
+            if (!uniqueResolvedIds.length && !(includeFolderNotesChip && noteCfg.avoidFolderNotes !== false)) {
               chips.createDiv({ cls: "text-xs text-muted-foreground", text: emptyText });
               return;
             }
 
-            for (const id of resolvedIds) {
+            for (const id of uniqueResolvedIds) {
               const option = optionById.get(id);
               if (!option) continue;
               const chip = chips.createDiv({ cls: "sprout-coach-chip" });
@@ -2766,6 +2831,7 @@ export class SproutSettingsTab extends PluginSettingTab {
                 activeSet.delete(id);
                 scopePicker.render();
                 renderSelected();
+                renderIncludedNotesSummary();
                 void persistScopeQuery();
               });
             }
@@ -2780,7 +2846,10 @@ export class SproutSettingsTab extends PluginSettingTab {
               remove.addEventListener("click", () => {
                 noteCfg.avoidFolderNotes = false;
                 void this.plugin.saveAll();
+                avoidFolderNotesToggle?.setValue(false);
+                refreshScopeBlocks?.();
                 renderSelected();
+                renderIncludedNotesSummary();
               });
             }
           };
@@ -2806,6 +2875,7 @@ export class SproutSettingsTab extends PluginSettingTab {
               renderSelected();
               renderInclude?.();
               renderExclude?.();
+              renderIncludedNotesSummary();
               void persistScopeQuery();
             },
             emptyTextWhenQuery: "No matching scope items.",
@@ -2850,7 +2920,9 @@ export class SproutSettingsTab extends PluginSettingTab {
         refreshScopeBlocks = () => {
           renderInclude?.();
           renderExclude?.();
+          renderIncludedNotesSummary();
         };
+        renderIncludedNotesSummary();
       });
 
     new Setting(wrapper)
@@ -4693,7 +4765,8 @@ export class SproutSettingsTab extends PluginSettingTab {
         button.classList.contains("sprout-settings-icon-btn") ||
         button.classList.contains("sprout-ss-trigger") ||
         button.classList.contains("sprout-folder-suggest-item") ||
-        button.classList.contains("sprout-settings-advanced-toggle")
+        button.classList.contains("sprout-settings-advanced-toggle") ||
+        button.classList.contains("sprout-coach-chip-remove")
       ) {
         continue;
       }
