@@ -8,6 +8,8 @@ export type ExamGeneratorConfig = {
   difficulty: ExamDifficulty;
   questionMode: ExamQuestionMode;
   questionCount: number;
+  testName: string;
+  appliedScenarios: boolean;
   timed: boolean;
   durationMinutes: number;
   sourceMode: "selected" | "folder";

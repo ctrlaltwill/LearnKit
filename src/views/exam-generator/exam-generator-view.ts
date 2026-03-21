@@ -1,9 +1,10 @@
 import { ItemView, Notice, TFile, setIcon, type WorkspaceLeaf } from "obsidian";
 import { createViewHeader, type SproutHeader } from "../../platform/core/header";
 import { AOS_DURATION, MAX_CONTENT_WIDTH_PX, VIEW_TYPE_EXAM_GENERATOR } from "../../platform/core/constants";
-import { setCssProps } from "../../platform/core/ui";
+import { renderMarkdownPreviewInElement, setCssProps } from "../../platform/core/ui";
 import { createTitleStripFrame } from "../../platform/core/view-primitives";
 import { ExamTestsSqlite, type SavedExamTestSummary } from "../../platform/core/exam-tests-sqlite";
+import { CoachPlanSqlite } from "../../platform/core/coach-plan-sqlite";
 import { initAOS } from "../../platform/core/aos-loader";
 import type SproutPlugin from "../../main";
 import { t } from "../../platform/translations/translator";
@@ -31,6 +32,12 @@ import { resolveImageFile } from "../../platform/image-occlusion/io-helpers";
 import { mountSearchPopoverList, type SearchPopoverOption } from "../shared/search-popover-list";
 import { collectVaultTagAndPropertyPairs, decodePropertyPair, extractFilePropertyPairs, extractFileTags } from "../shared/scope-metadata";
 import { formatAttachmentChipLabel } from "../shared/attachment-chip-label";
+import {
+  rowToSavedScopePreset,
+  selectionMatchesPreset,
+  serializeScopes,
+  toScopeId,
+} from "../shared/saved-scope-presets";
 
 type ExamViewMode = "setup" | "generating" | "taking" | "grading" | "results" | "review";
 
@@ -58,7 +65,11 @@ export class SproutExamGeneratorView extends ItemView {
 
   private _header: SproutHeader | null = null;
   private _rootEl: HTMLElement | null = null;
+  private _shellEl: HTMLElement | null = null;
+  private _aosInitialized = false;
+  private _titleStripAnimatedOnce = false;
   private _testsDb: ExamTestsSqlite | null = null;
+  private _coachDb: CoachPlanSqlite | null = null;
   private _savedTests: SavedExamTestSummary[] = [];
   private _activeTestId: string | null = null;
   private _savedTestsPopoverOpen = false;
@@ -82,6 +93,8 @@ export class SproutExamGeneratorView extends ItemView {
     difficulty: "medium",
     questionMode: "mixed",
     questionCount: 5,
+    testName: "",
+    appliedScenarios: false,
     timed: false,
     durationMinutes: 20,
     sourceMode: "selected",
@@ -107,6 +120,8 @@ export class SproutExamGeneratorView extends ItemView {
   private _autoSubmitGrace: number | null = null;
   private _autoSubmitGraceInterval: number | null = null;
   private _autoSubmitWarningCountdownEl: HTMLElement | null = null;
+  private _loadingWordInterval: number | null = null;
+  private _loadingWordSwapTimeout: number | null = null;
 
   private _finalPercent: number | null = null;
   private _reviewWrongOnly = true;
@@ -146,6 +161,8 @@ export class SproutExamGeneratorView extends ItemView {
     this._header.install("exam");
     this._testsDb = new ExamTestsSqlite(this.plugin);
     await this._testsDb.open();
+    this._coachDb = new CoachPlanSqlite(this.plugin);
+    await this._coachDb.open();
     this._savedTests = this._testsDb.listTests(25);
 
     this._reloadNotes();
@@ -155,6 +172,7 @@ export class SproutExamGeneratorView extends ItemView {
 
   async onClose(): Promise<void> {
     this._stopTimer();
+    this._stopLoadingWordAnimation();
     this._clearAutoSubmitGrace();
     this._savedTestsPopoverCleanup?.();
     this._savedTestsPopoverCleanup = null;
@@ -162,9 +180,16 @@ export class SproutExamGeneratorView extends ItemView {
       await this._testsDb.close();
       this._testsDb = null;
     }
+    if (this._coachDb) {
+      await this._coachDb.close();
+      this._coachDb = null;
+    }
     this._header?.dispose();
     this._header = null;
     this._rootEl = null;
+    this._shellEl = null;
+    this._aosInitialized = false;
+    this._titleStripAnimatedOnce = false;
   }
 
   onRefresh(): void {
@@ -385,6 +410,80 @@ export class SproutExamGeneratorView extends ItemView {
     return Array.from(byPath.values()).sort((a, b) => a.path.localeCompare(b.path));
   }
 
+  private _selectedScopesForPresets(): Scope[] {
+    const scopes: Scope[] = [];
+    if (this._selectedVault) {
+      scopes.push({ type: "vault", key: "", name: this.app.vault.getName() || "Vault" });
+    }
+
+    const folderScopes = Array.from(this._selectedFolders)
+      .map((folder) => String(folder || "").trim())
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b))
+      .map((folder) => ({ type: "folder" as const, key: folder, name: folder }));
+    scopes.push(...folderScopes);
+
+    const noteScopes = this._notes
+      .filter((note) => this._selectedPaths.has(note.path))
+      .sort((a, b) => a.path.localeCompare(b.path))
+      .map((note) => ({ type: "note" as const, key: note.path, name: note.basename }));
+    scopes.push(...noteScopes);
+
+    const metadata = collectVaultTagAndPropertyPairs(this.app, this._notes);
+    const tagScopes = metadata.tags
+      .filter((tag) => this._selectedTags.has(tag.token))
+      .sort((a, b) => a.token.localeCompare(b.token))
+      .map((tag) => ({ type: "tag" as const, key: tag.token, name: `#${tag.token}` }));
+    scopes.push(...tagScopes);
+
+    const propertyScopes = metadata.properties
+      .filter((pair) => this._selectedProperties.has(`${encodeURIComponent(pair.key)}=${encodeURIComponent(pair.value)}`))
+      .sort((a, b) => `${a.key}::${a.value}`.localeCompare(`${b.key}::${b.value}`))
+      .map((pair) => ({
+        type: "property" as const,
+        key: `${encodeURIComponent(pair.key)}=${encodeURIComponent(pair.value)}`,
+        name: `${pair.displayKey}: ${pair.displayValue}`,
+      }));
+    scopes.push(...propertyScopes);
+    return scopes;
+  }
+
+  private _applySavedScopes(scopes: Scope[]): void {
+    this._selectedVault = false;
+    this._selectedPaths.clear();
+    this._selectedFolders.clear();
+    this._selectedTags.clear();
+    this._selectedProperties.clear();
+
+    const notePathSet = new Set(this._notes.map((note) => note.path));
+    const folderSet = new Set(this._folders);
+    const metadata = collectVaultTagAndPropertyPairs(this.app, this._notes);
+    const tagSet = new Set(metadata.tags.map((tag) => tag.token));
+    const propertySet = new Set(metadata.properties.map((pair) => `${encodeURIComponent(pair.key)}=${encodeURIComponent(pair.value)}`));
+
+    for (const scope of scopes) {
+      if (scope.type === "vault") {
+        this._selectedVault = true;
+        continue;
+      }
+      if (scope.type === "folder") {
+        if (folderSet.has(scope.key)) this._selectedFolders.add(scope.key);
+        continue;
+      }
+      if (scope.type === "note") {
+        if (notePathSet.has(scope.key)) this._selectedPaths.add(scope.key);
+        continue;
+      }
+      if (scope.type === "tag") {
+        if (tagSet.has(scope.key)) this._selectedTags.add(scope.key);
+        continue;
+      }
+      if (scope.type === "property") {
+        if (propertySet.has(scope.key)) this._selectedProperties.add(scope.key);
+      }
+    }
+  }
+
   private _noteFolderPath(path: string): string {
     const slash = path.lastIndexOf("/");
     return slash >= 0 ? path.slice(0, slash) : "";
@@ -501,12 +600,21 @@ export class SproutExamGeneratorView extends ItemView {
 
   private _render(): void {
     if (!this._rootEl) return;
+    this._stopLoadingWordAnimation();
     this._timerTextEl = null;
     this._titleTimerEl = null;
     this._autoSubmitWarningCountdownEl = null;
     this._savedTestsPopoverCleanup?.();
     this._savedTestsPopoverCleanup = null;
-    this._rootEl.empty();
+
+    if (!this._shellEl) {
+      this._rootEl.empty();
+      this._shellEl = this._rootEl.createDiv({ cls: "sprout-view-content-shell sprout-exam-generator-content-shell" });
+    }
+
+    const shell = this._shellEl;
+    this._rootEl.querySelector(":scope > .sprout-exam-generator-title-strip")?.remove();
+    shell.empty();
 
     const animationsEnabled = this.plugin.settings?.general?.enableAnimations ?? true;
 
@@ -518,7 +626,9 @@ export class SproutExamGeneratorView extends ItemView {
       rightClassName: "flex items-center gap-2",
       prepend: true,
     });
-    if (animationsEnabled) {
+
+    const animateTitleStripNow = animationsEnabled && !this._titleStripAnimatedOnce && this._mode === "setup";
+    if (animateTitleStripNow) {
       titleFrame.strip.setAttribute("data-aos", "fade-up");
       titleFrame.strip.setAttribute("data-aos-anchor-placement", "top-top");
       titleFrame.strip.setAttribute("data-aos-duration", String(AOS_DURATION));
@@ -529,7 +639,7 @@ export class SproutExamGeneratorView extends ItemView {
     titleFrame.subtitle.classList.add("flex", "items-center", "gap-1", "min-w-0");
     titleFrame.subtitle.textContent = this._tx(
       "ui.view.examGenerator.subtitle",
-      "Generate focused tests from your notes and track your progress with every retake.",
+      "Turn notes and media into focused practice tests.",
     );
 
     const savedTestsWrap = document.createElement("div");
@@ -549,17 +659,24 @@ export class SproutExamGeneratorView extends ItemView {
       cls: "sprout-popover-dropdown sprout-popover-dropdown-below sprout-exam-generator-saved-tests-popover",
     });
     const panel = savedTestsPanel.createDiv({ cls: "bc rounded-md border border-border bg-popover text-popover-foreground p-1 flex flex-col sprout-pointer-auto sprout-exam-generator-saved-tests-panel" });
-    const searchWrap = panel.createDiv({ cls: "sprout-exam-generator-saved-tests-search-wrap" });
-    const searchIcon = searchWrap.createSpan({ cls: "sprout-exam-generator-saved-tests-search-icon" });
-    setIcon(searchIcon, "search");
+    const searchWrap = panel.createDiv({ cls: "sprout-ss-search-wrap sprout-scope-preset-create sprout-exam-generator-saved-tests-search-wrap" });
     const searchInput = searchWrap.createEl("input", {
       type: "text",
-      cls: "bc input h-9 sprout-exam-generator-saved-tests-search",
+      cls: "sprout-ss-search-input sprout-exam-generator-saved-tests-search",
       attr: { placeholder: "Search saved tests", autocomplete: "off", spellcheck: "false" },
     });
+    const savedSearchIcon = searchWrap.createSpan({ cls: "sprout-exam-generator-saved-tests-search-icon-right" });
+    setIcon(savedSearchIcon, "search");
     searchInput.value = this._savedTestsSearchQuery;
-    const savedList = panel.createDiv({ cls: "bc flex flex-col max-h-60 overflow-auto sprout-exam-generator-saved-tests-list" });
+    panel.createDiv({ cls: "my-1 h-px bg-border sprout-exam-generator-saved-tests-divider" });
+    const savedTestsSubtitle = panel.createDiv({
+      cls: "px-2 py-1.5 text-sm text-muted-foreground sprout-exam-generator-popover-subtitle",
+      text: "Saved tests",
+    });
+    savedTestsSubtitle.setAttr("role", "presentation");
+    const savedList = panel.createDiv({ cls: "bc sprout-ss-listbox flex flex-col max-h-60 overflow-auto sprout-exam-generator-saved-tests-list" });
     savedList.setAttr("role", "listbox");
+    let savedTestsPanelLockedWidthPx: number | null = null;
 
     savedTestsBtn.setAttribute("aria-haspopup", "dialog");
     savedTestsBtn.setAttribute("aria-expanded", this._savedTestsPopoverOpen ? "true" : "false");
@@ -568,62 +685,159 @@ export class SproutExamGeneratorView extends ItemView {
       const d = new Date(timestamp);
       const day = String(d.getDate()).padStart(2, "0");
       const month = String(d.getMonth() + 1).padStart(2, "0");
-      const year = String(d.getFullYear()).slice(-2);
+      const year = String(d.getFullYear());
       return `${day}/${month}/${year}`;
+    };
+
+    const formatSavedDifficulty = (test: SavedExamTestSummary): string => {
+      const raw = (test.difficulty || "").trim().toLowerCase();
+      if (raw === "easy" || raw === "medium" || raw === "hard") {
+        return raw.charAt(0).toUpperCase() + raw.slice(1);
+      }
+      const label = (test.label || "").toLowerCase();
+      if (label.includes("easy")) return "Easy";
+      if (label.includes("hard")) return "Hard";
+      if (label.includes("medium")) return "Medium";
+      return "Medium";
+    };
+
+    const formatSavedName = (test: SavedExamTestSummary): string => {
+      const raw = (test.label || "Untitled test").trim();
+      const withoutDateTime = raw.replace(/\s+-\s+\d{1,2}\/\d{1,2}\/\d{4},\s*\d{2}:\d{2}:\d{2}\s*$/u, "").trim();
+      return withoutDateTime || "Untitled test";
+    };
+
+    const formatSavedTestLine = (test: SavedExamTestSummary): string => {
+      const name = formatSavedName(test);
+      const createdAt = formatSavedDate(test.createdAt);
+      const count = Math.max(0, Number(test.questionCount || 0));
+      const questions = `${count} question${count === 1 ? "" : "s"}`;
+      return `${name} • ${createdAt} • ${questions}`;
+    };
+
+    const applySavedTestsPanelWidth = () => {
+      if (savedTestsPanelLockedWidthPx != null && this._savedTestsPopoverOpen) {
+        const lockedPx = `${savedTestsPanelLockedWidthPx}px`;
+        panel.style.width = lockedPx;
+        panel.style.minWidth = lockedPx;
+        savedTestsPanel.style.width = lockedPx;
+        savedTestsPanel.style.minWidth = lockedPx;
+        return;
+      }
+
+      if (!this._savedTests.length) {
+        const buttonWidth = Math.ceil(savedTestsBtn.getBoundingClientRect().width);
+        const compactPx = `${Math.max(200, buttonWidth)}px`;
+        panel.style.width = compactPx;
+        panel.style.minWidth = compactPx;
+        savedTestsPanel.style.width = compactPx;
+        savedTestsPanel.style.minWidth = compactPx;
+        return;
+      }
+
+      const probe = panel.createSpan({
+        cls: "sprout-coach-scope-item-label sprout-exam-generator-width-probe",
+      });
+      const lines = this._savedTests.map((test) => formatSavedTestLine(test));
+      lines.push("Search saved tests");
+      let widestLabelPx = 0;
+      for (const line of lines) {
+        probe.textContent = line;
+        const width = Math.ceil(probe.getBoundingClientRect().width);
+        if (width > widestLabelPx) widestLabelPx = width;
+      }
+      probe.remove();
+
+      // Label width + left icon/gaps/paddings + right delete affordance.
+      const targetPx = widestLabelPx + 92;
+      const clampedPx = Math.max(220, Math.min(400, targetPx));
+      const widthPx = `${clampedPx}px`;
+      panel.style.width = widthPx;
+      panel.style.minWidth = widthPx;
+      savedTestsPanel.style.width = widthPx;
+      savedTestsPanel.style.minWidth = widthPx;
     };
 
     const filteredSavedTests = () => {
       const q = this._savedTestsSearchQuery.trim().toLowerCase();
       if (!q) return this._savedTests;
       return this._savedTests.filter((test) => {
-        const label = (test.label || "").toLowerCase();
+        const name = formatSavedName(test).toLowerCase();
         const createdAt = formatSavedDate(test.createdAt).toLowerCase();
+        const difficulty = formatSavedDifficulty(test).toLowerCase();
         const questionCount = String(test.questionCount || "");
-        return label.includes(q) || createdAt.includes(q) || questionCount.includes(q);
+        return name.includes(q) || createdAt.includes(q) || difficulty.includes(q) || questionCount.includes(q);
       });
     };
 
     const renderSavedTestsList = () => {
+      applySavedTestsPanelWidth();
+      const hasSavedTests = this._savedTests.length > 0;
+      searchWrap.classList.toggle("hidden", !hasSavedTests);
+      savedTestsSubtitle.classList.toggle("hidden", !hasSavedTests);
+      panel.querySelector(".sprout-exam-generator-saved-tests-divider")?.classList.toggle("hidden", !hasSavedTests);
+      savedList.classList.toggle("sprout-ss-listbox", hasSavedTests);
       savedList.empty();
       const results = filteredSavedTests();
       if (results.length === 0) {
-        const emptyMsg = savedList.createDiv({ cls: "px-2 py-2 text-sm sprout-settings-text-muted" });
+        const emptyMsg = savedList.createDiv({ cls: "sprout-exam-generator-saved-tests-empty-message sprout-settings-text-muted" });
         if (this._savedTests.length === 0) {
-          emptyMsg.createDiv({ text: "No saved tests yet." });
-          emptyMsg.createDiv({ cls: "mt-1", text: "Generate a test and it will be saved here automatically." });
+          emptyMsg.createDiv({ cls: "sprout-exam-generator-saved-tests-empty-title", text: "No saved tests yet." });
+          emptyMsg.createDiv({ cls: "sprout-exam-generator-saved-tests-empty-body", text: "Generate a test and it will be saved here automatically." });
         } else {
-          emptyMsg.textContent = "No saved tests match your search.";
+          emptyMsg.createDiv({ cls: "sprout-exam-generator-saved-tests-empty-body", text: "No saved tests match your search." });
         }
         return;
       }
       for (const test of results) {
-        const row = savedList.createDiv({
-          cls: "sprout-exam-generator-saved-tests-item",
-        });
+        const row = savedList.createDiv({ cls: "sprout-coach-scope-row sprout-exam-generator-saved-tests-item" });
         row.setAttr("role", "option");
         const lineBtn = row.createEl("button", {
-          cls: "bc sprout-exam-generator-saved-tests-line",
+          cls: "sprout-scope-preset-apply sprout-exam-generator-saved-tests-line",
           attr: { type: "button" },
         });
-        lineBtn.createSpan({
-          cls: "sprout-exam-generator-saved-tests-line-text",
-          text: `${test.label || "Saved test"} . ${formatSavedDate(test.createdAt)}`,
-        });
+        const lineIcon = lineBtn.createSpan({ cls: "sprout-exam-generator-saved-tests-line-icon" });
+        setIcon(lineIcon, "file-question-mark");
+        const lineText = formatSavedTestLine(test);
+        const textWrap = lineBtn.createSpan({ cls: "sprout-scope-preset-item-text sprout-exam-generator-saved-tests-line-text" });
+        textWrap.createSpan({ cls: "sprout-coach-scope-item-label", text: lineText });
+        lineBtn.setAttribute("aria-label", lineText);
         lineBtn.addEventListener("click", () => {
           this._savedTestsPopoverOpen = false;
           this._savedTestsSearchQuery = "";
           this._loadSavedTest(test.testId);
         });
 
-        const deleteBtn = row.createEl("button", {
-          cls: "bc sprout-exam-generator-saved-tests-delete",
-          attr: { type: "button", "aria-label": `Delete ${test.label || "saved test"}` },
+        const deleteBtn = row.createSpan({
+          cls: "sprout-scope-preset-remove sprout-exam-generator-saved-tests-delete",
         });
+        deleteBtn.setAttribute("aria-label", `Delete ${test.label || "saved test"}`);
+        deleteBtn.setAttribute("role", "button");
+        deleteBtn.setAttribute("tabindex", "0");
+        deleteBtn.setAttribute("data-tooltip-position", "top");
         setIcon(deleteBtn, "x");
+        const runDelete = async () => {
+          if (deleteBtn.getAttribute("aria-disabled") === "true") return;
+          deleteBtn.setAttribute("aria-disabled", "true");
+          deleteBtn.addClass("is-busy");
+          const deleted = await this._deleteSavedTest(test.testId);
+          if (!deleted) {
+            deleteBtn.removeAttribute("aria-disabled");
+            deleteBtn.removeClass("is-busy");
+            return;
+          }
+          renderSavedTestsList();
+        };
         deleteBtn.addEventListener("click", (ev) => {
           ev.preventDefault();
           ev.stopPropagation();
-          void this._deleteSavedTest(test.testId);
+          void runDelete();
+        });
+        deleteBtn.addEventListener("keydown", (ev) => {
+          if (ev.key !== "Enter" && ev.key !== " ") return;
+          ev.preventDefault();
+          ev.stopPropagation();
+          void runDelete();
         });
       }
     };
@@ -633,13 +847,24 @@ export class SproutExamGeneratorView extends ItemView {
       savedTestsPanel.setAttr("aria-hidden", this._savedTestsPopoverOpen ? "false" : "true");
       savedTestsBtn.setAttribute("aria-expanded", this._savedTestsPopoverOpen ? "true" : "false");
       chevronWrap.classList.toggle("is-open", this._savedTestsPopoverOpen);
+
+      if (this._savedTestsPopoverOpen) {
+        // Lock width while the popover stays open so deletes don't cause jumps.
+        if (savedTestsPanelLockedWidthPx == null) {
+          applySavedTestsPanelWidth();
+          savedTestsPanelLockedWidthPx = Math.max(200, Math.ceil(panel.getBoundingClientRect().width));
+        }
+      } else {
+        savedTestsPanelLockedWidthPx = null;
+      }
+
       renderSavedTestsList();
     };
 
     savedTestsBtn.addEventListener("click", () => {
       this._savedTestsPopoverOpen = !this._savedTestsPopoverOpen;
       syncSavedPopoverState();
-      if (this._savedTestsPopoverOpen) searchInput.focus();
+      if (this._savedTestsPopoverOpen && !searchWrap.classList.contains("hidden")) searchInput.focus();
     });
     searchInput.addEventListener("input", () => {
       this._savedTestsSearchQuery = searchInput.value;
@@ -666,28 +891,40 @@ export class SproutExamGeneratorView extends ItemView {
       document.removeEventListener("pointerdown", onDocPointerDown, true);
     };
 
-    syncSavedPopoverState();
     savedTestsWrap.appendChild(savedTestsBtn);
+    syncSavedPopoverState();
 
     if (this._mode === "taking") {
       this._renderTitleTimer(titleFrame.right);
+      this._savedTestsPopoverOpen = false;
+      savedTestsWrap.classList.add("hidden");
+    } else {
+      savedTestsWrap.classList.remove("hidden");
     }
 
     titleFrame.right.appendChild(savedTestsWrap);
 
-    const shell = this._rootEl.createDiv({ cls: "sprout-view-content-shell sprout-exam-generator-content-shell" });
     if (animationsEnabled) {
       shell.setAttribute("data-aos", "fade-up");
       shell.setAttribute("data-aos-anchor-placement", "top-top");
       shell.setAttribute("data-aos-duration", String(AOS_DURATION));
       shell.setAttribute("data-aos-delay", "100");
-      try {
-        initAOS({ duration: AOS_DURATION, easing: "ease-out", once: true, offset: 50 });
-      } catch {
-        // best-effort
+
+      if (!this._aosInitialized) {
+        try {
+          initAOS({ duration: AOS_DURATION, easing: "ease-out", once: true, offset: 50 });
+          this._aosInitialized = true;
+        } catch {
+          // best-effort
+        }
       }
+
+      shell.classList.remove("aos-animate");
       window.requestAnimationFrame(() => {
-        titleFrame.strip.classList.add("aos-animate");
+        if (animateTitleStripNow) {
+          titleFrame.strip.classList.add("aos-animate");
+          this._titleStripAnimatedOnce = true;
+        }
         shell.classList.add("aos-animate");
       });
     }
@@ -784,9 +1021,11 @@ export class SproutExamGeneratorView extends ItemView {
         const footer = page.createDiv({ cls: "sprout-coach-wizard-footer" });
         nextBtn = footer.createEl("button", {
           cls: "bc sprout-btn-toolbar sprout-btn-accent h-9 inline-flex items-center gap-2",
-          text: "Next",
         });
         nextBtn.type = "button";
+        nextBtn.createSpan({ text: "Next" });
+        const nextBtnIcon = nextBtn.createSpan({ cls: "inline-flex items-center justify-center [&_svg]:size-3.5" });
+        setIcon(nextBtnIcon, "arrow-right");
         nextBtn.disabled = !canGenerateNow();
         nextBtn.addEventListener("click", () => {
           this._wizardSlide = "next";
@@ -815,6 +1054,64 @@ export class SproutExamGeneratorView extends ItemView {
       const chipsWrap = page.createDiv({ cls: "sprout-coach-selected-wrap" });
       const selectedTitle = chipsWrap.createDiv({ cls: "sprout-coach-selected-title" });
       const chips = chipsWrap.createDiv({ cls: "sprout-coach-selected-chips" });
+      const actionsGrid = chipsWrap.createDiv({ cls: "sprout-coach-scope-actions-grid" });
+      const presetWrap = actionsGrid.createDiv({ cls: "sprout-coach-scope-action" });
+      const presetBtn = presetWrap.createEl("button", {
+        cls: "bc sprout-btn-toolbar sprout-btn-filter h-7 px-3 text-sm inline-flex items-center gap-2 sprout-scope-preset-btn",
+        attr: {
+          type: "button",
+          "aria-haspopup": "listbox",
+          "aria-expanded": "false",
+          "aria-label": "Saved presets",
+        },
+      });
+      const presetBtnIcon = presetBtn.createSpan({ cls: "bc inline-flex items-center justify-center" });
+      setIcon(presetBtnIcon, "bookmark");
+      const presetBtnLabel = presetBtn.createSpan({ cls: "bc", text: "Saved presets" });
+
+      const presetPopover = presetWrap.createDiv({ cls: "sprout-scope-preset-popover dropdown-menu hidden" });
+      const presetList = presetPopover.createDiv({
+        cls: "sprout-coach-scope-list min-w-56 rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 sprout-pointer-auto",
+      });
+      presetList.setAttr("role", "listbox");
+      presetList.setAttr("aria-label", "Saved presets");
+      let presetOutsideAttached = false;
+
+      const closePresetPopover = (): void => {
+        presetPopover.classList.add("hidden");
+        presetBtn.setAttr("aria-expanded", "false");
+        if (presetOutsideAttached) {
+          document.removeEventListener("pointerdown", handlePresetOutsidePointerDown, true);
+          presetOutsideAttached = false;
+        }
+      };
+
+      const openPresetPopover = (): void => {
+        presetPopover.classList.remove("hidden");
+        presetBtn.setAttr("aria-expanded", "true");
+        if (!presetOutsideAttached) {
+          document.addEventListener("pointerdown", handlePresetOutsidePointerDown, true);
+          presetOutsideAttached = true;
+        }
+      };
+
+      const handlePresetOutsidePointerDown = (evt: PointerEvent): void => {
+        const target = evt.target;
+        if (target instanceof Node && presetWrap.contains(target)) return;
+        closePresetPopover();
+      };
+
+      const clearWrap = actionsGrid.createDiv({ cls: "sprout-coach-scope-action hidden" });
+      const clearBtn = clearWrap.createEl("button", {
+        cls: "bc sprout-btn-toolbar sprout-btn-filter h-7 px-3 text-sm inline-flex items-center gap-2 sprout-scope-clear-btn",
+        attr: {
+          type: "button",
+          "aria-label": "Clear selection",
+        },
+      });
+      const clearBtnIcon = clearBtn.createSpan({ cls: "bc inline-flex items-center justify-center" });
+      setIcon(clearBtnIcon, "x");
+      clearBtn.createSpan({ cls: "bc", text: "Clear selection" });
 
       const buildSearchOptions = (): SearchPopoverOption[] => {
         const metadata = collectVaultTagAndPropertyPairs(this.app, this._notes);
@@ -922,6 +1219,14 @@ export class SproutExamGeneratorView extends ItemView {
         syncFooter();
       };
 
+      const clearSelection = (): void => {
+        this._selectedVault = false;
+        this._selectedFolders.clear();
+        this._selectedPaths.clear();
+        this._selectedTags.clear();
+        this._selectedProperties.clear();
+      };
+
       const scopePicker = mountSearchPopoverList({
         searchInput: search,
         popoverEl: popover,
@@ -948,7 +1253,219 @@ export class SproutExamGeneratorView extends ItemView {
         ],
       });
 
-      const renderSelected = (): void => {
+      const listPresets = () => (this._coachDb?.listSavedScopePresets() ?? [])
+        .map(rowToSavedScopePreset)
+        .filter((preset) => preset.scopes.length > 0);
+
+      const isSelectionSaved = (): boolean => {
+        const selectedScopes = this._selectedScopesForPresets();
+        if (!selectedScopes.length) return false;
+        return listPresets().some((preset) => selectionMatchesPreset(selectedScopes.map(toScopeId), preset));
+      };
+
+      const renderPresetList = (preserveOpen = false): void => {
+        const presets = listPresets();
+        const selectedScopeIds = this._selectedScopesForPresets().map(toScopeId);
+        const hasSelection = selectedScopeIds.length > 0;
+        const wasOpen = !presetPopover.classList.contains("hidden");
+        const keepOpen = preserveOpen && wasOpen;
+        presetList.empty();
+        presetBtnLabel.setText("Saved presets");
+        if (!keepOpen) closePresetPopover();
+
+        const matchingPreset = hasSelection
+          ? (presets.find((preset) => selectionMatchesPreset(selectedScopeIds, preset)) ?? null)
+          : null;
+        const duplicate = !!matchingPreset;
+
+        let nameInput: HTMLInputElement | null = null;
+        let addBtn: HTMLSpanElement | null = null;
+        let hasTopSection = false;
+        if (hasSelection && !duplicate) {
+          const createRow = presetList.createDiv({
+            cls: "sprout-ss-search-wrap sprout-scope-preset-create",
+          });
+          hasTopSection = true;
+          nameInput = createRow.createEl("input", {
+            cls: "sprout-ss-search-input",
+            attr: {
+              type: "text",
+              placeholder: "Preset name",
+              "aria-label": "Preset name",
+              autocomplete: "off",
+              spellcheck: "false",
+            },
+          });
+          addBtn = createRow.createSpan({
+            cls: "sprout-scope-preset-add hidden",
+            text: "+",
+            attr: {
+              role: "button",
+              tabindex: "0",
+              "aria-label": "Save preset",
+            },
+          });
+        } else if (matchingPreset) {
+          hasTopSection = true;
+          const status = presetList.createDiv({ cls: "sprout-scope-preset-status" });
+          status.createSpan({ text: "Selection saved as " });
+          status.createEl("strong", { text: matchingPreset.name });
+        }
+
+        const saveCurrentSelection = async (): Promise<void> => {
+          const scopes = this._selectedScopesForPresets();
+          if (!this._coachDb || !scopes.length || isSelectionSaved()) return;
+
+          const suggestedName = `Preset ${presets.length + 1}`;
+          const name = String(nameInput?.value || "").trim() || suggestedName;
+          const now = Date.now();
+          const presetId = globalThis.crypto?.randomUUID?.() ?? `preset-${now}-${Math.random().toString(36).slice(2, 8)}`;
+          this._coachDb.upsertSavedScopePreset({
+            preset_id: presetId,
+            name,
+            scopes_json: serializeScopes(scopes),
+            created_at: now,
+            updated_at: now,
+          });
+          await this._coachDb.persist();
+          renderSelected(true);
+        };
+
+        if (nameInput && addBtn) {
+          const syncAddVisibility = (): void => {
+            const canAdd = String(nameInput?.value || "").trim().length > 0;
+            addBtn?.classList.toggle("hidden", !canAdd);
+          };
+          syncAddVisibility();
+
+          addBtn.addEventListener("click", (evt) => {
+            evt.preventDefault();
+            evt.stopPropagation();
+            void saveCurrentSelection();
+          });
+          addBtn.addEventListener("keydown", (evt) => {
+            if (evt.key !== "Enter" && evt.key !== " ") return;
+            evt.preventDefault();
+            evt.stopPropagation();
+            void saveCurrentSelection();
+          });
+          nameInput.addEventListener("input", () => {
+            syncAddVisibility();
+          });
+          nameInput.addEventListener("keydown", (evt) => {
+            if (evt.key !== "Enter") return;
+            evt.preventDefault();
+            void saveCurrentSelection();
+          });
+        }
+
+        if (hasTopSection) {
+          presetList.createDiv({ cls: "my-1 h-px bg-border" });
+        }
+
+        const presetSubtitle = presetList.createDiv({
+          cls: "px-2 py-1.5 text-sm text-muted-foreground sprout-exam-generator-popover-subtitle",
+          text: "Saved presets",
+        });
+        presetSubtitle.setAttr("role", "presentation");
+
+        if (!presets.length) return;
+
+        for (const preset of presets) {
+          const selected = selectionMatchesPreset(this._selectedScopesForPresets().map(toScopeId), preset);
+          const row = presetList.createDiv({ cls: "sprout-coach-scope-row" });
+          row.setAttr("role", "option");
+          row.setAttr("aria-selected", selected ? "true" : "false");
+          const applyBtn = row.createEl("button", {
+            cls: "sprout-scope-preset-apply",
+          });
+          applyBtn.type = "button";
+          if (selected) {
+            row.classList.add("is-selected");
+            applyBtn.classList.add("is-selected");
+          }
+          const itemText = applyBtn.createSpan({ cls: "sprout-scope-preset-item-text" });
+          itemText.createSpan({ cls: "sprout-coach-scope-item-label", text: `${preset.name} (${preset.scopes.length})` });
+          applyBtn.addEventListener("click", () => {
+            this._applySavedScopes(preset.scopes);
+            closePresetPopover();
+            renderSelected();
+            scopePicker.render();
+            syncFooter();
+          });
+
+          const deleteBtn = row.createSpan({
+            cls: "sprout-scope-preset-remove",
+            attr: { "aria-label": `Delete ${preset.name}` },
+          });
+          setIcon(deleteBtn, "x");
+          deleteBtn.setAttr("role", "button");
+          deleteBtn.setAttr("tabindex", "0");
+          const deletePreset = () => {
+            void (async () => {
+              if (!this._coachDb) return;
+              this._coachDb.deleteSavedScopePreset(preset.id);
+              await this._coachDb.persist();
+              renderSelected(true);
+            })();
+          };
+          deleteBtn.addEventListener("click", (evt) => {
+            evt.preventDefault();
+            evt.stopPropagation();
+            deletePreset();
+          });
+          deleteBtn.addEventListener("keydown", (evt) => {
+            if (evt.key !== "Enter" && evt.key !== " ") return;
+            evt.preventDefault();
+            evt.stopPropagation();
+            deletePreset();
+          });
+        }
+
+        if (keepOpen) openPresetPopover();
+      };
+
+      const syncScopeActionState = (): void => {
+        const presets = listPresets();
+        const hasSelection = selectedScopeCount() > 0;
+        const canOpen = hasSelection || presets.length > 0;
+        clearWrap.classList.toggle("hidden", !hasSelection);
+        presetBtn.disabled = !canOpen;
+        if (!canOpen) presetBtn.setAttr("aria-label", "Select content to save a preset");
+        else if (!presets.length) presetBtn.setAttr("aria-label", "Save preset");
+        else presetBtn.setAttr("aria-label", "Saved presets");
+
+        if (!canOpen) closePresetPopover();
+      };
+
+      const syncSaveButtonState = (): void => {
+        // Legacy helper name retained; this now only keeps preset CTA state in sync.
+        syncScopeActionState();
+      };
+
+      presetBtn.addEventListener("click", (evt) => {
+        evt.preventDefault();
+        evt.stopPropagation();
+        if (presetBtn.disabled) return;
+        const isOpen = !presetPopover.classList.contains("hidden");
+        if (isOpen) closePresetPopover();
+        else openPresetPopover();
+      });
+
+      presetPopover.addEventListener("click", (evt) => {
+        evt.stopPropagation();
+      });
+
+      clearBtn.addEventListener("click", (evt) => {
+        evt.preventDefault();
+        evt.stopPropagation();
+        clearSelection();
+        renderSelected();
+        scopePicker.render();
+        syncFooter();
+      });
+
+      const renderSelected = (preservePresetPopover = false): void => {
         selectedTitle.setText(`Selected (${selectedScopeCount()})`);
         chips.empty();
         if (!selectedScopeCount()) {
@@ -1055,6 +1572,8 @@ export class SproutExamGeneratorView extends ItemView {
             });
           }
         }
+        renderPresetList(preservePresetPopover);
+        syncSaveButtonState();
       };
 
       renderSelected();
@@ -1062,15 +1581,32 @@ export class SproutExamGeneratorView extends ItemView {
 
       // ---- Attachments (optional) ----
       const attachArea = page.createDiv({ cls: "sprout-exam-generator-attachments" });
-      const attachmentsLabel = attachArea.createDiv({ cls: "sprout-coach-field-label" });
-      attachArea.createEl("p", {
-        cls: "sprout-coach-step-copy",
-        text: "Attach files to use as reference material for test generation.",
+      const attachWrap = attachArea.createDiv({ cls: "sprout-coach-selected-wrap" });
+      const attachmentsTitle = attachWrap.createDiv({ cls: "sprout-coach-selected-title" });
+      const attachChips = attachWrap.createDiv({ cls: "sprout-coach-selected-chips" });
+      const attachActions = attachWrap.createDiv({ cls: "sprout-coach-scope-actions-grid" });
+      const attachAction = attachActions.createDiv({ cls: "sprout-coach-scope-action" });
+      const clearAttachAction = attachActions.createDiv({ cls: "sprout-coach-scope-action sprout-exam-generator-hidden" });
+
+      const clearAttachBtn = clearAttachAction.createEl("button", {
+        cls: "bc sprout-btn-toolbar sprout-btn-filter h-7 px-3 text-sm inline-flex items-center gap-2 sprout-scope-clear-btn",
+        attr: {
+          type: "button",
+          "aria-label": "Clear attachments",
+        },
       });
-      const attachChips = attachArea.createDiv({ cls: "sprout-exam-generator-attachment-chips" });
+      const clearAttachIcon = clearAttachBtn.createSpan({ cls: "bc inline-flex items-center justify-center" });
+      setIcon(clearAttachIcon, "x");
+      clearAttachBtn.createSpan({ cls: "bc", text: "Clear attachments" });
+
       const renderAttachChips = () => {
-        attachmentsLabel.setText(`Attachments (${this._attachedFiles.length})`);
+        attachmentsTitle.setText(`Attachments (${this._attachedFiles.length})`);
+        clearAttachAction.classList.toggle("sprout-exam-generator-hidden", this._attachedFiles.length <= 0);
         attachChips.empty();
+        if (this._attachedFiles.length === 0) {
+          attachChips.createDiv({ cls: "text-xs text-muted-foreground", text: "No attachments added yet." });
+          return;
+        }
         for (let i = 0; i < this._attachedFiles.length; i++) {
           const af = this._attachedFiles[i];
           const chip = attachChips.createDiv({ cls: "sprout-coach-chip sprout-assistant-popup-attachment-chip" });
@@ -1088,15 +1624,24 @@ export class SproutExamGeneratorView extends ItemView {
           });
         }
       };
+
+      clearAttachBtn.addEventListener("click", (evt) => {
+        evt.preventDefault();
+        evt.stopPropagation();
+        if (this._attachedFiles.length === 0) return;
+        this._attachedFiles = [];
+        renderAttachChips();
+        syncFooter();
+      });
       renderAttachChips();
 
-      const addBtn = attachArea.createEl("button", {
-        cls: "bc sprout-btn-toolbar sprout-btn-outline-muted h-9 px-3 text-sm inline-flex items-center gap-2",
+      const addBtn = attachAction.createEl("button", {
+        cls: "bc sprout-btn-toolbar sprout-btn-filter h-7 px-3 text-sm inline-flex items-center gap-2",
       });
       addBtn.type = "button";
-      const addBtnIcon = addBtn.createSpan({ cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
+      const addBtnIcon = addBtn.createSpan({ cls: "bc inline-flex items-center justify-center" });
       setIcon(addBtnIcon, "paperclip");
-      addBtn.createSpan({ text: "Attach file" });
+      addBtn.createSpan({ cls: "bc", text: "Attach file" });
       addBtn.addEventListener("click", () => {
         if (this._attachedFiles.length >= MAX_ATTACHMENTS) {
           new Notice(`Maximum ${MAX_ATTACHMENTS} attachments.`);
@@ -1135,9 +1680,11 @@ export class SproutExamGeneratorView extends ItemView {
       const footer = page.createDiv({ cls: "sprout-coach-wizard-footer" });
       nextBtn = footer.createEl("button", {
         cls: "bc sprout-btn-toolbar sprout-btn-accent h-9 inline-flex items-center gap-2",
-        text: "Next",
       });
       nextBtn.type = "button";
+      nextBtn.createSpan({ text: "Next" });
+      const nextBtnIcon = nextBtn.createSpan({ cls: "inline-flex items-center justify-center [&_svg]:size-3.5" });
+      setIcon(nextBtnIcon, "arrow-right");
       nextBtn.disabled = !canGenerateNow();
       nextBtn.addEventListener("click", () => {
         this._wizardSlide = "next";
@@ -1161,34 +1708,91 @@ export class SproutExamGeneratorView extends ItemView {
 
     this._renderSelectOption(options, "Question type", ["mixed", "mcq", "saq"], this._config.questionMode, (value) => {
       this._config.questionMode = value as ExamQuestionMode;
-    }, { mixed: "Mixed", mcq: "Multiple choice (MCQ)", saq: "Short answer (SAQ)" });
+    }, { mixed: "Mixed questions", mcq: "Multiple choice questions", saq: "Short answer questions" });
 
     this._renderSelectOption(options, "Question count", ["5", "10", "15", "20"], String(this._config.questionCount), (value) => {
       this._config.questionCount = Math.max(1, Number(value) || 5);
     });
 
+    const testNameRow = options.createDiv({ cls: "sprout-exam-generator-row" });
+    testNameRow.createDiv({ cls: "sprout-exam-generator-label", text: "Test name (optional)" });
+    const testNameInput = testNameRow.createEl("input", {
+      type: "text",
+      cls: "sprout-exam-generator-input",
+      attr: { maxlength: "120" },
+    });
+    testNameInput.value = this._config.testName;
+    testNameInput.addEventListener("input", () => {
+      this._config.testName = testNameInput.value;
+    });
+
     const timedRow = options.createDiv({ cls: "sprout-exam-generator-row" });
-    const timedLabel = timedRow.createEl("label", { cls: "sprout-exam-generator-inline" });
+    timedRow.createDiv({ cls: "sprout-exam-generator-label", text: "Exam options" });
+    const togglesWrap = timedRow.createDiv({ cls: "sprout-exam-generator-inline" });
+
+    const timedLabel = togglesWrap.createEl("label", { cls: "inline-flex items-center gap-2" });
     const timedInput = timedLabel.createEl("input", { type: "checkbox" });
     timedInput.checked = this._config.timed;
+    timedLabel.createSpan({ text: "Enable time limit" });
+
+    const appliedLabel = togglesWrap.createEl("label", { cls: "inline-flex items-center gap-2 ml-3" });
+    const appliedInput = appliedLabel.createEl("input", { type: "checkbox" });
+    appliedInput.checked = this._config.appliedScenarios;
+    appliedLabel.createSpan({ text: "Applied scenarios" });
+
+    appliedInput.addEventListener("change", () => {
+      this._config.appliedScenarios = appliedInput.checked;
+    });
+
+    const durationRow = options.createDiv({ cls: "sprout-exam-generator-row" });
+    durationRow.classList.toggle("sprout-exam-generator-hidden", !this._config.timed);
+    durationRow.createDiv({ cls: "sprout-exam-generator-label", text: "Time limit" });
+    const durationInputWrap = durationRow.createDiv({ cls: "sprout-exam-generator-input-wrap" });
+    const durationInput = durationInputWrap.createEl("input", {
+      type: "number",
+      cls: "sprout-exam-generator-input",
+      attr: { min: "1", step: "1", inputmode: "numeric", placeholder: "20" },
+    });
+    const durationUnit = durationInputWrap.createSpan({
+      cls: "sprout-exam-generator-input-suffix sprout-exam-generator-hidden",
+      text: "minutes",
+    });
+    durationInput.value = String(this._config.durationMinutes);
+
+    const syncDurationSuffix = () => {
+      durationUnit.classList.toggle("sprout-exam-generator-hidden", !durationInput.value.trim());
+    };
+
+    durationInput.addEventListener("input", () => {
+      syncDurationSuffix();
+    });
+
+    durationInput.addEventListener("change", () => {
+      const raw = durationInput.value.trim();
+      if (!raw) {
+        this._config.durationMinutes = 20;
+        syncDurationSuffix();
+        return;
+      }
+      this._config.durationMinutes = Math.max(1, Number(raw) || 20);
+      durationInput.value = String(this._config.durationMinutes);
+      syncDurationSuffix();
+    });
+    syncDurationSuffix();
+
     timedInput.addEventListener("change", () => {
       this._config.timed = timedInput.checked;
-      this._render();
+      durationRow.classList.toggle("sprout-exam-generator-hidden", !this._config.timed);
     });
-    timedLabel.createSpan({ text: "Timed mode" });
 
-    if (this._config.timed) {
-      this._renderSelectOption(options, "Duration (minutes)", ["10", "20", "30", "45", "60"], String(this._config.durationMinutes), (value) => {
-        this._config.durationMinutes = Math.max(1, Number(value) || 20);
-      });
-    }
-
-    const footer = page.createDiv({ cls: "sprout-coach-wizard-footer" });
+    const footer = page.createDiv({ cls: "sprout-coach-wizard-footer sprout-exam-generator-settings-footer" });
     const backBtn = footer.createEl("button", {
-      cls: "bc sprout-btn-toolbar h-9 inline-flex items-center gap-2",
-      text: "Back",
+      cls: "bc sprout-btn-toolbar sprout-btn-filter h-7 px-3 text-sm inline-flex items-center gap-2",
     });
     backBtn.type = "button";
+    const backBtnIcon = backBtn.createSpan({ cls: "bc inline-flex items-center justify-center" });
+    setIcon(backBtnIcon, "chevron-left");
+    backBtn.createSpan({ cls: "bc", text: "Back" });
     backBtn.addEventListener("click", () => {
       this._wizardSlide = "back";
       this._setupStage = "source";
@@ -1197,9 +1801,11 @@ export class SproutExamGeneratorView extends ItemView {
 
     const generateBtn = footer.createEl("button", {
       cls: "bc sprout-btn-toolbar sprout-btn-accent h-9 inline-flex items-center gap-2",
-      text: "Generate test",
     });
     generateBtn.type = "button";
+    const generateBtnIcon = generateBtn.createSpan({ cls: "inline-flex items-center justify-center [&_svg]:size-3.5" });
+    setIcon(generateBtnIcon, "wand-sparkles");
+    generateBtn.createSpan({ text: "Generate test" });
     generateBtn.setAttr("aria-label", "Generate test");
     generateBtn.disabled = !canGenerateNow();
     generateBtn.addEventListener("click", () => {
@@ -1219,17 +1825,115 @@ export class SproutExamGeneratorView extends ItemView {
   ): void {
     const row = host.createDiv({ cls: "sprout-exam-generator-row" });
     row.createDiv({ cls: "sprout-exam-generator-label", text: label });
-    const select = row.createEl("select", { cls: "sprout-exam-generator-select" });
+    const getTextForValue = (value: string): string => labels?.[value] ?? value
+      .replace(/[-_]+/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+
+    const wrap = row.createDiv({ cls: "sprout-exam-generator-select-wrap" });
+    const id = `sprout-dd-${Math.random().toString(36).slice(2, 9)}`;
+    const trigger = wrap.createEl("button", {
+      cls: "bc sprout-btn-toolbar h-9 px-3 text-sm inline-flex items-center gap-2 sprout-pointer-auto sprout-exam-generator-select-trigger",
+      attr: {
+        type: "button",
+        id: `${id}-trigger`,
+        "aria-haspopup": "menu",
+        "aria-expanded": "false",
+        "aria-label": label,
+      },
+    });
+    const triggerText = trigger.createSpan({ cls: "truncate", text: getTextForValue(current) });
+    const chevron = trigger.createSpan({ cls: "inline-flex items-center justify-center [&_svg]:size-4" });
+    chevron.setAttr("aria-hidden", "true");
+    setIcon(chevron, "chevron-down");
+
+    const popover = wrap.createDiv({ cls: "sprout-exam-generator-select-popover dropdown-menu hidden" });
+    const panel = popover.createDiv({
+      cls: "rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 sprout-pointer-auto sprout-exam-generator-select-panel",
+    });
+    const menu = panel.createDiv({ cls: "flex flex-col" });
+    menu.setAttr("role", "menu");
+    menu.setAttr("id", `${id}-menu`);
+
+    let currentValue = current;
+
+    const close = (): void => {
+      popover.classList.add("hidden");
+      trigger.setAttr("aria-expanded", "false");
+      document.removeEventListener("pointerdown", onOutsidePointerDown, true);
+    };
+
+    const open = (): void => {
+      popover.classList.remove("hidden");
+      trigger.setAttr("aria-expanded", "true");
+      document.addEventListener("pointerdown", onOutsidePointerDown, true);
+    };
+
+    const onOutsidePointerDown = (evt: PointerEvent): void => {
+      const target = evt.target;
+      if (target instanceof Node && wrap.contains(target)) return;
+      close();
+    };
+
+    const setChecked = (item: HTMLElement, checked: boolean): void => {
+      item.setAttr("aria-checked", checked ? "true" : "false");
+    };
+
+    const items: Array<{ value: string; item: HTMLElement }> = [];
+
     for (const value of values) {
-      const text = labels?.[value] ?? value
-        .replace(/[-_]+/g, " ")
-        .replace(/\b\w/g, (c) => c.toUpperCase());
-      const option = select.createEl("option", { text, value });
-      option.selected = value === current;
+      const item = menu.createDiv({
+        cls: "group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer select-none outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+      });
+      item.setAttr("role", "menuitemradio");
+      item.setAttr("tabindex", "0");
+      setChecked(item, value === currentValue);
+
+      const dotWrap = item.createDiv({ cls: "size-4 flex items-center justify-center" });
+      dotWrap.createDiv({ cls: "size-2 rounded-full bg-foreground invisible group-aria-checked:visible" });
+      item.createSpan({ text: getTextForValue(value) });
+
+      const activate = (): void => {
+        currentValue = value;
+        triggerText.setText(getTextForValue(value));
+        for (const entry of items) setChecked(entry.item, entry.value === value);
+        onChange(value);
+        close();
+      };
+
+      item.addEventListener("click", (evt) => {
+        evt.preventDefault();
+        evt.stopPropagation();
+        activate();
+      });
+
+      item.addEventListener("keydown", (evt: KeyboardEvent) => {
+        if (evt.key === "Enter" || evt.key === " ") {
+          evt.preventDefault();
+          evt.stopPropagation();
+          activate();
+          return;
+        }
+        if (evt.key === "Escape") {
+          evt.preventDefault();
+          evt.stopPropagation();
+          close();
+          trigger.focus();
+        }
+      });
+
+      items.push({ value, item });
     }
-    select.value = current;
-    select.addEventListener("change", () => {
-      onChange(select.value);
+
+    trigger.addEventListener("click", (evt) => {
+      evt.preventDefault();
+      evt.stopPropagation();
+      const isOpen = !popover.classList.contains("hidden");
+      if (isOpen) close();
+      else open();
+    });
+
+    popover.addEventListener("click", (evt) => {
+      evt.stopPropagation();
     });
   }
 
@@ -1338,12 +2042,169 @@ export class SproutExamGeneratorView extends ItemView {
   }
 
   private _renderGenerating(host: HTMLElement): void {
-    const card = host.createDiv({ cls: "card sprout-exam-generator-card" });
-    card.createEl("h3", { text: "Generating test..." });
-    card.createDiv({
-      cls: "sprout-settings-text-muted",
-      text: "Building questions from your selected source. This may take a moment.",
+    const card = host.createDiv({ cls: "card sprout-exam-generator-card sprout-exam-generator-card-loading" });
+    const center = card.createDiv({ cls: "sprout-exam-generator-loading-center" });
+
+    const loader = center.createDiv({ cls: "sprout-exam-generator-loading-loader" });
+    const firstSlot = loader.createSpan({ cls: "sprout-exam-generator-loading-word-slot is-first" });
+    const secondSlot = loader.createSpan({ cls: "sprout-exam-generator-loading-word-slot is-second" });
+    const firstCurrent = firstSlot.createSpan({ cls: "sprout-exam-generator-loading-word current", text: "" });
+    const firstNext = firstSlot.createSpan({ cls: "sprout-exam-generator-loading-word next", text: "" });
+    const secondCurrent = secondSlot.createSpan({ cls: "sprout-exam-generator-loading-word current", text: "" });
+    const secondNext = secondSlot.createSpan({ cls: "sprout-exam-generator-loading-word next", text: "" });
+
+    const loadingPairs: Array<[string, string]> = [
+      ["Untangling", "Spaghetti"],
+      ["Brewing", "Questions"],
+      ["Aligning", "Neurons"],
+      ["Organising", "Knowledge"],
+      ["Generating", "Homework"],
+      ["Calculating", "Difficulty"],
+      ["Inducing", "Panic"],
+      ["Summoning", "Concepts"],
+      ["Assembling", "Questions"],
+      ["Reviewing", "Textbooks"],
+      ["Compressing", "Information"],
+      ["Checking", "Understanding"],
+      ["Increasing", "Difficulty"],
+      ["Inventing", "Homework"],
+      ["Evaluating", "Confidence"],
+      ["Pretending", "Easy"],
+    ];
+
+    const SWAP_MS = 420;
+    const HOLD_MS = 900;
+    const STEP_MS = SWAP_MS + HOLD_MS;
+
+    this._startLoadingWordSwapAnimation({
+      mode: "generating",
+      loadingPairs,
+      firstSlot,
+      secondSlot,
+      firstCurrent,
+      firstNext,
+      secondCurrent,
+      secondNext,
+      swapMs: SWAP_MS,
+      stepMs: STEP_MS,
+      fallbackPair: ["Loading", "Content"],
     });
+  }
+
+  private _startLoadingWordSwapAnimation(args: {
+    mode: ExamViewMode;
+    loadingPairs: Array<[string, string]>;
+    firstSlot: HTMLElement;
+    secondSlot: HTMLElement;
+    firstCurrent: HTMLElement;
+    firstNext: HTMLElement;
+    secondCurrent: HTMLElement;
+    secondNext: HTMLElement;
+    swapMs: number;
+    stepMs: number;
+    fallbackPair: [string, string];
+  }): void {
+    const {
+      mode,
+      loadingPairs,
+      firstSlot,
+      secondSlot,
+      firstCurrent,
+      firstNext,
+      secondCurrent,
+      secondNext,
+      swapMs,
+      stepMs,
+      fallbackPair,
+    } = args;
+
+    // Ensure only one loader loop runs at a time for this view instance.
+    this._stopLoadingWordAnimation();
+
+    const sourcePairs = loadingPairs.length > 0 ? [...loadingPairs] : [fallbackPair];
+    const pairKey = (pair: [string, string]): string => `${pair[0]}|||${pair[1]}`;
+    const shufflePairs = (pairs: Array<[string, string]>): Array<[string, string]> => {
+      const next = [...pairs];
+      for (let i = next.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [next[i], next[j]] = [next[j], next[i]];
+      }
+      return next;
+    };
+
+    let lastShownPairKey = "";
+    const buildQueue = (): Array<[string, string]> => {
+      const queue = shufflePairs(sourcePairs);
+      if (queue.length > 1 && lastShownPairKey && pairKey(queue[0]) === lastShownPairKey) {
+        const swapIndex = queue.findIndex((pair) => pairKey(pair) !== lastShownPairKey);
+        if (swapIndex > 0) {
+          [queue[0], queue[swapIndex]] = [queue[swapIndex], queue[0]];
+        }
+      }
+      return queue;
+    };
+
+    let pairQueue = buildQueue();
+    let queueIndex = 0;
+
+    const applyCurrentPair = (pair: [string, string]) => {
+      const [first, second] = pair;
+      firstCurrent.textContent = first;
+      secondCurrent.textContent = second;
+    };
+
+    const initialPair = pairQueue[queueIndex] ?? fallbackPair;
+    applyCurrentPair(initialPair);
+    lastShownPairKey = pairKey(initialPair);
+
+    this._loadingWordInterval = window.setInterval(() => {
+      if (this._mode !== mode) return;
+      if (this._loadingWordSwapTimeout != null) return;
+
+      let nextIndex = queueIndex + 1;
+      if (nextIndex >= pairQueue.length) {
+        pairQueue = buildQueue();
+        nextIndex = 0;
+      }
+
+      const nextPair = pairQueue[nextIndex] ?? fallbackPair;
+      const [nextFirst, nextSecond] = nextPair;
+      firstNext.textContent = nextFirst;
+      secondNext.textContent = nextSecond;
+
+      firstSlot.classList.add("is-swapping");
+      secondSlot.classList.add("is-swapping");
+
+      this._loadingWordSwapTimeout = window.setTimeout(() => {
+        queueIndex = nextIndex;
+        lastShownPairKey = pairKey(nextPair);
+
+        // Snap to post-transition baseline without animating back.
+        firstSlot.classList.add("is-resetting");
+        secondSlot.classList.add("is-resetting");
+        applyCurrentPair(nextPair);
+        firstNext.textContent = "";
+        secondNext.textContent = "";
+        firstSlot.classList.remove("is-swapping");
+        secondSlot.classList.remove("is-swapping");
+        void firstSlot.getBoundingClientRect();
+        void secondSlot.getBoundingClientRect();
+        firstSlot.classList.remove("is-resetting");
+        secondSlot.classList.remove("is-resetting");
+        this._loadingWordSwapTimeout = null;
+      }, swapMs);
+    }, stepMs);
+  }
+
+  private _stopLoadingWordAnimation(): void {
+    if (this._loadingWordInterval != null) {
+      window.clearInterval(this._loadingWordInterval);
+      this._loadingWordInterval = null;
+    }
+    if (this._loadingWordSwapTimeout != null) {
+      window.clearTimeout(this._loadingWordSwapTimeout);
+      this._loadingWordSwapTimeout = null;
+    }
   }
 
   private _startTimer(): void {
@@ -1528,17 +2389,19 @@ export class SproutExamGeneratorView extends ItemView {
     const topRight = top.createDiv({ cls: "sprout-exam-generator-topline-right" });
 
     const quitBtn = topRight.createEl("button", {
-      cls: "sprout-btn-toolbar sprout-btn-exit-sm",
+      cls: "bc sprout-btn-toolbar sprout-btn-filter h-7 px-3 text-sm inline-flex items-center gap-2 sprout-scope-clear-btn",
       attr: { type: "button", "aria-label": "Quit test" },
     });
     quitBtn.setAttr("data-tooltip-position", "top");
-    const quitIconWrap = quitBtn.createSpan({ cls: "inline-flex items-center justify-center sprout-btn-icon" });
+    const quitIconWrap = quitBtn.createSpan({ cls: "bc inline-flex items-center justify-center" });
     setIcon(quitIconWrap, "x");
+    quitBtn.createSpan({ cls: "bc", text: "Quit test" });
     quitBtn.addEventListener("click", () => {
       this._resetToSetup();
     });
 
-    card.createEl("h3", { text: q.prompt });
+    const promptEl = card.createEl("h3", { cls: "sprout-exam-generator-question-prompt" });
+    renderMarkdownPreviewInElement(promptEl, q.prompt);
 
     if (q.type === "mcq") {
       const options = q.options || [];
@@ -1549,8 +2412,11 @@ export class SproutExamGeneratorView extends ItemView {
         if (selected === i) btn.classList.add("sprout-mcq-selected");
         const left = btn.createSpan({ cls: "inline-flex items-center gap-2 min-w-0" });
         left.createEl("kbd", { cls: "kbd", text: String(i + 1) });
-        left.createSpan({ cls: "min-w-0 whitespace-pre-wrap break-words sprout-mcq-option-text", text: options[i] });
+        const optionText = left.createSpan({ cls: "min-w-0 whitespace-pre-wrap break-words sprout-mcq-option-text" });
+        renderMarkdownPreviewInElement(optionText, options[i]);
         btn.addEventListener("click", () => {
+          const selection = window.getSelection();
+          if (selection && selection.toString().trim().length > 0) return;
           this._answers.set(q.id, i);
           optionList.querySelectorAll(".sprout-btn-toolbar").forEach((el) => el.classList.remove("sprout-mcq-selected"));
           btn.classList.add("sprout-mcq-selected");
@@ -1568,7 +2434,13 @@ export class SproutExamGeneratorView extends ItemView {
     }
 
     const actions = card.createDiv({ cls: "sprout-exam-generator-actions" });
-    const prev = actions.createEl("button", { cls: "sprout-btn-toolbar", text: "Previous" });
+    const prev = actions.createEl("button", {
+      cls: "bc sprout-btn-toolbar sprout-btn-filter h-7 px-3 text-sm inline-flex items-center gap-2",
+      attr: { type: "button", "aria-label": "Previous", "data-tooltip-position": "top" },
+    });
+    const prevIcon = prev.createSpan({ cls: "bc inline-flex items-center justify-center" });
+    setIcon(prevIcon, "chevron-left");
+    prev.createSpan({ cls: "bc", text: "Previous" });
     prev.disabled = this._currentIndex <= 0;
     prev.addEventListener("click", () => {
       this._currentIndex = Math.max(0, this._currentIndex - 1);
@@ -1577,12 +2449,24 @@ export class SproutExamGeneratorView extends ItemView {
 
     const isLastQuestion = this._currentIndex >= this._questions.length - 1;
     if (isLastQuestion) {
-      const submit = actions.createEl("button", { cls: "sprout-btn-toolbar", text: "Submit exam" });
+      const submit = actions.createEl("button", {
+        cls: "bc sprout-btn-toolbar sprout-btn-accent h-9 inline-flex items-center gap-2 sprout-exam-generator-actions-advance",
+        attr: { type: "button", "aria-label": "Submit exam", "data-tooltip-position": "top" },
+      });
+      submit.createSpan({ text: "Submit exam" });
+      const submitIcon = submit.createSpan({ cls: "inline-flex items-center justify-center [&_svg]:size-3.5" });
+      setIcon(submitIcon, "arrow-right");
       submit.addEventListener("click", () => {
         void this._submitExam(false);
       });
     } else {
-      const next = actions.createEl("button", { cls: "sprout-btn-toolbar", text: "Next" });
+      const next = actions.createEl("button", {
+        cls: "bc sprout-btn-toolbar sprout-btn-filter h-7 px-3 text-sm inline-flex items-center gap-2 sprout-exam-generator-actions-advance",
+        attr: { type: "button", "aria-label": "Next", "data-tooltip-position": "top" },
+      });
+      next.createSpan({ text: "Next" });
+      const nextIcon = next.createSpan({ cls: "bc inline-flex items-center justify-center" });
+      setIcon(nextIcon, "chevron-right");
       next.addEventListener("click", () => {
         this._currentIndex = Math.min(this._questions.length - 1, this._currentIndex + 1);
         this._render();
@@ -1650,6 +2534,7 @@ export class SproutExamGeneratorView extends ItemView {
             markingGuide: q.markingGuide || [],
             userAnswer: answerText,
             difficulty: this._config.difficulty,
+            appliedScenarios: this._config.appliedScenarios,
           });
           totalScore += saq.scorePercent;
           results.push({
@@ -1687,16 +2572,53 @@ export class SproutExamGeneratorView extends ItemView {
   }
 
   private _renderGrading(host: HTMLElement): void {
-    const card = host.createDiv({ cls: "card sprout-exam-generator-card" });
-    card.createEl("h3", { text: "Marking exam..." });
-    card.createDiv({ cls: "sprout-settings-text-muted", text: "Please wait while SAQ answers are graded." });
+    const card = host.createDiv({ cls: "card sprout-exam-generator-card sprout-exam-generator-card-loading" });
+    const center = card.createDiv({ cls: "sprout-exam-generator-loading-center" });
+
+    const loader = center.createDiv({ cls: "sprout-exam-generator-loading-loader" });
+    const firstSlot = loader.createSpan({ cls: "sprout-exam-generator-loading-word-slot is-first" });
+    const secondSlot = loader.createSpan({ cls: "sprout-exam-generator-loading-word-slot is-second" });
+    const firstCurrent = firstSlot.createSpan({ cls: "sprout-exam-generator-loading-word current", text: "" });
+    const firstNext = firstSlot.createSpan({ cls: "sprout-exam-generator-loading-word next", text: "" });
+    const secondCurrent = secondSlot.createSpan({ cls: "sprout-exam-generator-loading-word current", text: "" });
+    const secondNext = secondSlot.createSpan({ cls: "sprout-exam-generator-loading-word next", text: "" });
+
+    const gradingPairs: Array<[string, string]> = [
+      ["Scoring", "Answers"],
+      ["Checking", "Reasoning"],
+      ["Reviewing", "Evidence"],
+      ["Validating", "Concepts"],
+      ["Measuring", "Accuracy"],
+      ["Comparing", "Criteria"],
+      ["Marking", "Responses"],
+      ["Finalizing", "Grades"],
+    ];
+
+    const SWAP_MS = 420;
+    const HOLD_MS = 900;
+    const STEP_MS = SWAP_MS + HOLD_MS;
+
+    this._startLoadingWordSwapAnimation({
+      mode: "grading",
+      loadingPairs: gradingPairs,
+      firstSlot,
+      secondSlot,
+      firstCurrent,
+      firstNext,
+      secondCurrent,
+      secondNext,
+      swapMs: SWAP_MS,
+      stepMs: STEP_MS,
+      fallbackPair: ["Marking", "Answers"],
+    });
   }
 
   private _renderResults(host: HTMLElement): void {
     const card = host.createDiv({ cls: "card sprout-exam-generator-card" });
     const score = this._finalPercent == null ? "0" : `${this._finalPercent.toFixed(1)}%`;
 
-    card.createEl("h3", { text: `Final score: ${score}` });
+    const resultsHeader = card.createDiv({ cls: "sprout-exam-generator-results-header" });
+    resultsHeader.createEl("h3", { text: `Final score: ${score}` });
 
     if (this._autoSubmitted) {
       card.createDiv({ cls: "sprout-settings-text-muted", text: "Timed exam auto-submitted when the timer reached zero." });
@@ -1707,19 +2629,28 @@ export class SproutExamGeneratorView extends ItemView {
       const q = this._questions[i];
       const r = this._questionResults.find((item) => item.questionId === q.id);
       const row = list.createDiv({ cls: "sprout-exam-generator-result-row" });
-      row.createDiv({ cls: "sprout-exam-generator-result-title", text: `Q${i + 1} (${q.type.toUpperCase()})` });
-      row.createDiv({ cls: "sprout-exam-generator-result-score", text: `${Math.round(r?.scorePercent ?? 0)}%` });
-      row.createDiv({ cls: "sprout-settings-text-muted", text: r?.feedback || "No feedback." });
-      if (r?.saq?.keyPointsMissed?.length) {
-        row.createDiv({
-          cls: "sprout-settings-text-muted",
-          text: `Missed: ${r.saq.keyPointsMissed.join("; ")}`,
-        });
-      }
+      const scorePercent = Math.round(r?.scorePercent ?? 0);
+      const scoreTone = scorePercent > 80 ? "is-strong" : scorePercent >= 50 ? "is-mid" : "is-weak";
+      const status = scorePercent > 80 ? "Correct" : scorePercent >= 50 ? "Partly correct" : "Wrong";
+
+      const header = row.createDiv({ cls: "sprout-exam-generator-result-header" });
+      header.createDiv({ cls: "sprout-exam-generator-result-title", text: `Question ${i + 1}:` });
+      header.createDiv({
+        cls: `sprout-exam-generator-result-score ${scoreTone}`,
+        text: `${scorePercent}%`,
+      });
+
+      const body = row.createDiv({ cls: "sprout-exam-generator-result-body" });
+      body.createDiv({ cls: "sprout-exam-generator-result-detail", text: status });
     }
 
     const actions = card.createDiv({ cls: "sprout-exam-generator-actions" });
-    const review = actions.createEl("button", { cls: "sprout-btn-toolbar", text: "Review mistakes" });
+    const review = actions.createEl("button", {
+      cls: "bc sprout-btn-toolbar sprout-btn-filter h-7 px-3 text-sm inline-flex items-center gap-2 sprout-scope-clear-btn",
+      text: "Review mistakes",
+    });
+    review.setAttribute("aria-label", "Review mistakes");
+    review.setAttribute("data-tooltip-position", "top");
     review.disabled = !this._questionResults.some((r) => (r.scorePercent ?? 0) < 100);
     review.addEventListener("click", () => {
       this._reviewWrongOnly = true;
@@ -1727,22 +2658,38 @@ export class SproutExamGeneratorView extends ItemView {
       this._render();
     });
 
-    const reviewAll = actions.createEl("button", { cls: "sprout-btn-toolbar", text: "Review all" });
+    const reviewAll = actions.createEl("button", {
+      cls: "bc sprout-btn-toolbar sprout-btn-filter h-7 px-3 text-sm inline-flex items-center gap-2 sprout-scope-clear-btn",
+      text: "Review all answers",
+    });
+    reviewAll.setAttribute("aria-label", "Review all answers");
+    reviewAll.setAttribute("data-tooltip-position", "top");
     reviewAll.addEventListener("click", () => {
       this._reviewWrongOnly = false;
       this._mode = "review";
       this._render();
     });
 
-    const retake = actions.createEl("button", { cls: "sprout-btn-toolbar", text: "Retake setup" });
-    retake.addEventListener("click", () => {
+    const setup = actions.createEl("button", {
+      cls: "bc sprout-btn-accent inline-flex items-center gap-2 sprout-exam-generator-saved-tests-btn sprout-exam-generator-actions-advance",
+      text: "Back to tests",
+    });
+    setup.setAttribute("aria-label", "Back to tests");
+    setup.setAttribute("data-tooltip-position", "top");
+    const setupIcon = setup.createSpan({ cls: "inline-flex items-center justify-center [&_svg]:size-3.5" });
+    setIcon(setupIcon, "clipboard-check");
+    setup.insertBefore(setupIcon, setup.firstChild);
+    setup.addEventListener("click", () => {
       this._resetToSetup();
     });
   }
 
   private _renderReview(host: HTMLElement): void {
     const card = host.createDiv({ cls: "card sprout-exam-generator-card" });
-    card.createEl("h3", { text: this._reviewWrongOnly ? "Review mistakes" : "Review test" });
+    card.createEl("h3", {
+      cls: "sprout-exam-generator-review-title",
+      text: this._reviewWrongOnly ? "Review mistakes" : "Review all answers",
+    });
 
     const rows = this._questionResults
       .map((result, i) => ({ result, index: i }))
@@ -1754,25 +2701,88 @@ export class SproutExamGeneratorView extends ItemView {
       const list = card.createDiv({ cls: "sprout-exam-generator-results" });
       for (const { result, index } of rows) {
         const row = list.createDiv({ cls: "sprout-exam-generator-result-row" });
-        row.createDiv({ cls: "sprout-exam-generator-result-title", text: `Q${index + 1} (${result.questionType.toUpperCase()})` });
-        row.createDiv({ cls: "sprout-exam-generator-result-score", text: `${Math.round(result.scorePercent)}%` });
-        row.createDiv({ text: result.prompt });
-        row.createDiv({ cls: "sprout-settings-text-muted", text: `Your answer: ${result.userAnswer || "(blank)"}` });
-        row.createDiv({ cls: "sprout-settings-text-muted", text: `Expected: ${result.expectedAnswer || "(not provided)"}` });
-        row.createDiv({ cls: "sprout-settings-text-muted", text: result.feedback || "No feedback." });
+        const scorePercent = Math.round(result.scorePercent);
+        const scoreTone = scorePercent > 80 ? "is-strong" : scorePercent >= 50 ? "is-mid" : "is-weak";
+
+        const header = row.createDiv({ cls: "sprout-exam-generator-result-header" });
+        header.createDiv({ cls: "sprout-exam-generator-result-title", text: `Question ${index + 1}:` });
+        header.createDiv({
+          cls: `sprout-exam-generator-result-score ${scoreTone}`,
+          text: `${scorePercent}%`,
+        });
+
+        const body = row.createDiv({ cls: "sprout-exam-generator-result-body" });
+        const prompt = body.createDiv({ cls: "sprout-exam-generator-result-prompt" });
+        renderMarkdownPreviewInElement(prompt, result.prompt);
+
+        const userAnswerLine = body.createDiv({ cls: "sprout-exam-generator-result-detail" });
+        userAnswerLine.createEl("strong", { text: "Your answer: " });
+        const userAnswerValue = userAnswerLine.createSpan();
+        renderMarkdownPreviewInElement(userAnswerValue, result.userAnswer?.trim() || "(blank)");
+
+        const expectedLine = body.createDiv({ cls: "sprout-exam-generator-result-detail" });
+        const expectedLabel = result.questionType === "mcq" ? "Correct option: " : "Model answer: ";
+        expectedLine.createEl("strong", { text: expectedLabel });
+        const expectedValue = expectedLine.createSpan();
+        renderMarkdownPreviewInElement(expectedValue, this._formatModelAnswer(result.expectedAnswer));
+
+        const feedback = result.feedback?.trim();
+        if (feedback) {
+          const statusOnly = feedback === "Correct" || feedback === "Partly correct" || feedback === "Incorrect" || feedback === "Wrong";
+          if (!statusOnly) {
+            const feedbackLine = body.createDiv({ cls: "sprout-exam-generator-result-feedback" });
+            feedbackLine.createEl("strong", { text: "Feedback: " });
+            const feedbackValue = feedbackLine.createSpan();
+            renderMarkdownPreviewInElement(feedbackValue, feedback);
+          }
+        }
+
       }
     }
 
     const actions = card.createDiv({ cls: "sprout-exam-generator-actions" });
-    const back = actions.createEl("button", { cls: "sprout-btn-toolbar", text: "Back to results" });
+    const back = actions.createEl("button", {
+      cls: "bc sprout-btn-toolbar sprout-btn-filter h-7 px-3 text-sm inline-flex items-center gap-2 sprout-scope-clear-btn",
+      text: "Back to results",
+    });
+    back.setAttribute("aria-label", "Back to results");
+    back.setAttribute("data-tooltip-position", "top");
     back.addEventListener("click", () => {
       this._mode = "results";
       this._render();
     });
-    const setup = actions.createEl("button", { cls: "sprout-btn-toolbar", text: "Back to setup" });
+    const setup = actions.createEl("button", {
+      cls: "bc sprout-btn-accent inline-flex items-center gap-2 sprout-exam-generator-saved-tests-btn sprout-exam-generator-actions-advance",
+      text: "Back to tests",
+    });
+    setup.setAttribute("aria-label", "Back to tests");
+    setup.setAttribute("data-tooltip-position", "top");
+    const setupIcon = setup.createSpan({ cls: "inline-flex items-center justify-center [&_svg]:size-3.5" });
+    setIcon(setupIcon, "clipboard-check");
+    setup.insertBefore(setupIcon, setup.firstChild);
     setup.addEventListener("click", () => {
       this._resetToSetup();
     });
+  }
+
+  private _formatModelAnswer(raw: string | null | undefined): string {
+    const source = String(raw || "").trim();
+    if (!source) return "(not provided)";
+
+    const chunks = source
+      .split(";")
+      .map((part) => part.trim())
+      .map((part) => part.replace(/\.+$/g, "").trim())
+      .filter(Boolean);
+
+    if (chunks.length <= 1) return source;
+
+    const normalized = chunks.map((part) => part.replace(/^lists?\s+/i, "").trim());
+    const joined = normalized.length === 2
+      ? `${normalized[0]} and ${normalized[1]}`
+      : `${normalized.slice(0, -1).join(", ")}, and ${normalized[normalized.length - 1]}`;
+
+    return `The model answer includes ${joined}.`;
   }
 
   private _formatTime(seconds: number): string {
@@ -1784,7 +2794,8 @@ export class SproutExamGeneratorView extends ItemView {
 
   private _persistGeneratedTest(notes: Array<{ path: string; title: string; content: string }>): string | null {
     if (!this._testsDb) return null;
-    const label = `${this._config.difficulty.toUpperCase()} test - ${new Date().toLocaleString()}`;
+    const customName = this._config.testName.trim();
+    const label = customName || `${this._config.difficulty.toUpperCase()} test - ${new Date().toLocaleString()}`;
     try {
       const id = this._testsDb.saveTest({
         label,
@@ -1852,6 +2863,8 @@ export class SproutExamGeneratorView extends ItemView {
     this._config = {
       ...this._config,
       ...parsedConfig,
+      testName: String(parsedConfig?.testName || saved.label || ""),
+      appliedScenarios: Boolean(parsedConfig?.appliedScenarios ?? false),
       sourceMode: parsedConfig?.sourceMode === "folder" ? "folder" : "selected",
       folderPath: String(parsedConfig?.folderPath || ""),
       includeSubfolders: Boolean(parsedConfig?.includeSubfolders ?? true),
@@ -1872,21 +2885,22 @@ export class SproutExamGeneratorView extends ItemView {
     this._render();
   }
 
-  private async _deleteSavedTest(id: string): Promise<void> {
-    if (!this._testsDb) return;
+  private async _deleteSavedTest(id: string): Promise<boolean> {
+    if (!this._testsDb) return false;
     try {
       const deleted = this._testsDb.deleteTest(id);
       if (!deleted) {
         new Notice("Saved test no longer exists.");
-        return;
+        return false;
       }
       await this._testsDb.persist();
       if (this._activeTestId === id) this._activeTestId = null;
       this._savedTests = this._testsDb.listTests(25);
       this._savedTestsSearchQuery = this._savedTestsSearchQuery.trim();
-      this._render();
+      return true;
     } catch {
       new Notice("Failed to delete saved test.");
+      return false;
     }
   }
 

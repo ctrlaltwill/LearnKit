@@ -30,6 +30,20 @@ export type CoachProgressRow = {
   count: number;
 };
 
+export type SavedScopePresetScope = {
+  type: "vault" | "folder" | "note" | "group" | "tag" | "property";
+  key: string;
+  name: string;
+};
+
+export type SavedScopePresetRow = {
+  preset_id: string;
+  name: string;
+  scopes_json: string;
+  created_at: number;
+  updated_at: number;
+};
+
 function asText(value: unknown, fallback = ""): string {
   if (typeof value === "string") return value;
   if (typeof value === "number" || typeof value === "boolean" || typeof value === "bigint") return String(value);
@@ -119,6 +133,18 @@ function runSchema(db: Database): void {
 
   db.run("CREATE INDEX IF NOT EXISTS idx_coach_plan_exam ON coach_plan(exam_date_utc);");
   db.run("CREATE INDEX IF NOT EXISTS idx_coach_progress_day ON coach_progress(day_utc);");
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS saved_scope_presets (
+      preset_id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      scopes_json TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
+  `);
+
+  db.run("CREATE INDEX IF NOT EXISTS idx_saved_scope_presets_updated ON saved_scope_presets(updated_at DESC);");
 }
 
 export class CoachPlanSqlite {
@@ -331,5 +357,51 @@ export class CoachPlanSqlite {
       stmt.free();
     }
     return 0;
+  }
+
+  listSavedScopePresets(): SavedScopePresetRow[] {
+    if (!this.db) return [];
+    const out: SavedScopePresetRow[] = [];
+    const stmt = this.db.prepare(
+      `SELECT preset_id, name, scopes_json, created_at, updated_at
+         FROM saved_scope_presets
+        ORDER BY updated_at DESC, name COLLATE NOCASE ASC`,
+    );
+
+    try {
+      while (stmt.step()) {
+        const row = stmt.getAsObject() as Record<string, unknown>;
+        out.push({
+          preset_id: asText(row.preset_id),
+          name: asText(row.name),
+          scopes_json: asText(row.scopes_json, "[]"),
+          created_at: Number(row.created_at || 0),
+          updated_at: Number(row.updated_at || 0),
+        });
+      }
+    } finally {
+      stmt.free();
+    }
+
+    return out;
+  }
+
+  upsertSavedScopePreset(row: SavedScopePresetRow): void {
+    if (!this.db) return;
+    this.db.run(
+      `INSERT INTO saved_scope_presets(
+         preset_id, name, scopes_json, created_at, updated_at
+       ) VALUES(?, ?, ?, ?, ?)
+       ON CONFLICT(preset_id) DO UPDATE SET
+         name=excluded.name,
+         scopes_json=excluded.scopes_json,
+         updated_at=excluded.updated_at`,
+      [row.preset_id, row.name, row.scopes_json, row.created_at, row.updated_at],
+    );
+  }
+
+  deleteSavedScopePreset(presetId: string): void {
+    if (!this.db) return;
+    this.db.run("DELETE FROM saved_scope_presets WHERE preset_id = ?", [presetId]);
   }
 }

@@ -807,7 +807,7 @@
 }
 
 .sprout .sprout-coach-wizard-page h3 {
-  margin: 0.5rem 0 0 !important
+  margin: 0 !important;
 }
 
 @keyframes sproutCoachSlideNext {
@@ -879,33 +879,43 @@
 }
 
 .sprout .sprout-coach-step-dot.is-active {
-  background: var(--interactive-accent);
+  background: var(--theme-accent);
 }
 
 .sprout .sprout-coach-step-dot.is-done {
-  background: var(--chart-accent-1);
+  background: var(--color-base-40);
 }
 
 .sprout .sprout-coach-step-line {
   width: 24px;
   height: 1px;
-  background: var(--color-base-40);
+  background: var(--text-muted);
 }
 
 .sprout .sprout-coach-step-line.is-done {
-  background: var(--chart-accent-1);
+  background: var(--text-muted);
 }
 
 .sprout .sprout-coach-step-label {
   font-size: var(--sprout-font-2xs);
   color: var(--text-muted);
+  letter-spacing: -0.01rem;
+}
+
+.sprout .sprout-coach-step-item:has(.sprout-coach-step-dot.is-active) .sprout-coach-step-label {
+  color: var(--theme-accent);
+    font-weight: 500;
 }
 
 .sprout .sprout-coach-step-copy {
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 1rem 0 !important;
   font-size: var(--sprout-font-xs);
   color: var(--text-muted);
   line-height: 1.55;
+}
+
+.sprout .sprout-coach-wizard-page > .sprout-coach-step-copy {
+  margin-bottom: 0.75rem;
 }
 
 .sprout .sprout-coach-search-wrap {
@@ -916,7 +926,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  margin: 0 0 0.7rem 0;
+  margin: 0 0 1.2rem 0;
 }
 
 .sprout .sprout-coach-search-wrap .input {
@@ -931,12 +941,9 @@
 }
 
 .sprout .sprout-scope-type-filter-btn {
-  min-height: 36px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-s);
-  padding: 0 10px;
-  background: var(--background-secondary);
-  color: var(--text-muted);
+  min-height: 30px;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .sprout .sprout-scope-type-filter-popover {
@@ -992,6 +999,10 @@
   box-shadow: var(--lk-shadow-popover-md);
 }
 
+.sprout .sprout-coach-scope-list.sprout-header-menu-panel {
+  gap: 2px;
+}
+
 .sprout .sprout-coach-scope-section-title {
   padding: 6px 8px;
   font-size: var(--font-ui-small);
@@ -1011,17 +1022,23 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 6px 8px;
+  height: 32px;
   border: 1px solid transparent;
   border-radius: var(--radius-s);
   background: transparent;
   color: var(--text-normal);
-  margin: 2px 0;
+  margin: 1px 0;
   cursor: pointer;
   text-align: left;
   width: 100%;
   min-width: 0;
   overflow: hidden;
   transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.sprout .sprout-coach-scope-list.sprout-header-menu-panel .sprout-coach-scope-item {
+  margin: 0;
 }
 
 .sprout .sprout-coach-scope-item-icon {
@@ -1081,6 +1098,8 @@
   display: block;
   min-width: 0;
   width: 100%;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1114,6 +1133,198 @@
   gap: 8px;
 }
 
+.sprout .sprout-coach-scope-actions-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.sprout .sprout-coach-selected-wrap > .sprout-coach-scope-actions-grid {
+  margin-bottom: 0.75rem;
+}
+
+.sprout .sprout-exam-generator-attachments {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sprout .sprout-exam-generator-attachments > .sprout-coach-step-copy {
+  margin-bottom: 0;
+}
+
+.sprout .sprout-exam-generator-attachments .sprout-coach-selected-wrap > .sprout-coach-scope-actions-grid {
+  margin-bottom: 0.75rem;
+}
+
+.sprout .sprout-coach-scope-action {
+  position: relative;
+}
+
+.sprout .sprout-coach-scope-actions-grid :is(.sprout-scope-preset-btn, .sprout-scope-save-btn) {
+  width: auto;
+  justify-content: flex-start;
+}
+
+.sprout .sprout-scope-preset-popover {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 6px);
+  z-index: 2100;
+}
+
+.sprout .sprout-coach-scope-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 8px;
+  margin: 2px 0;
+    height: 36px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.sprout .sprout-coach-scope-row:hover,
+.sprout .sprout-coach-scope-row:focus-within {
+  background: var(--color-base-20) !important;
+  border-color: var(--color-base-35) !important;
+  color: var(--text-normal) !important;
+}
+
+.sprout .sprout-coach-scope-row.is-selected,
+.sprout .sprout-coach-scope-row[aria-selected="true"] {
+  background: var(--color-base-30) !important;
+  border-color: var(--color-base-50) !important;
+}
+
+.sprout .sprout-scope-preset-apply {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  color: inherit;
+  padding: 0;
+  border-radius: inherit;
+}
+
+.sprout .sprout-coach-scope-row .sprout-scope-preset-apply:hover,
+.sprout .sprout-coach-scope-row .sprout-scope-preset-apply:focus,
+.sprout .sprout-coach-scope-row .sprout-scope-preset-apply:focus-visible {
+  background: transparent !important;
+  color: inherit !important;
+}
+
+.sprout .sprout-scope-preset-apply.is-selected {
+  color: var(--text-normal) !important;
+}
+
+.sprout .sprout-scope-preset-item-text {
+  min-width: 0;
+  flex: 1;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.sprout .sprout-scope-preset-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+  opacity: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.sprout .sprout-scope-preset-remove:hover {
+    background: none !important;
+}
+
+.sprout .sprout-scope-preset-add:hover {
+    background: none !important;
+}
+
+
+.sprout .sprout-scope-preset-remove .svg-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.sprout .sprout-coach-scope-row:hover .sprout-scope-preset-remove,
+.sprout .sprout-coach-scope-row:focus-within .sprout-scope-preset-remove {
+  opacity: 1;
+}
+
+.sprout .sprout-scope-preset-remove:hover,
+.sprout .sprout-scope-preset-remove:focus-visible {
+  color: var(--text-normal);
+}
+
+.sprout .sprout-scope-preset-create {
+  padding: 4px 6px;
+  gap: 6px;
+}
+
+.sprout .sprout-scope-preset-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.sprout .sprout-scope-preset-add:hover,
+.sprout .sprout-scope-preset-add:focus-visible {
+  color: var(--text-normal);
+}
+
+.sprout .sprout-scope-preset-status {
+  padding: 6px 8px;
+  font-size: var(--sprout-font-xs);
+  color: var(--text-muted);
+}
+
+.sprout .sprout-scope-preset-status strong {
+  color: var(--text-normal);
+  font-weight: 600;
+}
+
+.sprout button,
+.sprout textarea,
+.sprout .multi-select-container,
+.sprout input.metadata-input-text,
+.sprout input[type="date"],
+.sprout input[type="datetime-local"],
+.sprout input[type="text"],
+.sprout input[type="search"],
+.sprout input[type="email"],
+.sprout input[type="password"],
+.sprout input[type="number"] {
+  font-size: 0.9rem;
+}
+
+.sprout .text-sm {
+  font-size: 0.9rem !important;
+}
+
+.sprout .sprout-scope-preset-delete {
+  min-width: 30px;
+}
+
+body.is-mobile .sprout .sprout-coach-scope-actions-grid {
+  flex-wrap: wrap;
+}
+
 .sprout .sprout-coach-selected-title {
   font-size: var(--sprout-font-xs);
   font-weight: 600;
@@ -1124,6 +1335,7 @@
 
 .sprout .sprout-coach-selected-chips {
   display: flex;
+  padding-right: 30px;
   flex-wrap: wrap;
   gap: 8px;
 }
@@ -1168,7 +1380,6 @@
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  margin-top: 1rem;
 }
 
 .sprout .sprout-coach-field-label {

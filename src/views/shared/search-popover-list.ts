@@ -126,11 +126,17 @@ export function mountSearchPopoverList(args: SearchPopoverListArgs): SearchPopov
   let typeFilterOpen = false;
 
   const searchWrap = args.searchInput.parentElement;
+  const filterPopoverId = `sprout-scope-type-filter-listbox-${Math.random().toString(36).slice(2, 9)}`;
   const typeFilterBtn = typeFilterDefs.length
     ? searchWrap?.createEl("button", {
-      cls: "bc sprout-scope-type-filter-btn h-9 inline-flex items-center gap-1",
-      attr: { type: "button", "aria-label": "Filter scope item types" },
-      text: "Filters",
+      cls: "bc sprout-btn-toolbar sprout-btn-filter h-7 px-3 text-sm inline-flex items-center gap-2 sprout-scope-type-filter-btn",
+      attr: {
+        type: "button",
+        "aria-label": "Filter scope item types",
+        "aria-haspopup": "listbox",
+        "aria-expanded": "false",
+        "aria-controls": filterPopoverId,
+      },
     })
     : null;
   const typeFilterPopover = typeFilterDefs.length
@@ -139,15 +145,28 @@ export function mountSearchPopoverList(args: SearchPopoverListArgs): SearchPopov
   const typeFilterList = typeFilterPopover?.createDiv({
     cls: "sprout-coach-scope-list min-w-56 rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 sprout-pointer-auto sprout-header-menu-panel",
   }) ?? null;
+  if (typeFilterList) {
+    typeFilterList.setAttr("id", filterPopoverId);
+    typeFilterList.setAttr("role", "listbox");
+  }
+
+  const typeFilterBtnLabel = typeFilterBtn
+    ? typeFilterBtn.createSpan({ cls: "bc", text: "Filters" })
+    : null;
+  if (typeFilterBtn) {
+    const typeFilterIcon = typeFilterBtn.createSpan({ cls: "bc inline-flex items-center justify-center" });
+    setIcon(typeFilterIcon, "filter");
+    typeFilterBtn.insertBefore(typeFilterIcon, typeFilterBtnLabel);
+  }
 
   const applyTypeFilterLabel = (): void => {
-    if (!typeFilterBtn) return;
+    if (!typeFilterBtn || !typeFilterBtnLabel) return;
     if (!visibleTypeFilterDefs.length || visibleTypeFilterDefs.every((entry) => enabledTypes.has(entry.type))) {
-      typeFilterBtn.setText("Filters");
+      typeFilterBtnLabel.setText("Filters");
       return;
     }
     const activeVisibleCount = visibleTypeFilterDefs.filter((entry) => enabledTypes.has(entry.type)).length;
-    typeFilterBtn.setText(`Filters (${activeVisibleCount})`);
+    typeFilterBtnLabel.setText(`Filters (${activeVisibleCount})`);
   };
 
   const renderTypeFilterList = (): void => {
@@ -276,6 +295,7 @@ export function mountSearchPopoverList(args: SearchPopoverListArgs): SearchPopov
 
   const setTypeFilterOpen = (open: boolean): void => {
     typeFilterOpen = open;
+    typeFilterBtn?.setAttr("aria-expanded", open ? "true" : "false");
     if (!typeFilterPopover) return;
     if (open) typeFilterPopover.classList.remove("hidden");
     else typeFilterPopover.classList.add("hidden");

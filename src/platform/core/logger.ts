@@ -1,7 +1,7 @@
 /**
  * @file src/core/logger.ts
  * @summary Centralised logging abstraction for Sprout. Every message is prefixed with
- * "[Sprout]" for easy DevTools filtering. Supports four severity levels (debug, info,
+ * "[LearnKit]" for easy DevTools filtering. Supports four severity levels (debug, info,
  * warn, error) plus a "silent" mode, and a `swallow` helper for previously-empty catch
  * blocks that logs at debug level. The log level can be changed at runtime via
  * `window.__sproutLog.setLevel("debug")`.
@@ -11,7 +11,7 @@
  *   - log — singleton logger object with debug/info/warn/error/swallow methods
  */
 
-const PREFIX = "[Sprout]";
+const PREFIX = "[LearnKit]";
 
 // Bind console methods once so call-sites don't trigger the no-console rule.
 const _debug = globalThis.console.debug.bind(globalThis.console);

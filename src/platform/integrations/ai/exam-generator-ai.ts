@@ -19,6 +19,27 @@ const NON_EDUCATIONAL_PATTERNS: RegExp[] = [
   /^\s*(vault|folder|folders|structure|organization|organise|organize|system|attachments|templates)\s*:?\s*$/i,
 ];
 
+const EDUCATIONAL_KEYWORDS = [
+  "diagnosis",
+  "management",
+  "treatment",
+  "pathophysiology",
+  "mechanism",
+  "symptom",
+  "sign",
+  "cause",
+  "risk",
+  "clinical",
+  "definition",
+  "criteria",
+  "example",
+  "indication",
+  "contraindication",
+  "interpret",
+  "compare",
+  "evaluate",
+];
+
 function looksLikePathOnlyLine(line: string): boolean {
   const value = String(line || "").trim();
   if (!value) return false;
@@ -44,14 +65,68 @@ function isNonEducationalLine(line: string): boolean {
 function filterEducationalContent(raw: string): string {
   const lines = String(raw || "").split(/\r?\n/);
   const kept: string[] = [];
+  let inTocBlock = false;
 
   for (const line of lines) {
+    const trimmed = String(line || "").trim();
+    const isHeading = /^\s*#{1,6}\s+/.test(line);
+    const startsTocBlock = /^\s*#{1,6}\s*(table of contents|toc|contents|index|navigation)\b/i.test(line)
+      || /^\s*(table of contents|toc|contents|index|navigation)\s*:?\s*$/i.test(trimmed);
+
+    if (startsTocBlock) {
+      inTocBlock = true;
+      continue;
+    }
+
+    // Exit a TOC/navigation block when we reach a non-TOC heading.
+    if (inTocBlock && isHeading && !startsTocBlock) {
+      inTocBlock = false;
+    }
+
+    if (inTocBlock) {
+      if (trimmed.length === 0) continue;
+      if (looksLikePathOnlyLine(trimmed)) continue;
+      if (/^(?:[-*+]\s+|\d+\.\s+)/.test(trimmed)) continue;
+      if (trimmed.split(/\s+/).length <= 6 && !/[.!?]/.test(trimmed)) continue;
+    }
+
     if (isNonEducationalLine(line)) continue;
     kept.push(line);
   }
 
   const filtered = kept.join("\n").replace(/\n{3,}/g, "\n\n").trim();
   return filtered;
+}
+
+function educationalSignalScore(raw: string): number {
+  const text = String(raw || "");
+  if (!text.trim()) return 0;
+
+  const lines = text.split(/\r?\n/);
+  let sentenceLikeLines = 0;
+  let bullets = 0;
+  let shortTitleLike = 0;
+  let keywordHits = 0;
+
+  for (const line of lines) {
+    const value = line.trim();
+    if (!value) continue;
+    if (/^(?:[-*+]\s+|\d+\.\s+)/.test(value)) bullets += 1;
+    const words = value.split(/\s+/).filter(Boolean);
+    if (words.length >= 8 && /[.!?]|:/.test(value)) sentenceLikeLines += 1;
+    if (words.length <= 5 && !/[.!?]/.test(value)) shortTitleLike += 1;
+
+    const low = value.toLowerCase();
+    for (const kw of EDUCATIONAL_KEYWORDS) {
+      if (low.includes(kw)) keywordHits += 1;
+    }
+  }
+
+  return sentenceLikeLines * 4 + keywordHits * 2 - shortTitleLike - Math.floor(bullets * 0.5);
+}
+
+function isEducationallyUseful(raw: string): boolean {
+  return educationalSignalScore(raw) >= 4;
 }
 
 function clip(text: string, maxChars = MAX_NOTE_CHARS): string {
@@ -271,17 +346,44 @@ export async function generateExamQuestions(params: {
     remainingChars -= chunk.length;
   }
 
-  if (preparedNotes.length === 0 && (!attachedFileDataUrls || attachedFileDataUrls.length === 0)) {
+  const educationalNotes = preparedNotes.filter((note) => isEducationallyUseful(note.content));
+  const notesForGeneration = educationalNotes.length > 0 ? educationalNotes : preparedNotes;
+
+  if (notesForGeneration.length === 0 && (!attachedFileDataUrls || attachedFileDataUrls.length === 0)) {
     throw new Error("Select at least one note or attach a file to generate an exam.");
   }
 
   const requestedType = config.questionMode === "mixed" ? "mixed" : config.questionMode;
+  const appliedModeRules = config.appliedScenarios
+    ? [
+      "Applied scenario questions mode is ON.",
+      "Generate applied problem-solving questions from the note content, not recall-only prompts.",
+      "All questions in this mode must be scenario-based.",
+      "Each prompt must include concrete context (for example a case, situation, setup, or data conditions) and ask the learner to apply knowledge.",
+      "Do NOT output pure theory/definition/identify-style questions in this mode.",
+      "Prefer tasks that require interpretation, decision-making, calculation, prioritization, or troubleshooting from context.",
+      "Do not include LaTeX notation or Markdown tables in prompts, options, explanations, or marking guides.",
+      "For quantitative tasks, include enough data for the learner to calculate an answer.",
+      "For SAQ, make markingGuide specific and checkable against the applied scenario (final conclusion plus key reasoning checks).",
+      "For MCQ, ensure distractors are plausible application errors rather than random facts.",
+      "Use plain text formatting only for numeric expressions (no LaTeX delimiters).",
+    ]
+    : [
+      "Applied scenario questions mode is OFF.",
+      "Prefer straightforward conceptual exam questions unless source content is inherently quantitative.",
+    ];
   const systemPrompt = [
     "You are LearnKit Exam Generator (beta).",
-    "Generate exam questions ONLY from provided notes and attached files.",
-    "Do not include facts that are not present in the notes or attachments.",
+    "Generate exam questions primarily from provided notes and attached files from the selected scope.",
+    "Prioritize the educational content that appears in the selected scope over generic structure, metadata, or site map content.",
+    "If tiny amounts of outside knowledge are needed to clarify wording, use only directly relevant background and keep it minimal.",
+    "Do not ask the user any follow-up questions.",
+    "Do not output planning steps, commentary, or analysis.",
     "Do not ask questions about vault organization, note names, file paths, table of contents, indexes, navigation sections, or system/admin metadata.",
+    "Never generate prompts that test folder structure, file structure, TOC headings, document indexing, or note-management workflow.",
     "Prioritize educational subject matter (concepts, definitions, mechanisms, diagnosis, management, reasoning, examples, or factual learning content).",
+    "Every question must test domain knowledge from educational content, not document structure.",
+    ...appliedModeRules,
     "Return valid JSON only with this schema:",
     "{\"questions\":[{\"id\":\"q1\",\"type\":\"mcq|saq\",\"prompt\":\"...\",\"sourcePath\":\"...\",\"options\":[\"...\"],\"correctIndex\":0,\"explanation\":\"...\",\"markingGuide\":[\"...\"]}]}",
     "Rules:",
@@ -290,14 +392,14 @@ export async function generateExamQuestions(params: {
     "- Keep prompts clear and exam-like.",
   ].join("\n");
 
-  const fallbackPath = preparedNotes[0]?.path || "";
+  const fallbackPath = notesForGeneration[0]?.path || "";
   let questions: GeneratedExamQuestion[] = [];
 
-  if (preparedNotes.length <= EXAM_CHUNK_SIZE) {
+  if (notesForGeneration.length <= EXAM_CHUNK_SIZE) {
     questions = await requestExamChunk({
       settings,
       systemPrompt,
-      notes: preparedNotes,
+      notes: notesForGeneration,
       difficulty: config.difficulty,
       requestedType,
       questionCount: config.questionCount,
@@ -306,7 +408,7 @@ export async function generateExamQuestions(params: {
       attachedFileDataUrls,
     });
   } else {
-    const chunks = splitIntoChunks(preparedNotes, EXAM_CHUNK_SIZE);
+    const chunks = splitIntoChunks(notesForGeneration, EXAM_CHUNK_SIZE);
     const counts = allocateQuestionCounts(config.questionCount, chunks.length);
     const allChunkQuestions: GeneratedExamQuestion[] = [];
 
@@ -343,8 +445,9 @@ export async function gradeSaqAnswer(params: {
   markingGuide: string[];
   userAnswer: string;
   difficulty: ExamGeneratorConfig["difficulty"];
+  appliedScenarios?: boolean;
 }): Promise<SaqGradeResult> {
-  const { settings, questionPrompt, markingGuide, userAnswer, difficulty } = params;
+  const { settings, questionPrompt, markingGuide, userAnswer, difficulty, appliedScenarios } = params;
 
   const systemPrompt = [
     "You are LearnKit Exam Marker (beta).",
@@ -353,6 +456,9 @@ export async function gradeSaqAnswer(params: {
     "Prioritize conceptual correctness.",
     "Allow minor spelling/grammar issues and brief wording when meaning is correct.",
     "Award partial credit for partially correct answers and concise but accurate responses.",
+    "Do not expect or require Markdown tables or LaTeX in prompt or answer.",
+    "When a prompt includes quantitative scenario data, verify whether the final conclusion/calculation is correct from that data.",
+    "Accept mathematically equivalent expressions and equivalent units when contextually appropriate.",
     "Return JSON only:",
     "{\"scorePercent\":0-100,\"feedback\":\"...\",\"keyPointsMet\":[\"...\"],\"keyPointsMissed\":[\"...\"],\"conceptuallyCorrect\":true|false}",
   ].join("\n");
@@ -360,6 +466,7 @@ export async function gradeSaqAnswer(params: {
   const userPrompt = JSON.stringify(
     {
       difficulty,
+      appliedScenarios: Boolean(appliedScenarios),
       questionPrompt,
       markingGuide,
       answer: String(userAnswer || "").trim(),

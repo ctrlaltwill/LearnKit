@@ -15,6 +15,7 @@ type AdapterLike = {
 export type SavedExamTestSummary = {
   testId: string;
   label: string;
+  difficulty: string;
   sourceSummary: string;
   questionCount: number;
   createdAt: number;
@@ -233,6 +234,7 @@ export class ExamTestsSqlite {
       `SELECT
          t.test_id,
          t.label,
+         t.config_json,
          t.source_summary,
          t.questions_json,
          t.created_at,
@@ -260,16 +262,27 @@ export class ExamTestsSqlite {
       while (stmt.step()) {
         const row = stmt.getAsObject() as Record<string, unknown>;
         let questionCount = 0;
+        let difficulty = "";
         try {
           const arr = JSON.parse(asText(row.questions_json, "[]")) as unknown;
           if (Array.isArray(arr)) questionCount = arr.length;
         } catch {
           questionCount = 0;
         }
+        try {
+          const config = JSON.parse(asText(row.config_json, "{}")) as Record<string, unknown>;
+          const rawDifficulty = asText(config?.difficulty, "").trim().toLowerCase();
+          if (rawDifficulty === "easy" || rawDifficulty === "medium" || rawDifficulty === "hard") {
+            difficulty = rawDifficulty;
+          }
+        } catch {
+          difficulty = "";
+        }
 
         out.push({
           testId: asText(row.test_id),
           label: asText(row.label, "Saved test"),
+          difficulty,
           sourceSummary: asText(row.source_summary),
           questionCount,
           createdAt: Number(row.created_at ?? Date.now()),

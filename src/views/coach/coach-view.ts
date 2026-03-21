@@ -16,6 +16,12 @@ import { cascadeAOSOnLoad, initAOS, resetAOS } from "../../platform/core/aos-loa
 import { CoachHealthPanel, CoachReadinessPanel, type ExamReadinessPoint } from "./coach-charts";
 import { mountSearchPopoverList, type SearchPopoverOption } from "../shared/search-popover-list";
 import {
+  rowToSavedScopePreset,
+  scopeIdKeyFromIds,
+  selectionMatchesPreset,
+  serializeScopes,
+} from "../shared/saved-scope-presets";
+import {
   collectVaultTagAndPropertyPairs,
   decodePropertyPair,
   encodePropertyPair,
@@ -746,6 +752,63 @@ export class SproutCoachView extends ItemView {
     const chipsWrap = card.createDiv({ cls: "sprout-coach-selected-wrap" });
     const selectedTitle = chipsWrap.createDiv({ cls: "sprout-coach-selected-title", text: `Study content (${this._selectedScopeIds.size})` });
     const chips = chipsWrap.createDiv({ cls: "sprout-coach-selected-chips" });
+    const actionsGrid = chipsWrap.createDiv({ cls: "sprout-coach-scope-actions-grid" });
+    const presetWrap = actionsGrid.createDiv({ cls: "sprout-coach-scope-action" });
+    const presetBtn = presetWrap.createEl("button", {
+      cls: "bc sprout-btn-toolbar sprout-btn-filter h-7 px-3 text-sm inline-flex items-center gap-2 sprout-scope-preset-btn",
+      attr: {
+        type: "button",
+        "aria-haspopup": "listbox",
+        "aria-expanded": "false",
+        "aria-label": "Saved presets",
+      },
+    });
+    const presetBtnIcon = presetBtn.createSpan({ cls: "bc inline-flex items-center justify-center" });
+    setIcon(presetBtnIcon, "bookmark");
+    const presetBtnLabel = presetBtn.createSpan({ cls: "bc", text: "Saved presets" });
+    const presetPopover = presetWrap.createDiv({ cls: "sprout-scope-preset-popover dropdown-menu hidden" });
+    const presetList = presetPopover.createDiv({
+      cls: "sprout-coach-scope-list min-w-56 rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 sprout-pointer-auto",
+    });
+    presetList.setAttr("role", "listbox");
+    presetList.setAttr("aria-label", "Saved presets");
+    let presetOutsideAttached = false;
+
+    const closePresetPopover = (): void => {
+      presetPopover.classList.add("hidden");
+      presetBtn.setAttr("aria-expanded", "false");
+      if (presetOutsideAttached) {
+        document.removeEventListener("pointerdown", handlePresetOutsidePointerDown, true);
+        presetOutsideAttached = false;
+      }
+    };
+
+    const openPresetPopover = (): void => {
+      presetPopover.classList.remove("hidden");
+      presetBtn.setAttr("aria-expanded", "true");
+      if (!presetOutsideAttached) {
+        document.addEventListener("pointerdown", handlePresetOutsidePointerDown, true);
+        presetOutsideAttached = true;
+      }
+    };
+
+    const handlePresetOutsidePointerDown = (evt: PointerEvent): void => {
+      const target = evt.target;
+      if (target instanceof Node && presetWrap.contains(target)) return;
+      closePresetPopover();
+    };
+
+    const clearWrap = actionsGrid.createDiv({ cls: "sprout-coach-scope-action hidden" });
+    const clearBtn = clearWrap.createEl("button", {
+      cls: "bc sprout-btn-toolbar sprout-btn-filter h-7 px-3 text-sm inline-flex items-center gap-2 sprout-scope-clear-btn",
+      attr: {
+        type: "button",
+        "aria-label": "Clear selection",
+      },
+    });
+    const clearBtnIcon = clearBtn.createSpan({ cls: "bc inline-flex items-center justify-center" });
+    setIcon(clearBtnIcon, "x");
+    clearBtn.createSpan({ cls: "bc", text: "Clear selection" });
 
     const footer = card.createDiv({ cls: "sprout-coach-wizard-footer" });
     const cancel = footer.createEl("button", { cls: "h-9 flex items-center gap-2 equal-height-btn sprout-btn-control", text: "Cancel" });
@@ -772,7 +835,223 @@ export class SproutCoachView extends ItemView {
       scopePicker.render();
     };
 
-    const renderSelected = (): void => {
+    const clearSelection = (): void => {
+      this._selectedScopeIds.clear();
+      next.disabled = true;
+    };
+
+    const selectedScopes = (): Scope[] => Array.from(this._selectedScopeIds)
+      .map((id) => fromScopeId(id, this._scopeLookup))
+      .filter((scope): scope is Scope => !!scope);
+
+    const selectedScopeKey = (): string => scopeIdKeyFromIds(this._selectedScopeIds);
+
+    const listPresets = () => (this._coachDb?.listSavedScopePresets() ?? [])
+      .map(rowToSavedScopePreset)
+      .filter((preset) => preset.scopes.length > 0);
+
+    const isSelectionSaved = (): boolean => {
+      if (!this._selectedScopeIds.size) return false;
+      const currentKey = selectedScopeKey();
+      if (!currentKey) return false;
+      return listPresets().some((preset) => selectionMatchesPreset(this._selectedScopeIds, preset));
+    };
+
+    const renderPresetList = (preserveOpen = false): void => {
+      const presets = listPresets();
+      const selectedScopeIds = Array.from(this._selectedScopeIds);
+      const hasSelection = selectedScopeIds.length > 0;
+      const wasOpen = !presetPopover.classList.contains("hidden");
+      const keepOpen = preserveOpen && wasOpen;
+      presetList.empty();
+      presetBtnLabel.setText("Saved presets");
+      if (!keepOpen) closePresetPopover();
+
+      const matchingPreset = hasSelection
+        ? (presets.find((preset) => selectionMatchesPreset(selectedScopeIds, preset)) ?? null)
+        : null;
+      const duplicate = !!matchingPreset;
+
+      let nameInput: HTMLInputElement | null = null;
+      let addBtn: HTMLSpanElement | null = null;
+      if (hasSelection && !duplicate) {
+        const createRow = presetList.createDiv({
+          cls: "sprout-ss-search-wrap sprout-scope-preset-create",
+        });
+        nameInput = createRow.createEl("input", {
+          cls: "sprout-ss-search-input",
+          attr: {
+            type: "text",
+            placeholder: "Preset name",
+            "aria-label": "Preset name",
+            autocomplete: "off",
+            spellcheck: "false",
+          },
+        });
+        addBtn = createRow.createSpan({
+          cls: "sprout-scope-preset-add hidden",
+          text: "+",
+          attr: {
+            role: "button",
+            tabindex: "0",
+            "aria-label": "Save preset",
+          },
+        });
+      } else if (matchingPreset) {
+        const status = presetList.createDiv({ cls: "sprout-scope-preset-status" });
+        status.createSpan({ text: "Selection saved as " });
+        status.createEl("strong", { text: matchingPreset.name });
+      }
+
+      const saveCurrentSelection = async (): Promise<void> => {
+        if (!this._coachDb || !this._selectedScopeIds.size || isSelectionSaved()) return;
+        const suggestedName = `Preset ${presets.length + 1}`;
+        const name = String(nameInput?.value || "").trim() || suggestedName;
+        const now = Date.now();
+        const presetId = globalThis.crypto?.randomUUID?.() ?? `preset-${now}-${Math.random().toString(36).slice(2, 8)}`;
+        this._coachDb.upsertSavedScopePreset({
+          preset_id: presetId,
+          name,
+          scopes_json: serializeScopes(selectedScopes()),
+          created_at: now,
+          updated_at: now,
+        });
+        await this._coachDb.persist();
+        renderSelected(true);
+      };
+
+      if (nameInput && addBtn) {
+        const syncAddVisibility = (): void => {
+          const canAdd = String(nameInput?.value || "").trim().length > 0;
+          addBtn?.classList.toggle("hidden", !canAdd);
+        };
+        syncAddVisibility();
+
+        addBtn.addEventListener("click", (evt) => {
+          evt.preventDefault();
+          evt.stopPropagation();
+          void saveCurrentSelection();
+        });
+        addBtn.addEventListener("keydown", (evt) => {
+          if (evt.key !== "Enter" && evt.key !== " ") return;
+          evt.preventDefault();
+          evt.stopPropagation();
+          void saveCurrentSelection();
+        });
+        nameInput.addEventListener("input", () => {
+          syncAddVisibility();
+        });
+        nameInput.addEventListener("keydown", (evt) => {
+          if (evt.key !== "Enter") return;
+          evt.preventDefault();
+          void saveCurrentSelection();
+        });
+      }
+
+      if ((hasSelection || duplicate) && presets.length) {
+        presetList.createDiv({ cls: "my-1 h-px bg-border" });
+      }
+
+      if (!presets.length) return;
+
+      for (const preset of presets) {
+        const selected = selectionMatchesPreset(this._selectedScopeIds, preset);
+        const row = presetList.createDiv({ cls: "sprout-coach-scope-row" });
+        row.setAttr("role", "option");
+        row.setAttr("aria-selected", selected ? "true" : "false");
+        const applyBtn = row.createEl("button", {
+          cls: "sprout-scope-preset-apply",
+        });
+        applyBtn.type = "button";
+        if (selected) {
+          row.classList.add("is-selected");
+          applyBtn.classList.add("is-selected");
+        }
+        const itemText = applyBtn.createSpan({ cls: "sprout-scope-preset-item-text" });
+        itemText.createSpan({ cls: "sprout-coach-scope-item-label", text: `${preset.name} (${preset.scopes.length})` });
+        applyBtn.addEventListener("click", () => {
+          this._selectedScopeIds.clear();
+          for (const scope of preset.scopes) {
+            const id = toScopeId(scope);
+            if (this._scopeLookup.has(id)) this._selectedScopeIds.add(id);
+          }
+          next.disabled = !this._selectedScopeIds.size;
+          closePresetPopover();
+          renderSelected();
+          scopePicker.render();
+        });
+
+        const deleteBtn = row.createSpan({
+          cls: "sprout-scope-preset-remove",
+          attr: { "aria-label": `Delete ${preset.name}` },
+        });
+        setIcon(deleteBtn, "x");
+        deleteBtn.setAttr("role", "button");
+        deleteBtn.setAttr("tabindex", "0");
+        const deletePreset = () => {
+          void (async () => {
+            if (!this._coachDb) return;
+            this._coachDb.deleteSavedScopePreset(preset.id);
+            await this._coachDb.persist();
+            renderSelected(true);
+          })();
+        };
+        deleteBtn.addEventListener("click", (evt) => {
+          evt.preventDefault();
+          evt.stopPropagation();
+          deletePreset();
+        });
+        deleteBtn.addEventListener("keydown", (evt) => {
+          if (evt.key !== "Enter" && evt.key !== " ") return;
+          evt.preventDefault();
+          evt.stopPropagation();
+          deletePreset();
+        });
+      }
+
+      if (keepOpen) openPresetPopover();
+    };
+
+    const syncScopeActionState = (): void => {
+      const presets = listPresets();
+      const hasSelection = this._selectedScopeIds.size > 0;
+      const canOpen = hasSelection || presets.length > 0;
+      clearWrap.classList.toggle("hidden", !hasSelection);
+      presetBtn.disabled = !canOpen;
+      if (!canOpen) presetBtn.setAttr("aria-label", "Select content to save a preset");
+      else if (!presets.length) presetBtn.setAttr("aria-label", "Save preset");
+      else presetBtn.setAttr("aria-label", "Saved presets");
+
+      if (!canOpen) closePresetPopover();
+    };
+
+    const syncSaveButtonState = (): void => {
+      // Legacy helper name retained; this now only keeps preset CTA state in sync.
+      syncScopeActionState();
+    };
+
+    presetBtn.addEventListener("click", (evt) => {
+      evt.preventDefault();
+      evt.stopPropagation();
+      if (presetBtn.disabled) return;
+      const isOpen = !presetPopover.classList.contains("hidden");
+      if (isOpen) closePresetPopover();
+      else openPresetPopover();
+    });
+
+    presetPopover.addEventListener("click", (evt) => {
+      evt.stopPropagation();
+    });
+
+    clearBtn.addEventListener("click", (evt) => {
+      evt.preventDefault();
+      evt.stopPropagation();
+      clearSelection();
+      renderSelected();
+      scopePicker.render();
+    });
+
+    const renderSelected = (preservePresetPopover = false): void => {
       selectedTitle.setText(`Selected (${this._selectedScopeIds.size})`);
       chips.empty();
       if (!this._selectedScopeIds.size) {
@@ -802,6 +1081,8 @@ export class SproutCoachView extends ItemView {
           });
         }
       }
+      renderPresetList(preservePresetPopover);
+      syncSaveButtonState();
     };
 
     const scopePicker = mountSearchPopoverList({

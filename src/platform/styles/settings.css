@@ -1271,9 +1271,11 @@ body:not(.is-mobile) .sprout-guide-body pre button.copy-code-button.sprout-guide
 .sprout .sprout-settings-text-muted,
 .sprout-settings .sprout-settings-text-muted {
   color: var(--text-muted);
-  padding: 14px;
+  padding: 1rem 0 0 0;
   font-size: var(--sprout-font-xs);
-  text-align: center;
+  display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
 /* ---- Utility: opacity flicker for repaint ---- */
@@ -2305,7 +2307,7 @@ color: var(--color-base-100);
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 4px;
+  padding: 5px 0 5px;
 }
 
 .sprout-ss-search-icon {

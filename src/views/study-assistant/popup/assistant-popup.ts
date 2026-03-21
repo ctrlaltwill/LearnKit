@@ -2513,6 +2513,8 @@ export class SproutAssistantPopup {
         difficulty: "medium",
         questionMode: "mixed",
         questionCount: 10,
+        testName: "",
+        appliedScenarios: false,
         timed: false,
         durationMinutes: 15,
         sourceMode: "selected",

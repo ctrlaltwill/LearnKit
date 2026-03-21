@@ -625,7 +625,7 @@ export function syncReadingViewStyles(): void {
    ========================= */
 
 export function registerReadingViewPrettyCards(plugin: Plugin) {
-  debugLog("[Sprout] Registering reading view prettifier");
+  debugLog("[LearnKit] Registering reading view prettifier");
 
   sproutPluginRef = plugin;
 
@@ -637,7 +637,7 @@ export function registerReadingViewPrettyCards(plugin: Plugin) {
       try {
         // Skip if inside editor live preview
         if (rootEl.closest(".cm-content")) {
-          debugLog("[Sprout] Skipping - in editor content");
+          debugLog("[LearnKit] Skipping - in editor content");
           return;
         }
 
@@ -649,7 +649,7 @@ export function registerReadingViewPrettyCards(plugin: Plugin) {
           (ctx.containerEl && (ctx.containerEl.classList.contains("markdown-reading-view") || ctx.containerEl.classList.contains("markdown-preview-view") || ctx.containerEl.closest(".markdown-reading-view, .markdown-preview-view") !== null));
 
         if (!isInReadingView) {
-          debugLog("[Sprout] Skipping - not in reading/preview view");
+          debugLog("[LearnKit] Skipping - not in reading/preview view");
           return;
         }
 
@@ -666,7 +666,7 @@ export function registerReadingViewPrettyCards(plugin: Plugin) {
             }
           }
         } catch (e) {
-          debugLog("[Sprout] Could not read source file:", e);
+          debugLog("[LearnKit] Could not read source file:", e);
         }
 
         // Parse and enhance any new .el-p nodes in this root
@@ -753,18 +753,18 @@ export function registerReadingViewPrettyCards(plugin: Plugin) {
 
 function setupManualTrigger() {
   window.sproutApplyMasonryGrid = () => {
-    debugLog('[Sprout] Manual sproutApplyMasonryGrid() called');
+    debugLog('[LearnKit] Manual sproutApplyMasonryGrid() called');
     requestAnimationFrame(() => {
       void processCardElements(document.documentElement, undefined, '');
     });
   };
 
   addTrackedWindowListener('sprout-cards-inserted', () => {
-    debugLog('[Sprout] Received sprout-cards-inserted event — re-processing cards');
+    debugLog('[LearnKit] Received sprout-cards-inserted event — re-processing cards');
     window.sproutApplyMasonryGrid?.();
   });
 
-  debugLog('[Sprout] Manual trigger and event hook installed');
+  debugLog('[LearnKit] Manual trigger and event hook installed');
 }
 
 async function getLiveMarkdownSourceContent(): Promise<string> {
@@ -787,7 +787,7 @@ async function getLiveMarkdownSourceContent(): Promise<string> {
       return await plugin.app.vault.read(activeFile);
     }
   } catch (e) {
-    debugLog('[Sprout] Could not read live markdown source content:', e);
+    debugLog('[LearnKit] Could not read live markdown source content:', e);
   }
   return '';
 }
@@ -847,7 +847,7 @@ export function teardownReadingView(): void {
 
 function setupDebouncedMutationObserver() {
   if (mutationObserver) {
-    debugLog('[Sprout] MutationObserver already running');
+    debugLog('[LearnKit] MutationObserver already running');
     return;
   }
 
@@ -932,7 +932,7 @@ function setupDebouncedMutationObserver() {
     const containers = Array.from(dirtyContainers);
     debounceTimer = window.setTimeout(() => {
       try {
-        debugLog('[Sprout] MutationObserver triggered — processing', containers.length, 'dirty containers');
+        debugLog('[LearnKit] MutationObserver triggered — processing', containers.length, 'dirty containers');
         for (const container of containers) {
           // Only process if the container is still in the DOM
           if (container.isConnected) {
@@ -956,9 +956,9 @@ function setupDebouncedMutationObserver() {
       attributes: false,
       characterData: false // Also ignore text content changes
     });
-    debugLog('[Sprout] MutationObserver attached to document.body');
+    debugLog('[LearnKit] MutationObserver attached to document.body');
   } else {
-    debugLog('[Sprout] document.body not available for MutationObserver');
+    debugLog('[LearnKit] document.body not available for MutationObserver');
   }
 }
 
@@ -972,7 +972,7 @@ async function processCardElements(container: HTMLElement, _ctx?: MarkdownPostPr
     const pluginCheck = getSproutPlugin();
     const stylesEnabled = !!pluginCheck?.settings?.general?.enableReadingStyles;
     if (!stylesEnabled) {
-      debugLog('[Sprout] Prettify cards is off — skipping card processing');
+      debugLog('[LearnKit] Prettify cards is off — skipping card processing');
       resetCardsToNativeReading(container);
       return;
     }
@@ -1004,7 +1004,7 @@ async function processCardElements(container: HTMLElement, _ctx?: MarkdownPostPr
   container.querySelectorAll<HTMLElement>('.el-p:not([data-sprout-processed])').forEach(el => found.push(el));
 
   if (found.length === 0) {
-    debugLog('[Sprout] No unprocessed .el-p elements found in container');
+    debugLog('[LearnKit] No unprocessed .el-p elements found in container');
     // Field-only edits can change card bodies without creating new anchor
     // paragraphs. Rebuild existing processed cards from latest source text.
     void refreshProcessedCards(container, sourceContent);
@@ -1013,7 +1013,7 @@ async function processCardElements(container: HTMLElement, _ctx?: MarkdownPostPr
     return;
   }
 
-  debugLog(`[Sprout] Found ${found.length} potential card elements to parse`);
+  debugLog(`[LearnKit] Found ${found.length} potential card elements to parse`);
 
   for (const el of found) {
     try {
@@ -3617,6 +3617,6 @@ function renderIoInReadingCard(
 declare global { interface Window { sproutApplyMasonryGrid?: () => void; } }
 
 window.sproutApplyMasonryGrid = window.sproutApplyMasonryGrid || (() => {
-  debugLog('[Sprout] sproutApplyMasonryGrid placeholder invoked');
+  debugLog('[LearnKit] sproutApplyMasonryGrid placeholder invoked');
   void processCardElements(document.documentElement, undefined, '');
 });

@@ -465,6 +465,9 @@ function markdownPreviewHtml(source: string): string {
   // ── Circle-flag tokens ──
   work = replaceCircleFlagTokens(work);
 
+  // ── Markdown tables ──
+  work = convertMarkdownTables(work);
+
   // ── Markdown lists ──
   work = convertMarkdownLists(work);
 
@@ -540,6 +543,59 @@ function convertMarkdownLists(text: string): string {
   closeTo(0);
 
   return out.join("");
+}
+
+function convertMarkdownTables(text: string): string {
+  const lines = text.split("\n");
+  const out: string[] = [];
+
+  const splitRow = (line: string): string[] => {
+    const trimmed = line.trim().replace(/^\|/, "").replace(/\|$/, "");
+    return trimmed.split("|").map((cell) => cell.trim());
+  };
+
+  const isSeparator = (line: string): boolean => {
+    const raw = line.trim().replace(/^\|/, "").replace(/\|$/, "");
+    if (!raw) return false;
+    const cols = raw.split("|").map((part) => part.trim());
+    if (!cols.length) return false;
+    return cols.every((col) => /^:?-{3,}:?$/.test(col));
+  };
+
+  let i = 0;
+  while (i < lines.length) {
+    const headerLine = lines[i];
+    const separatorLine = i + 1 < lines.length ? lines[i + 1] : "";
+
+    const looksLikeHeader = headerLine.includes("|");
+    if (!looksLikeHeader || !isSeparator(separatorLine)) {
+      out.push(headerLine);
+      i += 1;
+      continue;
+    }
+
+    const headers = splitRow(headerLine);
+    const rows: string[][] = [];
+    i += 2;
+
+    while (i < lines.length) {
+      const rowLine = lines[i];
+      if (!rowLine.trim() || !rowLine.includes("|")) break;
+      rows.push(splitRow(rowLine));
+      i += 1;
+    }
+
+    const th = headers.map((h) => `<th>${h}</th>`).join("");
+    const bodyRows = rows
+      .map((row) => {
+        const cells = headers.map((_, idx) => `<td>${row[idx] ?? ""}</td>`).join("");
+        return `<tr>${cells}</tr>`;
+      })
+      .join("");
+    out.push(`<table><thead><tr>${th}</tr></thead><tbody>${bodyRows}</tbody></table>`);
+  }
+
+  return out.join("\n");
 }
 
 export function queryFirst<T extends Element = Element>(root: ParentNode, selector: string): T | null {
