@@ -1661,7 +1661,7 @@ export default class SproutPlugin extends Plugin {
         // Navigate to the target tab if specified
         const view = existing.view as SproutSettingsView | undefined;
         if (view && typeof view.navigateToTab === "function") {
-          view.navigateToTab(resolvedTargetTab);
+          view.navigateToTab(resolvedTargetTab, { reanimateEntrance: true });
         }
         return;
       }
@@ -1675,7 +1675,7 @@ export default class SproutPlugin extends Plugin {
     setTimeout(() => {
       const view = leaf.view as SproutSettingsView | undefined;
       if (view && typeof view.navigateToTab === "function") {
-        view.navigateToTab(resolvedTargetTab);
+        view.navigateToTab(resolvedTargetTab, { reanimateEntrance: true });
       }
     }, 50);
   }

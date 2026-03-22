@@ -199,7 +199,7 @@ export class SproutAnalyticsView extends ItemView {
     const root = this._rootEl;
     if (!root) return;
 
-    const maxWidth = this.plugin.isWideMode ? "none" : MAX_CONTENT_WIDTH_PX;
+    const maxWidth = this.plugin.isWideMode ? "100%" : MAX_CONTENT_WIDTH_PX;
     setCssProps(root, "--lk-home-max-width", maxWidth);
     setCssProps(root, "--sprout-analytics-max-width", maxWidth);
   }

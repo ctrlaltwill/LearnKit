@@ -327,7 +327,7 @@ export class SproutCoachView extends ItemView {
     else this.containerEl.removeAttribute("data-sprout-wide");
 
     if (!this._rootEl) return;
-    const maxWidth = this.plugin.isWideMode ? "none" : MAX_CONTENT_WIDTH_PX;
+    const maxWidth = this.plugin.isWideMode ? "100%" : MAX_CONTENT_WIDTH_PX;
     if (this._rootEl) setCssProps(this._rootEl, "--lk-home-max-width", maxWidth);
   }
 

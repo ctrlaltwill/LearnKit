@@ -13,7 +13,7 @@
 import { ItemView, setIcon, type WorkspaceLeaf, MarkdownRenderer, Component, TFile, normalizePath } from "obsidian";
 import { type SproutHeader, createViewHeader } from "../../platform/core/header";
 import { log } from "../../platform/core/logger";
-import { AOS_CASCADE_STEP, AOS_DURATION, MAX_CONTENT_WIDTH_PX, VIEW_TYPE_SETTINGS } from "../../platform/core/constants";
+import { AOS_DURATION, MAX_CONTENT_WIDTH_PX, VIEW_TYPE_SETTINGS } from "../../platform/core/constants";
 import { setCssProps } from "../../platform/core/ui";
 import { createTitleStripFrame } from "../../platform/core/view-primitives";
 import { SPROUT_HOME_CONTENT_SHELL_CLASS } from "../../platform/core/ui-classes";
@@ -72,6 +72,9 @@ export class SproutSettingsView extends ItemView {
 
   /** Tab content container. */
   private _tabContentEl: HTMLElement | null = null;
+
+  /** One-time AOS bootstrap flag to mirror other views. */
+  private _aosInitialized = false;
 
   /** Window-level listener cleanups registered by active tab content. */
   private _windowListenerCleanups: Array<() => void> = [];
@@ -157,7 +160,7 @@ export class SproutSettingsView extends ItemView {
     const strip = this._titleStripEl;
     if (!root && !strip) return;
 
-    const maxWidth = this.plugin.isWideMode ? "none" : MAX_CONTENT_WIDTH_PX;
+    const maxWidth = this.plugin.isWideMode ? "100%" : MAX_CONTENT_WIDTH_PX;
     if (root) {
       setCssProps(root, "--lk-home-max-width", maxWidth);
       setCssProps(root, "--sprout-settings-view-max-width", maxWidth);
@@ -205,7 +208,7 @@ export class SproutSettingsView extends ItemView {
       btn.addEventListener("click", () => {
         if (this._activeTab === tab.id) return;
         this._activeTab = tab.id;
-        this._refreshActiveTab();
+        this._refreshActiveTab(false);
       });
       right.appendChild(btn);
       this._titleStripTabBtnEls.set(tab.id, btn);
@@ -267,6 +270,42 @@ export class SproutSettingsView extends ItemView {
 
   // ── Main render ─────────────────────────────────────────────
 
+  private _animateTopLevelEntrance(): void {
+    const animationsEnabled = this.plugin.settings?.general?.enableAnimations ?? true;
+    if (!animationsEnabled) return;
+    const titleStrip = this._titleStripEl;
+    const shell = this._rootEl?.querySelector<HTMLElement>(".sprout-settings-content-shell");
+    if (!shell) return;
+
+    const applyRootAos = (el: HTMLElement, delay: number = 0) => {
+      el.classList.remove("aos-animate", "sprout-aos-fallback");
+      el.setAttribute("data-aos", "fade-up");
+      el.setAttribute("data-aos-anchor-placement", "top-top");
+      el.setAttribute("data-aos-duration", String(AOS_DURATION));
+      el.setAttribute("data-aos-delay", String(Math.max(0, delay)));
+    };
+
+    if (titleStrip) applyRootAos(titleStrip, 0);
+    applyRootAos(shell, 100);
+
+    if (!this._aosInitialized) {
+      initAOS({
+        duration: AOS_DURATION,
+        easing: "ease-out",
+        once: true,
+        offset: 50,
+      });
+      this._aosInitialized = true;
+    }
+
+    if (titleStrip) titleStrip.classList.remove("aos-animate");
+    shell.classList.remove("aos-animate");
+    requestAnimationFrame(() => {
+      if (titleStrip?.isConnected) titleStrip.classList.add("aos-animate");
+      if (shell.isConnected) shell.classList.add("aos-animate");
+    });
+  }
+
   render() {
     const root = this.contentEl;
     this._titleStripEl?.remove();
@@ -321,50 +360,16 @@ export class SproutSettingsView extends ItemView {
     contentShell.appendChild(tabContentWrapper);
     this._tabContentEl = tabContent;
 
-    if (animationsEnabled) {
-      const applyAos = (el: HTMLElement, delay: number) => {
-        el.classList.remove("aos-init", "aos-animate", "sprout-aos-fallback");
-        el.classList.add("aos-init");
-        el.setAttribute("data-aos", "fade-up");
-        el.setAttribute("data-aos-anchor-placement", "top-top");
-        el.setAttribute("data-aos-duration", String(AOS_DURATION));
-        el.setAttribute("data-aos-delay", String(delay));
-      };
-      if (this._titleStripEl) applyAos(this._titleStripEl, 0);
-      applyAos(contentShell, AOS_CASCADE_STEP);
-      initAOS({
-        duration: AOS_DURATION,
-        easing: "ease-out",
-        once: true,
-        offset: 50,
-      });
-
-      // Deterministic top-of-page animation for the content wrapper.
-      const topStages: HTMLElement[] = [];
-      if (this._titleStripEl) topStages.push(this._titleStripEl);
-      topStages.push(contentShell);
-      requestAnimationFrame(() => {
-        topStages.forEach((el, index) => {
-          window.setTimeout(() => {
-            if (!el.isConnected) return;
-            el.classList.add("aos-animate");
-          }, index * AOS_CASCADE_STEP);
-        });
-      });
-    }
-
     this._renderActiveTabContent();
 
-    if (animationsEnabled) {
-      requestAnimationFrame(() => {
-        refreshAOS();
-      });
-    }
+    if (animationsEnabled) this._animateTopLevelEntrance();
+
+    if (animationsEnabled) requestAnimationFrame(refreshAOS);
   }
 
   // ── Tab switching ───────────────────────────────────────────
 
-  private _refreshActiveTab() {
+  private _refreshActiveTab(reanimateTopLevel = false) {
     // Update button highlights
     for (const [id, btn] of this._tabBtnEls) {
       btn.classList.toggle("is-active", id === this._activeTab);
@@ -374,6 +379,8 @@ export class SproutSettingsView extends ItemView {
 
     // Re-render content
     this._renderActiveTabContent();
+
+    if (reanimateTopLevel) this._animateTopLevelEntrance();
   }
 
   private _renderActiveTabContent() {
@@ -2110,7 +2117,7 @@ export class SproutSettingsView extends ItemView {
    * Navigate to a specific settings tab programmatically.
    * Called externally when opening the view with a target tab.
    */
-  public navigateToTab(tabId: string) {
+  public navigateToTab(tabId: string, options?: { reanimateEntrance?: boolean }) {
     const topTabs = new Set(["guide", "about", "settings"]);
     const settingsSubTabs = new Set(["general", "appearance", "audio", "cards", "storage", "study", "note-review", "assistant", "reminders", "reset"]);
     const normalizedTabId = tabId === "reading" ? "appearance" : tabId;
@@ -2125,7 +2132,7 @@ export class SproutSettingsView extends ItemView {
     }
 
     if (this._tabContentEl) {
-      this._refreshActiveTab();
+      this._refreshActiveTab(options?.reanimateEntrance === true);
     }
   }
 }

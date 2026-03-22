@@ -14,7 +14,7 @@ import {
   setIcon,
 } from "obsidian";
 
-import { AOS_DURATION, MAX_CONTENT_WIDTH, MAX_CONTENT_WIDTH_PX, MS_DAY, VIEW_TYPE_REVIEWER } from "../../platform/core/constants";
+import { MAX_CONTENT_WIDTH, MAX_CONTENT_WIDTH_PX, MS_DAY, VIEW_TYPE_REVIEWER } from "../../platform/core/constants";
 import { log } from "../../platform/core/logger";
 import { queryFirst, setCssProps } from "../../platform/core/ui";
 import { createTitleStripFrame } from "../../platform/core/view-primitives";
@@ -231,13 +231,13 @@ export class SproutReviewerView extends ItemView {
     }
 
     if (this.mode === "deck" || this.mode === "session") {
-      const maxWidth = this.plugin.isWideMode ? "none" : MAX_CONTENT_WIDTH_PX;
+      const maxWidth = this.plugin.isWideMode ? "100%" : MAX_CONTENT_WIDTH_PX;
       setCssProps(root, "--lk-home-max-width", maxWidth);
       if (strip) setCssProps(strip, "--lk-home-max-width", maxWidth);
       setCssProps(root, "--lk-review-max-width", maxWidth);
     } else if (this.plugin.isWideMode) {
-      setCssProps(root, "--lk-review-max-width", "none");
-      if (strip) setCssProps(strip, "--sprout-view-strip-max-width", "none");
+      setCssProps(root, "--lk-review-max-width", "100%");
+      if (strip) setCssProps(strip, "--sprout-view-strip-max-width", "100%");
     } else {
       setCssProps(root, "--lk-review-max-width", MAX_CONTENT_WIDTH_PX);
       if (strip) setCssProps(strip, "--sprout-view-strip-max-width", MAX_CONTENT_WIDTH_PX);

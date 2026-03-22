@@ -447,9 +447,11 @@ export class SproutHeader {
   private switchSettingsTab(tab: "settings" | "guide" | "about") {
     setTimeout(() => {
       const settingsLeaf = this.deps.leaf;
-      const view = settingsLeaf?.view as { navigateToTab?: (tabId: string) => void } | undefined;
+      const view = settingsLeaf?.view as {
+        navigateToTab?: (tabId: string, options?: { reanimateEntrance?: boolean }) => void;
+      } | undefined;
       if (view && typeof view.navigateToTab === "function") {
-        view.navigateToTab(tab);
+        view.navigateToTab(tab, { reanimateEntrance: true });
       }
     }, 100);
   }

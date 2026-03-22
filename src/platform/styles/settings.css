@@ -2552,7 +2552,7 @@ color: var(--color-base-100);
 
 /* Root container for the settings view */
 .sprout .sprout-settings-view-root {
-  gap: 20px;
+  gap: 12px;
   width: 100%;
   margin-top: 0;
   margin-left: auto;

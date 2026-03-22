@@ -302,7 +302,7 @@ export class SproutCardBrowserView extends ItemView {
     const root = this._rootEl;
     const strip = this._titleStripEl;
     if (root) {
-      const maxWidth = this.plugin.isWideMode ? "none" : MAX_CONTENT_WIDTH_PX;
+      const maxWidth = this.plugin.isWideMode ? "100%" : MAX_CONTENT_WIDTH_PX;
       setCssProps(root, "--lk-home-max-width", maxWidth);
       setCssProps(root, "--lk-browser-max-width", maxWidth);
       if (strip) setCssProps(strip, "--lk-home-max-width", maxWidth);

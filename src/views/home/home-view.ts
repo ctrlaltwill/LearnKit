@@ -141,7 +141,8 @@ export class SproutHomeView extends ItemView {
     const titleStrip = this._titleStripEl;
     if (!root && !titleStrip) return;
 
-    const maxWidth = this.plugin.isWideMode ? "none" : MAX_CONTENT_WIDTH_PX;
+    // Keep a valid length/percentage token so CSS min(...) keeps side gutters in wide mode.
+    const maxWidth = this.plugin.isWideMode ? "100%" : MAX_CONTENT_WIDTH_PX;
 
     if (root) setCssProps(root, "--lk-home-max-width", maxWidth);
     if (titleStrip) setCssProps(titleStrip, "--lk-home-max-width", maxWidth);

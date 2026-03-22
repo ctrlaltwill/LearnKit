@@ -8,7 +8,7 @@
   max-width: var(--sprout-exam-generator-max-width, 1280px);
   width: 100%;
   margin: 0 auto;
-  gap: 20px;
+  gap: 12px;
   overflow: visible;
 }
 

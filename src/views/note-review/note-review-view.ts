@@ -838,12 +838,16 @@ export class SproutNoteReviewView extends ItemView {
 
     const strip = this._titleStripEl;
     if (!this._rootEl && !strip) return;
-    const maxWidth = this.plugin.isWideMode ? "none" : MAX_CONTENT_WIDTH_PX;
+    const maxWidth = this.plugin.isWideMode ? "100%" : MAX_CONTENT_WIDTH_PX;
     if (this._rootEl) {
+      setCssProps(this._rootEl, "--lk-home-max-width", maxWidth);
       setCssProps(this._rootEl, "--sprout-home-max-width", maxWidth);
       setCssProps(this._rootEl, "--sprout-note-review-max-width", maxWidth);
     }
-    if (strip) setCssProps(strip, "--sprout-home-max-width", maxWidth);
+    if (strip) {
+      setCssProps(strip, "--lk-home-max-width", maxWidth);
+      setCssProps(strip, "--sprout-home-max-width", maxWidth);
+    }
   }
 
   private _ensureTitleStrip(root: HTMLElement): void {
@@ -1074,19 +1078,6 @@ export class SproutNoteReviewView extends ItemView {
       el.removeAttribute("data-aos-duration");
       el.removeAttribute("data-aos-anchor-placement");
       el.classList.remove("aos-init", "aos-animate", "sprout-aos-fallback");
-    };
-
-    const applyAos = (el: HTMLElement | null, delay: number, animation = "fade-up") => {
-      if (!el) return;
-      if (!animationsEnabled) {
-        clearAos(el);
-        return;
-      }
-      clearAos(el);
-      el.setAttribute("data-aos", animation);
-      el.setAttribute("data-aos-delay", String(delay));
-      el.setAttribute("data-aos-duration", String(AOS_DURATION));
-      el.setAttribute("data-aos-anchor-placement", "top-top");
     };
 
     const sessionHeader = contentShell.querySelector<HTMLElement>("[data-study-session-header]");
