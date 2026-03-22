@@ -150,7 +150,11 @@ export class SproutReviewerView extends ItemView {
   private _header: SproutHeader | null = null;
   private _titleStripEl: HTMLElement | null = null;
   private _pendingSessionBuildOptions: SessionBuildOptions | null = null;
+  private _isCoachSession = false;
+  private _trackCoachProgress = false;
+  private _sessionPracticeMode = false;
   private _titleTimerHostEl: HTMLElement | null = null;
+  private _suppressEntranceAosOnce = false;
 
   // Typed cloze state: stores what the user typed for each cloze index on the current card
   private _typedClozeAnswers = new Map<number, string>();
@@ -255,6 +259,9 @@ export class SproutReviewerView extends ItemView {
   }
 
   private _reviewerTitleText(): string {
+    if (this._returnToCoach || this._isCoachSession) {
+      return "Coach";
+    }
     if (this.mode === "deck") {
       return t(this.plugin.settings?.general?.interfaceLanguage, "ui.reviewer.deck.title", "Deck browser");
     }
@@ -262,6 +269,9 @@ export class SproutReviewerView extends ItemView {
   }
 
   private _reviewerSubtitleText(): string {
+    if (this._returnToCoach || this._isCoachSession) {
+      return "Build and manage focused study plans.";
+    }
     if (this.mode === "deck") {
       return this.tx("ui.reviewer.deck.subtitle.chooseDeck", "Choose a deck to start studying");
     }
@@ -296,11 +306,14 @@ export class SproutReviewerView extends ItemView {
 
     this._titleStripEl?.remove();
     this._titleTimerHostEl = null;
+    const coachShellMode = this._returnToCoach || this._isCoachSession;
 
     const frame = createTitleStripFrame({
       root,
       stripClassName:
-        this.mode === "deck"
+        coachShellMode
+          ? "lk-home-title-strip sprout-coach-title-strip"
+          : this.mode === "deck"
           ? "lk-home-title-strip lk-review-title-strip lk-review-title-strip-deck"
           : "lk-home-title-strip lk-review-title-strip lk-review-title-strip-session",
       rowClassName: "sprout-inline-sentence w-full flex items-center justify-between gap-[10px] lk-review-title-row",
@@ -308,6 +321,11 @@ export class SproutReviewerView extends ItemView {
     const { strip, right, title, subtitle } = frame;
     title.textContent = this._reviewerTitleText();
     subtitle.textContent = this._reviewerSubtitleText();
+
+    if (coachShellMode) {
+      this._titleStripEl = strip;
+      return;
+    }
 
     const timerHost = document.createElement("div");
     timerHost.className = "lk-review-title-timer-host";
@@ -323,6 +341,10 @@ export class SproutReviewerView extends ItemView {
 
   setReturnToCoach(enabled: boolean): void {
     this._returnToCoach = !!enabled;
+  }
+
+  setSuppressEntranceAosOnce(enabled: boolean): void {
+    this._suppressEntranceAosOnce = !!enabled;
   }
 
   private noteCardPresented(card: CardRecord) {
@@ -1154,7 +1176,9 @@ export class SproutReviewerView extends ItemView {
         });
       }
 
-      await this.plugin.recordCoachProgressForScope(this.session.scope, "flashcard", 1);
+      if (this._isCoachSession && this._trackCoachProgress && !this.isPracticeSession()) {
+        await this.plugin.recordCoachProgressForScope(this.session.scope, "flashcard", 1);
+      }
 
       await this.plugin.store.persist();
 
@@ -1412,7 +1436,7 @@ export class SproutReviewerView extends ItemView {
 
       initMcqOrderState(this.session);
       initSkipState(this.session);
-      this.session.practice = false;
+      this.session.practice = this._sessionPracticeMode;
     }
 
     this.showAnswer = false;
@@ -1420,6 +1444,9 @@ export class SproutReviewerView extends ItemView {
   }
 
   openSessionFromScope(scope: Scope, options?: SessionBuildOptions) {
+    this._isCoachSession = Number.isFinite(Number(options?.targetCount));
+    this._trackCoachProgress = this._isCoachSession && options?.trackCoachProgress !== false;
+    this._sessionPracticeMode = options?.practiceMode === true;
     this._pendingSessionBuildOptions = options ?? null;
     this.openSession(scope);
   }
@@ -1427,6 +1454,9 @@ export class SproutReviewerView extends ItemView {
   openSessionFromWidget(payload: WidgetSessionHandoffPayload) {
     if (!payload || !payload.scope) return;
 
+    this._isCoachSession = false;
+    this._trackCoachProgress = false;
+    this._sessionPracticeMode = false;
     this.openSession(payload.scope);
     if (!this.session) return;
 
@@ -1468,12 +1498,15 @@ export class SproutReviewerView extends ItemView {
 
     this.mode = "deck";
     this._firstDeckRender = true;
+    this._isCoachSession = false;
+    this._trackCoachProgress = false;
+    this._sessionPracticeMode = false;
     this.session = null;
     this.showAnswer = false;
 
     if (this._returnToCoach) {
       this._returnToCoach = false;
-      void this.plugin.openCoachTab();
+      void this.plugin.openCoachTab(false, { suppressEntranceAos: true, refresh: false }, this.leaf);
       return;
     }
 
@@ -1536,7 +1569,7 @@ export class SproutReviewerView extends ItemView {
           return;
         }
 
-        if (this.canStartPractice(this.session.scope)) {
+        if (!this._isCoachSession && this.canStartPractice(this.session.scope)) {
           this.startPracticeFromCurrentScope();
           return;
         }
@@ -1890,6 +1923,13 @@ export class SproutReviewerView extends ItemView {
 
   render() {
     const root = this.contentEl;
+    const suppressEntranceAos = this._suppressEntranceAosOnce;
+    this._suppressEntranceAosOnce = false;
+    const coachShellMode = this._returnToCoach || this._isCoachSession;
+    const preservedCoachStrip = coachShellMode
+      ? root.querySelector<HTMLElement>(":scope > .lk-home-title-strip.sprout-coach-title-strip")
+      : null;
+    if (preservedCoachStrip) preservedCoachStrip.remove();
     this._titleStripEl?.remove();
     this._titleStripEl = null;
     this._titleTimerHostEl = null;
@@ -1899,6 +1939,10 @@ export class SproutReviewerView extends ItemView {
     const headerWillPersist = !!studySessionHeader && this.mode === "session" && !!this.session;
     
     root.empty();
+    if (preservedCoachStrip) {
+      root.appendChild(preservedCoachStrip);
+      this._titleStripEl = preservedCoachStrip;
+    }
 
     this._moreOpen = false;
     this._moreWrap = null;
@@ -1910,7 +1954,9 @@ export class SproutReviewerView extends ItemView {
     root.classList.add("flex", "flex-col");
     root.setAttribute("data-lk-review-mode", this.mode);
     this.containerEl.addClass("sprout");
-    this._ensureTitleStrip(root);
+    if (!preservedCoachStrip) {
+      this._ensureTitleStrip(root);
+    }
 
     let contentHost: HTMLElement = root;
     if (this.mode === "deck" || this.mode === "session") {
@@ -1959,14 +2005,17 @@ export class SproutReviewerView extends ItemView {
         applyAOS: false,
         expanded: this.expanded,
         setExpanded: (s) => (this.expanded = s),
-        openSession: (scope) => this.openSession(scope),
+        openSession: (scope) => {
+          this._isCoachSession = false;
+          this.openSession(scope);
+        },
         resyncActiveFile: () => this.resyncActiveFile(),
         rerender: () => this.render(),
       });
 
       if (this._firstDeckRender) {
         const animationsEnabled = this.plugin.settings?.general?.enableAnimations ?? true;
-        if (animationsEnabled) {
+        if (animationsEnabled && !suppressEntranceAos) {
           const titleStrip = this._titleStripEl as HTMLElement | null;
           if (titleStrip) {
             titleStrip.setAttribute("data-aos", "fade-up");
@@ -1997,7 +2046,7 @@ export class SproutReviewerView extends ItemView {
     const ttsEnabledForCard = this._canUseTtsForCard(activeCard);
 
     const practiceMode = this.isPracticeSession();
-    const canStartPractice = !practiceMode && !activeCard && this.canStartPractice(this.session.scope);
+    const canStartPractice = !this._isCoachSession && !practiceMode && !activeCard && this.canStartPractice(this.session.scope);
 
     renderSessionMode({
       container: sessionColumn ?? contentHost,
@@ -2055,6 +2104,12 @@ export class SproutReviewerView extends ItemView {
       practiceMode,
       canStartPractice,
       startPractice: () => this.startPracticeFromCurrentScope(),
+      coachSessionMode: this._isCoachSession,
+      coachEmptyTitle: this.tx(
+        "ui.reviewer.session.coachDoneTitle",
+        "All due flashcards for your study plan have been reviewed for today.",
+      ),
+      coachBackLabel: this.tx("ui.reviewer.session.backToCoach", "Back to Coach"),
 
       showInfo,
       clearTimer: () => this.clearTimer(),
@@ -2120,7 +2175,7 @@ export class SproutReviewerView extends ItemView {
     const titleTimerHost = this._titleTimerHostEl as HTMLElement | null;
     if (titleTimerHost) {
       while (titleTimerHost.firstChild) titleTimerHost.removeChild(titleTimerHost.firstChild);
-      if (renderedSessionTimerRow) {
+      if (renderedSessionTimerRow && !coachShellMode) {
         titleTimerHost.appendChild(renderedSessionTimerRow);
       }
     }
@@ -2141,7 +2196,7 @@ export class SproutReviewerView extends ItemView {
     if (this._firstSessionRender) {
       const animationsEnabled = this.plugin.settings?.general?.enableAnimations ?? true;
       // Initialize AOS animations for reviewer cards
-      if (animationsEnabled) {
+      if (animationsEnabled && !coachShellMode && !suppressEntranceAos) {
         const titleStrip = this._titleStripEl as HTMLElement | null;
         if (titleStrip) {
           titleStrip.setAttribute("data-aos", "fade-up");

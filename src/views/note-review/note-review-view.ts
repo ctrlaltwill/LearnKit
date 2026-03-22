@@ -36,8 +36,13 @@ export class SproutNoteReviewView extends ItemView {
   private _practiceQueueCompleted = false;
   private _filteredNotes: TFile[] = [];
   private _coachScope: Scope | null = null;
+  private _coachTargetCount: number | null = null;
+  private _coachIncludeNotDue = false;
+  private _coachNoScheduling = false;
+  private _coachTrackProgress = true;
   private _returnToCoach = false;
   private _ignoreDailyReviewLimit = false;
+  private _suppressEntranceAosOnce = false;
 
   constructor(leaf: WorkspaceLeaf, plugin: SproutPlugin) {
     super(leaf);
@@ -99,6 +104,10 @@ export class SproutNoteReviewView extends ItemView {
 
   setCoachScope(scope: Scope | null): void {
     this._coachScope = scope;
+    if (!scope) {
+      this._coachNoScheduling = false;
+      this._coachTrackProgress = true;
+    }
     void this._refreshQueue(true).then(() => this.render());
   }
 
@@ -106,13 +115,31 @@ export class SproutNoteReviewView extends ItemView {
     this._returnToCoach = !!enabled;
   }
 
+  setSuppressEntranceAosOnce(enabled: boolean): void {
+    this._suppressEntranceAosOnce = !!enabled;
+  }
+
   setIgnoreDailyReviewLimit(enabled: boolean): void {
     this._ignoreDailyReviewLimit = !!enabled;
     void this._refreshQueue(true).then(() => this.render());
   }
 
-  startCoachDueSession(scope: Scope): void {
+  startCoachDueSession(
+    scope: Scope,
+    options?: {
+      targetCount?: number;
+      includeNotDue?: boolean;
+      noScheduling?: boolean;
+      trackCoachProgress?: boolean;
+    },
+  ): void {
     this._coachScope = scope;
+    this._coachTargetCount = Number.isFinite(Number(options?.targetCount))
+      ? Math.max(0, Math.floor(Number(options?.targetCount)))
+      : null;
+    this._coachIncludeNotDue = options?.includeNotDue === true;
+    this._coachNoScheduling = options?.noScheduling === true;
+    this._coachTrackProgress = options?.trackCoachProgress !== false;
     this._returnToCoach = true;
     this._ignoreDailyReviewLimit = true;
     this._practiceMode = false;
@@ -133,13 +160,21 @@ export class SproutNoteReviewView extends ItemView {
       at: Date.now(),
       noteId: file.path,
       sourceNotePath: file.path,
-      mode: this._practiceMode ? "practice" : "scheduled",
+      mode: this._practiceMode || this._coachNoScheduling ? "practice" : "scheduled",
       action,
       algorithm: this.plugin.settings.noteReview?.algorithm === "lkrs" ? "lkrs" : "fsrs",
     });
-    if (!this._practiceMode && (action === "pass" || action === "fail" || action === "read") && this._coachScope) {
+    if ((action === "pass" || action === "fail" || action === "read") && this._coachScope && this._coachTrackProgress && !this._coachNoScheduling) {
       await this.plugin.recordCoachProgressForScope(this._coachScope, "note", 1);
     }
+  }
+
+  private _advanceNoSchedulingQueue(): void {
+    this._queueSessionDone = Math.min(this._queueSessionDone + 1, Math.max(this._queueSessionTotal, 1));
+    this._queueIndex += 1;
+    if (this._queueIndex > this._queue.length) this._queueIndex = this._queue.length;
+    this._dockMoreOpen = false;
+    this.render();
   }
 
   private _startOfTomorrowUtc(now: number): number {
@@ -369,6 +404,26 @@ export class SproutNoteReviewView extends ItemView {
     const byPath = new Map(filtered.map((f) => [f.path, f]));
     let queue = dueIds.map((id) => byPath.get(id)).filter((f): f is TFile => !!f);
 
+    if (this._coachScope && this._coachTargetCount != null) {
+      const targetCount = this._coachTargetCount;
+
+      if (targetCount <= 0) {
+        queue = [];
+      } else {
+        if (this._coachIncludeNotDue && queue.length < targetCount) {
+          const queuedPaths = new Set(queue.map((f) => f.path));
+          const remaining = filtered.filter((f) => !queuedPaths.has(f.path));
+          remaining.sort((a, b) => {
+            const aDue = this._notesDb?.getNoteState(a.path)?.next_review_time ?? Number.MAX_SAFE_INTEGER;
+            const bDue = this._notesDb?.getNoteState(b.path)?.next_review_time ?? Number.MAX_SAFE_INTEGER;
+            return Number(aDue) - Number(bDue);
+          });
+          queue = [...queue, ...remaining.slice(0, Math.max(0, targetCount - queue.length))];
+        }
+        queue = queue.slice(0, targetCount);
+      }
+    }
+
     // When due notes are exhausted, keep the queue empty so the session shows
     // the "No notes are due" screen and offers an explicit practice session.
 
@@ -431,39 +486,49 @@ export class SproutNoteReviewView extends ItemView {
     const card = host.createDiv({ cls: "sprout-note-review-empty card" });
     this._renderNoteReviewSessionHeader(card, null);
 
+    const isCoachSession = !!this._coachScope;
+
     card.createDiv({
       cls: "sprout-note-review-empty-title",
-      text: isPracticeComplete
+      text: isCoachSession
+        ? t(lang, "ui.noteReview.session.coachDoneTitle", "All due notes for your study plan have been reviewed for today.")
+        : isPracticeComplete
         ? t(lang, "ui.reviewer.session.practiceComplete", "Practice complete")
         : t(lang, "ui.view.noteReview.empty.noNotesDue", "No notes are due"),
     });
 
     card.createEl("p", {
       cls: "sprout-note-review-empty-body",
-      text: isPracticeComplete
+      text: isCoachSession
+        ? t(lang, "ui.noteReview.session.coachDoneBody", "All due notes for your study plan have been reviewed for today.")
+        : isPracticeComplete
         ? t(lang, "ui.reviewer.session.practiceSessionComplete", "Practice session complete")
         : t(lang, "ui.view.noteReview.empty.askStartPractice", "Would you like to start a practice session?"),
     });
 
-    card.createEl("p", {
-      cls: "sprout-note-review-empty-body sprout-settings-text-muted",
-      text: isPracticeComplete
-        ? t(
-            lang,
-            "ui.view.noteReview.empty.practiceCompleteDetail",
-            "This was a practice session. Scheduling was not changed.",
-          )
-        : t(
-            lang,
-            "ui.view.noteReview.empty.practicePrompt",
-            "Practice sessions review randomized notes from the active filter and do not affect scheduling.",
-          ),
-    });
+    if (!isCoachSession) {
+      card.createEl("p", {
+        cls: "sprout-note-review-empty-body sprout-settings-text-muted",
+        text: isPracticeComplete
+          ? t(
+              lang,
+              "ui.view.noteReview.empty.practiceCompleteDetail",
+              "This was a practice session. Scheduling was not changed.",
+            )
+          : t(
+              lang,
+              "ui.view.noteReview.empty.practicePrompt",
+              "Practice sessions review randomized notes from the active filter and do not affect scheduling.",
+            ),
+      });
+    }
 
     const actions = card.createDiv({ cls: "sprout-note-review-empty-actions" });
     const homeBtn = actions.createEl("button", {
       cls: "h-9 flex items-center gap-2 equal-height-btn sprout-btn-control",
-      text: t(lang, "ui.reviewer.session.returnToDecks", "Return to Home"),
+      text: isCoachSession
+        ? t(lang, "ui.reviewer.session.backToCoach", "Back to Coach Plan")
+        : t(lang, "ui.reviewer.session.returnToDecks", "Return to Home"),
     });
     homeBtn.setAttr("type", "button");
     homeBtn.setAttr("aria-label", t(lang, "ui.reviewer.session.returnToDecks", "Return to Decks"));
@@ -472,7 +537,7 @@ export class SproutNoteReviewView extends ItemView {
       void this._quitToHome();
     });
 
-    if (!this._practiceMode && this._filteredNotes.length > 0) {
+    if (!isCoachSession && !this._practiceMode && this._filteredNotes.length > 0) {
       const practiceBtn = actions.createEl("button", {
         cls: "bc btn-outline sprout-btn-toolbar sprout-btn-accent h-9 w-full md:w-auto inline-flex items-center gap-2 equal-height-btn",
         text: t(lang, "ui.reviewer.session.startPractice", "Start Practice"),
@@ -490,9 +555,9 @@ export class SproutNoteReviewView extends ItemView {
     const file = this._currentNote();
     if (!file) return;
 
-    if (this._practiceMode) {
+    if (this._practiceMode || this._coachNoScheduling) {
       await this._trackNoteReviewAction(file, "read");
-      this._advancePracticeQueue();
+      this._advanceNoSchedulingQueue();
       return;
     }
 
@@ -555,9 +620,9 @@ export class SproutNoteReviewView extends ItemView {
     const file = this._currentNote();
     if (!file) return;
 
-    if (this._practiceMode) {
+    if (this._practiceMode || this._coachNoScheduling) {
       await this._trackNoteReviewAction(file, outcome);
-      this._advancePracticeQueue();
+      this._advanceNoSchedulingQueue();
       return;
     }
 
@@ -659,7 +724,7 @@ export class SproutNoteReviewView extends ItemView {
     this._practiceQueueCompleted = false;
     if (this._returnToCoach) {
       this._returnToCoach = false;
-      await this.plugin.openCoachTab();
+      await this.plugin.openCoachTab(false, { suppressEntranceAos: true, refresh: false }, this.leaf);
       return;
     }
     await this.plugin.openHomeTab();
@@ -689,7 +754,7 @@ export class SproutNoteReviewView extends ItemView {
       }
 
       if (key === "m") {
-        if (this._practiceMode) return;
+        if (this._practiceMode || this._coachNoScheduling) return;
         evt.preventDefault();
         this._dockMoreOpen = !this._dockMoreOpen;
         this.render();
@@ -704,7 +769,7 @@ export class SproutNoteReviewView extends ItemView {
       }
 
       if (!hasCurrent) {
-        if (key === "enter" && !this._practiceMode && this._filteredNotes.length > 0) {
+        if (key === "enter" && !this._coachScope && !this._practiceMode && this._filteredNotes.length > 0) {
           evt.preventDefault();
           this._startPracticeSession();
         }
@@ -719,14 +784,14 @@ export class SproutNoteReviewView extends ItemView {
       }
 
       if (key === "b") {
-        if (this._practiceMode) return;
+        if (this._practiceMode || this._coachNoScheduling) return;
         evt.preventDefault();
         void this._buryCurrentNote().then(() => new Notice("Sprout: note buried until tomorrow."));
         return;
       }
 
       if (key === "s") {
-        if (this._practiceMode) return;
+        if (this._practiceMode || this._coachNoScheduling) return;
         evt.preventDefault();
         void this._suspendCurrentNote().then(() => new Notice("Sprout: note suspended."));
         return;
@@ -788,8 +853,12 @@ export class SproutNoteReviewView extends ItemView {
     this._titleStripEl?.remove();
     this._titleTimerHostEl = null;
 
+    const coachShellMode = !!this._coachScope || this._returnToCoach;
+
     const strip = document.createElement("div");
-    strip.className = "lk-home-title-strip sprout-note-review-title-strip";
+    strip.className = coachShellMode
+      ? "lk-home-title-strip sprout-coach-title-strip"
+      : "lk-home-title-strip sprout-note-review-title-strip";
 
     const row = document.createElement("div");
     row.className = "sprout-inline-sentence w-full flex items-center justify-between gap-[10px] sprout-note-review-title-row";
@@ -799,13 +868,17 @@ export class SproutNoteReviewView extends ItemView {
 
     const title = document.createElement("div");
     title.className = SPROUT_TITLE_STRIP_LABEL_CLASS;
-    title.textContent = t(this.plugin.settings?.general?.interfaceLanguage, "ui.view.noteReview.title", "Notes");
+    title.textContent = coachShellMode
+      ? "Coach"
+      : t(this.plugin.settings?.general?.interfaceLanguage, "ui.view.noteReview.title", "Notes");
 
     const total = Math.max(this._queueSessionTotal, this._queue.length);
     const remaining = Math.max(0, total - this._queueSessionDone);
     const subtitle = document.createElement("div");
     subtitle.className = "text-[0.95rem] font-normal leading-[1.3] text-muted-foreground";
-    if (this._practiceMode) {
+    if (coachShellMode) {
+      subtitle.textContent = "Build and manage focused study plans.";
+    } else if (this._practiceMode) {
       subtitle.textContent = t(
         this.plugin.settings?.general?.interfaceLanguage,
         "ui.noteReview.title.practiceRemaining",
@@ -877,9 +950,8 @@ export class SproutNoteReviewView extends ItemView {
   }
 
   private async _renderCurrentNoteContent(host: HTMLElement, note: TFile, token: number): Promise<void> {
-    host.empty();
-
-    const article = host.createDiv({ cls: "sprout-note-review-article card" });
+    const article = document.createElement("div");
+    article.className = "sprout-note-review-article card";
     this._renderNoteReviewSessionHeader(article, note);
 
     const body = article.createDiv({ cls: "sprout-note-review-note-body markdown-rendered" });
@@ -910,10 +982,26 @@ export class SproutNoteReviewView extends ItemView {
         text: "Could not load this note.",
       });
     }
+
+    if (token !== this._renderToken) return;
+
+    host.replaceChildren(article);
+    article.classList.add("sprout-note-review-article-enter");
+    requestAnimationFrame(() => {
+      if (!article.isConnected) return;
+      article.classList.add("is-visible");
+    });
   }
 
   render() {
     const root = this.contentEl;
+    const suppressEntranceAos = this._suppressEntranceAosOnce;
+    this._suppressEntranceAosOnce = false;
+    const coachShellMode = !!this._coachScope || this._returnToCoach;
+    const preservedCoachStrip = coachShellMode
+      ? root.querySelector<HTMLElement>(":scope > .lk-home-title-strip.sprout-coach-title-strip")
+      : null;
+    if (preservedCoachStrip) preservedCoachStrip.remove();
     this._titleStripEl?.remove();
     this._titleStripEl = null;
     this._titleTimerHostEl = null;
@@ -924,6 +1012,10 @@ export class SproutNoteReviewView extends ItemView {
     }
 
     root.empty();
+    if (preservedCoachStrip) {
+      root.appendChild(preservedCoachStrip);
+      this._titleStripEl = preservedCoachStrip;
+    }
 
     if (existingHeader) {
       root.appendChild(existingHeader);
@@ -933,7 +1025,9 @@ export class SproutNoteReviewView extends ItemView {
     root.classList.add("bc", "sprout-view-content", "sprout-note-review-root", "flex", "flex-col", "min-h-0");
     this.containerEl.addClass("sprout");
     this.setTitle?.(this.getDisplayText());
-    this._ensureTitleStrip(root);
+    if (!preservedCoachStrip) {
+      this._ensureTitleStrip(root);
+    }
 
     const contentShell = root.createDiv({
       cls: `${SPROUT_HOME_CONTENT_SHELL_CLASS} sprout-note-review-content-shell sprout-session-column flex flex-col min-h-0`,
@@ -958,7 +1052,7 @@ export class SproutNoteReviewView extends ItemView {
       (this.plugin.settings?.general?.enableAnimations ?? true) &&
       (this.plugin.settings?.noteReview?.enableSessionAnimations ?? true);
 
-    if (animationsEnabled && !this._hasInitAos) {
+    if (animationsEnabled && !this._hasInitAos && !suppressEntranceAos) {
       try {
         initAOS({ duration: AOS_DURATION, easing: "ease-out", once: true, offset: 50 });
       } catch {
@@ -1002,7 +1096,7 @@ export class SproutNoteReviewView extends ItemView {
     const titleTimerHost = this._titleTimerHostEl as HTMLElement | null;
     if (titleTimerHost) {
       while (titleTimerHost.firstChild) titleTimerHost.removeChild(titleTimerHost.firstChild);
-      if (sessionTimerRow) {
+      if (sessionTimerRow && !coachShellMode) {
         titleTimerHost.appendChild(sessionTimerRow);
       }
     }
@@ -1010,7 +1104,7 @@ export class SproutNoteReviewView extends ItemView {
       sessionHeader.classList.add("sprout-note-review-session-header-hidden");
     }
     clearAos(titleTimerHost);
-    if (animationsEnabled && !this._didEntranceAos) {
+    if (animationsEnabled && !this._didEntranceAos && !coachShellMode && !suppressEntranceAos) {
       applyAos(stripEl, 0, "fade-up");
       applyAos(contentShell, 100, "fade-up");
       const maxDelay = cascadeAOSOnLoad(root, { stepMs: 0, baseDelayMs: 0, durationMs: AOS_DURATION, overwriteDelays: false });
@@ -1032,23 +1126,46 @@ export class SproutNoteReviewView extends ItemView {
     }
 
     const panel = contentShell.createDiv({ cls: "sprout-note-review-panel" });
+    const coachLabel = "Coach";
+    const backToCoachLabel = `Back to ${coachLabel}`;
+    const quitToCoachLabel = `Quit to ${coachLabel}`;
 
     const quitBtn = panel.createEl("button");
-    quitBtn.classList.add(
-      "sprout-btn-toolbar",
-      "h-9",
-      "flex",
-      "items-center",
-      "gap-2",
-      "equal-height-btn",
-      "sprout-btn-exit-sm",
-      "sprout-btn-top-right",
-    );
+    if (coachShellMode) {
+      quitBtn.classList.add(
+        "bc",
+        "sprout-btn-toolbar",
+        "sprout-btn-filter",
+        "h-7",
+        "px-3",
+        "text-sm",
+        "inline-flex",
+        "items-center",
+        "gap-2",
+        "sprout-scope-clear-btn",
+        "sprout-btn-top-right",
+        "sprout-note-review-quit-coach-btn",
+      );
+    } else {
+      quitBtn.classList.add(
+        "sprout-btn-toolbar",
+        "h-9",
+        "flex",
+        "items-center",
+        "gap-2",
+        "equal-height-btn",
+        "sprout-btn-exit-sm",
+        "sprout-btn-top-right",
+      );
+    }
     quitBtn.setAttr("type", "button");
-    quitBtn.setAttr("aria-label", "Quit study session");
+    quitBtn.setAttr("aria-label", coachShellMode ? backToCoachLabel : "Quit study session");
     quitBtn.setAttr("data-tooltip-position", "top");
-    const quitIconWrap = quitBtn.createSpan({ cls: "inline-flex items-center justify-center sprout-btn-icon" });
+    const quitIconWrap = quitBtn.createSpan({ cls: coachShellMode ? "bc inline-flex items-center justify-center" : "inline-flex items-center justify-center sprout-btn-icon" });
     setIcon(quitIconWrap, "x");
+    if (coachShellMode) {
+      quitBtn.createSpan({ cls: "bc", attr: { "data-sprout-label": "true" }, text: backToCoachLabel });
+    }
     quitBtn.addEventListener("click", () => {
       void this._quitToHome();
     });
@@ -1061,6 +1178,11 @@ export class SproutNoteReviewView extends ItemView {
     const renderToken = this._renderToken;
 
     if (current) {
+      const loadingArticle = viewport.createDiv({ cls: "sprout-note-review-article card sprout-note-review-article-loading" });
+      loadingArticle.createDiv({
+        cls: "sprout-note-review-note-body markdown-rendered sprout-note-review-loading-copy",
+        text: "Loading note...",
+      });
       void this._renderCurrentNoteContent(viewport, current, renderToken).then(() => {
         this._syncOverflowLayout(panel);
       });
@@ -1137,7 +1259,7 @@ export class SproutNoteReviewView extends ItemView {
     const right = controls.createDiv({ cls: "sprout-note-review-dock-right" });
     const moreWrap = right.createDiv({ cls: "sprout-note-review-more" });
     const moreBtn = moreWrap.createEl("button", { text: "More" });
-    moreBtn.disabled = !current || this._practiceMode;
+    moreBtn.disabled = !current || this._practiceMode || this._coachNoScheduling;
     moreBtn.classList.add("sprout-note-review-more-trigger", "bc", "sprout-btn-toolbar");
     moreBtn.setAttr("aria-label", "More actions");
     const moreKbd = moreBtn.createEl("kbd", { text: "M" });
@@ -1148,7 +1270,7 @@ export class SproutNoteReviewView extends ItemView {
       this.render();
     });
 
-    if (this._dockMoreOpen && current && !this._practiceMode) {
+    if (this._dockMoreOpen && current && !this._practiceMode && !this._coachNoScheduling) {
       const popover = moreWrap.createDiv({
         cls: "bc sprout rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 pointer-events-auto sprout-note-review-more-popover",
       });
@@ -1192,7 +1314,7 @@ export class SproutNoteReviewView extends ItemView {
       undoDisabled.createSpan({ cls: "bc", text: "Undo last grade" });
       undoDisabled.createEl("kbd", { cls: "bc kbd ml-auto text-xs text-muted-foreground tracking-widest", text: "U" });
 
-      addItem("Exit to Decks", "Q", () => {
+      addItem(coachShellMode ? quitToCoachLabel : "Exit to Decks", "Q", () => {
         void this._quitToHome();
       });
     }

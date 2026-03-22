@@ -72,6 +72,9 @@ type Args = {
   practiceMode?: boolean;
   canStartPractice?: boolean;
   startPractice?: () => void;
+  coachSessionMode?: boolean;
+  coachEmptyTitle?: string;
+  coachBackLabel?: string;
 
   // info / countdown
   showInfo: boolean;
@@ -1028,17 +1031,30 @@ export function renderSessionMode(args: Args) {
     args.container.dataset.deckBrowserAosOnce = "0";
   }
 
-  // ===== Quit button: Lucide X icon in top right =====
+  // ===== Top-right button: quit for regular sessions, back for coach-scoped sessions =====
   const quitBtn = document.createElement("button");
   quitBtn.type = "button";
-  quitBtn.className =
-    "sprout-btn-toolbar h-9 flex items-center gap-2 equal-height-btn sprout-btn-exit-sm sprout-btn-top-right";
-  quitBtn.setAttribute("aria-label", tx("ui.reviewer.session.quit", "Quit study session"));
+  const coachBackLabel = (args.coachBackLabel || "Back to Coach").trim() || "Back to Coach";
+  if (args.coachSessionMode) {
+    quitBtn.className =
+      "bc sprout-btn-toolbar sprout-btn-filter h-7 px-3 text-sm inline-flex items-center gap-2 sprout-scope-clear-btn sprout-btn-top-right sprout-reviewer-coach-back-btn";
+    quitBtn.setAttribute("aria-label", coachBackLabel);
+  } else {
+    quitBtn.className =
+      "sprout-btn-toolbar h-9 flex items-center gap-2 equal-height-btn sprout-btn-exit-sm sprout-btn-top-right";
+    quitBtn.setAttribute("aria-label", tx("ui.reviewer.session.quit", "Quit study session"));
+  }
   quitBtn.setAttribute("data-tooltip-position", "top");
   const quitIconWrap = document.createElement("span");
   quitIconWrap.className = "inline-flex items-center justify-center sprout-btn-icon";
   quitBtn.appendChild(quitIconWrap);
   setIcon(quitIconWrap, "x");
+  if (args.coachSessionMode) {
+    const backLabel = document.createElement("span");
+    backLabel.setAttribute("data-sprout-label", "true");
+    backLabel.textContent = coachBackLabel;
+    quitBtn.appendChild(backLabel);
+  }
   quitBtn.addEventListener("click", () => args.backToDecks());
 
   // Create section once for both empty and card-present states

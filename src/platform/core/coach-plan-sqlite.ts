@@ -5,10 +5,11 @@ import { getSchedulingDirPath, copyDbToVaultSyncFolder, reconcileFromVaultSync }
 
 const COACH_DB = "coach.db";
 
-export type CoachScopeType = "vault" | "folder" | "note" | "group";
+export type CoachScopeType = "vault" | "folder" | "note" | "group" | "tag" | "property";
 export type CoachIntensity = "relaxed" | "balanced" | "aggressive";
 
 export type CoachPlanRow = {
+  plan_id: string;
   scope_type: CoachScopeType;
   scope_key: string;
   scope_name: string;
@@ -92,32 +93,87 @@ function runSchema(db: Database): void {
 
   db.run(`
     CREATE TABLE IF NOT EXISTS coach_plan (
+      plan_id TEXT PRIMARY KEY,
       scope_type TEXT NOT NULL,
       scope_key TEXT NOT NULL,
       scope_name TEXT NOT NULL,
       plan_name TEXT NOT NULL DEFAULT '',
+      scope_data TEXT NOT NULL DEFAULT '',
       exam_date_utc INTEGER NOT NULL,
       intensity TEXT NOT NULL DEFAULT 'balanced',
       daily_flashcard_target INTEGER NOT NULL DEFAULT 0,
       daily_note_target INTEGER NOT NULL DEFAULT 0,
       status TEXT NOT NULL DEFAULT 'on-track',
-      updated_at INTEGER NOT NULL,
-      PRIMARY KEY (scope_type, scope_key)
+      updated_at INTEGER NOT NULL
     );
   `);
 
-  // Migration: add plan_name if missing (existing databases)
+  // Legacy schema compatibility: older installs may not have these columns.
   try {
     db.run("ALTER TABLE coach_plan ADD COLUMN plan_name TEXT NOT NULL DEFAULT ''");
   } catch {
-    // Column already exists
+    // Column already exists or table already migrated.
   }
 
-  // Migration: add scope_data if missing (existing databases)
   try {
     db.run("ALTER TABLE coach_plan ADD COLUMN scope_data TEXT NOT NULL DEFAULT ''");
   } catch {
-    // Column already exists
+    // Column already exists or table already migrated.
+  }
+
+  const colsRes = db.exec("PRAGMA table_info(coach_plan)");
+  const cols = colsRes[0]?.values?.map((row) => asText(row?.[1])) ?? [];
+  const hasPlanId = cols.includes("plan_id");
+
+  if (!hasPlanId && cols.length > 0) {
+    db.run("ALTER TABLE coach_plan RENAME TO coach_plan_legacy");
+    db.run(`
+      CREATE TABLE coach_plan (
+        plan_id TEXT PRIMARY KEY,
+        scope_type TEXT NOT NULL,
+        scope_key TEXT NOT NULL,
+        scope_name TEXT NOT NULL,
+        plan_name TEXT NOT NULL DEFAULT '',
+        scope_data TEXT NOT NULL DEFAULT '',
+        exam_date_utc INTEGER NOT NULL,
+        intensity TEXT NOT NULL DEFAULT 'balanced',
+        daily_flashcard_target INTEGER NOT NULL DEFAULT 0,
+        daily_note_target INTEGER NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'on-track',
+        updated_at INTEGER NOT NULL
+      );
+    `);
+    db.run(`
+      INSERT INTO coach_plan(
+        plan_id,
+        scope_type,
+        scope_key,
+        scope_name,
+        plan_name,
+        scope_data,
+        exam_date_utc,
+        intensity,
+        daily_flashcard_target,
+        daily_note_target,
+        status,
+        updated_at
+      )
+      SELECT
+        lower(hex(randomblob(16))),
+        scope_type,
+        scope_key,
+        scope_name,
+        COALESCE(plan_name, ''),
+        COALESCE(scope_data, ''),
+        exam_date_utc,
+        intensity,
+        daily_flashcard_target,
+        daily_note_target,
+        status,
+        updated_at
+      FROM coach_plan_legacy;
+    `);
+    db.run("DROP TABLE coach_plan_legacy");
   }
 
   db.run(`
@@ -232,7 +288,7 @@ export class CoachPlanSqlite {
     if (!this.db) return [];
     const out: CoachPlanRow[] = [];
     const stmt = this.db.prepare(
-      `SELECT scope_type, scope_key, scope_name, plan_name, scope_data, exam_date_utc, intensity,
+      `SELECT plan_id, scope_type, scope_key, scope_name, plan_name, scope_data, exam_date_utc, intensity,
               daily_flashcard_target, daily_note_target, status, updated_at
          FROM coach_plan
         ORDER BY exam_date_utc ASC, scope_name ASC`,
@@ -242,6 +298,7 @@ export class CoachPlanSqlite {
       while (stmt.step()) {
         const row = stmt.getAsObject() as Record<string, unknown>;
         out.push({
+          plan_id: asText(row.plan_id),
           scope_type: asText(row.scope_type, "vault") as CoachScopeType,
           scope_key: asText(row.scope_key),
           scope_name: asText(row.scope_name),
@@ -266,10 +323,10 @@ export class CoachPlanSqlite {
     if (!this.db) return;
     this.db.run(
       `INSERT INTO coach_plan(
-         scope_type, scope_key, scope_name, plan_name, scope_data, exam_date_utc, intensity,
+         plan_id, scope_type, scope_key, scope_name, plan_name, scope_data, exam_date_utc, intensity,
          daily_flashcard_target, daily_note_target, status, updated_at
-       ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-       ON CONFLICT(scope_type, scope_key) DO UPDATE SET
+       ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(plan_id) DO UPDATE SET
          scope_name=excluded.scope_name,
          plan_name=excluded.plan_name,
          scope_data=excluded.scope_data,
@@ -280,6 +337,7 @@ export class CoachPlanSqlite {
          status=excluded.status,
          updated_at=excluded.updated_at`,
       [
+        row.plan_id,
         row.scope_type,
         row.scope_key,
         row.scope_name,
@@ -295,9 +353,9 @@ export class CoachPlanSqlite {
     );
   }
 
-  deletePlan(scopeType: CoachScopeType, scopeKey: string): void {
+  deletePlan(planId: string): void {
     if (!this.db) return;
-    this.db.run("DELETE FROM coach_plan WHERE scope_type = ? AND scope_key = ?", [scopeType, scopeKey]);
+    this.db.run("DELETE FROM coach_plan WHERE plan_id = ?", [planId]);
   }
 
   incrementProgress(dayUtc: number, scopeType: CoachScopeType, scopeKey: string, kind: CoachProgressRow["kind"], by = 1): void {
@@ -352,6 +410,74 @@ export class CoachPlanSqlite {
       if (stmt.step()) {
         const row = stmt.getAsObject() as Record<string, unknown>;
         return Number(row.cnt || 0);
+      }
+    } finally {
+      stmt.free();
+    }
+    return 0;
+  }
+
+  currentStreakDays(scopeType: CoachScopeType, scopeKey: string, todayUtc?: number): number {
+    if (!this.db) return 0;
+
+    const days: number[] = [];
+    const stmt = this.db.prepare(
+      `SELECT DISTINCT day_utc
+         FROM coach_progress
+        WHERE scope_type = ? AND scope_key = ? AND count > 0
+        ORDER BY day_utc DESC`,
+    );
+
+    try {
+      stmt.bind([scopeType, scopeKey]);
+      while (stmt.step()) {
+        const row = stmt.getAsObject() as Record<string, unknown>;
+        const day = Number(row.day_utc || 0);
+        if (Number.isFinite(day) && day > 0) days.push(day);
+      }
+    } finally {
+      stmt.free();
+    }
+
+    if (!days.length) return 0;
+
+    const MS_DAY = 24 * 60 * 60 * 1000;
+    const anchor = Number.isFinite(todayUtc) ? Number(todayUtc) : (() => {
+      const now = new Date();
+      now.setUTCHours(0, 0, 0, 0);
+      return now.getTime();
+    })();
+
+    const daySet = new Set(days);
+    let cursor = anchor;
+    let streak = 0;
+
+    if (!daySet.has(cursor)) {
+      const yesterday = cursor - MS_DAY;
+      if (!daySet.has(yesterday)) return 0;
+      cursor = yesterday;
+    }
+
+    while (daySet.has(cursor)) {
+      streak += 1;
+      cursor -= MS_DAY;
+    }
+
+    return streak;
+  }
+
+  latestProgressDayUtc(scopeType: CoachScopeType, scopeKey: string): number {
+    if (!this.db) return 0;
+    const stmt = this.db.prepare(
+      `SELECT MAX(day_utc) AS day_utc
+         FROM coach_progress
+        WHERE scope_type = ? AND scope_key = ? AND count > 0`,
+    );
+    try {
+      stmt.bind([scopeType, scopeKey]);
+      if (stmt.step()) {
+        const row = stmt.getAsObject() as Record<string, unknown>;
+        return Number(row.day_utc || 0);
       }
     } finally {
       stmt.free();

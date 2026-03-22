@@ -69,6 +69,7 @@ export class SproutExamGeneratorView extends ItemView {
   private _shellEl: HTMLElement | null = null;
   private _aosInitialized = false;
   private _titleStripAnimatedOnce = false;
+  private _suppressEntranceAosOnce = false;
   private _testsDb: ExamTestsSqlite | null = null;
   private _coachDb: CoachPlanSqlite | null = null;
   private _savedTests: SavedExamTestSummary[] = [];
@@ -89,6 +90,7 @@ export class SproutExamGeneratorView extends ItemView {
   private _selectedProperties = new Set<string>();
   private _noteSearchQuery = "";
   private _folderPreviewExpanded = false;
+  private _coachScopePrefilled = false;
 
   private _config: ExamGeneratorConfig = {
     difficulty: "medium",
@@ -150,9 +152,8 @@ export class SproutExamGeneratorView extends ItemView {
     this.contentEl.empty();
     this.containerEl.addClass("sprout");
 
-    this._rootEl = this.contentEl.createDiv({
-      cls: "bc sprout-view-content sprout-exam-generator-root flex flex-col min-h-0",
-    });
+    this._rootEl = this.contentEl;
+    this._rootEl.classList.add("bc", "sprout-view-content", "sprout-exam-generator-root", "flex", "flex-col", "min-h-0");
 
     this._header = createViewHeader({
       view: this,
@@ -199,9 +200,21 @@ export class SproutExamGeneratorView extends ItemView {
     this._render();
   }
 
+  setSuppressEntranceAosOnce(enabled: boolean): void {
+    this._suppressEntranceAosOnce = !!enabled;
+  }
+
   setCoachScope(scope: Scope | null): void {
     if (!scope) return;
-    this._applyCoachScope(scope);
+    this._applyCoachScopes([scope]);
+  }
+
+  setCoachScopes(scopes: Scope[] | null): void {
+    const normalized = Array.isArray(scopes)
+      ? scopes.filter((scope): scope is Scope => !!scope)
+      : [];
+    if (!normalized.length) return;
+    this._applyCoachScopes(normalized);
   }
 
   loadSavedTestById(testId: string): void {
@@ -221,10 +234,18 @@ export class SproutExamGeneratorView extends ItemView {
   }
 
   private _applyCoachScope(scope: Scope): void {
+    this._applyCoachScopes([scope]);
+  }
+
+  private _applyCoachScopes(scopes: Scope[]): void {
+    const normalized = scopes.filter((scope): scope is Scope => !!scope);
+    if (!normalized.length) return;
+
     this._reloadNotes();
 
     this._mode = "setup";
     this._setupStage = "source";
+    this._wizardSlide = null;
     this._noteSearchQuery = "";
     this._folderPreviewExpanded = false;
     this._selectedPaths.clear();
@@ -232,63 +253,37 @@ export class SproutExamGeneratorView extends ItemView {
     this._selectedVault = false;
     this._selectedTags.clear();
     this._selectedProperties.clear();
+    this._coachScopePrefilled = true;
 
-    if (scope.type === "vault") {
-      this._config.sourceMode = "folder";
-      this._config.folderPath = "";
-      this._config.includeSubfolders = true;
-      this._render();
-      return;
-    }
+    this._config.sourceMode = "selected";
+    this._applySavedScopes(normalized);
 
-    if (scope.type === "folder") {
-      this._config.sourceMode = "folder";
-      this._config.folderPath = String(scope.key || "");
-      this._config.includeSubfolders = true;
-      this._render();
-      return;
+    const groupScopes = normalized.filter((scope) => scope.type === "group");
+    if (groupScopes.length > 0) {
+      const groupPaths = new Set<string>();
+      for (const scope of groupScopes) {
+        for (const card of this.plugin.store.getAllCards()) {
+          const groups = Array.isArray(card.groups) ? card.groups : [];
+          if (!groups.some((g) => String(g || "") === scope.key)) continue;
+          const path = String(card.sourceNotePath || "").trim();
+          if (path) groupPaths.add(path);
+        }
+      }
+
+      const selected = Array.from(groupPaths)
+        .sort((a, b) => a.localeCompare(b))
+        .slice(0, MAX_SELECTABLE_NOTES);
+
+      for (const path of selected) {
+        this._selectedPaths.add(path);
+      }
+
+      if (groupPaths.size > MAX_SELECTABLE_NOTES) {
+        new Notice(`Selected first ${MAX_SELECTABLE_NOTES} notes for this group. Refine in Source if needed.`);
+      }
     }
 
     this._config.sourceMode = "selected";
-
-    if (scope.type === "note") {
-      this._selectedPaths.add(String(scope.key || ""));
-      this._render();
-      return;
-    }
-
-    if (scope.type === "tag") {
-      this._selectedTags.add(String(scope.key || "").trim().toLowerCase().replace(/^#+/, ""));
-      this._render();
-      return;
-    }
-
-    if (scope.type === "property") {
-      this._selectedProperties.add(String(scope.key || "").trim());
-      this._render();
-      return;
-    }
-
-    const groupPaths = new Set<string>();
-    for (const card of this.plugin.store.getAllCards()) {
-      const groups = Array.isArray(card.groups) ? card.groups : [];
-      if (!groups.some((g) => String(g || "") === scope.key)) continue;
-      const path = String(card.sourceNotePath || "").trim();
-      if (path) groupPaths.add(path);
-    }
-
-    const selected = Array.from(groupPaths)
-      .sort((a, b) => a.localeCompare(b))
-      .slice(0, MAX_SELECTABLE_NOTES);
-
-    for (const path of selected) {
-      this._selectedPaths.add(path);
-    }
-
-    if (groupPaths.size > MAX_SELECTABLE_NOTES) {
-      new Notice(`Selected first ${MAX_SELECTABLE_NOTES} notes for this group. Refine in Source if needed.`);
-    }
-
     this._render();
   }
 
@@ -614,10 +609,13 @@ export class SproutExamGeneratorView extends ItemView {
     }
 
     const shell = this._shellEl;
-    this._rootEl.querySelector(":scope > .sprout-exam-generator-title-strip")?.remove();
+    this._rootEl.querySelector(":scope > .lk-home-title-strip")?.remove();
     shell.empty();
 
     const animationsEnabled = this.plugin.settings?.general?.enableAnimations ?? true;
+    const suppressEntranceAos = this._suppressEntranceAosOnce;
+    this._suppressEntranceAosOnce = false;
+    const coachShellMode = this._coachScopePrefilled;
 
     const titleFrame = createTitleStripFrame({
       root: this._rootEl,
@@ -628,7 +626,8 @@ export class SproutExamGeneratorView extends ItemView {
       prepend: true,
     });
 
-    const animateTitleStripNow = animationsEnabled && !this._titleStripAnimatedOnce && this._mode === "setup";
+    const animateTitleStripNow =
+      animationsEnabled && !this._titleStripAnimatedOnce && this._mode === "setup" && !coachShellMode && !suppressEntranceAos;
     if (animateTitleStripNow) {
       titleFrame.strip.setAttribute("data-aos", "fade-up");
       titleFrame.strip.setAttribute("data-aos-anchor-placement", "top-top");
@@ -636,12 +635,14 @@ export class SproutExamGeneratorView extends ItemView {
       titleFrame.strip.setAttribute("data-aos-delay", "0");
     }
     titleFrame.title.classList.add("text-xl", "font-semibold", "tracking-tight");
-    titleFrame.title.textContent = "Tests";
+    titleFrame.title.textContent = coachShellMode ? "Coach" : "Tests";
     titleFrame.subtitle.classList.add("flex", "items-center", "gap-1", "min-w-0");
-    titleFrame.subtitle.textContent = this._tx(
-      "ui.view.examGenerator.subtitle",
-      "Turn notes and media into focused practice tests.",
-    );
+    titleFrame.subtitle.textContent = coachShellMode
+      ? "Build and manage focused study plans."
+      : this._tx(
+        "ui.view.examGenerator.subtitle",
+        "Turn notes and media into focused practice tests.",
+      );
 
     const savedTestsWrap = document.createElement("div");
     savedTestsWrap.className = "sprout-exam-generator-saved-tests-wrap";
@@ -899,13 +900,16 @@ export class SproutExamGeneratorView extends ItemView {
       this._renderTitleTimer(titleFrame.right);
       this._savedTestsPopoverOpen = false;
       savedTestsWrap.classList.add("hidden");
+    } else if (coachShellMode) {
+      this._savedTestsPopoverOpen = false;
+      savedTestsWrap.classList.add("hidden");
     } else {
       savedTestsWrap.classList.remove("hidden");
     }
 
     titleFrame.right.appendChild(savedTestsWrap);
 
-    if (animationsEnabled) {
+    if (animationsEnabled && !coachShellMode && !suppressEntranceAos) {
       shell.setAttribute("data-aos", "fade-up");
       shell.setAttribute("data-aos-anchor-placement", "top-top");
       shell.setAttribute("data-aos-duration", String(AOS_DURATION));
@@ -928,6 +932,13 @@ export class SproutExamGeneratorView extends ItemView {
         }
         shell.classList.add("aos-animate");
       });
+    } else {
+      shell.removeAttribute("data-aos");
+      shell.removeAttribute("data-aos-anchor-placement");
+      shell.removeAttribute("data-aos-duration");
+      shell.removeAttribute("data-aos-delay");
+      shell.classList.add("aos-animate", "sprout-aos-fallback");
+      this._titleStripAnimatedOnce = true;
     }
 
     if (this._mode === "setup") {
@@ -964,9 +975,10 @@ export class SproutExamGeneratorView extends ItemView {
 
     const card = host.createDiv({ cls: "card sprout-coach-wizard-card sprout-exam-generator-card sprout-exam-generator-setup-card" });
 
+    const setupTopline = card.createDiv({ cls: "sprout-exam-generator-setup-topline" });
     const stepLabels = ["Source", "Settings"];
     const currentStep = this._setupStage === "source" ? 0 : 1;
-    const stepper = card.createDiv({ cls: "sprout-coach-stepper" });
+    const stepper = setupTopline.createDiv({ cls: "sprout-coach-stepper" });
     stepLabels.forEach((label, idx) => {
       const item = stepper.createDiv({ cls: "sprout-coach-step-item" });
       const dot = item.createDiv({ cls: "sprout-coach-step-dot" });
@@ -978,6 +990,20 @@ export class SproutExamGeneratorView extends ItemView {
         if (idx < currentStep) line.classList.add("is-done");
       }
     });
+
+    if (this._coachScopePrefilled) {
+      const setupToplineRight = setupTopline.createDiv({ cls: "sprout-exam-generator-setup-topline-right" });
+      const backToCoachBtn = setupToplineRight.createEl("button", {
+        cls: "bc sprout-btn-toolbar sprout-btn-filter h-7 px-3 text-sm inline-flex items-center gap-2 sprout-scope-clear-btn",
+        attr: { type: "button", "aria-label": "Back to Coach", "data-tooltip-position": "top" },
+      });
+      const iconWrap = backToCoachBtn.createSpan({ cls: "bc inline-flex items-center justify-center" });
+      setIcon(iconWrap, "x");
+      backToCoachBtn.createSpan({ cls: "bc", attr: { "data-sprout-label": "true" }, text: "Back to Coach" });
+      backToCoachBtn.addEventListener("click", () => {
+        void this.plugin.openCoachTab(false, { suppressEntranceAos: true, refresh: false }, this.leaf);
+      });
+    }
 
     const page = card.createDiv({ cls: "sprout-coach-wizard-page" });
     if (slide === "next") page.classList.add("is-enter-next");
@@ -996,10 +1022,17 @@ export class SproutExamGeneratorView extends ItemView {
     };
 
     if (this._setupStage === "source") {
-      page.createEl("h3", { text: "Choose your source content" });
+      const sourceHeading = this._coachScopePrefilled
+        ? "Use or expand your Coach scope"
+        : "Choose your source content";
+      const sourceCopy = this._coachScopePrefilled
+        ? "Your Coach scope is already included for this test. You can keep it as-is, add or remove source content, and attach files to expand the test."
+        : "Choose the content for this test, then optionally add files as reference material.";
+
+      page.createEl("h3", { text: sourceHeading });
       page.createEl("p", {
         cls: "sprout-coach-step-copy",
-        text: "Choose the content for this test, then optionally add files as reference material.",
+        text: sourceCopy,
       });
 
       let nextBtn: HTMLButtonElement | null = null;
@@ -1470,7 +1503,7 @@ export class SproutExamGeneratorView extends ItemView {
         selectedTitle.setText(`Selected (${selectedScopeCount()})`);
         chips.empty();
         if (!selectedScopeCount()) {
-          chips.createDiv({ cls: "text-xs text-muted-foreground", text: "No content selected yet." });
+          chips.createDiv({ cls: "text-muted-foreground", text: "No content selected yet." });
         } else {
           if (this._selectedVault) {
             const chip = chips.createDiv({ cls: "sprout-coach-chip" });
@@ -1605,7 +1638,7 @@ export class SproutExamGeneratorView extends ItemView {
         clearAttachAction.classList.toggle("sprout-exam-generator-hidden", this._attachedFiles.length <= 0);
         attachChips.empty();
         if (this._attachedFiles.length === 0) {
-          attachChips.createDiv({ cls: "text-xs text-muted-foreground", text: "No attachments added yet." });
+          attachChips.createDiv({ cls: "text-muted-foreground", text: "No content attached yet." });
           return;
         }
         for (let i = 0; i < this._attachedFiles.length; i++) {
@@ -2391,13 +2424,21 @@ export class SproutExamGeneratorView extends ItemView {
 
     const quitBtn = topRight.createEl("button", {
       cls: "bc sprout-btn-toolbar sprout-btn-filter h-7 px-3 text-sm inline-flex items-center gap-2 sprout-scope-clear-btn",
-      attr: { type: "button", "aria-label": "Quit test" },
+      attr: { type: "button", "aria-label": this._coachScopePrefilled ? "Back to Coach" : "Quit test" },
     });
     quitBtn.setAttr("data-tooltip-position", "top");
     const quitIconWrap = quitBtn.createSpan({ cls: "bc inline-flex items-center justify-center" });
     setIcon(quitIconWrap, "x");
-    quitBtn.createSpan({ cls: "bc", attr: { "data-sprout-label": "true" }, text: "Quit test" });
+    quitBtn.createSpan({
+      cls: "bc",
+      attr: { "data-sprout-label": "true" },
+      text: this._coachScopePrefilled ? "Back to Coach" : "Quit test",
+    });
     quitBtn.addEventListener("click", () => {
+      if (this._coachScopePrefilled) {
+        void this.plugin.openCoachTab(false, { suppressEntranceAos: true, refresh: false }, this.leaf);
+        return;
+      }
       this._resetToSetup();
     });
 

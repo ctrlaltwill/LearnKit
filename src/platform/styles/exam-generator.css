@@ -8,6 +8,7 @@
   max-width: var(--sprout-exam-generator-max-width, 1280px);
   width: 100%;
   margin: 0 auto;
+  gap: 20px;
   overflow: visible;
 }
 
@@ -178,14 +179,11 @@
   gap: 14px;
   padding: var(--lk-shell-padding-desktop);
   overflow: visible;
-  flex: 1;
-  min-height: 0;
 }
 
 .sprout .sprout-exam-generator-card {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
   padding: 1.2rem;
 }
 
@@ -496,7 +494,57 @@
 }
 
 .sprout .sprout-exam-generator-setup-card {
-  gap: 1.2rem;
+  gap: 1.5rem;
+  height: auto;
+  min-height: 0;
+  flex: 0 0 auto;
+  align-self: flex-start;
+  width: 100%;
+}
+
+.sprout .sprout-exam-generator-setup-topline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sprout .sprout-exam-generator-setup-topline .sprout-coach-stepper {
+  flex: 1;
+  min-width: 0;
+}
+
+.sprout .sprout-exam-generator-setup-topline-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.sprout .sprout-exam-generator-setup-topline-right .sprout-scope-clear-btn {
+  min-width: 36px;
+  padding-left: 8px;
+  padding-right: 8px;
+  gap: 0;
+  overflow: hidden;
+}
+
+.sprout .sprout-exam-generator-setup-topline-right .sprout-scope-clear-btn [data-sprout-label="true"] {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 0;
+  opacity: 0;
+  margin-left: 0;
+  transform: translateX(-4px);
+  transition: max-width 1115ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 913ms ease, margin-left 1115ms cubic-bezier(0.2, 0.9, 0.2, 1), transform 1115ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.sprout .sprout-exam-generator-setup-topline-right .sprout-scope-clear-btn:is(:hover, :focus-visible, :focus-within, [aria-expanded="true"]) [data-sprout-label="true"] {
+  max-width: 9rem;
+  opacity: 1;
+  margin-left: 6px;
+  transform: translateX(0);
 }
 
 .sprout .sprout-exam-generator-setup-card h3 {
@@ -685,7 +733,7 @@
 }
 
 .sprout .sprout-exam-generator-label {
-  font-size: 12px;
+  font-size: var(--lk-font-size-2xs);
   color: var(--text-muted);
 }
 

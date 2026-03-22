@@ -1692,14 +1692,69 @@ export default class SproutPlugin extends Plugin {
 
   async openExamGeneratorScope(scope: Scope): Promise<void> {
     const leaf = await this._openSingleTabView(VIEW_TYPE_EXAM_GENERATOR, false);
-    const view = leaf.view as { setCoachScope?: (s: Scope | null) => void } | undefined;
+    const view = leaf.view as {
+      setCoachScope?: (s: Scope | null) => void;
+      setCoachScopes?: (scopes: Scope[] | null) => void;
+      setSuppressEntranceAosOnce?: (enabled: boolean) => void;
+    } | undefined;
+    view?.setSuppressEntranceAosOnce?.(true);
+    if (view?.setCoachScopes) {
+      view.setCoachScopes([scope]);
+      return;
+    }
     view?.setCoachScope?.(scope);
   }
 
-  async openCoachTab(forceNew: boolean = false) {
-    const leaf = await this._openSingleTabView(VIEW_TYPE_COACH, forceNew);
-    const view = leaf.view as { onRefresh?: () => void } | undefined;
-    view?.onRefresh?.();
+  async openExamGeneratorScopes(scopes: Scope[], targetLeaf?: WorkspaceLeaf): Promise<void> {
+    const normalized = Array.isArray(scopes)
+      ? scopes.filter((scope): scope is Scope => !!scope)
+      : [];
+    if (!normalized.length) return;
+
+    const leaf = targetLeaf
+      ? await (async () => {
+        await targetLeaf.setViewState({ type: VIEW_TYPE_EXAM_GENERATOR, active: true });
+        void this.app.workspace.revealLeaf(targetLeaf);
+        return targetLeaf;
+      })()
+      : await this._openSingleTabView(VIEW_TYPE_EXAM_GENERATOR, false);
+    const view = leaf.view as {
+      setCoachScope?: (s: Scope | null) => void;
+      setCoachScopes?: (items: Scope[] | null) => void;
+      setSuppressEntranceAosOnce?: (enabled: boolean) => void;
+    } | undefined;
+    view?.setSuppressEntranceAosOnce?.(true);
+
+    if (view?.setCoachScopes) {
+      view.setCoachScopes(normalized);
+      return;
+    }
+
+    view?.setCoachScope?.(normalized[0] ?? null);
+  }
+
+  async openCoachTab(
+    forceNew: boolean = false,
+    options?: { suppressEntranceAos?: boolean; refresh?: boolean },
+    targetLeaf?: WorkspaceLeaf,
+  ) {
+    const leaf = targetLeaf
+      ? await (async () => {
+        await targetLeaf.setViewState({ type: VIEW_TYPE_COACH, active: true });
+        void this.app.workspace.revealLeaf(targetLeaf);
+        return targetLeaf;
+      })()
+      : await this._openSingleTabView(VIEW_TYPE_COACH, forceNew);
+    const view = leaf.view as {
+      onRefresh?: () => void;
+      setSuppressEntranceAosOnce?: (enabled: boolean) => void;
+    } | undefined;
+    if (options?.suppressEntranceAos) {
+      view?.setSuppressEntranceAosOnce?.(true);
+    }
+    if (options?.refresh !== false) {
+      view?.onRefresh?.();
+    }
   }
 
   async openReviewerScope(scope: Scope): Promise<void> {
@@ -1717,31 +1772,109 @@ export default class SproutPlugin extends Plugin {
 
   async openReviewerScopeWithOptions(
     scope: Scope,
-    options: { ignoreDailyReviewLimit?: boolean; ignoreDailyNewLimit?: boolean; dueOnly?: boolean },
+    options: {
+      ignoreDailyReviewLimit?: boolean;
+      ignoreDailyNewLimit?: boolean;
+      dueOnly?: boolean;
+      includeNotDue?: boolean;
+      targetCount?: number;
+      practiceMode?: boolean;
+      trackCoachProgress?: boolean;
+    },
+    targetLeaf?: WorkspaceLeaf,
   ): Promise<void> {
-    const leaf = await this._openSingleTabView(VIEW_TYPE_REVIEWER, false);
+    const leaf = targetLeaf
+      ? await (async () => {
+        await targetLeaf.setViewState({ type: VIEW_TYPE_REVIEWER, active: true });
+        void this.app.workspace.revealLeaf(targetLeaf);
+        return targetLeaf;
+      })()
+      : await this._openSingleTabView(VIEW_TYPE_REVIEWER, false);
     const view = leaf.view as {
       setReturnToCoach?: (enabled: boolean) => void;
+      setSuppressEntranceAosOnce?: (enabled: boolean) => void;
       openSessionFromScope?: (
         s: Scope,
-        opts?: { ignoreDailyReviewLimit?: boolean; ignoreDailyNewLimit?: boolean; dueOnly?: boolean },
+        opts?: {
+          ignoreDailyReviewLimit?: boolean;
+          ignoreDailyNewLimit?: boolean;
+          dueOnly?: boolean;
+          includeNotDue?: boolean;
+          targetCount?: number;
+          practiceMode?: boolean;
+          trackCoachProgress?: boolean;
+        },
       ) => void;
     } | undefined;
+    view?.setSuppressEntranceAosOnce?.(true);
     view?.setReturnToCoach?.(true);
     view?.openSessionFromScope?.(scope, options);
   }
 
   async openNoteReviewScope(scope: Scope): Promise<void> {
-    const leaf = await this._openSingleTabView(VIEW_TYPE_NOTE_REVIEW, false);
+    return this.openNoteReviewScopeWithOptions(scope, {});
+  }
+
+  async openNoteReviewScopeWithOptions(
+    scope: Scope,
+    options: {
+      targetCount?: number;
+      includeNotDue?: boolean;
+      noScheduling?: boolean;
+      trackCoachProgress?: boolean;
+    },
+    targetLeaf?: WorkspaceLeaf,
+  ): Promise<void> {
+    const leaf = targetLeaf
+      ? await (async () => {
+        await targetLeaf.setViewState({ type: VIEW_TYPE_NOTE_REVIEW, active: true });
+        void this.app.workspace.revealLeaf(targetLeaf);
+        return targetLeaf;
+      })()
+      : await this._openSingleTabView(VIEW_TYPE_NOTE_REVIEW, false);
     const view = leaf.view as {
       setReturnToCoach?: (enabled: boolean) => void;
+      setSuppressEntranceAosOnce?: (enabled: boolean) => void;
       setCoachScope?: (s: Scope | null) => void;
       setIgnoreDailyReviewLimit?: (enabled: boolean) => void;
-      startCoachDueSession?: (s: Scope) => void;
+      startCoachDueSession?: (
+        s: Scope,
+        opts?: {
+          targetCount?: number;
+          includeNotDue?: boolean;
+          noScheduling?: boolean;
+          trackCoachProgress?: boolean;
+        },
+      ) => void;
     } | undefined;
+    view?.setSuppressEntranceAosOnce?.(true);
     view?.setReturnToCoach?.(true);
     if (typeof view?.startCoachDueSession === "function") {
-      view.startCoachDueSession(scope);
+      view.startCoachDueSession(scope, options);
+      // On first open, Note Review can still be mounting; rerun once on next tick
+      // only if scope did not stick, to avoid a second full re-render flicker.
+      window.setTimeout(() => {
+        const mountedView = leaf.view as {
+          startCoachDueSession?: (
+            s: Scope,
+            opts?: {
+              targetCount?: number;
+              includeNotDue?: boolean;
+              noScheduling?: boolean;
+              trackCoachProgress?: boolean;
+            },
+          ) => void;
+          _coachScope?: Scope | null;
+        } | undefined;
+        const activeScope = mountedView?._coachScope;
+        const scopeAlreadyApplied =
+          !!activeScope &&
+          activeScope.type === scope.type &&
+          activeScope.key === scope.key;
+        if (!scopeAlreadyApplied) {
+          mountedView?.startCoachDueSession?.(scope, options);
+        }
+      }, 0);
       return;
     }
     view?.setCoachScope?.(scope);

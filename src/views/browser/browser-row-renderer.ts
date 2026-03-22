@@ -1448,6 +1448,16 @@ function makeGroupsEditorCell(
     window.addEventListener("scroll", onResizeOrScroll, true);
     wrap?.addEventListener("scroll", onResizeOrScroll, { passive: true });
 
+    let detachObserver: MutationObserver | null = null;
+    if (document.body) {
+      detachObserver = new MutationObserver(() => {
+        if (!tagBox.isConnected || !popover.isConnected) {
+          close();
+        }
+      });
+      detachObserver.observe(document.body, { childList: true, subtree: true });
+    }
+
     const tid = window.setTimeout(() => {
       document.addEventListener("pointerdown", onDocPointerDown, true);
       document.addEventListener("keydown", onDocKeydown, true);
@@ -1460,6 +1470,8 @@ function makeGroupsEditorCell(
       wrap?.removeEventListener("scroll", onResizeOrScroll);
       document.removeEventListener("pointerdown", onDocPointerDown, true);
       document.removeEventListener("keydown", onDocKeydown, true);
+      detachObserver?.disconnect();
+      detachObserver = null;
     };
   };
 

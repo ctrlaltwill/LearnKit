@@ -20,6 +20,9 @@ export type SessionBuildOptions = {
   ignoreDailyReviewLimit?: boolean;
   ignoreDailyNewLimit?: boolean;
   dueOnly?: boolean;
+  targetCount?: number;
+  trackCoachProgress?: boolean;
+  practiceMode?: boolean;
 };
 
 

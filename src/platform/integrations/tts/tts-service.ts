@@ -1151,6 +1151,14 @@ export function extractClozeAnswerForTts(
 export class TtsService {
   private _speaking = false;
   private _speakSession = 0;
+  private _resumeKeepAliveInterval: ReturnType<typeof setInterval> | null = null;
+
+  private _clearResumeKeepAliveInterval(): void {
+    if (this._resumeKeepAliveInterval) {
+      clearInterval(this._resumeKeepAliveInterval);
+      this._resumeKeepAliveInterval = null;
+    }
+  }
 
   /** Whether the browser supports the Web Speech API. */
   get isSupported(): boolean {
@@ -1166,6 +1174,7 @@ export class TtsService {
   stop(): void {
     if (!this.isSupported) return;
     this._speakSession += 1;
+    this._clearResumeKeepAliveInterval();
     window.speechSynthesis.cancel();
     this._speaking = false;
   }
@@ -1271,11 +1280,10 @@ export class TtsService {
         ttsLog("No voice matched — using speechSynthesis default.");
       }
 
-      let resumeInterval: ReturnType<typeof setInterval> | null = null;
-
       utterance.onstart = () => {
         this._speaking = true;
-        resumeInterval = setInterval(() => {
+        this._clearResumeKeepAliveInterval();
+        this._resumeKeepAliveInterval = setInterval(() => {
           if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
             window.speechSynthesis.pause();
             window.speechSynthesis.resume();
@@ -1298,10 +1306,7 @@ export class TtsService {
       };
 
       const cleanupInterval = () => {
-        if (resumeInterval) {
-          clearInterval(resumeInterval);
-          resumeInterval = null;
-        }
+        this._clearResumeKeepAliveInterval();
       };
 
       utterance.onend = () => {

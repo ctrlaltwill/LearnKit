@@ -99,6 +99,33 @@
   padding: 0;
 }
 
+.sprout .sprout-note-review-article-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sprout .sprout-note-review-loading-copy {
+  color: var(--text-muted);
+  text-align: center;
+  padding-top: 24px;
+}
+
+.sprout .sprout-note-review-article.sprout-note-review-article-enter {
+  opacity: 0;
+  transition: opacity 100ms ease-out;
+}
+
+.sprout .sprout-note-review-article.sprout-note-review-article-enter.is-visible {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sprout .sprout-note-review-article.sprout-note-review-article-enter {
+    transition: none;
+  }
+}
+
 .sprout .sprout-note-review-note-title {
   margin: 0 0 14px;
   font-size: var(--sprout-font-xl);
@@ -355,6 +382,32 @@
   top: 12px;
   right: 12px;
   z-index: 7;
+}
+
+.sprout .sprout-note-review-panel .sprout-note-review-quit-coach-btn {
+  min-width: 36px;
+  padding-left: 8px;
+  padding-right: 8px;
+  gap: 0;
+  overflow: hidden;
+}
+
+.sprout .sprout-note-review-panel .sprout-note-review-quit-coach-btn [data-sprout-label="true"] {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 0;
+  opacity: 0;
+  margin-left: 0;
+  transform: translateX(-4px);
+  transition: max-width 1115ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 913ms ease, margin-left 1115ms cubic-bezier(0.2, 0.9, 0.2, 1), transform 1115ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.sprout .sprout-note-review-panel .sprout-note-review-quit-coach-btn:is(:hover, :focus-visible, :focus-within, [aria-expanded="true"]) [data-sprout-label="true"] {
+  max-width: 9rem;
+  opacity: 1;
+  margin-left: 6px;
+  transform: translateX(0);
 }
 
 @media (max-width: 767px) {
