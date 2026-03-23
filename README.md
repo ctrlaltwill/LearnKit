@@ -9,8 +9,7 @@
 ![LearnKit Banner One - Welcome](site/branding/Banner%20One%20-%20Welcome.png)
 
 > [!NOTE]
-> **1.2 update:** This release introduces major new features, but it is not fully polished yet.
-> LearnKit is still a proof of concept. The immediate focus is on polishing the UI and fixing bugs; the longer-term focus is on improving stability and delivering a smooth mobile experience.
+> **1.2.3 update:** We have updated the plugin ID in this latest build – please review the release notes for a guide on migration before updating.
 
 LearnKit brings flashcards, spaced repetition, and AI-powered study tools directly into Obsidian, so you can learn faster from the notes you already write.
 
@@ -70,7 +69,7 @@ Understand faster, write better, and create study-ready cards without leaving Ob
 
 🎥 **[Watch Companion in action →](https://youtu.be/fe1htR7hjvY)**
 
-You **bring your own API key** — zero subscriptions, zero markupsWorks with free-tier providers (Google, OpenRouter) and premium platforms (Anthropic, OpenAI, Perplexity). To start for free, try Auto Router via OpenRouter.
+You **bring your own API key** — zero subscriptions, zero markupsWorks with free-tier providers (Google, OpenRouter) and premium platforms (Anthropic, OpenAI, Perplexity). To start for free, try Free Model Router or Auto Router via OpenRouter.
 
 ## Feature highlights
 
