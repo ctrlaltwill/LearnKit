@@ -164,7 +164,9 @@ export class BulkEditCardModal extends Modal {
       close.appendChild(closeLabel);
       close.addEventListener("click", () => this.close());
       headerEl.appendChild(close);
-      contentEl.appendChild(headerEl);
+      if (headerEl.parentElement !== this.modalEl) {
+        this.modalEl.insertBefore(headerEl, contentEl);
+      }
     }
 
     // Reset cleanup handlers for this modal instance and collect teardown work
@@ -202,15 +204,18 @@ export class BulkEditCardModal extends Modal {
     control.classList.add("sprout-flag-editor-control");
 
     if (control instanceof HTMLTextAreaElement) {
-      // Let actual content drive height instead of keeping a fixed multi-row baseline.
+      // Start compact and allow user-resize up to max height.
       control.rows = 1;
+      setCssProps(control, {
+        "min-height": `${minControlHeight}px`,
+        height: `${minControlHeight}px`,
+        "max-height": `${Math.max(minControlHeight, Math.floor(maxControlHeight))}px`,
+        resize: "vertical",
+        "overflow-y": "auto",
+      });
     }
 
     const measureControlHeight = () => {
-      if (control instanceof HTMLTextAreaElement) {
-        setCssProps(control, "height", "auto");
-        return Math.max(minControlHeight, Math.ceil(control.scrollHeight || 0));
-      }
       return Math.max(minControlHeight, Math.ceil(control.getBoundingClientRect().height || 0));
     };
 
@@ -229,14 +234,8 @@ export class BulkEditCardModal extends Modal {
     let lastPreviewHeight = 0;
 
     const syncPreviewHeight = () => {
-      const scrollbarFudgePx = 5;
       const controlHeight = measureControlHeight();
-      const overlayHeight = Math.ceil(overlay.scrollHeight || 0);
-      const rawPreviewHeight = Math.max(
-        minControlHeight,
-        controlHeight + scrollbarFudgePx,
-        overlayHeight,
-      );
+      const rawPreviewHeight = Math.max(minControlHeight, controlHeight);
       const previewHeight = Number.isFinite(maxControlHeight)
         ? Math.min(Math.max(minControlHeight, Math.floor(maxControlHeight)), rawPreviewHeight)
         : rawPreviewHeight;
@@ -264,13 +263,30 @@ export class BulkEditCardModal extends Modal {
       window.setTimeout(syncPreviewHeight, 80);
     };
 
+    const focusEditorFromPreview = (ev: Event) => {
+      control.focus({ preventScroll: true });
+      if (control instanceof HTMLInputElement || control instanceof HTMLTextAreaElement) {
+        const end = control.value.length;
+        control.setSelectionRange(end, end);
+      }
+    };
+
+    wrap.addEventListener("pointerdown", (ev: PointerEvent) => {
+      if (ev.button !== 0) return;
+      if (document.activeElement === control) return;
+      focusEditorFromPreview(ev);
+    });
+
     overlay.addEventListener("pointerdown", (ev: PointerEvent) => {
       if (ev.button !== 0) return;
-      ev.preventDefault();
-      control.focus();
+      if (document.activeElement === control) return;
+      focusEditorFromPreview(ev);
     }, true);
 
-    overlay.addEventListener("click", () => control.focus());
+    overlay.addEventListener("click", (ev: MouseEvent) => {
+      if (document.activeElement === control) return;
+      focusEditorFromPreview(ev);
+    });
 
     control.addEventListener("focus", () => {
       wrap.classList.add("sprout-flag-editor--focused");
@@ -284,6 +300,14 @@ export class BulkEditCardModal extends Modal {
       syncPreviewHeight();
       if (!wrap.classList.contains("sprout-flag-editor--focused")) renderOverlay();
     });
+
+    if (control instanceof HTMLTextAreaElement) {
+      control.addEventListener("keydown", (ev: KeyboardEvent) => {
+        if ((ev.metaKey || ev.ctrlKey) && !ev.altKey && String(ev.key).toLowerCase() === "a") {
+          ev.stopPropagation();
+        }
+      });
+    }
 
     if (typeof ResizeObserver !== "undefined") {
       const ro = new ResizeObserver(() => {
@@ -307,21 +331,31 @@ export class BulkEditCardModal extends Modal {
 
   const attachSingleEditBlurPreview = (
     textarea: HTMLTextAreaElement,
-    minControlHeight = 50,
-    maxControlHeight = 150,
+    minControlHeight = 80,
+    maxControlHeight = 80,
   ): HTMLElement => {
     const wrap = document.createElement("div");
     wrap.className = "bc sprout-single-edit-markdown-field";
 
     const preview = document.createElement("div");
     preview.className = "bc sprout-single-edit-markdown-preview markdown-rendered";
-    setCssProps(preview, "min-height", `${minControlHeight}px`);
+    setCssProps(preview, {
+      "min-height": `${minControlHeight}px`,
+      height: `${minControlHeight}px`,
+      "max-height": `${Math.max(minControlHeight, Math.floor(maxControlHeight))}px`,
+    });
     setCssProps(textarea, {
-      resize: "vertical",
+      "min-height": `${minControlHeight}px`,
+      height: `${minControlHeight}px`,
+      "max-height": `${Math.max(minControlHeight, Math.floor(maxControlHeight))}px`,
+      resize: "none",
       "overflow-y": "auto",
     });
     let isEditing = false;
     let lastSyncedHeight = minControlHeight;
+    let suppressOutsideCloseUntil = 0;
+    let allowEditorFocusUntil = 0;
+    let keepEditorFocusUntil = 0;
 
     const clampHeight = (height: number): number => {
       const floorMin = Math.max(minControlHeight, Math.ceil(height || 0));
@@ -339,22 +373,8 @@ export class BulkEditCardModal extends Modal {
       }
     };
 
-    const syncFieldHeights = () => {
-      const textareaVisible = textarea.style.display !== "none";
-      const renderedTextareaHeight = textareaVisible
-        ? Math.ceil(textarea.getBoundingClientRect().height || 0)
-        : lastSyncedHeight;
-      const textareaContentHeight = textareaVisible
-        ? Math.ceil(textarea.scrollHeight || 0)
-        : lastSyncedHeight;
-      const previewHeight = Math.ceil(preview.scrollHeight || 0);
-      const rawTargetHeight = Math.max(
-        minControlHeight,
-        renderedTextareaHeight,
-        textareaContentHeight,
-        previewHeight,
-      );
-      const targetHeight = clampHeight(rawTargetHeight);
+    const applyHeight = (rawHeight: number) => {
+      const targetHeight = clampHeight(rawHeight);
       lastSyncedHeight = targetHeight;
       setCssProps(textarea, {
         "min-height": `${targetHeight}px`,
@@ -366,6 +386,16 @@ export class BulkEditCardModal extends Modal {
         height: `${targetHeight}px`,
         "max-height": `${Math.max(minControlHeight, Math.floor(maxControlHeight))}px`,
       });
+      setCssProps(wrap, "--sprout-single-edit-height", `${targetHeight}px`);
+    };
+
+    const syncFieldHeights = () => {
+      const textareaVisible = textarea.style.display !== "none";
+      const renderedTextareaHeight = textareaVisible
+        ? Math.ceil(textarea.getBoundingClientRect().height || 0)
+        : lastSyncedHeight;
+      const rawTargetHeight = Math.max(minControlHeight, renderedTextareaHeight || lastSyncedHeight);
+      applyHeight(rawTargetHeight);
     };
 
     const captureRenderedEditorHeight = () => {
@@ -374,13 +404,16 @@ export class BulkEditCardModal extends Modal {
       const offsetHeight = Math.ceil(textarea.offsetHeight || 0);
       const inlineHeight = Math.ceil(Number.parseFloat(textarea.style.height || "0") || 0);
       const measured = Math.max(renderedHeight, offsetHeight, inlineHeight);
-      if (measured > 0) lastSyncedHeight = clampHeight(measured);
-      syncFieldHeights();
+      if (measured > 0) {
+        applyHeight(measured);
+      } else {
+        applyHeight(lastSyncedHeight);
+      }
     };
 
     const renderPreview = () => {
       renderMarkdownPreviewInElement(preview, String(textarea.value ?? ""));
-      syncFieldHeights();
+      applyHeight(lastSyncedHeight);
     };
 
     const showPreview = () => {
@@ -398,17 +431,31 @@ export class BulkEditCardModal extends Modal {
       wrap.classList.remove("is-preview");
       applyModeVisibility(true);
       textarea.focus();
-      syncFieldHeights();
+      applyHeight(lastSyncedHeight);
     };
 
-    const activateEditFromPreview = (ev: Event) => {
-      ev.preventDefault();
-      ev.stopPropagation();
+    const focusEditor = () => {
+      textarea.focus({ preventScroll: true });
+      const valueLength = textarea.value?.length ?? 0;
+      textarea.setSelectionRange(valueLength, valueLength);
+    };
+
+    const activateEditFromPreview = () => {
+      suppressOutsideCloseUntil = performance.now() + 180;
+      allowEditorFocusUntil = performance.now() + 800;
+      keepEditorFocusUntil = performance.now() + 350;
       showEditor();
+      window.requestAnimationFrame(() => {
+        focusEditor();
+        window.setTimeout(() => {
+          focusEditor();
+        }, 0);
+      });
     };
 
     const handleDocumentPointerDown = (ev: PointerEvent) => {
       if (!isEditing) return;
+      if (performance.now() < suppressOutsideCloseUntil) return;
       const target = ev.target;
       if (!(target instanceof Node)) return;
       if (wrap.contains(target)) return;
@@ -421,55 +468,48 @@ export class BulkEditCardModal extends Modal {
 
     preview.addEventListener("pointerdown", (ev: PointerEvent) => {
       if (ev.button !== 0) return;
-      activateEditFromPreview(ev);
+      ev.preventDefault();
+      ev.stopPropagation();
+      activateEditFromPreview();
     }, true);
-    preview.addEventListener("touchstart", activateEditFromPreview, { capture: true, passive: false });
+    preview.addEventListener("touchstart", (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      activateEditFromPreview();
+    }, { capture: true, passive: false });
     textarea.addEventListener("focus", () => {
+      if (!isEditing && performance.now() > allowEditorFocusUntil) {
+        textarea.blur();
+        wrap.classList.add("is-preview");
+        applyModeVisibility(false);
+        return;
+      }
       isEditing = true;
       wrap.classList.remove("is-preview");
       applyModeVisibility(true);
       setCssProps(wrap, "overflow", "visible");
-      syncFieldHeights();
+      applyHeight(lastSyncedHeight);
     });
     textarea.addEventListener("blur", (ev: FocusEvent) => {
       if (!isEditing) return;
       const related = ev.relatedTarget;
       if (related instanceof Node && wrap.contains(related)) return;
+      if (performance.now() < keepEditorFocusUntil) {
+        window.requestAnimationFrame(() => {
+          if (isEditing) focusEditor();
+        });
+        return;
+      }
       // Keep edit mode active on blur; exit is controlled by outside pointerdown only.
     });
     textarea.addEventListener("input", syncFieldHeights);
-    textarea.addEventListener("mouseup", captureRenderedEditorHeight);
-    textarea.addEventListener("pointerup", captureRenderedEditorHeight);
-
-    if (typeof ResizeObserver !== "undefined") {
-      let pendingResizeSyncRaf = 0;
-      const queueResizeSync = () => {
-        if (pendingResizeSyncRaf) return;
-        pendingResizeSyncRaf = window.requestAnimationFrame(() => {
-          pendingResizeSyncRaf = 0;
-          syncFieldHeights();
-        });
-      };
-      const ro = new ResizeObserver(() => {
-        if (isEditing && textarea.style.display !== "none") {
-          const renderedHeight = Math.ceil(textarea.getBoundingClientRect().height || 0);
-          if (renderedHeight > 0) lastSyncedHeight = clampHeight(renderedHeight);
-        }
-        queueResizeSync();
-      });
-      ro.observe(textarea);
-      ro.observe(preview);
-      registerCloseCleanup(() => {
-        if (pendingResizeSyncRaf) {
-          window.cancelAnimationFrame(pendingResizeSyncRaf);
-          pendingResizeSyncRaf = 0;
-        }
-        ro.disconnect();
-      });
-    }
-
+    textarea.addEventListener("keydown", (ev: KeyboardEvent) => {
+      if ((ev.metaKey || ev.ctrlKey) && !ev.altKey && String(ev.key).toLowerCase() === "a") {
+        ev.stopPropagation();
+      }
+    });
     renderPreview();
-    syncFieldHeights();
+    applyHeight(minControlHeight);
     wrap.classList.add("is-preview");
     setCssProps(wrap, "overflow", "hidden");
     applyModeVisibility(false);
@@ -498,7 +538,7 @@ export class BulkEditCardModal extends Modal {
     wrapper.appendChild(labelEl);
 
     const textarea = document.createElement("textarea");
-    textarea.className = "bc textarea w-full sprout-textarea-fixed";
+    textarea.className = "bc w-full sprout-textarea-fixed";
     textarea.rows = 3;
     textarea.value = getSharedEditableFieldValue(cards, field);
     setCssProps(textarea, {
@@ -510,14 +550,13 @@ export class BulkEditCardModal extends Modal {
     });
     // Single-card edit: show textarea while editing and rendered markdown on blur.
     if (isSingleEdit) {
-      const minHeight = fieldMinHeightPx(field);
-      const maxHeight = fieldMaxHeightPx(field);
       setCssProps(textarea, {
-        "min-height": `${minHeight}px`,
-        height: `${minHeight}px`,
-        "max-height": `${maxHeight}px`,
+        "min-height": "80px",
+        height: "80px",
+        "max-height": "80px",
+        resize: "none",
       });
-      wrapper.appendChild(attachSingleEditBlurPreview(textarea, minHeight, maxHeight));
+      wrapper.appendChild(attachSingleEditBlurPreview(textarea, 80, 80));
     } else {
       wrapper.appendChild(attachFlagPreviewOverlay(textarea, fieldMinHeightPx(field), fieldMaxHeightPx(field)));
     }
@@ -969,7 +1008,7 @@ export class BulkEditCardModal extends Modal {
 
   footer.appendChild(cancel);
   footer.appendChild(save);
-  contentEl.appendChild(footer);
+  this.modalEl.appendChild(footer);
 
   cancel.addEventListener("click", () => this.close());
 

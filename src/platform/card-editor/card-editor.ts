@@ -286,15 +286,24 @@ export function attachFlagPreviewOverlay(
     }
   };
 
-  wrap.addEventListener("mousedown", (ev: MouseEvent) => {
-    if (ev.target !== wrap) return;
+  const handlePreviewPointerDown = (ev: PointerEvent) => {
     if (ev.button !== 0) return;
     if (document.activeElement === control) return;
+    focusEditorFromPreview();
+  };
+
+  // Focus on pointer-down so preview clicks/taps reliably enter edit mode.
+  wrap.addEventListener("pointerdown", (ev: PointerEvent) => {
+    handlePreviewPointerDown(ev);
+  });
+  overlay.addEventListener("pointerdown", handlePreviewPointerDown);
+
+  // Keep click as a fallback for environments that do not dispatch pointer events.
+  overlay.addEventListener("click", (ev: MouseEvent) => {
     ev.preventDefault();
+    ev.stopPropagation();
     focusEditorFromPreview();
   });
-
-  overlay.addEventListener("click", () => focusEditorFromPreview());
 
   const handleDocumentPointerDown = (ev: PointerEvent) => {
     const target = ev.target;
@@ -329,6 +338,14 @@ export function attachFlagPreviewOverlay(
   control.addEventListener("keydown", () => {
     unlockMeasuredHeight();
   });
+
+  if (control instanceof HTMLTextAreaElement) {
+    control.addEventListener("keydown", (ev: KeyboardEvent) => {
+      if ((ev.metaKey || ev.ctrlKey) && !ev.altKey && String(ev.key).toLowerCase() === "a") {
+        ev.stopPropagation();
+      }
+    });
+  }
 
   let ro: ResizeObserver | null = null;
   let detachObserver: MutationObserver | null = null;
@@ -868,11 +885,11 @@ export function createCardEditor(config: CardEditorConfig): CardEditorResult {
     const configuredHeights = editableFieldKey ? config.editableFieldHeights?.[editableFieldKey] : undefined;
     const modalFieldMin =
       field.editable && editableFieldKey
-        ? (configuredHeights?.min ?? fieldMinHeightPx(field.key))
+        ? (configuredHeights?.min ?? fieldMinHeightPx(editableFieldKey))
         : 38;
     const modalFieldMax =
       field.editable && editableFieldKey
-        ? (configuredHeights?.max ?? fieldMaxHeightPx(field.key))
+        ? (configuredHeights?.max ?? fieldMaxHeightPx(editableFieldKey))
         : Number.POSITIVE_INFINITY;
 
     wrapper.appendChild(shouldPreviewFlags ? attachFlagPreviewOverlay(input, modalFieldMin, modalFieldMax) : input);
@@ -949,7 +966,9 @@ function getFieldValue(card: CardRecord, key: ColKey): string {
     case "id":
       return String(card.id);
     case "type":
-      return String(card.type ?? "");
+      return String(card.type ?? "").toLowerCase() === "oq"
+        ? "Ordered question"
+        : String(card.type ?? "");
     case "stage": {
       const stage = (card as unknown as Record<string, unknown>).stage;
       return typeof stage === "string" ? stage : typeof stage === "number" ? String(stage) : "";

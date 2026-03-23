@@ -13,11 +13,11 @@
 import { ItemView, setIcon, type WorkspaceLeaf, MarkdownRenderer, Component, TFile, normalizePath } from "obsidian";
 import { type SproutHeader, createViewHeader } from "../../platform/core/header";
 import { log } from "../../platform/core/logger";
-import { AOS_DURATION, MAX_CONTENT_WIDTH_PX, VIEW_TYPE_SETTINGS } from "../../platform/core/constants";
+import { AOS_CASCADE_STEP, MAX_CONTENT_WIDTH_PX, VIEW_TYPE_SETTINGS } from "../../platform/core/constants";
 import { setCssProps } from "../../platform/core/ui";
 import { createTitleStripFrame } from "../../platform/core/view-primitives";
 import { SPROUT_HOME_CONTENT_SHELL_CLASS } from "../../platform/core/ui-classes";
-import { initAOS, refreshAOS } from "../../platform/core/aos-loader";
+import { refreshAOS } from "../../platform/core/aos-loader";
 import type SproutPlugin from "../../main";
 import { SproutSettingsTab } from "./settings-tab";
 import {
@@ -48,6 +48,7 @@ export class SproutSettingsView extends ItemView {
   private _titleStripTitleEl: HTMLElement | null = null;
   private _titleStripSubtitleEl: HTMLElement | null = null;
   private _titleStripTabBtnEls: Map<string, HTMLButtonElement> = new Map();
+  private _contentShellEl: HTMLElement | null = null;
 
   /** Current active top-level settings tab. */
   private _activeTab = "settings";
@@ -72,9 +73,6 @@ export class SproutSettingsView extends ItemView {
 
   /** Tab content container. */
   private _tabContentEl: HTMLElement | null = null;
-
-  /** One-time AOS bootstrap flag to mirror other views. */
-  private _aosInitialized = false;
 
   /** Window-level listener cleanups registered by active tab content. */
   private _windowListenerCleanups: Array<() => void> = [];
@@ -117,6 +115,7 @@ export class SproutSettingsView extends ItemView {
     this._header = null;
     this._titleStripEl?.remove();
     this._titleStripEl = null;
+    this._contentShellEl = null;
     this._releaseComponent = null;
     this._settingsTabAdapter = null;
     await Promise.resolve();
@@ -273,36 +272,31 @@ export class SproutSettingsView extends ItemView {
   private _animateTopLevelEntrance(): void {
     const animationsEnabled = this.plugin.settings?.general?.enableAnimations ?? true;
     if (!animationsEnabled) return;
-    const titleStrip = this._titleStripEl;
-    const shell = this._rootEl?.querySelector<HTMLElement>(".sprout-settings-content-shell");
-    if (!shell) return;
 
-    const applyRootAos = (el: HTMLElement, delay: number = 0) => {
-      el.classList.remove("aos-animate", "sprout-aos-fallback");
-      el.setAttribute("data-aos", "fade-up");
-      el.setAttribute("data-aos-anchor-placement", "top-top");
-      el.setAttribute("data-aos-duration", String(AOS_DURATION));
-      el.setAttribute("data-aos-delay", String(Math.max(0, delay)));
-    };
+    const stages: Array<{ el: HTMLElement; delay: number }> = [];
+    if (this._titleStripEl) stages.push({ el: this._titleStripEl, delay: 0 });
+    if (this._contentShellEl) stages.push({ el: this._contentShellEl, delay: AOS_CASCADE_STEP });
+    if (!stages.length) return;
 
-    if (titleStrip) applyRootAos(titleStrip, 0);
-    applyRootAos(shell, 100);
-
-    if (!this._aosInitialized) {
-      initAOS({
-        duration: AOS_DURATION,
-        easing: "ease-out",
-        once: true,
-        offset: 50,
-      });
-      this._aosInitialized = true;
+    for (const { el } of stages) {
+      el.classList.remove("sprout-settings-top-enter");
+      el.style.removeProperty("--sprout-settings-enter-delay");
+      // Remove AOS hooks on top stages so AOS cannot short-circuit title-strip motion.
+      el.removeAttribute("data-aos");
+      el.removeAttribute("data-aos-delay");
+      el.removeAttribute("data-aos-duration");
+      el.removeAttribute("data-aos-anchor-placement");
+      el.classList.remove("aos-init", "aos-animate", "sprout-aos-fallback");
     }
 
-    if (titleStrip) titleStrip.classList.remove("aos-animate");
-    shell.classList.remove("aos-animate");
     requestAnimationFrame(() => {
-      if (titleStrip?.isConnected) titleStrip.classList.add("aos-animate");
-      if (shell.isConnected) shell.classList.add("aos-animate");
+      for (const { el, delay } of stages) {
+        if (!el.isConnected) continue;
+        el.style.setProperty("--sprout-settings-enter-delay", `${Math.max(0, delay)}ms`);
+        // Force reflow so class re-add always restarts the keyframe.
+        void el.offsetHeight;
+        el.classList.add("sprout-settings-top-enter");
+      }
     });
   }
 
@@ -348,6 +342,7 @@ export class SproutSettingsView extends ItemView {
     const contentShell = document.createElement("div");
     contentShell.className = `${SPROUT_HOME_CONTENT_SHELL_CLASS} sprout-settings-content-shell`;
     root.appendChild(contentShell);
+    this._contentShellEl = contentShell;
     this._pageTitleEl = null;
 
     // ── Tab content ──
@@ -360,11 +355,15 @@ export class SproutSettingsView extends ItemView {
     contentShell.appendChild(tabContentWrapper);
     this._tabContentEl = tabContent;
 
-    this._renderActiveTabContent();
-
     if (animationsEnabled) this._animateTopLevelEntrance();
 
-    if (animationsEnabled) requestAnimationFrame(refreshAOS);
+    this._renderActiveTabContent();
+
+    if (animationsEnabled) {
+      requestAnimationFrame(() => {
+        refreshAOS();
+      });
+    }
   }
 
   // ── Tab switching ───────────────────────────────────────────

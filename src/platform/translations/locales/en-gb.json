@@ -770,6 +770,7 @@
   "ui.reviewer.notice.savedWithQuarantine": "Saved changes to flashcard (but {count} card(s) quarantined).",
   "ui.reviewer.notice.saved": "Saved changes to flashcard",
   "ui.reviewer.notice.editFailed": "Edit failed ({error})",
+  "ui.reviewer.session.exitTo": "Exit to",
   "ui.reviewer.session.quit": "Quit study session",
   "ui.reviewer.session.scope.home": "Home",
   "ui.reviewer.session.practiceComplete": "Practice complete",

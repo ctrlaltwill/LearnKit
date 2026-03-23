@@ -354,6 +354,23 @@ body.is-mobile .sprout .sprout-deck-expand-buttons .sprout-btn-toolbar {
   padding: 20px !important;
 }
 
+/* Deck rows: keep a hidden baseline border so hover border-color can render. */
+.sprout .sprout-deck-table tbody td {
+  border-top: 1px solid var(--background);
+  border-bottom: 1px solid var(--background);
+  border-left: 0;
+  border-right: 0;
+  transition: border-color 0.18s ease;
+}
+
+.sprout .sprout-deck-table tbody td:first-child {
+  border-left: 1px solid var(--background);
+}
+
+.sprout .sprout-deck-table tbody td:last-child {
+  border-right: 1px solid var(--background);
+}
+
 .sprout .sprout-deck-table tbody tr:hover td:first-child {
   border-top-left-radius: 8px;
   border-bottom-left-radius: 8px;

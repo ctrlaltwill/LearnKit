@@ -12,6 +12,7 @@ import type { ReviewRating } from "../../platform/types/scheduler";
 import { logFsrsIfNeeded } from "../../views/reviewer/fsrs-log";
 import { log } from "../../platform/core/logger";
 import { processMarkdownFeatures, setupInternalLinkHandlers } from "../../views/widget/view/markdown";
+import { getRatingIntervalPreview } from "../../platform/core/grade-intervals";
 import { processClozeForMath, textContainsMath, convertInlineDisplayMath, forceSingleLineDisplayMathInline } from "../../platform/core/shared-utils";
 import { processCircleFlagsInMarkdown, hydrateCircleFlagsInElement } from "../../platform/flags/flag-tokens";
 import { getCorrectIndices, isMultiAnswerMcq, normalizeCardOptions } from "../../platform/types/card";
@@ -46,6 +47,7 @@ export class GatekeeperModal extends Modal {
   private _keyHandler: ((ev: KeyboardEvent) => void) | null = null;
   private _showBypassWarning = false;
   private _frozenModalSize: { width: number; height: number } | null = null;
+  private _progressEl: HTMLElement | null = null;
 
   constructor(args: GatekeeperModalArgs) {
     super(args.app);
@@ -65,8 +67,7 @@ export class GatekeeperModal extends Modal {
       scopeModalToWorkspace(this);
     }
 
-    this.setupTopRow();
-    this.applyModalTitle();
+    this.setupHeader();
 
     if (this.allowBypass) {
       this.scope.register([], "Escape", () => {
@@ -160,44 +161,46 @@ export class GatekeeperModal extends Modal {
     return key;
   }
 
-  private setupTopRow() {
-    const header = this.modalEl.querySelector(".modal-header");
-    const existingTopRow = this.modalEl.querySelector(".sprout-gatekeeper-top-row");
-    if (existingTopRow) existingTopRow.remove();
+  private setupHeader() {
+    const headerEl = this.modalEl.querySelector<HTMLElement>(":scope > .modal-header");
+    if (!headerEl) return;
 
-    const topRow = this.modalEl.ownerDocument.createElement("div");
-    topRow.className = "bc flex items-center justify-end sprout-gatekeeper-top-row";
-
-    this.modalEl.querySelector(".modal-close-button")?.remove();
-    if (this.allowBypass) {
-      const bypassBtn = topRow.createEl("button", {
-        cls: "bc sprout-gatekeeper-bypass-btn inline-flex items-center h-9 px-2 text-sm",
-        type: "button",
-      });
-      const iconWrap = bypassBtn.createSpan({ cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
-      setIcon(iconWrap, "shield-off");
-      bypassBtn.createSpan({ text: "Bypass", cls: "sprout-gatekeeper-bypass-label" });
-      bypassBtn.setAttribute("aria-label", "Bypass this round");
-      bypassBtn.setAttribute("data-tooltip-position", "top");
-      bypassBtn.onclick = (ev) => {
-        ev.preventDefault();
-        this.requestBypass();
-      };
+    const titleEl = headerEl.querySelector<HTMLElement>(":scope > .modal-title");
+    if (titleEl) {
+      titleEl.empty();
+      // Separate strings avoid sentence-case lint trigger
+      titleEl.createSpan({ text: "Learn" });
+      titleEl.createSpan({ text: "Kit" });
+      titleEl.createSpan({ text: " " });
+      titleEl.createSpan({ text: "Gatekeeper" });
     }
 
-    this.modalEl.insertBefore(topRow, header ?? this.modalEl.firstChild);
-  }
+    // Progress indicator (top-right, like close button position on other modals)
+    const progressEl = headerEl.createDiv({ cls: "bc text-sm text-muted-foreground sprout-gatekeeper-progress" });
+    progressEl.setText(`${this.index + 1} of ${this.cards.length}`);
+    this._progressEl = progressEl;
 
-  private applyModalTitle() {
-    const titleEl = this.modalEl.querySelector(".modal-title");
-    if (!titleEl) return;
-    titleEl.empty();
-    titleEl.addClass("flex", "items-center", "gap-2");
+    // Remove Obsidian's default close button
+    this.modalEl.querySelector<HTMLElement>(":scope > .modal-close-button")?.remove();
 
-    const iconWrap = titleEl.createSpan({ cls: "bc inline-flex items-center justify-center" });
-    setIcon(iconWrap, "sprout-brand");
+    // Add bypass button into header (replaces old top-row)
+    const existingBypass = headerEl.querySelector<HTMLElement>(".sprout-gatekeeper-bypass-btn");
+    if (existingBypass) existingBypass.remove();
 
-    titleEl.createSpan({ text: "Sprout Gatekeeper", cls: "font-semibold" });
+    if (this.allowBypass) {
+      const bypassBtn = headerEl.createEl("button", {
+        cls: "bc sprout-btn-toolbar sprout-btn-filter h-7 px-3 text-sm inline-flex items-center gap-2 sprout-gatekeeper-bypass-btn",
+        attr: { type: "button", "aria-label": "Bypass this round" },
+      });
+      bypassBtn.setAttr("data-tooltip-position", "top");
+      const iconWrap = bypassBtn.createSpan({ cls: "bc inline-flex items-center justify-center [&_svg]:size-4" });
+      setIcon(iconWrap, "shield-off");
+      bypassBtn.createSpan({ text: "Bypass", cls: "bc", attr: { "data-sprout-label": "true" } });
+      bypassBtn.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        this.requestBypass();
+      });
+    }
   }
 
   override close(): void {
@@ -216,26 +219,37 @@ export class GatekeeperModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
 
+    // Update header progress indicator
+    if (this._progressEl) {
+      this._progressEl.setText(`${this.index + 1} of ${this.cards.length}`);
+    }
+
     if (this._showBypassWarning) {
       this.renderBypassWarning(contentEl);
       return;
     }
 
-    const qaSection = contentEl.createDiv({ cls: "bc sprout-gatekeeper-qa-section" });
+    // ── Content: study-style card section ──
+    const section = contentEl.createEl("section", { cls: "bc flex flex-col gap-3 sprout-gatekeeper-qa-section" });
 
-    const body = qaSection.createDiv({ cls: "sprout-gatekeeper-body" });
-    const qHeading = body.createDiv({ cls: "bc flex items-center justify-between gap-2" });
-    qHeading.createEl("h3", { text: "Question", cls: "text-sm font-medium sprout-gatekeeper-section-label" });
-    this.appendTtsReplayButton(qHeading, card, false);
-    this.renderCardBody(body, card);
+    // Question row
+    section.appendChild(this.makeLabelRow("Question", card, false));
+    this.renderQuestionBlock(section, card);
 
+    // Answer + extra info (only when revealed)
+    if (this.reveal) {
+      this.renderAnswerBlock(section, card);
+      this.renderExtraInfoBlock(section, card);
+    }
+
+    // ── Footer: review buttons ──
     const footer = contentEl.createDiv({ cls: "bc flex flex-col items-center gap-3 lk-modal-footer sprout-gatekeeper-footer" });
 
     if (!this.reveal) {
       const mainActionRow = footer.createDiv({ cls: "bc flex items-center justify-center gap-2 w-full" });
       const revealBtn = this.makeButtonWithKbd(mainActionRow, {
         text: "Reveal answer",
-        cls: "bc btn-primary inline-flex items-center gap-2 h-9 px-3 text-sm",
+        cls: "bc sprout-btn-toolbar sprout-btn-filter",
         kbd: "↵",
       });
       revealBtn.addEventListener("click", () => {
@@ -243,29 +257,42 @@ export class GatekeeperModal extends Modal {
         this.render();
       });
 
-      const progressRow = footer.createDiv({ cls: "bc flex items-center justify-center w-full sprout-gatekeeper-progress-row" });
-      progressRow.createDiv({ text: `${this.index + 1} of ${this.cards.length}`, cls: "text-sm text-muted-foreground" });
-
       return;
     }
 
     const fourButtonMode = !!this.plugin.settings.study?.fourButtonMode;
-    const gradeRow = footer.createDiv({ cls: fourButtonMode ? "bc grid grid-cols-2 gap-2 w-full" : "bc flex items-center justify-center gap-2 w-full" });
+    const showIntervals = !!this.plugin.settings.study?.showGradeIntervals;
+    const previewNow = Date.now();
+    const previewState = showIntervals ? this.plugin.store.ensureState(String(card.id), previewNow) : null;
+    const getSubtitle = (rating: ReviewRating): string | undefined => {
+      if (!previewState || !showIntervals) return undefined;
+      return (
+        getRatingIntervalPreview({
+          state: previewState,
+          rating,
+          now: previewNow,
+          scheduling: this.plugin.settings.scheduling,
+        }) ?? undefined
+      );
+    };
+
+    const gradeRow = footer.createDiv({ cls: fourButtonMode ? "bc grid grid-cols-2 gap-2 w-full" : "bc flex flex-wrap justify-center gap-2 w-full" });
     const grades = fourButtonMode
       ? ([
-          { rating: "again", label: "Again", kbd: "1", tooltip: "Grade question as again (1)", cls: "bc btn-destructive sprout-btn-again inline-flex items-center gap-2 h-9 px-3 text-sm" },
-          { rating: "hard", label: "Hard", kbd: "2", tooltip: "Grade question as hard (2)", cls: "bc btn sprout-btn-hard inline-flex items-center gap-2 h-9 px-3 text-sm" },
-          { rating: "good", label: "Good", kbd: "3", tooltip: "Grade question as good (3)", cls: "bc btn sprout-btn-good inline-flex items-center gap-2 h-9 px-3 text-sm" },
-          { rating: "easy", label: "Easy", kbd: "4", tooltip: "Grade question as easy (4)", cls: "bc btn sprout-btn-easy inline-flex items-center gap-2 h-9 px-3 text-sm" },
+          { rating: "again", label: "Again", subtitle: getSubtitle("again"), kbd: "1", tooltip: "Grade question as again (1)", cls: "bc btn-destructive sprout-btn-again sprout-grade-btn-with-interval" },
+          { rating: "hard", label: "Hard", subtitle: getSubtitle("hard"), kbd: "2", tooltip: "Grade question as hard (2)", cls: "bc btn sprout-btn-hard sprout-grade-btn-with-interval" },
+          { rating: "good", label: "Good", subtitle: getSubtitle("good"), kbd: "3", tooltip: "Grade question as good (3)", cls: "bc btn sprout-btn-good sprout-grade-btn-with-interval" },
+          { rating: "easy", label: "Easy", subtitle: getSubtitle("easy"), kbd: "4", tooltip: "Grade question as easy (4)", cls: "bc btn sprout-btn-easy sprout-grade-btn-with-interval" },
         ] as const)
       : ([
-          { rating: "again", label: "Again", kbd: "1", tooltip: "Grade question as again (1)", cls: "bc btn-destructive sprout-btn-again inline-flex items-center gap-2 h-9 px-3 text-sm" },
-          { rating: "good", label: "Good", kbd: "2", tooltip: "Grade question as good (2)", cls: "bc btn sprout-btn-good inline-flex items-center gap-2 h-9 px-3 text-sm" },
+          { rating: "again", label: "Again", subtitle: getSubtitle("again"), kbd: "1", tooltip: "Grade question as again (1)", cls: "bc btn-destructive sprout-btn-again sprout-grade-btn-with-interval" },
+          { rating: "good", label: "Good", subtitle: getSubtitle("good"), kbd: "2", tooltip: "Grade question as good (2)", cls: "bc btn sprout-btn-good sprout-grade-btn-with-interval" },
         ] as const);
 
     for (const grade of grades) {
       const btn = this.makeButtonWithKbd(gradeRow, {
         text: grade.label,
+        subtitle: grade.subtitle,
         cls: `${grade.cls}${fourButtonMode ? " w-full" : ""}`,
         kbd: grade.kbd,
         tooltip: grade.tooltip,
@@ -275,8 +302,6 @@ export class GatekeeperModal extends Modal {
       });
     }
 
-    const progressRow = footer.createDiv({ cls: "bc flex items-center justify-center w-full sprout-gatekeeper-progress-row" });
-    progressRow.createDiv({ text: `${this.index + 1} of ${this.cards.length}`, cls: "text-sm text-muted-foreground" });
   }
 
   private requestBypass() {
@@ -345,39 +370,19 @@ export class GatekeeperModal extends Modal {
     continueBtn.addEventListener("click", () => this.close());
   }
 
-  private getCardLocationText(card: CardRecord): string {
-    const raw = String(card.sourceNotePath || "").trim();
-    if (!raw) return "";
-    const clean = raw.replace(/\\/g, "/").replace(/\.md$/i, "");
-    return clean.split("/").filter(Boolean).join(" / ");
-  }
-
-  private getCardTitleText(card: CardRecord): string {
-    const explicit = String(card.title || "").trim();
-    if (explicit) return explicit;
-
-    const type = String(card.type || "").toLowerCase();
-    const fallback =
-      type === "mcq"
-        ? String(card.stem || "").trim()
-        : type === "cloze" || type === "cloze-child"
-          ? String(card.clozeText || "").trim()
-          : type === "io" || type === "io-child"
-            ? String(card.prompt || "").trim()
-            : String(card.q || "").trim();
-
-    const oneLine = fallback.replace(/\s+/g, " ").trim();
-    if (!oneLine) return "Flashcard";
-    return oneLine.length > 90 ? `${oneLine.slice(0, 87)}...` : oneLine;
-  }
-
-  private makeButtonWithKbd(parent: HTMLElement, args: { text: string; cls: string; kbd?: string; tooltip?: string }) {
+  private makeButtonWithKbd(parent: HTMLElement, args: { text: string; subtitle?: string; cls: string; kbd?: string; tooltip?: string }) {
     const btn = parent.createEl("button", { cls: args.cls, type: "button" });
-    btn.createSpan({ text: args.text });
+    if (args.subtitle) {
+      const labelWrap = btn.createSpan({ cls: "bc sprout-grade-btn-label-wrap" });
+      labelWrap.createSpan({ cls: "bc sprout-grade-btn-label", text: args.text });
+      labelWrap.createSpan({ cls: "bc sprout-grade-btn-subtitle", text: args.subtitle });
+    } else {
+      btn.createSpan({ text: args.text });
+    }
     btn.setAttribute("aria-label", args.tooltip || (args.kbd ? `${args.text} (${args.kbd})` : args.text));
     btn.setAttribute("data-tooltip-position", "top");
     if (args.kbd) {
-      btn.createEl("kbd", { cls: "bc kbd", text: args.kbd });
+      btn.createEl("kbd", { cls: "bc kbd ml-2", text: args.kbd });
     }
     return btn;
   }
@@ -477,46 +482,87 @@ export class GatekeeperModal extends Modal {
     hydrateCircleFlagsInElement(containerEl);
   }
 
-  private renderCardBody(body: HTMLElement, card: CardRecord) {
+  /** Build a label row matching the study session style ("Question", "Answer", etc.) */
+  private makeLabelRow(text: string, card?: CardRecord, answerSide?: boolean): HTMLElement {
+    const row = document.createElement("div");
+    row.className = "bc flex items-center justify-between sprout-label-row";
+    const label = document.createElement("div");
+    label.className = "bc text-muted-foreground text-sm font-medium";
+    label.textContent = text;
+    row.appendChild(label);
+    if (card && answerSide !== undefined) {
+      this.appendTtsReplayButton(row, card, answerSide);
+    }
+    return row;
+  }
+
+  /** Render the question block into a section element, based on type. */
+  private renderQuestionBlock(section: HTMLElement, card: CardRecord) {
     const type = String(card.type || "").toLowerCase();
 
     if (type === "basic" || type === "reversed" || type === "reversed-child") {
-      this.renderBasicCard(body, card);
+      const isBackDirection = type === "reversed-child" && (card as unknown as Record<string, unknown>).reversedDirection === "back";
+      const isOldReversed = type === "reversed";
+      const qText = (isBackDirection || isOldReversed) ? (card.a || "") : (card.q || "");
+      section.appendChild(this.renderMdBlock("bc-q", qText, card));
     } else if (type === "cloze" || type === "cloze-child") {
-      this.renderClozeCard(body, card);
+      this.renderClozeCard(section, card);
     } else if (type === "mcq") {
-      this.renderMcqCard(body, card);
+      this.renderMcqCard(section, card);
     } else if (type === "oq") {
-      this.renderOqCard(body, card);
+      this.renderOqCard(section, card);
     } else if (type === "io" || type === "io-child") {
-      this.renderIoCard(body, card);
+      this.renderIoCard(section, card);
     } else {
-      const q = body.createDiv({ cls: "whitespace-pre-wrap" });
       const maybeQuestion = (card as unknown as Record<string, unknown>).q;
-      q.textContent = typeof maybeQuestion === "string" ? maybeQuestion : "(No question text)";
-      if (this.reveal) {
-        const a = body.createDiv({ cls: "whitespace-pre-wrap mt-3" });
-        const maybeAnswer = (card as unknown as Record<string, unknown>).a;
-        a.textContent = typeof maybeAnswer === "string" ? maybeAnswer : "(No answer text)";
-      }
+      const text = typeof maybeQuestion === "string" ? maybeQuestion : "(No question text)";
+      section.appendChild(this.renderMdBlock("bc-q", text, card));
     }
   }
 
-  private renderBasicCard(body: HTMLElement, card: CardRecord) {
-    const isBackDirection = card.type === "reversed-child" && (card as unknown as Record<string, unknown>).reversedDirection === "back";
-    const isOldReversed = card.type === "reversed";
-    const qText = (isBackDirection || isOldReversed) ? (card.a || "") : (card.q || "");
-    const qEl = body.createDiv({ cls: "whitespace-pre-wrap break-words" });
-    this.renderTextBlock(qEl, qText, card);
+  /** Render the answer block into the section on reveal. */
+  private renderAnswerBlock(section: HTMLElement, card: CardRecord) {
+    const type = String(card.type || "").toLowerCase();
 
-    if (!this.reveal) return;
+    if (type === "basic" || type === "reversed" || type === "reversed-child") {
+      const isBackDirection = type === "reversed-child" && (card as unknown as Record<string, unknown>).reversedDirection === "back";
+      const isOldReversed = type === "reversed";
+      const aText = (isBackDirection || isOldReversed) ? (card.q || "") : (card.a || "");
+      section.appendChild(this.makeLabelRow("Answer", card, true));
+      section.appendChild(this.renderMdBlock("bc-a", aText, card));
+    } else if (type === "io" || type === "io-child") {
+      // IO answer is part of the reveal render, handled inside renderIoCard
+    } else {
+      // cloze / mcq / oq answer reveal is handled inline by their own renders
+    }
+  }
 
-    const aHeading = body.createDiv({ cls: "bc flex items-center justify-between gap-2" });
-    aHeading.createEl("h3", { text: "Answer", cls: "text-sm font-medium sprout-gatekeeper-section-label" });
-    this.appendTtsReplayButton(aHeading, card, true);
-    const aText = (isBackDirection || isOldReversed) ? (card.q || "") : (card.a || "");
-    const aEl = body.createDiv({ cls: "whitespace-pre-wrap break-words" });
-    this.renderTextBlock(aEl, aText, card);
+  /** Render extra info block if the card has one. */
+  private renderExtraInfoBlock(section: HTMLElement, card: CardRecord) {
+    const infoText = this.extractInfoField(card);
+    if (!infoText) return;
+    section.appendChild(this.makeLabelRow("Extra information"));
+    section.appendChild(this.renderMdBlock("bc-info", infoText, card));
+  }
+
+  /** Extract the extra-info field from a card record (mirrors reviewer logic). */
+  private extractInfoField(card: CardRecord): string | null {
+    if (!card) return null;
+    const v = card.info;
+    if (typeof v === "string" && v.trim()) return v.trim();
+    if (Array.isArray(v)) {
+      const s = (v as unknown[]).filter((x) => typeof x === "string").join("\n").trim();
+      return s || null;
+    }
+    return null;
+  }
+
+  /** Create a styled markdown block matching the study session pattern. */
+  private renderMdBlock(cls: string, text: string, card: CardRecord): HTMLElement {
+    const block = document.createElement("div");
+    block.className = `bc ${cls} whitespace-pre-wrap break-words sprout-md-block`;
+    this.renderTextBlock(block, text, card);
+    return block;
   }
 
   private isGatekeeperTtsEnabled(): boolean {

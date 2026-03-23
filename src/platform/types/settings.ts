@@ -248,12 +248,6 @@ export type SproutSettings = {
     defaultMaskMode: "solo" | "all";
     /** Back-side reveal behavior for IO cards using Hide all mode. */
     revealMode: "group" | "all";
-    /** Background color for the target (active) mask. */
-    maskTargetColor: string;
-    /** Background color for other (context) masks. */
-    maskOtherColor: string;
-    /** Icon/text shown on the target mask (e.g., "?"). Leave empty for no icon. */
-    maskIcon: string;
   };
 
   // Reading View — card appearance in reading/preview mode

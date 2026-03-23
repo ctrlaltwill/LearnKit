@@ -5,6 +5,10 @@
 
 /* ---- Browser table ---- */
 
+.sprout .text-xs {
+  font-size: var(--sprout-font-xs) !important;
+}
+
 /* Browser table should align with other content */
 .sprout .lk-browser-card {
   margin: 0;
@@ -929,9 +933,9 @@
 
 /* Keep numeric pagination buttons exactly square across all states. */
 .sprout .lk-browser-view nav[role="navigation"] button[aria-label^="Page "] {
-  width: 37px !important;
-  min-width: 37px !important;
-  max-width: 37px !important;
+  width: 36px !important;
+  min-width: 36px !important;
+  max-width: 36px !important;
   height: 37px !important;
   min-height: 37px !important;
   max-height: 37px !important;
@@ -939,7 +943,7 @@
   margin: 0 !important;
   box-sizing: border-box !important;
   aspect-ratio: 1 / 1;
-  flex: 0 0 37px !important;
+  flex: 0 0 36px !important;
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
@@ -951,9 +955,9 @@
 .sprout .lk-browser-view nav[role="navigation"] button[aria-label^="Page "]:focus-visible,
 .sprout .lk-browser-view nav[role="navigation"] button[aria-label^="Page "]:active,
 .sprout .lk-browser-view nav[role="navigation"] button[aria-label^="Page "][aria-current="page"] {
-  width: 37px !important;
-  min-width: 37px !important;
-  max-width: 37px !important;
+  width: 36px !important;
+  min-width: 36px !important;
+  max-width: 36px !important;
   height: 37px !important;
   min-height: 37px !important;
   max-height: 37px !important;
@@ -989,8 +993,12 @@
   font-weight: 500;
 }
 
+.sprout .table {
+font-size: var(--sprout-font-xs);
+}
+
 .sprout .lk-browser-view .table thead th {
-  background-color: var(--color-base-20);
+  background-color: var(--theme-base-10);
   border-bottom: 1px solid var(--lk-browser-border-soft);
   font-size: var(--font-ui-small);
   color: var(--text-muted);

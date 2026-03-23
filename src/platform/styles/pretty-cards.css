@@ -327,9 +327,7 @@ mjx-container[jax="CHTML"][display="true"] {
 
 /* Flashcards macro */
 .sprout-pretty-card.sprout-macro-flashcards {
-  background: var(--color-base-10);
-  border: 1px solid var(--alt-accent-color);
-  border-radius: var(--radius-l);
+
   padding: 0;
   cursor: pointer;
   user-select: none;
@@ -1122,8 +1120,9 @@ mjx-container[jax="CHTML"][display="true"] {
   text-align: center;
   line-height: 1.5;
   border: var(--sprout-border-width) solid var(--sprout-border-color);
-  border-radius: calc(var(--radius-l) - 1px);
-  background: var(--color-base-25);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-base-35);;
+  background: var(--color-base-20);
   padding: 12px;
   overflow: hidden;
 }
@@ -1287,13 +1286,6 @@ padding: 0px !important;
   height: 15px;
   stroke: currentColor;
   fill: none;
-}
-
-.sprout-pretty-card.sprout-macro-flashcards .sprout-flashcard-question,
-.sprout-pretty-card.sprout-macro-flashcards .sprout-flashcard-answer {
-  background: var(--color-base-25);
-  color: var(--sprout-rv-flash-text);
-  padding: 20px 30px;
 }
 
 .sprout-pretty-card.sprout-macro-flashcards .sprout-flashcard-answer {

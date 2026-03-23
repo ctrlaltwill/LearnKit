@@ -323,16 +323,16 @@
 }
 
 .sprout .sprout-io-mask-target {
-  background: var(--sprout-io-mask-target-color, var(--theme-accent));
-  border: 1px solid var(--foreground);
+  background: var(--color-base-70);
+  border: 1px solid var(--color-base-100);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .sprout .sprout-io-mask-other {
-  background: var(--sprout-io-mask-other-color, var(--foreground));
-  border: 2px solid var(--foreground);
+  background: var(--color-base-20);
+  border: 1px solid var(--color-base-35);
 }
 
 .sprout .sprout-io-mask-hidden {
@@ -345,11 +345,11 @@
 }
 
 .sprout .sprout-io-mask-rect {
-  border-radius: var(--radius-s);
+  border-radius: 3px;
 }
 
 .sprout .sprout-io-mask-hint {
-  color: #fff;
+  color: var(--color-base-100);
   font-weight: 600;
   line-height: 1;
   font-size: var(--sprout-io-hint-size, var(--sprout-font-2xs));
@@ -362,62 +362,7 @@
 .sprout .sprout-io-mask-hint .svg-icon {
   width: var(--sprout-io-hint-size, 12px);
   height: var(--sprout-io-hint-size, 12px);
-  stroke: #fff;
-}
-
-/* ── IO icon picker in settings ───────────────────────────────── */
-.sprout .sprout-io-icon-picker {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.sprout .sprout-io-icon-chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 32px;
-  height: 34px;
-  padding: 0 10px;
-  border: 1px solid var(--color-base-35);
-  border-radius: var(--radius-s, 4px);
-  background-color: var(--color-base-20);
-  color: var(--text-normal);
-  font-size: var(--font-ui-small);
-  cursor: pointer;
-  transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease;
-}
-
-.sprout .sprout-io-icon-chip:hover {
-  background-color: var(--color-base-30);
-  border-color: var(--color-base-40);
-  color: var(--color-base-100);
-}
-
-.sprout .sprout-io-icon-chip.is-active {
-  border-color: var(--color-base-60);
-  background: linear-gradient(180deg, var(--color-base-35), var(--color-base-30));
-  color: var(--color-base-100);
-}
-
-.sprout .sprout-io-icon-chip.is-active .svg-icon {
-  stroke: currentColor;
-}
-
-.sprout .sprout-io-icon-chip .svg-icon {
-  width: 16px;
-  height: 16px;
-}
-
-.sprout .sprout-io-icon-custom-input {
-  height: 32px;
-  width: 60px;
-  padding: 0 8px;
-  border: var(--sprout-border-width) solid var(--sprout-border-color);
-  border-radius: var(--radius-md);
-  background-color: var(--background);
-  color: var(--foreground);
-  font-size: var(--sprout-font-xs);
+  stroke: var(--color-base-100);
 }
 
 .theme-dark .sprout .sprout-bmc {

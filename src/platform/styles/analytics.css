@@ -269,6 +269,25 @@
   border-bottom: none;
 }
 
+/* Analytics table pagination: keep number buttons fixed without affecting Prev/Next. */
+.sprout .sprout-analytics-root nav[role="navigation"] button[aria-label^="Page "] {
+  min-width: 36px;
+  max-width: 36px;
+}
+
+/* Active page button is non-interactive and should not show hover treatment. */
+.sprout .sprout-analytics-root nav[role="navigation"] button[aria-label^="Page "][aria-current="page"] {
+  cursor: default;
+  pointer-events: none;
+}
+
+.sprout .sprout-analytics-root nav[role="navigation"] button[aria-label^="Page "][aria-current="page"]:hover,
+.sprout .sprout-analytics-root nav[role="navigation"] button[aria-label^="Page "][aria-current="page"]:focus,
+.sprout .sprout-analytics-root nav[role="navigation"] button[aria-label^="Page "][aria-current="page"]:focus-visible,
+.sprout .sprout-analytics-root nav[role="navigation"] button[aria-label^="Page "][aria-current="page"]:active {
+  transform: none;
+}
+
 /* ---- Legend dot ---- */
 /* Replaces inline: width/height 10px; borderRadius 3px; background:<color>
    across 7 analytics chart files (~15 usages) */
@@ -294,6 +313,38 @@
 .sprout .sprout-analytics-stats-card .sprout-changelog-table th,
 .sprout .sprout-analytics-stats-card .sprout-changelog-table td {
   min-width: 50px;
+}
+
+/* Daily stats table: match deck row height. */
+.sprout .sprout-analytics-stats-card .sprout-changelog-table tbody tr {
+  height: var(--lk-row-height-default, 42px);
+}
+
+.sprout .sprout-analytics-stats-card .sprout-changelog-table tbody td,
+.sprout .sprout-analytics-stats-card .sprout-changelog-table tbody .sprout-changelog-cell {
+  height: var(--lk-row-height-default, 42px);
+  vertical-align: middle;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-top: 1px solid var(--background);
+  border-bottom: 1px solid var(--background);
+  border-left: 0;
+  border-right: 0;
+  transition: border-color 0.18s ease;
+}
+
+.sprout .sprout-analytics-stats-card .sprout-changelog-table tbody td:first-child,
+.sprout .sprout-analytics-stats-card .sprout-changelog-table tbody .sprout-changelog-cell:first-child {
+  border-left: 1px solid var(--background);
+  border-top-left-radius: var(--radius-md);
+  border-bottom-left-radius: var(--radius-md);
+}
+
+.sprout .sprout-analytics-stats-card .sprout-changelog-table tbody td:last-child,
+.sprout .sprout-analytics-stats-card .sprout-changelog-table tbody .sprout-changelog-cell:last-child {
+  border-right: 1px solid var(--background);
+  border-top-right-radius: var(--radius-md);
+  border-bottom-right-radius: var(--radius-md);
 }
 
 /* Analytics table wrapper: padding + border so scroll stays inside */
@@ -327,29 +378,31 @@
   cursor: pointer;
 }
 
-.sprout .sprout-analytics-stats-card .sprout-changelog-table tbody tr:hover {
-  background-color: var(--theme-base-90);
-  color: #fff;
-}
+@media (hover: hover) {
+  .sprout .sprout-analytics-stats-card .sprout-changelog-table tbody tr:hover {
+    background-color: var(--theme-base-10);
+    color: var(--theme-base-95);
+  }
 
-.sprout .sprout-analytics-stats-card .sprout-changelog-table tbody tr:hover td {
-  background-color: var(--theme-base-90);
-  border-color: var(--sprout-border-color);
-  color: #fff;
-}
+  .sprout .sprout-analytics-stats-card .sprout-changelog-table tbody tr:hover td {
+    background-color: var(--theme-base-10);
+    border-top-color: var(--theme-base-20) !important;
+    border-bottom-color: var(--theme-base-20) !important;
+    color: var(--theme-base-95);
+  }
 
-.sprout .sprout-analytics-stats-card .sprout-changelog-table tbody tr:hover td .text-muted-foreground {
-  color: rgb(245, 245, 245);
-}
+  .sprout .sprout-analytics-stats-card .sprout-changelog-table tbody tr:hover td:first-child {
+    border-left-color: var(--theme-base-20) !important;
+  }
 
-.sprout .sprout-analytics-stats-card .sprout-changelog-table tbody tr:hover td:first-child {
-  border-top-left-radius: var(--radius-md);
-  border-bottom-left-radius: var(--radius-md);
-}
+  .sprout .sprout-analytics-stats-card .sprout-changelog-table tbody tr:hover td:last-child {
+    border-right-color: var(--theme-base-20) !important;
+  }
 
-.sprout .sprout-analytics-stats-card .sprout-changelog-table tbody tr:hover td:last-child {
-  border-top-right-radius: var(--radius-md);
-  border-bottom-right-radius: var(--radius-md);
+  .sprout .sprout-analytics-stats-card .sprout-changelog-table tbody tr:hover td .text-muted-foreground {
+    color: var(--theme-base-95);
+  }
+
 }
 
 .sprout .sprout-analytics-root .table tbody tr:hover td:first-child {
@@ -408,6 +461,28 @@
 
 .sprout .sprout-ana-popover-sm {
   min-width: 250px;
+}
+
+/* Analytics filter triggers should match neutral settings action button styling. */
+.sprout .sprout-ana-card .sprout-btn-filter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: var(--radius-s, 4px);
+  border: 1px solid var(--color-base-35) !important;
+  background-color: var(--color-base-20) !important;
+  color: var(--text-normal) !important;
+  box-shadow: none;
+  transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease;
+}
+
+.sprout .sprout-ana-card .sprout-btn-filter:is(:hover, :focus-visible, :active, [aria-expanded="true"]) {
+  background-color: var(--color-base-30) !important;
+  border-color: var(--color-base-40) !important;
+  color: var(--color-base-100) !important;
 }
 
 /* Analytics filter popovers: shared menu hover/active treatment */

@@ -142,7 +142,7 @@
   max-width: min(var(--lk-home-max-width, 1280px), calc(100% - var(--lk-shell-gutter-desktop)));
   margin: 0 auto;
   box-sizing: border-box;
-  border-radius: 30px;
+  border-radius: var(--radius-l);
   border: var(--color-base-30) 1px solid;
   background-color: var(--color-base-20);
 }

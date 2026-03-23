@@ -149,6 +149,13 @@ function formatNotePathForHeader(raw: string): string {
   return formatBreadcrumbs(s);
 }
 
+function getNoteNameForHeader(rawPath: string): string {
+  const normalized = String(rawPath ?? "").trim().replace(/\\/g, "/");
+  if (!normalized) return "";
+  const leaf = normalized.split("/").pop() || normalized;
+  return leaf.replace(/\.md$/i, "").trim();
+}
+
 function applyInlineMarkdownWithFlags(target: HTMLElement, raw: string): void {
   applyInlineMarkdown(target, processCircleFlagsInMarkdown(raw));
   hydrateCircleFlagsInElement(target);
@@ -903,30 +910,6 @@ function renderOqContent(ctx: CardRenderCtx): void {
 
     renderSteps();
 
-    // Submit button
-    const submitWrap = document.createElement("div");
-    submitWrap.className = "bc flex justify-center mt-2";
-    const submitBtn = document.createElement("button");
-    submitBtn.type = "button";
-    submitBtn.className = "bc btn w-full sprout-oq-submit-btn";
-
-    const submitLabel = document.createElement("span");
-    submitLabel.textContent = t(args.interfaceLanguage, "ui.reviewer.oq.submitOrder", "Submit order");
-    submitBtn.appendChild(submitLabel);
-
-    const submitKbd = document.createElement("kbd");
-    submitKbd.className = "bc kbd ml-2 text-xs";
-    submitKbd.textContent = "\u21B5";
-    submitBtn.appendChild(submitKbd);
-
-    submitBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      void args.answerOq(currentOrder.slice());
-    });
-    submitWrap.appendChild(submitBtn);
-    section.appendChild(submitWrap);
-
   } else {
     // ── Back: show user order with correctness highlighting ──
     section.appendChild(labelRow("Your Order"));
@@ -972,6 +955,7 @@ function renderOqContent(ctx: CardRenderCtx): void {
 export function renderSessionMode(args: Args) {
   const tx = (token: string, fallback: string, vars?: Record<string, string | number>) =>
     t(args.interfaceLanguage, token, fallback, vars);
+  const exitToDecksLabel = `${tx("ui.reviewer.session.exitTo", "Exit to")} ${tx("ui.anki.import.preview.decks", "Decks")}`;
   const skipEnabled = !!(args.enableSkipButton ?? args.skipEnabled);
   const practiceMode = !!args.practiceMode;
   const four = !!args.fourButtonMode;
@@ -1041,12 +1025,12 @@ export function renderSessionMode(args: Args) {
     quitBtn.setAttribute("aria-label", coachBackLabel);
   } else {
     quitBtn.className =
-      "sprout-btn-toolbar h-9 flex items-center gap-2 equal-height-btn sprout-btn-exit-sm sprout-btn-top-right";
-    quitBtn.setAttribute("aria-label", tx("ui.reviewer.session.quit", "Quit study session"));
+      "bc sprout-btn-toolbar sprout-btn-filter h-7 px-3 text-sm inline-flex items-center gap-2 sprout-scope-clear-btn sprout-btn-top-right sprout-session-quit-btn";
+    quitBtn.setAttribute("aria-label", exitToDecksLabel);
   }
   quitBtn.setAttribute("data-tooltip-position", "top");
   const quitIconWrap = document.createElement("span");
-  quitIconWrap.className = "inline-flex items-center justify-center sprout-btn-icon";
+  quitIconWrap.className = "bc inline-flex items-center justify-center";
   quitBtn.appendChild(quitIconWrap);
   setIcon(quitIconWrap, "x");
   if (args.coachSessionMode) {
@@ -1054,6 +1038,12 @@ export function renderSessionMode(args: Args) {
     backLabel.setAttribute("data-sprout-label", "true");
     backLabel.textContent = coachBackLabel;
     quitBtn.appendChild(backLabel);
+  } else {
+    const exitLabel = document.createElement("span");
+    exitLabel.className = "bc";
+    exitLabel.setAttribute("data-sprout-label", "true");
+    exitLabel.textContent = exitToDecksLabel;
+    quitBtn.appendChild(exitLabel);
   }
   quitBtn.addEventListener("click", () => args.backToDecks());
 
@@ -1364,7 +1354,7 @@ export function renderSessionMode(args: Args) {
   const shouldShowInfo =
     ((card.type === "basic" || card.type === "reversed" || card.type === "reversed-child") && isBack && !!infoText) || ((args.showInfo || graded) && !!infoText);
   if (shouldShowInfo) {
-    section.appendChild(mutedLabel("Extra information"));
+    section.appendChild(labelRow("Extra information"));
     section.appendChild(renderMdBlock("bc-info", infoText));
   }
 
@@ -1554,7 +1544,22 @@ export function renderSessionMode(args: Args) {
       mainRow.appendChild(h("div", "text-muted-foreground text-sm", `Choose 1–${optCount}.`));
       hasMainRowContent = true;
     } else if (card.type === "oq") {
-      mainRow.appendChild(h("div", "text-muted-foreground text-sm", t(args.interfaceLanguage, "ui.reviewer.oq.dragThenSubmit", "Drag to reorder, then submit.")));
+      const steps = Array.isArray(card.oqSteps) ? card.oqSteps : [];
+      const n = steps.length;
+      const identity = Array.from({ length: n }, (_, i) => i);
+      mainRow.appendChild(
+        makeTextButton({
+          label: t(args.interfaceLanguage, "ui.reviewer.oq.submitOrder", "Submit order"),
+          className: "btn sprout-oq-submit-btn",
+          onClick: () => {
+            const oqMap = ensureOqOrderMap(args.session);
+            const currentOrder = oqMap[String(card.id)];
+            const orderToSubmit = isPermutation(currentOrder, n) ? currentOrder.slice() : identity;
+            void args.answerOq(orderToSubmit);
+          },
+          kbd: "↵",
+        }),
+      );
       hasMainRowContent = true;
     } else if (ioLike && !args.showAnswer) {
       mainRow.appendChild(h("div", "text-muted-foreground text-sm", "Press Enter to reveal the image."));

@@ -43,10 +43,6 @@ export function createSettingsNoticeLines(tx: Tx) {
         ? tx("ui.settings.cards.imageOcclusion.revealMode.option.group", "Reveal group")
         : tx("ui.settings.cards.imageOcclusion.revealMode.option.all", "Reveal all"),
     }),
-    ioTargetColorUpdated: tx("ui.settings.notice.ioTargetColorUpdated", "Target mask color updated"),
-    ioTargetColorReset: tx("ui.settings.cards.imageOcclusion.targetMaskColor.resetTooltip", "Reset to theme accent"),
-    ioOtherColorUpdated: tx("ui.settings.notice.ioOtherColorUpdated", "Other mask color updated"),
-    ioOtherColorReset: tx("ui.settings.cards.imageOcclusion.otherMaskColor.resetTooltip", "Reset to theme foreground"),
     randomizeMcqOptions: (enabled: boolean) => tx("ui.settings.notice.randomizeMcqOptions", "Randomise multiple-choice options: {state}", {
       state: enabled ? tx("ui.common.on", "On") : tx("ui.common.off", "Off"),
     }),

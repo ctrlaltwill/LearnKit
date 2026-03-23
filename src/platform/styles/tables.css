@@ -84,13 +84,21 @@
 @media (hover: hover) {
   .sprout .table tr:hover {
     background-color: var(--theme-base-10);
-    border: 1px solid var(--theme-base-20);
     color: var(--theme-base-95);
   }
 
-  .sprout .table tr:hover td {
-    border-color: var(--theme-base-20);
+  .sprout .table tbody tr:hover td {
+    border-top-color: var(--theme-base-20);
+    border-bottom-color: var(--theme-base-20);
     color: var(--theme-base-95);
+  }
+
+  .sprout .table tbody tr:hover td:first-child {
+    border-left-color: var(--theme-base-20);
+  }
+
+  .sprout .table tbody tr:hover td:last-child {
+    border-right-color: var(--theme-base-20);
   }
 
   .sprout .table tr:hover :is(.sprout-deck-expand-icon, .sprout-deck-disclosure, .sprout-deck-control-icon) {

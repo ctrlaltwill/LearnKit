@@ -54,9 +54,9 @@ export function migrateSettingsInPlace(settings: Record<string, unknown>): void 
   move(s, "scheduler", "scheduling");
   move(s, "notifications", "reminders");
 
-  // Merge legacy imageOcclusion.attachmentFolderPath + cardAttachments → storage
-  // NOTE: imageOcclusion is now reused for mask appearance/review settings (maskTargetColor,
-  // maskOtherColor, maskIcon, defaultMaskMode, revealMode) — do NOT delete the entire object.
+  // Merge legacy imageOcclusion.attachmentFolderPath + cardAttachments → storage.
+  // NOTE: imageOcclusion is still used for review behavior settings (defaultMaskMode, revealMode)
+  // so do NOT delete the entire object.
   const io = s.imageOcclusion as Record<string, unknown> | undefined;
   const ca = s.cardAttachments as Record<string, unknown> | undefined;
   if ((io && "attachmentFolderPath" in io) || ca) {

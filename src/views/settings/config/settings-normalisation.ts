@@ -216,9 +216,6 @@ export function normaliseSettingsInPlace(s: SproutSettings): void {
   s.imageOcclusion.revealMode ??= (
     s.imageOcclusion.defaultMaskMode === "all" ? "all" : DEFAULT_SETTINGS.imageOcclusion.revealMode
   );
-  s.imageOcclusion.maskTargetColor ??= DEFAULT_SETTINGS.imageOcclusion.maskTargetColor;
-  s.imageOcclusion.maskOtherColor ??= DEFAULT_SETTINGS.imageOcclusion.maskOtherColor;
-  s.imageOcclusion.maskIcon ??= DEFAULT_SETTINGS.imageOcclusion.maskIcon;
 
   s.scheduling.learningStepsMinutes = cleanPositiveNumberArray(
     s.scheduling.learningStepsMinutes,

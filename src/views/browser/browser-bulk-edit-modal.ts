@@ -265,19 +265,30 @@ export class BulkEditModal extends Modal {
       window.setTimeout(syncPreviewHeight, 80);
     };
 
-    wrap.addEventListener("mousedown", (ev: MouseEvent) => {
+    const focusEditorFromPreview = (ev: Event) => {
+      control.focus({ preventScroll: true });
+      if (control instanceof HTMLInputElement || control instanceof HTMLTextAreaElement) {
+        const end = control.value.length;
+        control.setSelectionRange(end, end);
+      }
+    };
+
+    wrap.addEventListener("pointerdown", (ev: PointerEvent) => {
       if (ev.button !== 0) return;
       if (document.activeElement === control) return;
-      control.focus();
+      focusEditorFromPreview(ev);
     });
 
     overlay.addEventListener("pointerdown", (ev: PointerEvent) => {
       if (ev.button !== 0) return;
-      ev.preventDefault();
-      control.focus();
+      if (document.activeElement === control) return;
+      focusEditorFromPreview(ev);
     }, true);
 
-    overlay.addEventListener("click", () => control.focus());
+    overlay.addEventListener("click", (ev: MouseEvent) => {
+      if (document.activeElement === control) return;
+      focusEditorFromPreview(ev);
+    });
 
     const handleDocumentPointerDown = (ev: PointerEvent) => {
       const target = ev.target;
@@ -307,6 +318,14 @@ export class BulkEditModal extends Modal {
       syncPreviewHeight();
       if (!wrap.classList.contains("sprout-flag-editor--focused")) renderOverlay();
     });
+
+    if (control instanceof HTMLTextAreaElement) {
+      control.addEventListener("keydown", (ev: KeyboardEvent) => {
+        if ((ev.metaKey || ev.ctrlKey) && !ev.altKey && String(ev.key).toLowerCase() === "a") {
+          ev.stopPropagation();
+        }
+      });
+    }
 
     if (typeof ResizeObserver !== "undefined") {
       const ro = new ResizeObserver(() => {

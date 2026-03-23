@@ -1,4 +1,4 @@
-import { Component, ItemView, MarkdownRenderer, Notice, TFile, setIcon, type WorkspaceLeaf } from "obsidian";
+import { Component, ItemView, MarkdownRenderer, TFile, setIcon, type WorkspaceLeaf } from "obsidian";
 import { createViewHeader, type SproutHeader } from "../../platform/core/header";
 import { AOS_DURATION, MAX_CONTENT_WIDTH_PX, VIEW_TYPE_NOTE_REVIEW } from "../../platform/core/constants";
 import { setCssProps } from "../../platform/core/ui";
@@ -43,6 +43,9 @@ export class SproutNoteReviewView extends ItemView {
   private _returnToCoach = false;
   private _ignoreDailyReviewLimit = false;
   private _suppressEntranceAosOnce = false;
+  private _moreWrapEl: HTMLElement | null = null;
+  private _morePopoverEl: HTMLElement | null = null;
+  private _moreCleanup: (() => void) | null = null;
 
   constructor(leaf: WorkspaceLeaf, plugin: SproutPlugin) {
     super(leaf);
@@ -422,10 +425,20 @@ export class SproutNoteReviewView extends ItemView {
         }
         queue = queue.slice(0, targetCount);
       }
+    } else if (cfg?.fillFromFutureWhenUnderLimit !== false && queue.length < dueLimit) {
+      const queuedPaths = new Set(queue.map((f) => f.path));
+      const remaining = filtered.filter((f) => !queuedPaths.has(f.path));
+      remaining.sort((a, b) => {
+        const aDue = this._notesDb?.getNoteState(a.path)?.next_review_time ?? Number.MAX_SAFE_INTEGER;
+        const bDue = this._notesDb?.getNoteState(b.path)?.next_review_time ?? Number.MAX_SAFE_INTEGER;
+        return Number(aDue) - Number(bDue);
+      });
+      queue = [...queue, ...remaining.slice(0, Math.max(0, dueLimit - queue.length))];
     }
 
-    // When due notes are exhausted, keep the queue empty so the session shows
-    // the "No notes are due" screen and offers an explicit practice session.
+    // When due notes are exhausted and fillFromFuture is off, the queue stays
+    // empty so the session shows the "No notes are due" screen and offers
+    // an explicit practice session.
 
     this._queue = queue;
     if (this._queueIndex >= this._queue.length) this._queueIndex = 0;
@@ -756,15 +769,13 @@ export class SproutNoteReviewView extends ItemView {
       if (key === "m") {
         if (this._practiceMode || this._coachNoScheduling) return;
         evt.preventDefault();
-        this._dockMoreOpen = !this._dockMoreOpen;
-        this.render();
+        this._toggleDockMore();
         return;
       }
 
       if (key === "escape" && this._dockMoreOpen) {
         evt.preventDefault();
-        this._dockMoreOpen = false;
-        this.render();
+        this._closeDockMore();
         return;
       }
 
@@ -786,26 +797,26 @@ export class SproutNoteReviewView extends ItemView {
       if (key === "b") {
         if (this._practiceMode || this._coachNoScheduling) return;
         evt.preventDefault();
-        void this._buryCurrentNote().then(() => new Notice("Sprout: note buried until tomorrow."));
+        void this._buryCurrentNote();
         return;
       }
 
       if (key === "s") {
         if (this._practiceMode || this._coachNoScheduling) return;
         evt.preventDefault();
-        void this._suspendCurrentNote().then(() => new Notice("Sprout: note suspended."));
+        void this._suspendCurrentNote();
         return;
       }
 
       if (algorithm === "fsrs") {
         if (key === "1") {
           evt.preventDefault();
-          void this._gradeCurrentFsrs("fail").then(() => new Notice("Sprout: rated again."));
+          void this._gradeCurrentFsrs("fail");
           return;
         }
         if (key === "2") {
           evt.preventDefault();
-          void this._gradeCurrentFsrs("pass").then(() => new Notice("Sprout: rated good."));
+          void this._gradeCurrentFsrs("pass");
         }
         return;
       }
@@ -813,13 +824,12 @@ export class SproutNoteReviewView extends ItemView {
       if (key === "1") {
         evt.preventDefault();
         this._skipCurrent();
-        new Notice("Sprout: skipped.");
         return;
       }
 
       if (key === "2") {
         evt.preventDefault();
-        void this._markCurrentAsRead().then(() => new Notice("Sprout: marked as read."));
+        void this._markCurrentAsRead();
       }
     });
   }
@@ -926,17 +936,14 @@ export class SproutNoteReviewView extends ItemView {
   }
 
   private _renderNoteReviewSessionHeader(root: HTMLElement, note: TFile | null): void {
-    const header = root.createEl("header", { cls: "bc flex flex-col gap-4 pt-4 p-6" });
+    const locationText = this._buildSessionLocation(note);
+    if (!locationText) return;
 
+    const header = root.createEl("header", { cls: "bc px-6 pt-4 pb-2" });
     const locationRow = header.createDiv({ cls: "bc flex items-center gap-2 min-w-0" });
     locationRow.createDiv({
       cls: "bc text-muted-foreground sprout-session-location-text",
-      text: this._buildSessionLocation(note),
-    });
-
-    header.createDiv({
-      cls: "bc sprout-question-title",
-      text: note?.basename ?? t(this.plugin.settings?.general?.interfaceLanguage, "ui.view.noteReview.title", "Notes"),
+      text: locationText,
     });
   }
 
@@ -997,7 +1004,123 @@ export class SproutNoteReviewView extends ItemView {
     });
   }
 
+  private _closeDockMore() {
+    this._dockMoreOpen = false;
+    this._morePopoverEl?.remove();
+    this._morePopoverEl = null;
+    if (this._moreCleanup) {
+      this._moreCleanup();
+      this._moreCleanup = null;
+    }
+  }
+
+  private _toggleDockMore() {
+    if (this._dockMoreOpen) {
+      this._closeDockMore();
+      return;
+    }
+    const current = this._queue[this._queueIndex] ?? null;
+    if (!current || this._practiceMode || this._coachNoScheduling) return;
+
+    this._dockMoreOpen = true;
+    const moreWrap = this._moreWrapEl;
+    if (!moreWrap) return;
+
+    const coachShellMode = !!this._coachScope || this._returnToCoach;
+    const coachLabel = "Coach";
+    const backToCoachLabel = `Back to ${coachLabel}`;
+
+    const popover = document.createElement("div");
+    popover.className =
+      "bc sprout rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 pointer-events-auto sprout-note-review-more-popover";
+
+    const menu = document.createElement("div");
+    menu.className = "bc sprout flex flex-col";
+    menu.setAttribute("role", "menu");
+    popover.appendChild(menu);
+
+    const itemClass =
+      "bc group flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer select-none outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground";
+
+    const addItem = (label: string, hotkey: string, onClick: () => void) => {
+      const item = document.createElement("div");
+      item.className = itemClass;
+      item.setAttribute("role", "menuitem");
+      item.tabIndex = 0;
+      const span = document.createElement("span");
+      span.className = "bc";
+      span.textContent = label;
+      item.appendChild(span);
+      const kbd = document.createElement("kbd");
+      kbd.className = "bc kbd ml-auto text-xs text-muted-foreground tracking-widest";
+      kbd.textContent = hotkey;
+      item.appendChild(kbd);
+      item.addEventListener("click", () => {
+        this._closeDockMore();
+        onClick();
+      });
+      item.addEventListener("keydown", (evt: KeyboardEvent) => {
+        if (evt.key !== "Enter" && evt.key !== " ") return;
+        evt.preventDefault();
+        this._closeDockMore();
+        onClick();
+      });
+      menu.appendChild(item);
+    };
+
+    addItem("Open in Note", "O", () => void this._openCurrentNote());
+    addItem("Bury", "B", () => void this._buryCurrentNote().then(() => new Notice("Note buried until tomorrow.")));
+    addItem("Suspend", "S", () => void this._suspendCurrentNote().then(() => new Notice("Note suspended.")));
+
+    const undoItem = document.createElement("div");
+    undoItem.className = `${itemClass} sprout-menu-item--disabled`;
+    undoItem.setAttribute("role", "menuitem");
+    undoItem.tabIndex = -1;
+    undoItem.setAttribute("aria-disabled", "true");
+    const undoSpan = document.createElement("span");
+    undoSpan.className = "bc";
+    undoSpan.textContent = "Undo last grade";
+    undoItem.appendChild(undoSpan);
+    const undoKbd = document.createElement("kbd");
+    undoKbd.className = "bc kbd ml-auto text-xs text-muted-foreground tracking-widest";
+    undoKbd.textContent = "U";
+    undoItem.appendChild(undoKbd);
+    menu.appendChild(undoItem);
+
+    addItem(coachShellMode ? backToCoachLabel : "Exit to Decks", "Q", () => void this._quitToHome());
+
+    moreWrap.appendChild(popover);
+    this._morePopoverEl = popover;
+
+    const onDocPointerDown = (ev: PointerEvent) => {
+      const t = ev.target as Node | null;
+      if (!t) return;
+      if (moreWrap.contains(t)) return;
+      this._closeDockMore();
+    };
+    const onDocKeydown = (ev: KeyboardEvent) => {
+      if (ev.key !== "Escape") return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      this._closeDockMore();
+    };
+
+    const tid = window.setTimeout(() => {
+      document.addEventListener("pointerdown", onDocPointerDown, true);
+      document.addEventListener("keydown", onDocKeydown, true);
+    }, 0);
+    this._moreCleanup = () => {
+      window.clearTimeout(tid);
+      document.removeEventListener("pointerdown", onDocPointerDown, true);
+      document.removeEventListener("keydown", onDocKeydown, true);
+    };
+
+    const firstItem = popover.querySelector<HTMLElement>("[role='menuitem']");
+    firstItem?.focus();
+  }
+
   render() {
+    this._closeDockMore();
     const root = this.contentEl;
     const suppressEntranceAos = this._suppressEntranceAosOnce;
     this._suppressEntranceAosOnce = false;
@@ -1114,11 +1237,21 @@ export class SproutNoteReviewView extends ItemView {
     }
 
     const panel = contentShell.createDiv({ cls: "sprout-note-review-panel" });
+    const lang = this.plugin.settings?.general?.interfaceLanguage;
     const coachLabel = "Coach";
     const backToCoachLabel = `Back to ${coachLabel}`;
-    const quitToCoachLabel = `Quit to ${coachLabel}`;
+    const exitToHomeLabel = `${t(lang, "ui.reviewer.session.exitTo", "Exit to")} ${t(lang, "ui.reviewer.session.scope.home", "Home")}`;
 
-    const quitBtn = panel.createEl("button");
+    const topBar = panel.createDiv({ cls: "sprout-note-review-topbar" });
+    topBar.createDiv({
+      cls: "bc sprout-note-review-topbar-title",
+      text: current
+        ? `Note: ${current.basename}`
+        : t(this.plugin.settings?.general?.interfaceLanguage, "ui.view.noteReview.title", "Notes"),
+    });
+    const topBarActions = topBar.createDiv({ cls: "sprout-note-review-topbar-actions" });
+
+    const quitBtn = topBarActions.createEl("button");
     if (coachShellMode) {
       quitBtn.classList.add(
         "bc",
@@ -1131,28 +1264,32 @@ export class SproutNoteReviewView extends ItemView {
         "items-center",
         "gap-2",
         "sprout-scope-clear-btn",
-        "sprout-btn-top-right",
         "sprout-note-review-quit-coach-btn",
       );
     } else {
       quitBtn.classList.add(
+        "bc",
         "sprout-btn-toolbar",
-        "h-9",
-        "flex",
+        "sprout-btn-filter",
+        "h-7",
+        "px-3",
+        "text-sm",
+        "inline-flex",
         "items-center",
         "gap-2",
-        "equal-height-btn",
-        "sprout-btn-exit-sm",
-        "sprout-btn-top-right",
+        "sprout-scope-clear-btn",
+        "sprout-note-review-quit-btn",
       );
     }
     quitBtn.setAttr("type", "button");
-    quitBtn.setAttr("aria-label", coachShellMode ? backToCoachLabel : "Quit study session");
+    quitBtn.setAttr("aria-label", coachShellMode ? backToCoachLabel : exitToHomeLabel);
     quitBtn.setAttr("data-tooltip-position", "top");
-    const quitIconWrap = quitBtn.createSpan({ cls: coachShellMode ? "bc inline-flex items-center justify-center" : "inline-flex items-center justify-center sprout-btn-icon" });
+    const quitIconWrap = quitBtn.createSpan({ cls: "bc inline-flex items-center justify-center" });
     setIcon(quitIconWrap, "x");
     if (coachShellMode) {
       quitBtn.createSpan({ cls: "bc", attr: { "data-sprout-label": "true" }, text: backToCoachLabel });
+    } else {
+      quitBtn.createSpan({ cls: "bc", attr: { "data-sprout-label": "true" }, text: exitToHomeLabel });
     }
     quitBtn.addEventListener("click", () => {
       void this._quitToHome();
@@ -1196,56 +1333,56 @@ export class SproutNoteReviewView extends ItemView {
     if (algorithm === "fsrs") {
       const againBtn = buttonGroup.createEl("button");
       againBtn.classList.add("btn-destructive", "sprout-btn-again");
-      againBtn.createSpan({ text: "Again" });
+      againBtn.createSpan({ text: "Deferred" });
       const againKey = againBtn.createEl("kbd", { text: "1" });
       againKey.classList.add("bc", "kbd", "ml-2");
       againBtn.disabled = !current;
-      againBtn.setAttr("aria-label", "Grade question as again (1)");
+      againBtn.setAttr("aria-label", "Defer note (1)");
       againBtn.setAttr("data-tooltip-position", "top");
       againBtn.addEventListener("click", () => {
-        void this._gradeCurrentFsrs("fail").then(() => new Notice("Sprout: rated again."));
+        void this._gradeCurrentFsrs("fail");
       });
 
       const goodBtn = buttonGroup.createEl("button");
       goodBtn.classList.add("btn", "sprout-btn-good");
-      goodBtn.createSpan({ text: "Good" });
+      goodBtn.createSpan({ text: "Completed" });
       const goodKey = goodBtn.createEl("kbd", { text: "2" });
       goodKey.classList.add("bc", "kbd", "ml-2");
       goodBtn.disabled = !current;
-      goodBtn.setAttr("aria-label", "Grade question as good (2)");
+      goodBtn.setAttr("aria-label", "Mark note as completed (2)");
       goodBtn.setAttr("data-tooltip-position", "top");
       goodBtn.addEventListener("click", () => {
-        void this._gradeCurrentFsrs("pass").then(() => new Notice("Sprout: rated good."));
+        void this._gradeCurrentFsrs("pass");
       });
     } else {
       const skipBtn = buttonGroup.createEl("button");
       skipBtn.classList.add("sprout-btn-toolbar");
-      skipBtn.createSpan({ text: "Skip" });
+      skipBtn.createSpan({ text: "Deferred" });
       const skipKey = skipBtn.createEl("kbd", { text: "1" });
       skipKey.classList.add("bc", "kbd", "ml-2");
       skipBtn.disabled = !current;
-      skipBtn.setAttr("aria-label", "Skip note (1)");
+      skipBtn.setAttr("aria-label", "Defer note (1)");
       skipBtn.setAttr("data-tooltip-position", "top");
       skipBtn.addEventListener("click", () => {
         this._skipCurrent();
-        new Notice("Sprout: skipped.");
       });
 
       const markBtn = buttonGroup.createEl("button");
       markBtn.classList.add("btn", "sprout-btn-good");
-      markBtn.createSpan({ text: "Mark as read" });
+      markBtn.createSpan({ text: "Completed" });
       const markKey = markBtn.createEl("kbd", { text: "2" });
       markKey.classList.add("bc", "kbd", "ml-2");
       markBtn.disabled = !current;
-      markBtn.setAttr("aria-label", "Mark note as read (2)");
+      markBtn.setAttr("aria-label", "Mark note as completed (2)");
       markBtn.setAttr("data-tooltip-position", "top");
       markBtn.addEventListener("click", () => {
-        void this._markCurrentAsRead().then(() => new Notice("Sprout: marked as read."));
+        void this._markCurrentAsRead();
       });
     }
 
     const right = controls.createDiv({ cls: "sprout-note-review-dock-right" });
     const moreWrap = right.createDiv({ cls: "sprout-note-review-more" });
+    this._moreWrapEl = moreWrap;
     const moreBtn = moreWrap.createEl("button", { text: "More" });
     moreBtn.disabled = !current || this._practiceMode || this._coachNoScheduling;
     moreBtn.classList.add("sprout-note-review-more-trigger", "bc", "sprout-btn-toolbar");
@@ -1254,58 +1391,8 @@ export class SproutNoteReviewView extends ItemView {
     moreKbd.classList.add("bc", "kbd", "ml-2");
     moreBtn.setAttr("data-tooltip-position", "top");
     moreBtn.addEventListener("click", () => {
-      this._dockMoreOpen = !this._dockMoreOpen;
-      this.render();
+      this._toggleDockMore();
     });
-
-    if (this._dockMoreOpen && current && !this._practiceMode && !this._coachNoScheduling) {
-      const popover = moreWrap.createDiv({
-        cls: "bc sprout rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 pointer-events-auto sprout-note-review-more-popover",
-      });
-      const menu = popover.createDiv({ cls: "bc sprout flex flex-col" });
-      menu.setAttr("role", "menu");
-
-      const itemClass =
-        "bc group flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer select-none outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground";
-
-      const addItem = (label: string, hotkey: string, onClick: () => void) => {
-        const item = menu.createDiv({ cls: itemClass });
-        item.setAttr("role", "menuitem");
-        item.setAttr("tabindex", "0");
-        item.createSpan({ cls: "bc", text: label });
-        item.createEl("kbd", { cls: "bc kbd ml-auto text-xs text-muted-foreground tracking-widest", text: hotkey });
-        item.addEventListener("click", () => onClick());
-        item.addEventListener("keydown", (evt: KeyboardEvent) => {
-          if (evt.key !== "Enter" && evt.key !== " ") return;
-          evt.preventDefault();
-          onClick();
-        });
-      };
-
-      addItem("Open in Note", "O", () => {
-        this._dockMoreOpen = false;
-        void this._openCurrentNote();
-      });
-
-      addItem("bury", "B", () => {
-        void this._buryCurrentNote().then(() => new Notice("Note buried until tomorrow."));
-      });
-
-      addItem("suspend", "S", () => {
-        void this._suspendCurrentNote().then(() => new Notice("Note suspended."));
-      });
-
-      const undoDisabled = menu.createDiv({ cls: `${itemClass} sprout-menu-item--disabled` });
-      undoDisabled.setAttr("role", "menuitem");
-      undoDisabled.setAttr("tabindex", "-1");
-      undoDisabled.setAttr("aria-disabled", "true");
-      undoDisabled.createSpan({ cls: "bc", text: "Undo last grade" });
-      undoDisabled.createEl("kbd", { cls: "bc kbd ml-auto text-xs text-muted-foreground tracking-widest", text: "U" });
-
-      addItem(coachShellMode ? quitToCoachLabel : "Exit to Decks", "Q", () => {
-        void this._quitToHome();
-      });
-    }
 
     this._syncOverflowLayout(panel);
   }

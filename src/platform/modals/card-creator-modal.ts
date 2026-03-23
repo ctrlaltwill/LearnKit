@@ -491,7 +491,6 @@ export class CardCreatorModal extends Modal {
           }
         }
 
-        focusFirstField(cardEditor.root);
       } catch (e: unknown) {
         cardEditor = null;
         const msg = `Failed to render card fields (${e instanceof Error ? e.message : String(e)})`;

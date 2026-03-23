@@ -75,13 +75,13 @@
 /* ---- Panel ---- */
 
 .sprout .lk-modals.modal {
-    border: var(--sprout-border-width) solid var(--sprout-border-color);
+    border: 1px solid var(--color-base-40);
     width: min(720px, 100%);
     background: var(--background);
     border-radius: var(--radius-lg);
   max-width: min(1080px, 95%);
     max-height: min(80vh);
-    padding: 1.2rem;
+    padding: 1.2rem 0;
     overflow: hidden;
     outline: none;
     height: auto;
@@ -94,7 +94,7 @@
     max-width: min(1080px, 95%);
     height: auto;
     max-height: min(85vh);
-    padding: 1.2rem;
+    padding: 1.2rem 0;
     position: relative;
     overflow: hidden;
 }
@@ -107,7 +107,7 @@
 /* ---- Header + content spacing ---- */
 
 .sprout .lk-modals.modal .modal-header {
-  padding: 0 0 1.5rem 0;
+  padding: 0 1.2rem 1.5rem;
   border-bottom: none;
   display: flex;
   align-items: center;
@@ -132,7 +132,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   text-align: left;
-  padding: 0 0 0.2rem 0 !important;
+  padding: 0 1.2rem 0 !important;
 }
 
 .sprout .modal-container .modal-content {
@@ -200,7 +200,7 @@
   transition: max-width 1115ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 913ms ease, margin-left 1115ms cubic-bezier(0.2, 0.9, 0.2, 1), transform 1115ms cubic-bezier(0.2, 0.9, 0.2, 1);
 }
 
-.sprout :is(.sprout-card-creator-modal, .sprout-bulk-edit-panel, .sprout-edit-modal, .sprout-io-creator-modal) .sprout-card-creator-close-btn:is(:hover, :focus-visible, :active) [data-sprout-label="true"] {
+.sprout :is(.sprout-card-creator-modal, .sprout-bulk-edit-panel, .sprout-edit-modal, .sprout-io-creator-modal) .sprout-card-creator-close-btn:is(:hover, :focus-visible) [data-sprout-label="true"] {
   max-width: 7rem;
   opacity: 1;
   margin-left: 6px;
@@ -296,8 +296,9 @@
 /* Center compact MCQ/OQ row text vertically in both preview and edit states. */
 .sprout .lk-modals.modal :is(.sprout-edit-mcq-option-row, .sprout-mcq-add-row, .sprout-oq-editor-row, .sprout-oq-add-row) .sprout-flag-editor-control {
   line-height: 1.2;
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
+  /* Keep typed text centered in the fixed 36px compact editor lane. */
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
 }
 
 .sprout .lk-modals.modal :is(.sprout-edit-mcq-option-row, .sprout-mcq-add-row, .sprout-oq-editor-row, .sprout-oq-add-row) .sprout-flag-editor-overlay {
@@ -366,19 +367,19 @@
 
 /* Add flashcard modal: title/question/answer/extra start at 50px, allow resize up to 150px. */
 .sprout .sprout-card-creator-modal .sprout-card-creator-editor .sprout-flag-editor-wrap--multiline {
-  --sprout-flag-preview-height: 60px;
+  --sprout-flag-preview-height: 50px;
   --sprout-flag-preview-max-height: 150px;
-  min-height: 60px;
+  min-height: 50px;
   max-height: 150px;
 }
 
 .sprout .sprout-card-creator-modal .sprout-card-creator-editor .sprout-flag-editor-wrap--multiline .sprout-flag-editor-control {
-  min-height: 60px;
+  min-height: 50px;
   max-height: 150px;
 }
 
 .sprout .sprout-card-creator-modal .sprout-card-creator-editor .sprout-flag-editor-wrap--multiline .sprout-flag-editor-overlay {
-  min-height: 60px;
+  min-height: 50px;
   height: var(--sprout-flag-preview-height, 50px);
   max-height: var(--sprout-flag-preview-max-height, 150px);
 }
@@ -640,7 +641,7 @@ width: min(720px, 100%);
 
 .sprout .sprout-gatekeeper-modal {
   backdrop-filter: none;
-  padding: 2rem 0 0;
+  padding: 0;
   gap: 0;
   max-width: 90%;
   max-height: 90%;
@@ -653,14 +654,9 @@ width: min(720px, 100%);
   isolation: isolate;
 }
 
-.sprout .sprout-gatekeeper-top-row {
-  min-height: 40px;
-  padding: 8px 8px 0;
-}
-
 .sprout .sprout-gatekeeper-modal > .modal-header {
-  padding: 0 20px 0;
-  border-bottom: none;
+  padding: 16px 20px;
+  border-bottom: var(--sprout-border-width) solid var(--sprout-border-color);
   background: var(--background);
   display: flex;
   align-items: center;
@@ -693,16 +689,10 @@ width: min(720px, 100%);
 }
 
 .sprout .sprout-gatekeeper-qa-section {
-  padding: 2rem 0;
-  border-top: var(--sprout-border-width) solid var(--sprout-border-color);
-  border-bottom: var(--sprout-border-width) solid var(--sprout-border-color);
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-
-.sprout .sprout-gatekeeper-progress-row {
-  margin: 0;
 }
 
 .sprout .sprout-gatekeeper-section-label {
@@ -731,7 +721,8 @@ width: min(720px, 100%);
 }
 
 .sprout .sprout-gatekeeper-footer {
-  padding-top: 2rem;
+  padding: 16px 20px;
+  border-top: var(--sprout-border-width) solid var(--sprout-border-color);
 }
 
 .sprout .sprout-gatekeeper-grade-grid {
@@ -759,7 +750,6 @@ width: min(720px, 100%);
   line-height: 1.75;
 }
 
-.sprout .sprout-gatekeeper-modal.sprout-gatekeeper-warning-mode > .sprout-gatekeeper-top-row,
 .sprout .sprout-gatekeeper-modal.sprout-gatekeeper-warning-mode > .modal-header {
   display: none;
 }
@@ -775,36 +765,6 @@ width: min(720px, 100%);
   border: var(--sprout-border-width) solid color-mix(in srgb, var(--destructive) 45%, transparent);
   background: color-mix(in srgb, var(--destructive) 16%, var(--background));
   color: color-mix(in srgb, var(--destructive) 72%, var(--foreground));
-}
-
-.sprout .sprout-gatekeeper-top-row .sprout-gatekeeper-bypass-btn {
-  gap: 0;
-  padding-inline: 8px;
-  overflow: hidden;
-  transition: gap 180ms ease, padding-inline 180ms ease;
-}
-
-.sprout .sprout-gatekeeper-top-row .sprout-gatekeeper-bypass-label {
-  display: inline-block;
-  max-width: 0;
-  opacity: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  transform: translateX(-4px);
-  transition: max-width 220ms ease, opacity 180ms ease, transform 220ms ease;
-}
-
-.sprout .sprout-gatekeeper-top-row .sprout-gatekeeper-bypass-btn:hover,
-.sprout .sprout-gatekeeper-top-row .sprout-gatekeeper-bypass-btn:focus-visible {
-  gap: 8px;
-  padding-inline: 12px;
-}
-
-.sprout .sprout-gatekeeper-top-row .sprout-gatekeeper-bypass-btn:hover .sprout-gatekeeper-bypass-label,
-.sprout .sprout-gatekeeper-top-row .sprout-gatekeeper-bypass-btn:focus-visible .sprout-gatekeeper-bypass-label {
-  max-width: 72px;
-  opacity: 1;
-  transform: translateX(0);
 }
 
 .sprout .sprout-gatekeeper-bypass-btn:hover,
@@ -947,12 +907,14 @@ body.is-mobile .sprout .sprout-cloze-mobile-actions {
 /* ---- Consistent modal footer spacing ---- */
 
 .sprout .lk-modal-footer {
-    padding: 1.5rem 0 0;
+    padding: 1.5rem 1.2rem 0;
   border-top: none;
 }
 
 .sprout .lk-modal-footer.sprout-gatekeeper-footer {
-  padding-top: 2rem;
+  padding: 16px 20px;
+  margin-top: 1rem;
+  border-top: var(--sprout-border-width) solid var(--sprout-border-color);
 }
 
 /* ---- Bulk edit modal (browser) ---- */
@@ -1037,8 +999,8 @@ body.is-mobile .sprout .sprout-cloze-mobile-actions {
   border-radius: var(--radius-md);
   background: var(--background-modifier-form-field);
   overflow: hidden;
-  --sprout-single-edit-height: 60px;
-  --sprout-single-edit-max-height: 150px;
+  --sprout-single-edit-height: 80px;
+  --sprout-single-edit-max-height: 80px;
 }
 
 .sprout .sprout-bulk-edit-panel .sprout-single-edit-markdown-field:not(.is-preview) {
@@ -1050,9 +1012,9 @@ body.is-mobile .sprout .sprout-cloze-mobile-actions {
   padding: 6px 8px;
   border: 0 !important;
   background: transparent;
-  min-height: var(--sprout-single-edit-height, 50px) !important;
-  max-height: var(--sprout-single-edit-max-height, 150px) !important;
-  resize: vertical;
+  min-height: var(--sprout-single-edit-height, 80px);
+  max-height: var(--sprout-single-edit-max-height, 80px);
+  resize: none;
 }
 
 .sprout .sprout-bulk-edit-panel .sprout-flag-editor-wrap.sprout-flag-editor--focused {
@@ -1075,9 +1037,8 @@ body.is-mobile .sprout .sprout-cloze-mobile-actions {
   overflow-wrap: anywhere;
   overflow: auto;
   cursor: text;
-  min-height: var(--sprout-single-edit-height, 50px) !important;
-  height: var(--sprout-single-edit-height, 50px) !important;
-  max-height: var(--sprout-single-edit-max-height, 150px) !important;
+  min-height: var(--sprout-single-edit-height, 80px);
+  max-height: var(--sprout-single-edit-max-height, 80px);
 }
 
 .sprout .sprout-bulk-edit-panel .sprout-single-edit-markdown-field.is-preview .sprout-single-edit-markdown-preview {
@@ -1355,7 +1316,7 @@ body.is-mobile .sprout .sprout-edit-modal {
 
 .sprout .sprout-io-footer {
   margin-top: 16px;
-  padding-top: 16px;
+  padding: 16px 1.2rem 0;
   border-top: none;
   display: flex;
   align-items: center;
@@ -1536,21 +1497,23 @@ body.is-mobile .sprout .sprout-edit-modal {
 }
 
 .sprout .sprout-io-mask-delete {
-  position: absolute;
-left: 50px;
-  width: 24px;
-  height: 24px;
-  min-width: 24px;
-  min-height: 24px;
-  border-radius: 50%;
-  z-index: 11;
-  opacity: 0;
-  pointer-events: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  line-height: 1;
+z-index: 11;
+    opacity: 0;
+    pointer-events: none;
+    border-radius: 50%;
+    justify-content: center;
+    align-items: center;
+    width: 24px !important;
+    min-width: 24px !important;
+    max-width: 24px !important;
+    max-height: 24px !important;
+    min-height: 24px !important;
+    padding: 0 !important;
+    line-height: 1;
+    display: inline-flex
+;
+    position: absolute;
+    left: 50px;
 }
 
 .sprout .sprout-io-mask-delete:hover {
@@ -1829,27 +1792,34 @@ left: 50px;
 /* ---- Image zoom modal ---- */
 /* Replaces inline styles on zoom overlay across image-occlusion-review-render.ts */
 
-.sprout .sprout-zoom-overlay {
+.sprout .lk-modals.modal.sprout-zoom-overlay {
   background: transparent;
   backdrop-filter: none;
   border: none;
   box-shadow: none;
-  padding: 0;
+  padding: 0 !important;
   margin: 0;
-  width: 100vw;
-  max-width: 100vw;
-  height: 100vh;
-  max-height: 100vh;
+  width: 100dvw !important;
+  max-width: 100dvw !important;
+  min-height: 100dvh !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  border-radius: 0 !important;
+  overflow: hidden !important;
 }
 
-.sprout .sprout-zoom-content {
+.sprout .lk-modals.modal.sprout-zoom-overlay > .modal-content.sprout-zoom-content {
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  height: 100%;
-  min-height: 100vh;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: 100dvh !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+  margin: 0 !important;
 }
 
 .sprout .sprout-zoom-host {
@@ -1858,39 +1828,86 @@ left: 50px;
   align-items: center;
   justify-content: center;
   color: var(--foreground);
-  opacity: 0.8;
-  cursor: pointer;
-  max-width: 98vw;
-  max-height: 96vh;
-  overflow: visible;
+  opacity: 1;
+  cursor: default;
+  width: min(98vw, calc(100vw - 24px));
+  height: min(96vh, calc(100vh - 24px));
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+}
+
+.sprout .sprout-zoom-canvas {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.sprout .sprout-zoom-surface {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  max-height: 100%;
+  cursor: zoom-in;
+  transform-origin: center center;
+  transform: translate3d(var(--sprout-zoom-x, 0px), var(--sprout-zoom-y, 0px), 0)
+    scale(var(--sprout-zoom-scale, 1));
+  transition: transform 120ms ease-out;
+  will-change: transform;
+}
+
+.sprout .sprout-zoom-surface.sprout-io-container.sprout-io-container--clip {
+  border: 1px solid var(--color-base-40);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.sprout .sprout-zoom-host.is-zoomed .sprout-zoom-surface,
+.sprout .sprout-zoom-host.is-zoomed .sprout-zoom-img {
+  cursor: grab;
+}
+
+.sprout .sprout-zoom-host.is-dragging .sprout-zoom-surface,
+.sprout .sprout-zoom-host.is-dragging .sprout-zoom-img {
+  cursor: grabbing;
+}
+
+.sprout .sprout-zoom-host.is-dragging .sprout-zoom-surface {
+  transition: none;
 }
 
 .sprout .sprout-zoom-img {
-  max-width: 98vw;
-  max-height: 96vh;
+  max-width: 100%;
+  max-height: 100%;
   width: auto;
   height: auto;
   object-fit: contain;
   display: block;
 }
 
+/* In zoom modal, cancel the flashcard inline image cap (350px) from misc.css. */
+.sprout .lk-modals.modal.sprout-zoom-overlay .sprout-io-image-inline.sprout-zoom-img,
+.sprout .lk-modals.modal.sprout-zoom-overlay .sprout-io-image-zoomed.sprout-zoom-img {
+  max-height: 100% !important;
+  width: auto !important;
+  height: auto !important;
+}
+
 .sprout .sprout-zoom-close {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 10px;
+  right: 10px;
   z-index: 5;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: transparent;
+  min-width: 30px;
+  max-height: 30px !important;
+  border: 1px solid var(--color-base-35);
+  background: color-mix(in srgb, var(--background) 80%, transparent);
   box-shadow: none;
   outline: none;
-  padding: 0;
+  overflow: hidden;
   color: var(--foreground);
-  opacity: 0.8;
+  opacity: 0.95;
   cursor: pointer;
 }
 
@@ -1902,6 +1919,16 @@ left: 50px;
 .sprout .sprout-zoom-close:focus-visible,
 .sprout .sprout-zoom-close:active {
   opacity: 1;
+}
+
+.sprout .sprout-zoom-close [data-sprout-label="true"] {
+  color: var(--foreground);
+}
+
+.sprout .sprout-zoom-surface .sprout-zoom-close {
+  transform: scale(calc(1 / var(--sprout-zoom-scale, 1)));
+  transform-origin: top right;
+  gap: 0 !important;
 }
 
 /* ---- Confirm modals (settings) ---- */

@@ -1521,6 +1521,12 @@ export class SproutReviewerView extends ItemView {
   private handleKey(ev: KeyboardEvent) {
     if (!this.isActiveLeaf()) return;
 
+    // Let active zoom modals consume Escape so it closes the modal instead
+    // of quitting the study session.
+    if (ev.key === "Escape" && document.querySelector(".lk-modals.sprout-zoom-overlay")) {
+      return;
+    }
+
     const t = ev.target as HTMLElement | null;
     if (
       t &&
@@ -1573,7 +1579,7 @@ export class SproutReviewerView extends ItemView {
           return;
         }
       }
-      if (ev.key === "Escape" || ev.key === "q" || ev.key === "Q" || ev.code === "KeyQ") {
+      if (ev.key === "q" || ev.key === "Q" || ev.code === "KeyQ") {
         if (ev.metaKey || ev.ctrlKey) return;
         ev.preventDefault();
         ev.stopPropagation();
@@ -1587,7 +1593,7 @@ export class SproutReviewerView extends ItemView {
     const id = String(card.id);
     const graded = this.session.graded[id] || null;
 
-    if (ev.key === "Escape" || ev.key === "q" || ev.key === "Q" || ev.code === "KeyQ") {
+    if (ev.key === "q" || ev.key === "Q" || ev.code === "KeyQ") {
       if (ev.metaKey || ev.ctrlKey) return;
       ev.preventDefault();
       ev.stopPropagation();

@@ -87,6 +87,27 @@
   font-size: var(--sprout-widget-font-button);
 }
 
+/* Neutral (non-grading) widget controls should match settings action button style. */
+.sprout.sprout-widget :is(.sprout-widget-action-btn, .sprout-btn-toolbar):not(.sprout-btn-again):not(.sprout-btn-hard):not(.sprout-btn-good):not(.sprout-btn-easy) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: var(--radius-s, 4px);
+  border: 1px solid var(--color-base-35) !important;
+  background-color: var(--color-base-20) !important;
+  color: var(--text-normal) !important;
+  box-shadow: none;
+}
+
+.sprout.sprout-widget :is(.sprout-widget-action-btn, .sprout-btn-toolbar):not(.sprout-btn-again):not(.sprout-btn-hard):not(.sprout-btn-good):not(.sprout-btn-easy):is(:hover, :focus-visible, :active) {
+  background-color: var(--color-base-30) !important;
+  border-color: var(--color-base-40) !important;
+  color: var(--color-base-100) !important;
+}
+
 /* Match study/gatekeeper spacing for label + keycap in widget grading buttons. */
 .sprout.sprout-widget .sprout-widget-action-btn:is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy) {
   column-gap: 0;

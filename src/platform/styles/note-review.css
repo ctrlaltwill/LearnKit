@@ -61,6 +61,8 @@
 .sprout .sprout-note-review-panel {
   --sprout-note-review-dock-space: 86px;
   --sprout-note-review-edge-fade: 40px;
+  --sprout-note-review-topbar-inset: 16px;
+  --sprout-note-review-topbar-clearance: 88px;
   position: relative;
   min-height: 0;
   display: flex;
@@ -79,10 +81,48 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   flex: 1 1 auto;
   min-height: 0;
-  border: none !important;
+border: 1px solid var(--color-base-30);
+    border-radius: var(--radius-md);
   background: transparent !important;
+}
+
+.sprout .sprout-note-review-topbar {
+  position: absolute;
+  top: var(--sprout-note-review-topbar-inset);
+  left: var(--sprout-note-review-topbar-inset);
+  right: var(--sprout-note-review-topbar-inset);
+  z-index: 5;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--color-base-35);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--background) 74%, transparent);
+  box-shadow: none;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.sprout .sprout-note-review-topbar-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--sprout-font-md);
+  font-weight: 700;
+  color: var(--text-normal);
+}
+
+.sprout .sprout-note-review-topbar-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .sprout .sprout-note-review-viewport {
@@ -93,7 +133,7 @@
 .sprout .sprout-note-review-content {
   min-height: 0;
   overflow: auto;
-  padding: 0 0 var(--sprout-note-review-dock-space);
+  padding: 0;
   border: none !important;
   background: transparent !important;
 }
@@ -116,7 +156,8 @@
   margin: 0;
   min-height: 100%;
   width: 100%;
-  padding: 0;
+  padding: var(--sprout-note-review-topbar-clearance) 0 8rem 0;
+  border: none;;
 }
 
 .sprout .sprout-note-review-article-loading {
@@ -167,7 +208,18 @@
 }
 
 .sprout .sprout-note-review-note-body > *:first-child {
-  margin-top: 0;
+  margin-top: 1rem !important;
+}
+
+/* Keep first note heading compact in Note Review, even when global markdown rules
+   add larger spacing for block-to-heading transitions (e.g. hidden frontmatter <pre> + <h1>). */
+.sprout .sprout-note-review-note-body.markdown-rendered h1:first-of-type,
+.sprout .sprout-note-review-note-body.markdown-rendered :is(p, pre, table, ul, ol) + h1:first-of-type,
+.sprout .sprout-note-review-note-body.markdown-preview-view h1:first-of-type,
+.sprout .sprout-note-review-note-body.markdown-preview-view :is(p, pre, table, ul, ol) + h1:first-of-type,
+.sprout .sprout-note-review-note-body.markdown-rendered div:is(.el-p, .el-pre, .el-table, .el-ul, .el-ol) + div > h1:first-of-type,
+.sprout .sprout-note-review-note-body.markdown-preview-view div:is(.el-p, .el-pre, .el-table, .el-ul, .el-ol) + div > h1:first-of-type {
+  margin-top: 1rem !important;
 }
 
 .sprout .sprout-note-review-empty {
@@ -202,44 +254,47 @@
   right: 16px;
   bottom: 16px;
   transform: none;
-  z-index: 30;
+  z-index: 80;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 10px;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
+  padding: 1.2rem;
+  border: 1px solid var(--color-base-35);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--background) 74%, transparent);
   box-shadow: none;
-  backdrop-filter: none;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 
 .sprout .sprout-note-review-dock :is(button, .sprout-note-review-more-menu) {
   position: relative;
-  z-index: 31;
+  z-index: 81;
 }
 
 .sprout .sprout-note-review-queue-count {
-  --sprout-note-review-progress: 0%;
-  min-width: 164px;
-  font-size: var(--sprout-font-xs);
-  color: var(--text-normal);
-  border-radius: 999px;
-  border: var(--sprout-border-width) solid transparent;
-  background:
-    linear-gradient(color-mix(in srgb, var(--background-primary) 92%, transparent), color-mix(in srgb, var(--background-primary) 92%, transparent)) padding-box,
-    linear-gradient(
-      90deg,
-      var(--interactive-accent) 0,
-      var(--interactive-accent) var(--sprout-note-review-progress),
-      var(--sprout-border-color) var(--sprout-note-review-progress),
-      var(--sprout-border-color) 100%
-    ) border-box;
-  padding: 7px 10px;
-  white-space: nowrap;
-  text-align: center;
-  transition: background 180ms ease;
+border-radius: var(--radius-s, 4px);
+    min-height: 37px;
+    color: var(--text-normal);
+    font-size: var(--font-ui-small);
+    white-space: nowrap;
+    text-align: center;
+    box-shadow: none;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 14px;
+    transition: border-color .12s, background-color .12s, color .12s;
+    display: inline-flex
+;
+    border: 1px solid var(--color-base-35) !important;
+    background-color: var(--color-base-20) !important;
+}
+
+.sprout .sprout-note-review-queue-count:is(:hover, :focus-within) {
+  background-color: var(--color-base-30) !important;
+  border-color: var(--color-base-40) !important;
+  color: var(--color-base-100);
 }
 
 .sprout .sprout-note-review-queue-count-label {
@@ -272,7 +327,7 @@
   justify-content: center;
   gap: 8px;
   border-radius: calc(var(--radius-md) + 2px);
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
+  border: 1px solid var(--sprout-border-color) !important;
   background: var(--background-secondary) !important;
   color: var(--text-normal) !important;
   font-size: var(--sprout-font-xs);
@@ -295,28 +350,51 @@
 }
 
 .sprout .sprout-note-review-dock-buttons > .sprout-btn-again {
-  border-color: color-mix(in srgb, var(--destructive) 52%, transparent) !important;
-  background: color-mix(in srgb, var(--destructive) 18%, var(--background-secondary)) !important;
-  color: color-mix(in srgb, var(--destructive) 72%, var(--text-normal)) !important;
+  --sprout-btn-tint: var(--destructive);
 }
 
-.sprout .sprout-note-review-dock-buttons > .sprout-btn-again:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--destructive) 26%, var(--background-secondary)) !important;
+.sprout .sprout-note-review-dock-buttons > .sprout-btn-hard {
+  --sprout-btn-tint: var(--sprout-hard-bg);
 }
 
 .sprout .sprout-note-review-dock-buttons > .sprout-btn-good {
-  border-color: color-mix(in srgb, var(--sprout-good-bg, #22c55e) 52%, transparent) !important;
-  background: color-mix(in srgb, var(--sprout-good-bg, #22c55e) 18%, var(--background-secondary)) !important;
-  color: color-mix(in srgb, var(--sprout-good-bg, #22c55e) 76%, var(--text-normal)) !important;
+  --sprout-btn-tint: var(--sprout-good-bg);
 }
 
-.sprout .sprout-note-review-dock-buttons > .sprout-btn-good:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--sprout-good-bg, #22c55e) 28%, var(--background-secondary)) !important;
+.sprout .sprout-note-review-dock-buttons > .sprout-btn-easy {
+  --sprout-btn-tint: rgb(var(--interactive-accent-rgb, 138, 92, 245));
+}
+
+.sprout .sprout-note-review-dock-buttons > :is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy) {
+  --sprout-btn-bg-mix: 16%;
+  --sprout-btn-fg-mix: 72%;
+  --sprout-btn-border-mix: 45%;
+  --sprout-btn-bg-hover-mix: 24%;
+  --sprout-btn-border-hover-mix: 60%;
+  --sprout-kbd-tint: var(--sprout-btn-tint);
+  --sprout-kbd-bg-mix: 50%;
+  --sprout-kbd-border-mix: 48%;
+
+  background: color-mix(in srgb, var(--sprout-btn-tint) var(--sprout-btn-bg-mix), var(--background)) !important;
+  color: color-mix(in srgb, var(--sprout-btn-tint) var(--sprout-btn-fg-mix), var(--foreground)) !important;
+  border: 1px solid color-mix(in srgb, var(--sprout-btn-tint) var(--sprout-btn-border-mix), transparent) !important;
+}
+
+.sprout .sprout-note-review-dock-buttons > :is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy):hover:not(:disabled),
+.sprout .sprout-note-review-dock-buttons > :is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy):focus-visible {
+  background: color-mix(in srgb, var(--sprout-btn-tint) var(--sprout-btn-bg-hover-mix), var(--background)) !important;
+  border-color: color-mix(in srgb, var(--sprout-btn-tint) var(--sprout-btn-border-hover-mix), transparent) !important;
+}
+
+.sprout .sprout-note-review-dock-buttons > :is(.sprout-btn-again, .sprout-btn-hard, .sprout-btn-good, .sprout-btn-easy) :is(kbd, .kbd) {
+  background: color-mix(in srgb, var(--sprout-kbd-tint) var(--sprout-kbd-bg-mix), transparent);
+  border-color: color-mix(in srgb, var(--sprout-kbd-tint) var(--sprout-kbd-border-mix), transparent);
+  color: color-mix(in srgb, rgb(255, 255, 255) 88%, var(--sprout-kbd-tint) 12%);
 }
 
 .sprout .sprout-note-review-more {
   position: relative;
-  z-index: 31;
+  z-index: 4000;
 }
 
 .sprout .sprout-note-review-more-trigger {
@@ -324,37 +402,37 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border-radius: var(--radius-md);
-  border: var(--sprout-border-width) solid var(--sprout-border-color) !important;
-  background: color-mix(in srgb, var(--background-primary) 90%, transparent) !important;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: var(--radius-s, 4px);
+  border: 1px solid var(--color-base-35) !important;
+  background-color: var(--color-base-20) !important;
   color: var(--text-normal) !important;
-  font-size: var(--sprout-font-xs);
-  font-weight: 600;
+  font-size: var(--font-ui-small);
+  font-weight: 500;
   line-height: 1;
-  padding: 10px 12px;
+  box-shadow: none;
+  transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease;
 }
 
 .sprout .sprout-note-review-more-trigger:hover:not(:disabled),
 .sprout .sprout-note-review-more-trigger:focus-visible {
-  background: color-mix(in srgb, var(--interactive-accent) 10%, var(--background-secondary));
+  background-color: var(--color-base-30) !important;
+  border-color: var(--color-base-40) !important;
+  color: var(--color-base-100) !important;
 }
 
 .sprout .sprout-note-review-more-popover {
   position: absolute;
   right: 0;
   bottom: calc(100% + 8px);
-  display: flex;
-  flex-direction: column;
-  gap: 0;
   min-width: 230px;
-  padding: 4px;
-  border-radius: var(--radius-l);
-  border: var(--sprout-border-width) solid var(--sprout-border-color);
+  border-radius: var(--radius-m, 8px);
+  border: 1px solid var(--color-base-35);
   background: var(--background-primary);
   color: var(--text-normal);
   box-shadow: var(--shadow-s);
-  pointer-events: auto;
-  z-index: 32;
+  z-index: 5000;
 }
 
 .sprout .sprout-note-review-more-item {
@@ -397,14 +475,7 @@
   pointer-events: none;
 }
 
-.sprout .sprout-note-review-panel .sprout-btn-top-right {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 7;
-}
-
-.sprout .sprout-note-review-panel .sprout-note-review-quit-coach-btn {
+.sprout .sprout-note-review-panel :is(.sprout-note-review-quit-coach-btn, .sprout-note-review-quit-btn) {
   min-width: 36px;
   padding-left: 8px;
   padding-right: 8px;
@@ -412,7 +483,7 @@
   overflow: hidden;
 }
 
-.sprout .sprout-note-review-panel .sprout-note-review-quit-coach-btn [data-sprout-label="true"] {
+.sprout .sprout-note-review-panel :is(.sprout-note-review-quit-coach-btn, .sprout-note-review-quit-btn) [data-sprout-label="true"] {
   display: inline-block;
   overflow: hidden;
   white-space: nowrap;
@@ -423,7 +494,7 @@
   transition: max-width 1115ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 913ms ease, margin-left 1115ms cubic-bezier(0.2, 0.9, 0.2, 1), transform 1115ms cubic-bezier(0.2, 0.9, 0.2, 1);
 }
 
-.sprout .sprout-note-review-panel .sprout-note-review-quit-coach-btn:is(:hover, :focus-visible, :focus-within, [aria-expanded="true"]) [data-sprout-label="true"] {
+.sprout .sprout-note-review-panel :is(.sprout-note-review-quit-coach-btn, .sprout-note-review-quit-btn):is(:hover, :focus-visible, :focus-within, [aria-expanded="true"]) [data-sprout-label="true"] {
   max-width: 9rem;
   opacity: 1;
   margin-left: 6px;
@@ -434,6 +505,8 @@
   .sprout .sprout-note-review-panel {
     --sprout-note-review-dock-space: 120px;
     --sprout-note-review-edge-fade: 32px;
+    --sprout-note-review-topbar-inset: 12px;
+    --sprout-note-review-topbar-clearance: 80px;
   }
 
   .sprout .sprout-note-review-content {
@@ -441,7 +514,7 @@
   }
 
   .sprout .sprout-note-review-article {
-    padding: 0;
+    padding: var(--sprout-note-review-topbar-clearance) 0 0;
   }
 
   .sprout .sprout-note-review-panel {
@@ -449,9 +522,8 @@
     margin-right: 14px;
   }
 
-  .sprout .sprout-note-review-panel .sprout-btn-top-right {
-    top: 10px;
-    right: 10px;
+  .sprout .sprout-note-review-topbar {
+    margin: 0;
   }
 
   .sprout .sprout-note-review-dock {

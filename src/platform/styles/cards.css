@@ -430,7 +430,7 @@
   overflow: auto;
   text-overflow: clip;
   cursor: text;
-  pointer-events: auto;
+  pointer-events: none;
   z-index: 1;
 }
 

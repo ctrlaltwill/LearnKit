@@ -17,6 +17,127 @@ import type * as IoModule from "./image-occlusion-index";
 import { queryFirst, setCssProps } from "../../platform/core/ui";
 import { scopeModalToWorkspace } from "../../platform/modals/modal-utils";
 
+function clampNumber(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function installSmoothZoomInteractions(host: HTMLElement, zoomLayer: HTMLElement) {
+  let scale = 1;
+  let offsetX = 0;
+  let offsetY = 0;
+  let isDragging = false;
+  let pointerId: number | null = null;
+  let startClientX = 0;
+  let startClientY = 0;
+  let startOffsetX = 0;
+  let startOffsetY = 0;
+
+  const minScale = 1;
+  const absoluteMaxScale = 4;
+  let movedSincePointerDown = false;
+
+  const applyTransform = () => {
+    const baseWidth = Math.max(1, zoomLayer.offsetWidth);
+    const baseHeight = Math.max(1, zoomLayer.offsetHeight);
+    const maxViewportWidth = window.innerWidth * 0.95;
+    const maxViewportHeight = window.innerHeight * 0.95;
+    const maxScaleByViewport = Math.max(
+      1,
+      Math.min(maxViewportWidth / baseWidth, maxViewportHeight / baseHeight),
+    );
+    const maxScale = Math.min(absoluteMaxScale, maxScaleByViewport);
+
+    scale = clampNumber(scale, minScale, maxScale);
+
+    if (scale <= 1) {
+      offsetX = 0;
+      offsetY = 0;
+    } else {
+      const maxX = Math.max(0, (baseWidth * scale - host.clientWidth) / 2);
+      const maxY = Math.max(0, (baseHeight * scale - host.clientHeight) / 2);
+      offsetX = clampNumber(offsetX, -maxX, maxX);
+      offsetY = clampNumber(offsetY, -maxY, maxY);
+    }
+
+    setCssProps(zoomLayer, "--sprout-zoom-scale", String(scale));
+    setCssProps(zoomLayer, "--sprout-zoom-x", `${offsetX}px`);
+    setCssProps(zoomLayer, "--sprout-zoom-y", `${offsetY}px`);
+    host.classList.toggle("is-zoomed", scale > 1);
+  };
+
+  host.addEventListener(
+    "wheel",
+    (ev: WheelEvent) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      const factor = Math.exp(-ev.deltaY * 0.0015);
+      const next = Math.max(minScale, scale * factor);
+      if (next === scale) return;
+      scale = next;
+      applyTransform();
+    },
+    { passive: false },
+  );
+
+  zoomLayer.addEventListener("click", (ev: MouseEvent) => {
+    const target = ev.target as HTMLElement | null;
+    if (target?.closest(".sprout-zoom-close")) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    if (movedSincePointerDown) return;
+    const prev = scale;
+    const next = scale * 1.5;
+    // Apply clamping in applyTransform (includes 95vw/95vh cap).
+    scale = next <= 1.001 ? 1.5 : next;
+    applyTransform();
+    if (scale <= prev + 0.001) {
+      // Already at cap -> reset to default on subsequent click.
+      scale = 1;
+      applyTransform();
+    }
+  });
+
+  host.addEventListener("pointerdown", (ev: PointerEvent) => {
+    const target = ev.target as HTMLElement | null;
+    if (target?.closest(".sprout-zoom-close")) return;
+    if (ev.button !== 0 || scale <= 1) return;
+    movedSincePointerDown = false;
+    isDragging = true;
+    pointerId = ev.pointerId;
+    startClientX = ev.clientX;
+    startClientY = ev.clientY;
+    startOffsetX = offsetX;
+    startOffsetY = offsetY;
+    host.classList.add("is-dragging");
+    host.setPointerCapture(ev.pointerId);
+    ev.preventDefault();
+  });
+
+  host.addEventListener("pointermove", (ev: PointerEvent) => {
+    if (!isDragging || pointerId !== ev.pointerId) return;
+    movedSincePointerDown = true;
+    offsetX = startOffsetX + (ev.clientX - startClientX);
+    offsetY = startOffsetY + (ev.clientY - startClientY);
+    applyTransform();
+    ev.preventDefault();
+  });
+
+  const endDrag = (ev: PointerEvent) => {
+    if (!isDragging || pointerId !== ev.pointerId) return;
+    isDragging = false;
+    pointerId = null;
+    host.classList.remove("is-dragging");
+    if (host.hasPointerCapture(ev.pointerId)) {
+      host.releasePointerCapture(ev.pointerId);
+    }
+  };
+
+  host.addEventListener("pointerup", endDrag);
+  host.addEventListener("pointercancel", endDrag);
+
+  applyTransform();
+}
+
 export function isIoParentCard(card: CardRecord): boolean {
   return card && card.type === "io";
 }
@@ -119,65 +240,119 @@ export function renderImageOcclusionReviewInto(args: {
   host.appendChild(img);
 
   // Add masks if not revealed
+  const openZoomModal = () => {
+    const modal = new (class extends Modal {
+      onOpen() {
+        scopeModalToWorkspace(this);
+        this.containerEl.addClass("lk-modal-container", "lk-modal-dim", "sprout");
+        this.modalEl.addClass("bc", "lk-modals", "sprout-zoom-overlay");
+        queryFirst(this.modalEl, ".modal-header")?.remove();
+        queryFirst(this.modalEl, ".modal-close-button")?.remove();
+
+        // Clicking overlay chrome (outside content/image) should close.
+        this.modalEl.addEventListener("click", (ev) => {
+          if (ev.target !== this.modalEl) return;
+          this.close();
+        });
+
+        // Backdrop click should dismiss zoom modal.
+        const modalBg = queryFirst(this.containerEl, ".modal-bg");
+        if (modalBg) {
+          modalBg.addEventListener("click", () => this.close(), { once: true });
+        }
+
+        this.contentEl.empty();
+        this.contentEl.classList.add("sprout-zoom-content");
+        this.contentEl.addEventListener("click", (ev) => {
+          if (ev.target !== this.contentEl) return;
+          this.close();
+        });
+
+        const zoomHost = this.contentEl.createDiv({ cls: "bc sprout-zoom-host" });
+        const zoomCanvas = zoomHost.createDiv({ cls: "bc sprout-zoom-canvas" });
+        const zoomSurface = zoomCanvas.createDiv({ cls: "bc sprout-zoom-surface" });
+        zoomSurface.dataset.sproutIoWidget = "1";
+
+        const closeIfOutsideSurface = (ev: MouseEvent) => {
+          const target = ev.target as HTMLElement | null;
+          if (!target) return;
+          if (target.closest(".sprout-zoom-surface")) return;
+          if (target.closest(".sprout-zoom-close")) return;
+          this.close();
+        };
+        zoomHost.addEventListener("click", closeIfOutsideSurface);
+        zoomCanvas.addEventListener("click", closeIfOutsideSurface);
+
+        renderImageOcclusionReviewInto({
+          app,
+          plugin,
+          containerEl: zoomSurface,
+          card,
+          sourcePath,
+          reveal,
+          ioModule,
+          renderMarkdownInto: args.renderMarkdownInto,
+          enableWidgetModal: false,
+        });
+
+        const zoomImg = queryFirst(zoomSurface, "img");
+        if (zoomImg instanceof HTMLImageElement) {
+          zoomImg.classList.add("sprout-zoom-img", "sprout-io-image-zoomed");
+          installSmoothZoomInteractions(zoomHost, zoomSurface);
+        }
+
+        const closeBtn = document.createElement("button");
+        closeBtn.type = "button";
+        closeBtn.setAttribute("aria-label", "Close");
+        closeBtn.setAttribute("data-sprout-expand-collapse", "true");
+        closeBtn.classList.add(
+          "bc",
+          "sprout-btn-toolbar",
+          "sprout-btn-filter",
+          "h-7",
+          "px-3",
+          "text-sm",
+          "inline-flex",
+          "items-center",
+          "gap-2",
+          "sprout-zoom-close",
+        );
+
+        const closeIcon = document.createElement("span");
+        closeIcon.className = "bc inline-flex items-center justify-center";
+        setIcon(closeIcon, "x");
+        closeBtn.appendChild(closeIcon);
+
+        const closeLabel = document.createElement("span");
+        closeLabel.className = "bc";
+        closeLabel.setAttribute("data-sprout-label", "true");
+        closeLabel.textContent = "Close";
+        closeBtn.appendChild(closeLabel);
+
+        closeBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.close();
+        });
+        zoomSurface.appendChild(closeBtn);
+      }
+
+      onClose() {
+        this.contentEl.empty();
+        this.modalEl.removeClass("lk-modals", "sprout-zoom-overlay");
+        this.containerEl.removeClass("lk-modal-container", "lk-modal-dim", "sprout");
+      }
+    })(app);
+
+    modal.open();
+  };
+
   // Add zoom modal for RenderSession (not widgetMode)
   if (!widgetMode) {
     img.addEventListener("click", (ev) => {
       ev.preventDefault();
       ev.stopPropagation();
-      // Open modal with expanded image and masks, as in widget.ts
-      const modal = new (class extends Modal {
-        onOpen() {
-          scopeModalToWorkspace(this);
-          this.containerEl.addClass("lk-modal-container", "lk-modal-dim", "sprout");
-          this.modalEl.addClass("bc", "lk-modals", "sprout-zoom-overlay");
-          queryFirst(this.modalEl, ".modal-header")?.remove();
-          queryFirst(this.modalEl, ".modal-close-button")?.remove();
-
-          this.contentEl.empty();
-          this.contentEl.classList.add("sprout-zoom-content", "sprout-io-zoom-out");
-
-          const zoomHost = this.contentEl.createDiv({ cls: "bc sprout-zoom-host sprout-io-zoom-out" });
-          zoomHost.dataset.sproutIoWidget = "1";
-
-          // Render with modal-specific sizing
-          void renderImageOcclusionReviewInto({
-            app,
-            plugin,
-            containerEl: zoomHost,
-            card,
-            sourcePath,
-            reveal,
-            ioModule,
-            renderMarkdownInto: args.renderMarkdownInto,
-            enableWidgetModal: true, // signal modal mode
-          });
-
-          const closeBtn = document.createElement("button");
-          closeBtn.type = "button";
-          closeBtn.setAttribute("aria-label", "Close");
-          closeBtn.classList.add("sprout-zoom-close");
-          setIcon(closeBtn, "x");
-          closeBtn.addEventListener("click", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            this.close();
-          });
-          zoomHost.appendChild(closeBtn);
-
-          // Close modal on click anywhere in modal
-          this.contentEl.addEventListener("click", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            this.close();
-          });
-        }
-        onClose() {
-          this.contentEl.empty();
-          this.modalEl.removeClass("lk-modals", "sprout-zoom-overlay");
-          this.containerEl.removeClass("lk-modal-container", "lk-modal-dim", "sprout");
-        }
-      })(app);
-      modal.open();
+      openZoomModal();
     });
   }
   const maskMode = ioDef && typeof ioDef.maskMode === "string" ? String(ioDef.maskMode) : "";
@@ -212,23 +387,10 @@ export function renderImageOcclusionReviewInto(args: {
       ? occlusions.filter((rect) => !isTargetRect(rect))
       : [];
 
-  // Get custom colors and icon from settings
-  const maskTargetColor = plugin.settings?.imageOcclusion?.maskTargetColor || "";
-  const maskOtherColor = plugin.settings?.imageOcclusion?.maskOtherColor || "";
-  const maskIcon = plugin.settings?.imageOcclusion?.maskIcon ?? "?";
-
   if (masksForOverlay.length > 0) {
     const overlay = document.createElement("div");
     overlay.classList.add("sprout-io-overlay");
     const hintSizeUpdaters: Array<() => void> = [];
-
-    // Apply custom mask colors to the overlay container (only if set)
-    if (maskTargetColor) {
-      setCssProps(overlay, "--sprout-io-mask-target-color", maskTargetColor);
-    }
-    if (maskOtherColor) {
-      setCssProps(overlay, "--sprout-io-mask-other-color", maskOtherColor);
-    }
 
 
     function updateOverlay() {
@@ -266,24 +428,6 @@ export function renderImageOcclusionReviewInto(args: {
         mask.classList.add("sprout-io-mask-other");
       } else if (isTarget) {
         mask.classList.add("sprout-io-mask-target");
-        // Only show icon if maskIcon is not empty
-        if (maskIcon && maskIcon.trim()) {
-          const hint = document.createElement("span");
-          hint.classList.add("sprout-io-mask-hint");
-          const KNOWN_ICONS = ["circle-help", "eye-off"];
-          if (KNOWN_ICONS.includes(maskIcon.trim())) {
-            setIcon(hint, maskIcon.trim());
-          } else {
-            hint.textContent = maskIcon.trim();
-          }
-          mask.appendChild(hint);
-          hintSizeUpdaters.push(() => {
-            const rect = mask.getBoundingClientRect();
-            if (!rect.height) return;
-            const size = Math.max(12, rect.height * 0.35);
-            setCssProps(hint, "--sprout-io-hint-size", `${size}px`);
-          });
-        }
       } else {
         mask.classList.add("sprout-io-mask-other");
       }
@@ -347,60 +491,7 @@ export function renderImageOcclusionReviewInto(args: {
     host.onclick = (ev) => {
       ev.preventDefault();
       ev.stopPropagation();
-
-      const modal = new (class extends Modal {
-        onOpen() {
-          scopeModalToWorkspace(this);
-          this.containerEl.addClass("lk-modal-container", "lk-modal-dim", "sprout");
-          this.modalEl.addClass("bc", "lk-modals", "sprout-zoom-overlay");
-          queryFirst(this.modalEl, ".modal-header")?.remove();
-          queryFirst(this.modalEl, ".modal-close-button")?.remove();
-
-          this.contentEl.empty();
-          this.contentEl.classList.add("sprout-zoom-content");
-
-          const zoomHost = this.contentEl.createDiv({ cls: "bc sprout-zoom-host" });
-          zoomHost.dataset.sproutIoWidget = "1";
-
-          renderImageOcclusionReviewInto({
-            app,
-            plugin,
-            containerEl: zoomHost,
-            card,
-            sourcePath,
-            reveal,
-            ioModule,
-            renderMarkdownInto: args.renderMarkdownInto,
-            enableWidgetModal: false,
-          });
-          {
-            const zoomImg = queryFirst(zoomHost, "img");
-            if (zoomImg) {
-              zoomImg.classList.add("sprout-zoom-img", "sprout-io-image-zoomed");
-            }
-
-            const closeBtn = document.createElement("button");
-            closeBtn.type = "button";
-            closeBtn.setAttribute("aria-label", "Close");
-            closeBtn.classList.add("sprout-zoom-close");
-            setIcon(closeBtn, "x");
-            closeBtn.addEventListener("click", (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              this.close();
-            });
-            zoomHost.appendChild(closeBtn);
-          }
-        }
-
-        onClose() {
-          this.contentEl.empty();
-          this.modalEl.removeClass("lk-modals");
-          this.containerEl.removeClass("lk-modal-container", "lk-modal-dim", "sprout");
-        }
-      })(app);
-
-      modal.open();
+      openZoomModal();
     };
   }
 

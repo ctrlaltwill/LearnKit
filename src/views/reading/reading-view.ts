@@ -356,17 +356,28 @@ function deriveTextForDark(lightHex: string): string {
    Dynamic style injection
    ========================= */
 
-let readingDynamicStyleSheet: CSSStyleSheet | null = null;
+const READING_DYNAMIC_STYLE_ID = 'sprout-reading-view-dynamic-styles';
+let readingDynamicStyleEl: HTMLStyleElement | null = null;
 
-function getReadingDynamicStyleSheet(): CSSStyleSheet | null {
-  if (typeof document === 'undefined' || typeof CSSStyleSheet === 'undefined') return null;
-  const doc = document as Document & { adoptedStyleSheets?: CSSStyleSheet[] };
-  if (!Array.isArray(doc.adoptedStyleSheets)) return null;
-  if (!readingDynamicStyleSheet) readingDynamicStyleSheet = new CSSStyleSheet();
-  if (!doc.adoptedStyleSheets.includes(readingDynamicStyleSheet)) {
-    doc.adoptedStyleSheets = [...doc.adoptedStyleSheets, readingDynamicStyleSheet];
+function getReadingDynamicStyleElement(): HTMLStyleElement | null {
+  if (typeof document === 'undefined') return null;
+
+  if (readingDynamicStyleEl && readingDynamicStyleEl.isConnected) return readingDynamicStyleEl;
+
+  const existing = document.getElementById(READING_DYNAMIC_STYLE_ID);
+  if (existing instanceof HTMLStyleElement) {
+    readingDynamicStyleEl = existing;
+    return readingDynamicStyleEl;
   }
-  return readingDynamicStyleSheet;
+
+  if (!document.head) return null;
+
+  const styleEl = document.createElement('style');
+  styleEl.id = READING_DYNAMIC_STYLE_ID;
+  styleEl.setAttribute('data-sprout', 'reading-dynamic');
+  document.head.appendChild(styleEl);
+  readingDynamicStyleEl = styleEl;
+  return readingDynamicStyleEl;
 }
 
 function normaliseMacroPreset(raw: string | undefined): 'classic' | 'guidebook' | 'flashcards' | 'markdown' | 'custom' {
@@ -401,11 +412,11 @@ export function syncReadingViewStyles(): void {
   const effectiveLayout = resolveReadingLayout(rv?.layout, macroPreset);
   const macroSelector = `.sprout-pretty-card.sprout-macro-${macroPreset}`;
 
-  const styleSheet = getReadingDynamicStyleSheet();
-  if (!styleSheet) return;
+  const styleEl = getReadingDynamicStyleElement();
+  if (!styleEl) return;
 
   if (!enabled) {
-    styleSheet.replaceSync("");
+    styleEl.textContent = "";
     return;
   }
 
@@ -421,87 +432,6 @@ export function syncReadingViewStyles(): void {
             : rv?.macroConfigs?.flashcards;
 
   let css = '';
-
-  // ── Custom colours (body-level variables so all cards inherit) ──
-  const colours = (macroConfig as {
-    colours?: {
-      autoDarkAdjust?: boolean;
-      cardBgLight?: string;
-      cardBgDark?: string;
-      cardBorderLight?: string;
-      cardBorderDark?: string;
-      cardAccentLight?: string;
-      cardAccentDark?: string;
-      cardTextLight?: string;
-      cardTextDark?: string;
-      cardMutedLight?: string;
-      cardMutedDark?: string;
-      clozeBgLight?: string;
-      clozeTextLight?: string;
-      clozeBgDark?: string;
-      clozeTextDark?: string;
-    };
-  } | undefined)?.colours;
-
-  const autoDarkAdjust = colours?.autoDarkAdjust !== false;
-  const bgLight = colours?.cardBgLight ?? rv?.cardBgLight;
-  const textLight = colours?.cardTextLight ?? "";
-
-  if (macroPreset === 'flashcards') {
-    const bgDark = colours?.cardBgDark ?? "";
-    const textDark = colours?.cardTextDark ?? "";
-    const clozeBgLight = colours?.clozeBgLight ?? "";
-    const clozeTextLight = colours?.clozeTextLight ?? "";
-    const clozeBgDark = colours?.clozeBgDark ?? "";
-    const clozeTextDark = colours?.clozeTextDark ?? "";
-
-    const lightBgHex = sanitizeHexColor(bgLight);
-    const lightTextHex = sanitizeHexColor(textLight);
-    const lightClozeBgHex = sanitizeHexColor(clozeBgLight);
-    const lightClozeTextHex = sanitizeHexColor(clozeTextLight);
-
-    const derivedBgDark = autoDarkAdjust && lightBgHex ? deriveColourForDark(lightBgHex) : "";
-    const derivedTextDark = autoDarkAdjust && lightTextHex ? deriveTextForDark(lightTextHex) : "";
-    const derivedClozeBgDark = autoDarkAdjust && lightClozeBgHex ? deriveColourForDark(lightClozeBgHex) : "";
-    const clozeTextDeriveSource = lightClozeTextHex || "#ffffff";
-    const derivedClozeTextDark = autoDarkAdjust ? deriveTextForDark(clozeTextDeriveSource) : "";
-
-    const lightBgValue = bgLight || 'var(--color-base-05)';
-    const darkBgValue = autoDarkAdjust ? (derivedBgDark || 'var(--color-base-05)') : (bgDark || 'var(--color-base-05)');
-    const lightTextValue = textLight || 'var(--text-colour, var(--text-color, var(--text-normal)))';
-    const darkTextValue = autoDarkAdjust
-      ? (derivedTextDark || 'var(--text-colour, var(--text-color, var(--text-normal)))')
-      : (textDark || 'var(--text-colour, var(--text-color, var(--text-normal)))');
-    const lightClozeBgValue = clozeBgLight || 'color-mix(in srgb, var(--interactive-accent) 16%, transparent)';
-    const darkClozeBgValue = autoDarkAdjust
-      ? (derivedClozeBgDark || 'color-mix(in srgb, var(--interactive-accent) 24%, transparent)')
-      : (clozeBgDark || 'color-mix(in srgb, var(--interactive-accent) 24%, transparent)');
-    const lightClozeTextValue = clozeTextLight || 'var(--sprout-rv-flash-text)';
-    const darkClozeTextValue = autoDarkAdjust
-      ? (derivedClozeTextDark || 'var(--sprout-rv-flash-text)')
-      : (clozeTextDark || 'var(--sprout-rv-flash-text)');
-
-    css += `body.theme-light {\n`;
-    css += `  --sprout-rv-flash-bg: ${lightBgValue};\n`;
-    css += `  --sprout-rv-flash-text: ${lightTextValue};\n`;
-    css += `  --sprout-rv-flash-cloze-bg: ${lightClozeBgValue};\n`;
-    css += `  --sprout-rv-flash-cloze-text: ${lightClozeTextValue};\n`;
-    css += `}\n`;
-
-    css += `body.theme-dark {\n`;
-    css += `  --sprout-rv-flash-bg: ${darkBgValue};\n`;
-    css += `  --sprout-rv-flash-text: ${darkTextValue};\n`;
-    css += `  --sprout-rv-flash-cloze-bg: ${darkClozeBgValue};\n`;
-    css += `  --sprout-rv-flash-cloze-text: ${darkClozeTextValue};\n`;
-    css += `}\n`;
-
-    css += `${macroSelector} { background: var(--color-base-25) !important; color: var(--sprout-rv-flash-text) !important; }\n`;
-    css += `${macroSelector}.sprout-flashcard-flipped { background: var(--color-base-25) !important; }\n`;
-    css += `${macroSelector} .sprout-flashcard-question, ${macroSelector} .sprout-flashcard-answer { background: var(--color-base-25) !important; color: var(--sprout-rv-flash-text) !important; }\n`;
-    css += `${macroSelector} .sprout-card-content, ${macroSelector} .sprout-flashcard-options, ${macroSelector} .sprout-flashcard-info, ${macroSelector} .sprout-flashcard-body { color: var(--sprout-rv-flash-text) !important; }\n`;
-    css += `${macroSelector} .sprout-reading-view-cloze { background-color: var(--sprout-rv-flash-cloze-bg) !important; }\n`;
-    css += `${macroSelector} .sprout-cloze-text { color: var(--sprout-rv-flash-cloze-text) !important; }\n`;
-  }
 
   // ── Font size ──
   const fontSize = Number(rv?.fontSize);
@@ -617,7 +547,7 @@ export function syncReadingViewStyles(): void {
   // ── Upsert the <style> element ──
   // Note: Using document.head.createEl (Obsidian API) for reading-view dynamic settings
   // For static CSS, use the main styles.css file
-  styleSheet.replaceSync(css);
+  styleEl.textContent = css;
 }
 
 /* =========================
@@ -838,11 +768,10 @@ export function teardownReadingView(): void {
   sproutPluginRef = null;
   delete (window as unknown as Record<string, unknown>).sproutApplyMasonryGrid;
   // Detach dynamic reading stylesheet
-  const doc = document as Document & { adoptedStyleSheets?: CSSStyleSheet[] };
-  if (readingDynamicStyleSheet && Array.isArray(doc.adoptedStyleSheets)) {
-    doc.adoptedStyleSheets = doc.adoptedStyleSheets.filter((sheet) => sheet !== readingDynamicStyleSheet);
+  if (readingDynamicStyleEl?.isConnected) {
+    readingDynamicStyleEl.remove();
   }
-  readingDynamicStyleSheet = null;
+  readingDynamicStyleEl = null;
 }
 
 function setupDebouncedMutationObserver() {

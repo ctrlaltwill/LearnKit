@@ -167,9 +167,6 @@ export const DEFAULT_SETTINGS: SproutSettings = {
   imageOcclusion: {
     defaultMaskMode: "solo",
     revealMode: "group",
-    maskTargetColor: "",
-    maskOtherColor: "",
-    maskIcon: "circle-help",
   },
 
   readingView: {

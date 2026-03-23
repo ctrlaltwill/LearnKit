@@ -261,23 +261,24 @@
 
 .sprout .lk-home-root .sprout-deck-row:hover,
 .sprout .lk-home-root .sprout-deck-row.bg-background:hover {
-  background-color: var(--theme-base-90);
-  color: #fff;
+  background-color: var(--theme-base-10);
+  border-color: var(--theme-base-20);
+  color: var(--theme-base-95);
 }
 
 .sprout-deck-row:hover .sprout-text-truncate-rtl {
-  color: #fff;
+  color: var(--theme-base-95);
 }
 
 .sprout-deck-row:hover .text-muted-foreground {
-  color: rgb(245, 245, 245);
+  color: var(--theme-base-95);
 }
 
 .sprout-deck-row:hover .sprout-drag-handle,
 .sprout-deck-row:hover .sprout-deck-remove-btn,
 .sprout-deck-row:hover .sprout-drag-handle svg,
 .sprout-deck-row:hover .sprout-deck-remove-btn svg {
-  color: #fff;
+  color: var(--theme-base-95);
   stroke: currentColor;
 }
 
