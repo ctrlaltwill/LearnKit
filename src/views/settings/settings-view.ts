@@ -2059,7 +2059,12 @@ export class SproutSettingsView extends ItemView {
         "Data backup",
         "Syncing",
       ],
-      study: ["Card study sessions", "Scheduling"],
+      study: [
+        t(locale, "ui.settings.sections.studySessions", "Card study sessions"),
+        "Study sessions",
+        "Card study sessions",
+        "Scheduling",
+      ],
       "note-review": [
         t(locale, "ui.settings.noteReview.selection.heading", "Note selection"),
         t(locale, "ui.settings.noteReview.scheduling.heading", "Scheduling"),

@@ -117,6 +117,7 @@ export class SproutAssistantPopup {
   private isOpen = false;
   private _isTriggerHotzoneActive = false;
   private _isTriggerButtonHovered = false;
+  private _hotzoneProximityCleanup: (() => void) | null = null;
 
   // Mode
   private mode: AssistantMode = "assistant";
@@ -648,6 +649,7 @@ export class SproutAssistantPopup {
   mount(): void {
     if (this.isEmbeddedMode) return;
     if (this.triggerBtn) return;
+    if (!this._isAssistantEnabled()) return;
 
     this._syncSessionForActiveLeaf();
     this._registerChatLogSyncListener();
@@ -743,6 +745,8 @@ export class SproutAssistantPopup {
     this.triggerBtn = null;
     this.triggerHotzone?.remove();
     this.triggerHotzone = null;
+    this._hotzoneProximityCleanup?.();
+    this._hotzoneProximityCleanup = null;
     this._isTriggerButtonHovered = false;
 
     if (!this.popupEl) {
@@ -819,6 +823,8 @@ export class SproutAssistantPopup {
     this.triggerBtn = null;
     this.triggerHotzone?.remove();
     this.triggerHotzone = null;
+    this._hotzoneProximityCleanup?.();
+    this._hotzoneProximityCleanup = null;
     this._isTriggerButtonHovered = false;
     this._isTriggerReplyNotificationActive = false;
     this.isOpen = false;
@@ -1645,14 +1651,8 @@ export class SproutAssistantPopup {
     const zone = document.createElement("div");
     zone.className = "sprout-assistant-trigger-hotzone";
     zone.setAttribute("aria-hidden", "true");
-    zone.addEventListener("mouseenter", () => {
-      this._isTriggerHotzoneActive = true;
-      this._applyPresentationState();
-    });
-    zone.addEventListener("mouseleave", () => {
-      if (!this._isTriggerButtonHovered) this._isTriggerHotzoneActive = false;
-      this._applyPresentationState();
-    });
+    // Hover detection is handled via host-level pointermove (see _attachHostProximityHover)
+    // so the hotzone div is purely a visual placeholder with pointer-events: none in CSS.
     return zone;
   }
 
@@ -1666,7 +1666,48 @@ export class SproutAssistantPopup {
       return;
     }
     if (this.popupEl) this._attachToBestHost(this.popupEl);
+    this._attachHostProximityHover();
     this._applyPresentationState();
+  }
+
+  /**
+   * Attach a pointermove listener on the host element to detect mouse proximity
+   * to the trigger button.  This replaces direct event listeners on the hotzone
+   * div so the 200 × 200 px detection area never blocks clicks or scrolls.
+   */
+  private _attachHostProximityHover(): void {
+    this._hotzoneProximityCleanup?.();
+    this._hotzoneProximityCleanup = null;
+
+    const host = this._getHostElement();
+    if (!host || !this.triggerBtn) return;
+
+    const PROXIMITY = 200; // px from container edge
+
+    const onMove = (e: PointerEvent) => {
+      const rect = host.getBoundingClientRect();
+      const nearRight = rect.right - e.clientX <= PROXIMITY;
+      const nearBottom = rect.bottom - e.clientY <= PROXIMITY;
+      const near = nearRight && nearBottom;
+      if (near !== this._isTriggerHotzoneActive) {
+        this._isTriggerHotzoneActive = near;
+        this._applyPresentationState();
+      }
+    };
+
+    const onLeave = () => {
+      if (this._isTriggerHotzoneActive) {
+        this._isTriggerHotzoneActive = false;
+        this._applyPresentationState();
+      }
+    };
+
+    host.addEventListener("pointermove", onMove, { passive: true });
+    host.addEventListener("pointerleave", onLeave, { passive: true });
+    this._hotzoneProximityCleanup = () => {
+      host.removeEventListener("pointermove", onMove);
+      host.removeEventListener("pointerleave", onLeave);
+    };
   }
 
   private getActiveNoteDisplayName(): string | null {

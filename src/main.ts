@@ -238,6 +238,10 @@ export default class SproutPlugin extends Plugin {
 
   refreshAssistantPopupFromSettings(): void {
     const activeFile = this.app.workspace.getActiveFile();
+    if (this.settings?.studyAssistant?.enabled) {
+      // Re-mount if previously skipped because companion was disabled
+      this._assistantPopup?.mount();
+    }
     this._assistantPopup?.onActiveLeafChange();
     this._assistantPopup?.onFileOpen(activeFile);
     if (!this.settings?.studyAssistant?.enabled) {

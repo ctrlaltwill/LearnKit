@@ -17,7 +17,7 @@ import {
   shuffleCardsWithinTimeWindow,
   shuffleCardsWithParentAwareness,
 } from "../src/engine/scheduler/scheduler";
-import type { CardState, SchedulerSettings } from "../src/platform/types/scheduler";
+import type { CardState, ReviewRating, SchedulerSettings } from "../src/platform/types/scheduler";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -105,6 +105,29 @@ describe("gradeFromRating", () => {
     // After completing both learning steps, should be in review
     // (ts-fsrs may graduate in fewer steps depending on config)
     expect(["review", "learning"]).toContain(card.stage);
+  });
+
+  it("matches results after JSON persistence round-trips between reviews", () => {
+    const roundTrip = (s: CardState): CardState => JSON.parse(JSON.stringify(s)) as CardState;
+
+    const ratings: ReviewRating[] = ["good", "good", "again", "hard", "good", "easy"];
+
+    let live = newCardState();
+    let reloaded = roundTrip(newCardState());
+    let at = NOW;
+
+    for (const rating of ratings) {
+      const liveResult = gradeFromRating(live, rating, at, DEFAULT_SETTINGS);
+      const reloadedResult = gradeFromRating(roundTrip(reloaded), rating, at, DEFAULT_SETTINGS);
+
+      expect(reloadedResult.nextDue).toBe(liveResult.nextDue);
+      expect(reloadedResult.nextState).toEqual(liveResult.nextState);
+
+      // Simulate app close/reopen: persist + reload state before the next review.
+      live = liveResult.nextState;
+      reloaded = roundTrip(reloadedResult.nextState);
+      at = liveResult.nextDue;
+    }
   });
 });
 

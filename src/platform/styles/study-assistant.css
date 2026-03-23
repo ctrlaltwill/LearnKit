@@ -544,6 +544,7 @@
   width: 200px;
   height: 200px;
   z-index: calc(var(--layer-popover, 50) - 1);
+  pointer-events: none;
 }
 
 .sprout-assistant-trigger-hotzone.is-hidden {
