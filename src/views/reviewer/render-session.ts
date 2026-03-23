@@ -149,13 +149,6 @@ function formatNotePathForHeader(raw: string): string {
   return formatBreadcrumbs(s);
 }
 
-function getNoteNameForHeader(rawPath: string): string {
-  const normalized = String(rawPath ?? "").trim().replace(/\\/g, "/");
-  if (!normalized) return "";
-  const leaf = normalized.split("/").pop() || normalized;
-  return leaf.replace(/\.md$/i, "").trim();
-}
-
 function applyInlineMarkdownWithFlags(target: HTMLElement, raw: string): void {
   applyInlineMarkdown(target, processCircleFlagsInMarkdown(raw));
   hydrateCircleFlagsInElement(target);

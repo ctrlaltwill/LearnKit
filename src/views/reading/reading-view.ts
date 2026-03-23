@@ -356,28 +356,23 @@ function deriveTextForDark(lightHex: string): string {
    Dynamic style injection
    ========================= */
 
-const READING_DYNAMIC_STYLE_ID = 'sprout-reading-view-dynamic-styles';
-let readingDynamicStyleEl: HTMLStyleElement | null = null;
+type AdoptedStyleSheetsDocument = Document & { adoptedStyleSheets?: CSSStyleSheet[] };
 
-function getReadingDynamicStyleElement(): HTMLStyleElement | null {
-  if (typeof document === 'undefined') return null;
+let readingDynamicStyleSheet: CSSStyleSheet | null = null;
 
-  if (readingDynamicStyleEl && readingDynamicStyleEl.isConnected) return readingDynamicStyleEl;
+function getReadingDynamicStyleSheet(): CSSStyleSheet | null {
+  if (typeof document === 'undefined' || typeof CSSStyleSheet === 'undefined') return null;
 
-  const existing = document.getElementById(READING_DYNAMIC_STYLE_ID);
-  if (existing instanceof HTMLStyleElement) {
-    readingDynamicStyleEl = existing;
-    return readingDynamicStyleEl;
-  }
+  if (readingDynamicStyleSheet) return readingDynamicStyleSheet;
 
-  if (!document.head) return null;
+  const doc = document as AdoptedStyleSheetsDocument;
+  const existing = doc.adoptedStyleSheets;
+  if (!Array.isArray(existing)) return null;
 
-  const styleEl = document.createElement('style');
-  styleEl.id = READING_DYNAMIC_STYLE_ID;
-  styleEl.setAttribute('data-sprout', 'reading-dynamic');
-  document.head.appendChild(styleEl);
-  readingDynamicStyleEl = styleEl;
-  return readingDynamicStyleEl;
+  const sheet = new CSSStyleSheet();
+  doc.adoptedStyleSheets = [...existing, sheet];
+  readingDynamicStyleSheet = sheet;
+  return readingDynamicStyleSheet;
 }
 
 function normaliseMacroPreset(raw: string | undefined): 'classic' | 'guidebook' | 'flashcards' | 'markdown' | 'custom' {
@@ -398,7 +393,7 @@ function resolveReadingLayout(
 }
 
 /**
- * Injects or updates a <style> element that writes the current reading-view
+ * Injects or updates a dynamic stylesheet that writes the current reading-view
  * settings as CSS rules. This makes colour, font, layout, and mode changes
  * instant — no per-card DOM manipulation or full re-render needed.
  *
@@ -412,11 +407,11 @@ export function syncReadingViewStyles(): void {
   const effectiveLayout = resolveReadingLayout(rv?.layout, macroPreset);
   const macroSelector = `.sprout-pretty-card.sprout-macro-${macroPreset}`;
 
-  const styleEl = getReadingDynamicStyleElement();
-  if (!styleEl) return;
+  const styleSheet = getReadingDynamicStyleSheet();
+  if (!styleSheet) return;
 
   if (!enabled) {
-    styleEl.textContent = "";
+    styleSheet.replaceSync("");
     return;
   }
 
@@ -544,10 +539,9 @@ export function syncReadingViewStyles(): void {
 
   // Macro-specific styling is handled in pretty-cards.css.
 
-  // ── Upsert the <style> element ──
-  // Note: Using document.head.createEl (Obsidian API) for reading-view dynamic settings
-  // For static CSS, use the main styles.css file
-  styleEl.textContent = css;
+  // ── Update dynamic stylesheet ──
+  // For static CSS, use the main styles.css file.
+  styleSheet.replaceSync(css);
 }
 
 /* =========================
@@ -768,10 +762,13 @@ export function teardownReadingView(): void {
   sproutPluginRef = null;
   delete (window as unknown as Record<string, unknown>).sproutApplyMasonryGrid;
   // Detach dynamic reading stylesheet
-  if (readingDynamicStyleEl?.isConnected) {
-    readingDynamicStyleEl.remove();
+  if (readingDynamicStyleSheet) {
+    const doc = document as AdoptedStyleSheetsDocument;
+    if (Array.isArray(doc.adoptedStyleSheets)) {
+      doc.adoptedStyleSheets = doc.adoptedStyleSheets.filter((sheet) => sheet !== readingDynamicStyleSheet);
+    }
   }
-  readingDynamicStyleEl = null;
+  readingDynamicStyleSheet = null;
 }
 
 function setupDebouncedMutationObserver() {

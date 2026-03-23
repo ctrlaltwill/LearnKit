@@ -1,4 +1,4 @@
-import { Component, ItemView, MarkdownRenderer, TFile, setIcon, type WorkspaceLeaf } from "obsidian";
+import { Component, ItemView, MarkdownRenderer, Notice, TFile, setIcon, type WorkspaceLeaf } from "obsidian";
 import { createViewHeader, type SproutHeader } from "../../platform/core/header";
 import { AOS_DURATION, MAX_CONTENT_WIDTH_PX, VIEW_TYPE_NOTE_REVIEW } from "../../platform/core/constants";
 import { setCssProps } from "../../platform/core/ui";
