@@ -463,6 +463,14 @@
   min-width: 250px;
 }
 
+/* Analytics popovers: glass surface like header/note bars. */
+.sprout :is([id^="sprout-"][id$="-filter-popover"], .sprout-ana-popover) {
+  background: color-mix(in srgb, var(--color-base-00) 50%, transparent 50%) !important;
+  border: 1px solid var(--color-base-35) !important;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
 /* Analytics filter triggers should match neutral settings action button styling. */
 .sprout .sprout-ana-card .sprout-btn-filter {
   display: inline-flex;
@@ -472,43 +480,64 @@
   height: 36px;
   padding: 0 12px;
   border-radius: var(--radius-s, 4px);
-  border: 1px solid var(--color-base-35) !important;
+  border: 1px solid transparent !important;
   background-color: var(--color-base-20) !important;
   color: var(--text-normal) !important;
   box-shadow: none;
   transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease;
 }
 
-.sprout .sprout-ana-card .sprout-btn-filter:is(:hover, :focus-visible, :active, [aria-expanded="true"]) {
-  background-color: var(--color-base-30) !important;
-  border-color: var(--color-base-40) !important;
+.sprout .sprout-ana-card .sprout-btn-filter:is(:hover, [aria-expanded="true"]) {
+  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) !important;
+  border-color: color-mix(in srgb, var(--color-base-70) 25%, transparent 75%) !important;
+  color: var(--color-base-100) !important;
+}
+
+.sprout .sprout-ana-card .sprout-btn-filter:focus-visible {
+  background-color: color-mix(in srgb, var(--color-base-50) 20%, transparent 80%) !important;
+  border-color: color-mix(in srgb, var(--color-base-70) 32%, transparent 68%) !important;
+  color: var(--color-base-100) !important;
+}
+
+.sprout .sprout-ana-card .sprout-btn-filter:active {
+  background-color: color-mix(in srgb, var(--color-base-60) 24%, transparent 76%) !important;
+  border-color: color-mix(in srgb, var(--color-base-80) 36%, transparent 64%) !important;
   color: var(--color-base-100) !important;
 }
 
 /* Analytics filter popovers: shared menu hover/active treatment */
 .sprout :is([id^="sprout-"][id$="-filter-popover"], .sprout-ana-popover[role="listbox"][aria-label$="filters"]) :is([role="menuitem"], [role="menuitemradio"]).group {
-  border: 1px solid var(--color-base-00);
+  border: 1px solid transparent;
 }
 
 .sprout :is([id^="sprout-"][id$="-filter-popover"], .sprout-ana-popover[role="listbox"][aria-label$="filters"]) :is([role="menuitem"], [role="menuitemradio"]).group:is(:hover, :focus, :focus-visible, :active),
 .sprout :is([id^="sprout-"][id$="-filter-popover"], .sprout-ana-popover[role="listbox"][aria-label$="filters"]) [role="menuitemradio"].group[aria-checked="true"],
 .sprout :is([id^="sprout-"][id$="-filter-popover"], .sprout-ana-popover[role="listbox"][aria-label$="filters"]) [role="menuitem"].group[aria-current="true"],
 .sprout :is([id^="sprout-"][id$="-filter-popover"], .sprout-ana-popover[role="listbox"][aria-label$="filters"]) [role="menuitem"].group[aria-selected="true"] {
-  background-color: var(--color-base-20);
+  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%);
   color: var(--text-color);
-  border: 1px solid var(--color-base-35);
+  border: 1px solid color-mix(in srgb, var(--color-base-70) 25%, transparent 75%);
 }
 
 .sprout :is([id^="sprout-"][id$="-filter-popover"], .sprout-ana-popover[role="listbox"][aria-label$="filters"]) [role="button"],
 .sprout :is([id^="sprout-"][id$="-filter-popover"], .sprout-ana-popover[role="listbox"][aria-label$="filters"]) .text-sm.text-muted-foreground.cursor-pointer {
-  border: 1px solid var(--color-base-00);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background-color: transparent;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
 }
 
-.sprout :is([id^="sprout-"][id$="-filter-popover"], .sprout-ana-popover[role="listbox"][aria-label$="filters"]) [role="button"]:hover,
+/* Reset row has an outer px-2 wrapper; remove inner px-2 to keep width aligned. */
+.sprout :is([id^="sprout-"][id$="-filter-popover"], .sprout-ana-popover[role="listbox"][aria-label$="filters"]) .text-sm.text-muted-foreground.cursor-pointer {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.sprout :is([id^="sprout-"][id$="-filter-popover"], .sprout-ana-popover[role="listbox"][aria-label$="filters"]) [role="button"]:is(:hover, :focus, :focus-visible, :active),
 .sprout :is([id^="sprout-"][id$="-filter-popover"], .sprout-ana-popover[role="listbox"][aria-label$="filters"]) .text-sm.text-muted-foreground.cursor-pointer:is(:hover, :focus, :focus-visible, :active) {
-  background-color: var(--color-base-20);
+  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%);
   color: var(--text-color);
-  border: 1px solid var(--color-base-35);
+  border: 1px solid color-mix(in srgb, var(--color-base-70) 25%, transparent 75%);
 }
 
 .sprout .sprout-ana-min-320 {

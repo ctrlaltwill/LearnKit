@@ -561,7 +561,7 @@
   min-height: 400px;
   max-height: min(700px, 60vh);
   border-radius: 16px;
-  border: 1px solid var(--theme-base-40);
+  border: 1px solid var(--color-base-35);
   background: var(--background-primary, #fff);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.06);
   z-index: var(--layer-popover, 50);

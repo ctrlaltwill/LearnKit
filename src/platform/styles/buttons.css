@@ -173,6 +173,11 @@
   border: 1px solid var(--color-base-35) !important;
 }
 
+/* Ensure filter icons always inherit button text color (fixes dark icon in dark mode). */
+.sprout .sprout-btn-filter :is(.svg-icon, .lucide-filter, .text-foreground) {
+  color: currentColor !important;
+}
+
 .sprout :is(.sprout-btn-control, .sprout-btn-outline-muted) {
   border-radius: var(--radius-md, var(--radius-md)) !important;
   padding: 7px 15px !important;

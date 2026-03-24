@@ -4,15 +4,31 @@
 
 .sprout .sprout-header-wrap,
 .sprout .learnkit-header-wrap {
-  background: var(--background-primary);
+  --sprout-app-header-inset: 10px;
+  --sprout-app-header-top: 8px;
+  --sprout-app-header-overlay-height: 64px;
+  background: transparent;
   background-color: transparent;
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  position: absolute;
+  top: var(--sprout-app-header-top);
+  left: 0;
+  right: 0;
+  z-index: 120;
   overflow: visible;
-  padding: 0.3rem;
-  border-bottom: 1px solid var(--color-base-40) ;
+  padding: 0 var(--sprout-app-header-inset);
+  border: none;
   display: flow-root; /* contain child margins so ::after sits outside them */
+}
+
+.sprout .sprout-header-wrap + .sprout-view-content,
+.sprout .learnkit-header-wrap + .sprout-view-content,
+.sprout .sprout-header-wrap + .view-content,
+.sprout .learnkit-header-wrap + .view-content,
+.workspace-leaf-content.sprout:has(> .sprout-header-wrap) > .view-content,
+.workspace-leaf-content.sprout:has(> .learnkit-header-wrap) > .view-content,
+.workspace-leaf-content:has(> .sprout-header-wrap) > .sprout-view-content,
+.workspace-leaf-content:has(> .learnkit-header-wrap) > .sprout-view-content {
+  margin-top: 16px;
 }
 
 /* Soft gradient fade below sticky header so content scrolls under a soft edge.
@@ -20,24 +36,42 @@
 
 /* Settings, Guide, and Release Notes should scroll freely without sticky header. */
 .sprout:has(.sprout-settings-view-root) .sprout-header-wrap,
-.sprout:has(.sprout-settings-view-root) .studykit-header-wrap {
+.sprout:has(.sprout-settings-view-root) .learnkit-header-wrap {
   position: static;
+  left: auto;
+  right: auto;
+  background: transparent;
+  padding: 0;
+}
+
+.sprout:has(.sprout-settings-view-root) .sprout-header-wrap + .sprout-view-content,
+.sprout:has(.sprout-settings-view-root) .learnkit-header-wrap + .sprout-view-content,
+.sprout:has(.sprout-settings-view-root) .sprout-header-wrap + .view-content,
+.sprout:has(.sprout-settings-view-root) .learnkit-header-wrap + .view-content,
+.workspace-leaf-content.sprout:has(.sprout-settings-view-root):has(> .sprout-header-wrap) > .view-content,
+.workspace-leaf-content.sprout:has(.sprout-settings-view-root):has(> .learnkit-header-wrap) > .view-content,
+.workspace-leaf-content:has(.sprout-settings-view-root):has(> .sprout-header-wrap) > .sprout-view-content,
+.workspace-leaf-content:has(.sprout-settings-view-root):has(> .learnkit-header-wrap) > .sprout-view-content {
+  margin-top: 0;
 }
 
 .sprout:has(.sprout-settings-view-root) .sprout-header-wrap::after,
-.sprout:has(.sprout-settings-view-root) .studykit-header-wrap::after {
+.sprout:has(.sprout-settings-view-root) .learnkit-header-wrap::after {
   display: none;
 }
 
 .sprout .view-header.sprout-header {
-    border-radius: 0px;
-    background-color: var(--color-base-00);
+    border-radius: var(--radius-md);
+  background: rgba(127, 127, 127, 0.18);
+  border: 1px solid var(--color-base-35);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
     height: auto;
     box-shadow: none;
     align-items: center;
     column-gap: 6px;
-    margin: 0px;
-    padding: 6px;
+    margin: 0;
+    padding: 8px 10px;
     display: flex;
     position: relative;
 }
@@ -208,10 +242,10 @@
 
 /* --- Header action buttons (custom style matching header bg) --- */
 .sprout .sprout-header .sprout-btn-toolbar {
-  background-color: var(--color-base-00);
+  background-color: color-mix(in srgb, var(--color-base-40) 8%, transparent 92%);
   color: var(--text-normal);
   font-size: var(--sprout-font-xs);
-  border: 1px solid var(--color-base-00);
+  border: 1px solid color-mix(in srgb, var(--color-base-70) 14%, transparent 86%);
   border-radius: var(--radius-md);
   box-shadow: none;
   transition: all 0.15s ease-in-out, color 0.15s ease-in-out, border-color 0.15s ease-in-out;
@@ -284,30 +318,37 @@
 }
 
 .sprout .sprout-header .sprout-btn-toolbar:hover {
-  background-color: var(--color-base-20) !important;
-  color: var(--color-base-100);
-  border: var(--color-base-35) 1px solid !important;
+  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) !important;
+  color: var(--color-base-100) !important;
+  border: 1px solid color-mix(in srgb, var(--color-base-70) 25%, transparent 75%) !important;
 }
 .sprout .sprout-header .sprout-btn-toolbar[aria-expanded="true"] {
-  background-color: var(--color-base-20) !important;
-  color: var(--color-base-100);
-  border: var(--color-base-35) 1px solid !important;
+  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) !important;
+  color: var(--color-base-100) !important;
+  border: 1px solid color-mix(in srgb, var(--color-base-70) 25%, transparent 75%) !important;
 }
 .sprout .sprout-header .sprout-btn-toolbar:focus-visible {
-  background-color: var(--color-base-25);
-  color: var(--color-base-100);
-  border-color: var(--color-base-40) !important;
+  background-color: color-mix(in srgb, var(--color-base-45) 17%, transparent 83%) !important;
+  color: var(--color-base-100) !important;
+  border-color: color-mix(in srgb, var(--color-base-70) 28%, transparent 72%) !important;
 }
 .sprout .sprout-header .sprout-btn-toolbar:active {
-  background-color: var(--color-base-25) !important;
-    color: var(--color-base-100);
-  border-color: var(--color-base-40) !important;
+  background-color: color-mix(in srgb, var(--color-base-50) 19%, transparent 81%) !important;
+  color: var(--color-base-100) !important;
+  border-color: color-mix(in srgb, var(--color-base-75) 30%, transparent 70%) !important;
 }
 
 /* --- Mobile header layout --- */
 @media (max-width: 820px) {
+  .sprout .sprout-header-wrap,
+  .sprout .learnkit-header-wrap {
+    --sprout-app-header-inset: 8px;
+    --sprout-app-header-top: 6px;
+    --sprout-app-header-overlay-height: 68px;
+  }
+
   .sprout .view-header.sprout-header {
-    margin: 50px 12px 0 12px;
+    margin: 0;
     padding: 10px 12px;
     display: flex;
     flex-wrap: nowrap;
