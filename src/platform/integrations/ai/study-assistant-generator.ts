@@ -1178,7 +1178,7 @@ export async function generateStudyAssistantSuggestions(params: {
   const imageDataUrls = Array.isArray(input.imageDataUrls) ? input.imageDataUrls.filter(Boolean) : [];
   const attachedFileDataUrls = Array.isArray(input.attachedFileDataUrls) ? input.attachedFileDataUrls.filter(Boolean) : [];
   const canUseVisionForIo = !!input.includeImages && imageDataUrls.length > 0 && modelLikelySupportsVision(settings);
-  const systemPrompt = buildSystemPrompt(input.customInstructions || settings.prompts.generator || "", canUseVisionForIo);
+  const systemPrompt = buildSystemPrompt(input.customInstructions || settings.prompts.assistant || "", canUseVisionForIo);
   const userPrompt = buildUserPrompt(input, canUseVisionForIo, overrides);
   const payloadPreview = `System prompt:\n${systemPrompt}\n\nUser prompt:\n${userPrompt}`;
 
@@ -1228,7 +1228,7 @@ export async function generateStudyAssistantSuggestions(params: {
       count: remaining,
       exactCountRequested: true,
     };
-    const refillSystemPrompt = buildSystemPrompt(refillInput.customInstructions || settings.prompts.generator || "", canUseVisionForIo);
+    const refillSystemPrompt = buildSystemPrompt(refillInput.customInstructions || settings.prompts.assistant || "", canUseVisionForIo);
     const refillUserPrompt = buildUserPrompt(refillInput, canUseVisionForIo, refillOverrides);
 
     const refillResponse = await requestStudyAssistantCompletionDetailed({

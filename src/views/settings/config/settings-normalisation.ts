@@ -143,6 +143,9 @@ export function normaliseSettingsInPlace(s: SproutSettings): void {
   s.studyAssistant.prompts.generator = String(
     s.studyAssistant.prompts.generator ?? DEFAULT_SETTINGS.studyAssistant.prompts.generator,
   );
+  s.studyAssistant.prompts.tests = String(
+    s.studyAssistant.prompts.tests ?? DEFAULT_SETTINGS.studyAssistant.prompts.tests,
+  );
   s.studyAssistant.generatorTypes ??= { ...DEFAULT_SETTINGS.studyAssistant.generatorTypes };
   s.studyAssistant.generatorTypes.basic ??= DEFAULT_SETTINGS.studyAssistant.generatorTypes.basic;
   s.studyAssistant.generatorTypes.reversed ??= DEFAULT_SETTINGS.studyAssistant.generatorTypes.reversed;

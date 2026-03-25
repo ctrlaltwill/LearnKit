@@ -1,6 +1,7 @@
 import { requestUrl } from "obsidian";
 import type { SproutSettings } from "../../types/settings";
 import type { StudyAssistantProvider } from "./study-assistant-types";
+import { splitTextLikeAttachmentDataUrls } from "./attachment-helpers";
 
 type CompletionMode = "text" | "json";
 
@@ -20,6 +21,8 @@ type ProviderRequestError = Error & {
   provider?: StudyAssistantProvider;
   status?: number;
   detail?: string;
+  code?: string;
+  errorType?: string;
   endpoint?: string;
   responseText?: string;
   responseJson?: unknown;
@@ -101,6 +104,27 @@ function providerErrorDetail(res: { json?: unknown; text?: string }): string {
   return rawText;
 }
 
+function providerErrorCode(res: { json?: unknown; text?: string }): string {
+  const json = parseJsonFromUnknown(res.json);
+  const err = parseJsonFromUnknown(json?.error);
+  const code = typeof err?.code === "string" ? err.code.trim() : "";
+  if (code) return code;
+  const type = typeof err?.type === "string" ? err.type.trim() : "";
+  if (type) return type;
+  const status = typeof json?.status === "string" ? json.status.trim() : "";
+  if (status) return status;
+  const rawText = typeof res.text === "string" ? res.text.trim() : "";
+  const fromText = rawText.match(/\b([A-Z_]{3,}|[a-z_]{3,}(?:_error|_exceeded|_found|_denied|_quota))\b/);
+  return fromText?.[1] ? fromText[1].trim() : "";
+}
+
+function providerErrorType(res: { json?: unknown }): string {
+  const json = parseJsonFromUnknown(res.json);
+  const err = parseJsonFromUnknown(json?.error);
+  const type = typeof err?.type === "string" ? err.type.trim() : "";
+  return type;
+}
+
 function recordFromUnknown(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object") return null;
   return value as Record<string, unknown>;
@@ -159,16 +183,20 @@ function buildProviderRequestError(args: {
   endpoint: string;
   status: number;
   detail?: string;
+  code?: string;
+  errorType?: string;
   responseText?: string;
   responseJson?: unknown;
   originalError?: unknown;
 }): ProviderRequestError {
-  const { provider, endpoint, status, detail = "", responseText = "", responseJson, originalError } = args;
+  const { provider, endpoint, status, detail = "", code = "", errorType = "", responseText = "", responseJson, originalError } = args;
   const err = new Error(`${provider} request failed (${status})`) as ProviderRequestError;
   err.provider = provider;
   err.endpoint = endpoint;
   err.status = status;
   if (detail) err.detail = detail;
+  if (code) err.code = code;
+  if (errorType) err.errorType = errorType;
   if (responseText) err.responseText = responseText;
   if (responseJson !== undefined) err.responseJson = responseJson;
   if (originalError !== undefined) err.originalError = originalError;
@@ -296,6 +324,42 @@ function buildOpenAiContentBlocks(attachments: ParsedAttachment[]): unknown[] {
   });
 }
 
+function buildTextAttachmentContext(dataUrls: string[]): {
+  binaryDataUrls: string[];
+  textContext: string;
+} {
+  const { binaryDataUrls, textBlocks } = splitTextLikeAttachmentDataUrls(dataUrls || []);
+  if (!textBlocks.length) return { binaryDataUrls, textContext: "" };
+
+  const maxFiles = 6;
+  const maxCharsPerFile = 12000;
+  const maxCharsTotal = 48000;
+  let total = 0;
+  const lines: string[] = [
+    "Additional attached text context:",
+  ];
+
+  for (let i = 0; i < textBlocks.length && i < maxFiles; i += 1) {
+    const block = textBlocks[i];
+    const remaining = maxCharsTotal - total;
+    if (remaining <= 0) break;
+
+    const normalized = String(block.text || "").trim();
+    if (!normalized) continue;
+    const capped = normalized.slice(0, Math.min(maxCharsPerFile, remaining));
+    if (!capped) continue;
+
+    lines.push(`\n[Attached text file ${i + 1} - ${block.mimeType}]`);
+    lines.push(capped);
+    total += capped.length;
+  }
+
+  return {
+    binaryDataUrls,
+    textContext: lines.length > 1 ? lines.join("\n") : "",
+  };
+}
+
 export async function requestStudyAssistantCompletionDetailed(params: {
   settings: SproutSettings["studyAssistant"];
   systemPrompt: string;
@@ -331,7 +395,11 @@ export async function requestStudyAssistantCompletionDetailed(params: {
 
   if (!model) throw new Error("Missing model name in Study Companion settings.");
 
-  const allDataUrls = [...imageDataUrls, ...attachedFileDataUrls];
+  const textAttachmentPrep = buildTextAttachmentContext(attachedFileDataUrls);
+  const effectiveUserPrompt = textAttachmentPrep.textContext
+    ? `${userPrompt}\n\n${textAttachmentPrep.textContext}`
+    : userPrompt;
+  const allDataUrls = [...imageDataUrls, ...textAttachmentPrep.binaryDataUrls];
   const attachments = parseAttachmentDataUrls(allDataUrls);
 
   if (settings.provider === "anthropic") {
@@ -355,10 +423,10 @@ export async function requestStudyAssistantCompletionDetailed(params: {
             role: "user",
             content: attachments.length
               ? [
-                  { type: "text", text: userPrompt },
+                  { type: "text", text: effectiveUserPrompt },
                   ...buildAnthropicContentBlocks(attachments),
                 ]
-              : userPrompt,
+              : effectiveUserPrompt,
           }],
         }),
       });
@@ -368,11 +436,15 @@ export async function requestStudyAssistantCompletionDetailed(params: {
         const responseText = responseTextFromUnknownError(err);
         const responseJson = responseJsonFromUnknownError(err);
         const detail = providerErrorDetail({ json: responseJson, text: responseText });
+        const code = providerErrorCode({ json: responseJson, text: responseText });
+        const errorType = providerErrorType({ json: responseJson });
         throw buildProviderRequestError({
           provider: settings.provider,
           endpoint,
           status,
           detail,
+          code,
+          errorType,
           responseText,
           responseJson,
           originalError: err,
@@ -383,11 +455,15 @@ export async function requestStudyAssistantCompletionDetailed(params: {
 
     if (res.status < 200 || res.status >= 300) {
       const detail = providerErrorDetail(res);
+      const code = providerErrorCode(res);
+      const errorType = providerErrorType(res);
       throw buildProviderRequestError({
         provider: settings.provider,
         endpoint,
         status: res.status,
         detail,
+        code,
+        errorType,
         responseText: typeof res.text === "string" ? res.text : "",
         responseJson: res.json,
       });
@@ -425,10 +501,10 @@ export async function requestStudyAssistantCompletionDetailed(params: {
               role: "user",
               content: attachments.length
                 ? [
-                    { type: "text", text: userPrompt },
+                    { type: "text", text: effectiveUserPrompt },
                     ...buildOpenAiContentBlocks(attachments),
                   ]
-                : userPrompt,
+                : effectiveUserPrompt,
             },
           ],
           ...(settings.provider === "custom" && typeof conversationId === "string" && conversationId.trim()
@@ -444,11 +520,15 @@ export async function requestStudyAssistantCompletionDetailed(params: {
         const responseText = responseTextFromUnknownError(err);
         const responseJson = responseJsonFromUnknownError(err);
         const detail = providerErrorDetail({ json: responseJson, text: responseText });
+        const code = providerErrorCode({ json: responseJson, text: responseText });
+        const errorType = providerErrorType({ json: responseJson });
         throw buildProviderRequestError({
           provider: settings.provider,
           endpoint,
           status,
           detail,
+          code,
+          errorType,
           responseText,
           responseJson,
           originalError: err,
@@ -461,11 +541,15 @@ export async function requestStudyAssistantCompletionDetailed(params: {
   const assertOkOrThrow = (response: Awaited<ReturnType<typeof requestUrl>>): void => {
     if (response.status < 200 || response.status >= 300) {
       const detail = providerErrorDetail(response);
+      const code = providerErrorCode(response);
+      const errorType = providerErrorType(response);
       throw buildProviderRequestError({
         provider: settings.provider,
         endpoint,
         status: response.status,
         detail,
+        code,
+        errorType,
         responseText: typeof response.text === "string" ? response.text : "",
         responseJson: response.json,
       });

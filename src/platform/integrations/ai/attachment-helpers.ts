@@ -14,9 +14,37 @@ const EXT_MIME: Record<string, string> = {
   webp: "image/webp",
   gif: "image/gif",
   pdf: "application/pdf",
+  html: "text/html",
+  htm: "text/html",
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
   xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  json: "application/json",
+  xml: "application/xml",
+  yaml: "application/x-yaml",
+  yml: "application/x-yaml",
+  js: "application/javascript",
+  mjs: "application/javascript",
+  cjs: "application/javascript",
+  ts: "application/typescript",
+  jsx: "text/jsx",
+  tsx: "text/tsx",
+  css: "text/css",
+  py: "text/x-python",
+  java: "text/x-java-source",
+  c: "text/x-c",
+  h: "text/x-c",
+  cpp: "text/x-c++src",
+  hpp: "text/x-c++hdr",
+  cs: "text/x-csharp",
+  go: "text/x-go",
+  rs: "text/x-rustsrc",
+  php: "text/x-php",
+  rb: "text/x-ruby",
+  sh: "application/x-sh",
+  bash: "application/x-sh",
+  zsh: "application/x-sh",
+  sql: "application/sql",
   csv: "text/csv",
   txt: "text/plain",
   md: "text/markdown",
@@ -47,6 +75,11 @@ export type AttachedFile = {
   size: number;
 };
 
+type ParsedDataUrl = {
+  mimeType: string;
+  base64: string;
+};
+
 export function isSupportedAttachmentExt(ext: string): boolean {
   return SUPPORTED_EXTENSIONS.has(String(ext || "").toLowerCase());
 }
@@ -62,7 +95,71 @@ export function isPdfExt(ext: string): boolean {
 
 export function isDocumentExt(ext: string): boolean {
   const e = String(ext || "").toLowerCase();
-  return e === "docx" || e === "pptx" || e === "xlsx" || e === "csv" || e === "txt" || e === "md";
+  return e === "docx" || e === "pptx" || e === "xlsx" || e === "csv" || e === "txt" || e === "md"
+    || e === "html" || e === "htm" || e === "json" || e === "xml" || e === "yaml" || e === "yml"
+    || e === "js" || e === "mjs" || e === "cjs" || e === "ts" || e === "jsx" || e === "tsx" || e === "css"
+    || e === "py" || e === "java" || e === "c" || e === "h" || e === "cpp" || e === "hpp" || e === "cs"
+    || e === "go" || e === "rs" || e === "php" || e === "rb" || e === "sh" || e === "bash" || e === "zsh"
+    || e === "sql";
+}
+
+function parseDataUrl(url: string): ParsedDataUrl | null {
+  const raw = String(url || "").trim();
+  const match = raw.match(/^data:([^;,]+);base64,([a-z0-9+/=]+)$/i);
+  if (!match) return null;
+  return { mimeType: match[1].toLowerCase(), base64: match[2] };
+}
+
+function base64ToUtf8(base64: string): string {
+  try {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+    const decoder = new TextDecoder("utf-8", { fatal: false });
+    return decoder.decode(bytes);
+  } catch {
+    return "";
+  }
+}
+
+export function isTextLikeMimeType(mimeType: string): boolean {
+  const mime = String(mimeType || "").toLowerCase();
+  if (!mime) return false;
+  if (mime.startsWith("text/")) return true;
+  return mime === "application/json"
+    || mime === "application/xml"
+    || mime === "application/javascript"
+    || mime === "application/typescript"
+    || mime === "application/x-yaml"
+    || mime === "application/x-sh"
+    || mime === "application/sql";
+}
+
+export function splitTextLikeAttachmentDataUrls(dataUrls: string[]): {
+  binaryDataUrls: string[];
+  textBlocks: Array<{ mimeType: string; text: string }>;
+} {
+  const binaryDataUrls: string[] = [];
+  const textBlocks: Array<{ mimeType: string; text: string }> = [];
+
+  for (const value of dataUrls || []) {
+    const parsed = parseDataUrl(value);
+    if (!parsed) {
+      binaryDataUrls.push(String(value || ""));
+      continue;
+    }
+    if (!isTextLikeMimeType(parsed.mimeType)) {
+      binaryDataUrls.push(String(value || ""));
+      continue;
+    }
+
+    const decodedText = base64ToUtf8(parsed.base64);
+    const text = decodedText.split("\u0000").join("").trim();
+    if (!text) continue;
+    textBlocks.push({ mimeType: parsed.mimeType, text });
+  }
+
+  return { binaryDataUrls, textBlocks };
 }
 
 function maxBytesForExt(ext: string): number {

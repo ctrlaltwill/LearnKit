@@ -2158,6 +2158,91 @@ export class SproutExamGeneratorView extends ItemView {
     return this._getFolderCandidates();
   }
 
+  private _extractEmbedRefs(markdown: string): string[] {
+    const refs = new Set<string>();
+    const wikiRe = /!\[\[([^\]]+)\]\]/g;
+    let m: RegExpExecArray | null;
+    while ((m = wikiRe.exec(markdown)) !== null) {
+      const raw = String(m[1] || "").trim();
+      if (!raw) continue;
+      const filePart = raw.split("|")[0]?.split("#")[0]?.trim();
+      if (filePart) refs.add(filePart);
+    }
+    const mdRe = /!\[[^\]]*\]\(([^)]+)\)/g;
+    while ((m = mdRe.exec(markdown)) !== null) {
+      const raw = String(m[1] || "").trim();
+      if (!raw) continue;
+      refs.add(raw.replace(/^<|>$/g, ""));
+    }
+    return Array.from(refs);
+  }
+
+  private _extractLinkedRefs(markdown: string): string[] {
+    const refs = new Set<string>();
+    let m: RegExpExecArray | null;
+
+    const wikiRe = /(^|[^!])\[\[([^\]]+)\]\]/g;
+    while ((m = wikiRe.exec(markdown)) !== null) {
+      const raw = String(m[2] || "").trim();
+      if (!raw) continue;
+      const filePart = raw.split("|")[0]?.split("#")[0]?.trim();
+      if (filePart) refs.add(filePart);
+    }
+
+    const mdRe = /(^|[^!])\[[^\]]*\]\(([^)]+)\)/g;
+    while ((m = mdRe.exec(markdown)) !== null) {
+      const raw = String(m[2] || "").trim();
+      if (!raw) continue;
+      const normalized = raw.replace(/^<|>$/g, "");
+      if (/^(?:https?:|mailto:|obsidian:|file:)/i.test(normalized)) continue;
+      refs.add(normalized);
+    }
+
+    return Array.from(refs);
+  }
+
+  private async _buildLinkedNotesContext(file: TFile, markdown: string): Promise<string> {
+    const linkedRefs = this._extractLinkedRefs(markdown);
+    if (!linkedRefs.length) return "";
+
+    const sections: string[] = [];
+    const seen = new Set<string>();
+    const maxNotes = 6;
+    const maxCharsPerNote = 8000;
+    const maxCharsTotal = 30000;
+    let totalChars = 0;
+
+    for (const ref of linkedRefs) {
+      if (sections.length >= maxNotes || totalChars >= maxCharsTotal) break;
+      const resolved = resolveImageFile(this.app, file.path, ref);
+      if (!(resolved instanceof TFile)) continue;
+      if (String(resolved.extension || "").toLowerCase() !== "md") continue;
+      if (resolved.path === file.path) continue;
+      if (seen.has(resolved.path)) continue;
+      seen.add(resolved.path);
+
+      let linked = "";
+      try {
+        linked = String(await this.app.vault.cachedRead(resolved) || "").trim();
+      } catch {
+        linked = "";
+      }
+      if (!linked) continue;
+
+      const allowed = Math.min(maxCharsPerNote, maxCharsTotal - totalChars);
+      if (allowed <= 0) break;
+      const clipped = linked.slice(0, allowed);
+      totalChars += clipped.length;
+      sections.push(`### ${resolved.path}\n${clipped}`);
+    }
+
+    if (!sections.length) return "";
+    return [
+      "Children page additional, secondary context:",
+      ...sections,
+    ].join("\n\n");
+  }
+
   private async _generateExam(): Promise<void> {
     let selectedFiles = this._collectSourceFiles();
     selectedFiles = Array.from(new Map(selectedFiles.map((file) => [file.path, file])).values());
@@ -2178,35 +2263,44 @@ export class SproutExamGeneratorView extends ItemView {
     }
 
     try {
-      const notes = await Promise.all(selectedFiles.map(async (file) => ({
-        path: file.path,
-        title: file.basename,
-        content: await this.app.vault.cachedRead(file),
-      })));
+      const includeLinkedNotes = !!this.plugin.settings.studyAssistant.privacy.includeLinkedNotesInExam;
+      const testsCustomInstructions = String(this.plugin.settings.studyAssistant.prompts.tests || "").trim();
+      const notes = await Promise.all(selectedFiles.map(async (file) => {
+        const rawContent = await this.app.vault.cachedRead(file);
+        const linkedContext = includeLinkedNotes
+          ? await this._buildLinkedNotesContext(file, rawContent)
+          : "";
+        const baseContent = linkedContext ? `${rawContent}\n\n${linkedContext}` : rawContent;
+        const customInstructionBlock = testsCustomInstructions
+          ? `\n\nAdditional Tests custom instructions (plain text context):\n${testsCustomInstructions}`
+          : "";
+        return {
+          path: file.path,
+          title: file.basename,
+          rawContent,
+          content: `${baseContent}${customInstructionBlock}`,
+        };
+      }));
 
       const rankedNotes = this._config.sourceMode === "folder"
         ? this._rankNotesByEducationalDensity(notes).slice(0, this._config.maxFolderNotes)
         : notes;
 
-      // Auto-include embedded attachments (images, PDFs, docs) from source notes.
+      // Auto-include embedded/linked attachments (images, PDFs, docs, code files) from source notes.
       const noteEmbedUrls: string[] = [];
-      if (this.plugin.settings.studyAssistant.privacy.includeAttachmentsInExam) {
+      const includeEmbeddedAttachments = !!this.plugin.settings.studyAssistant.privacy.includeAttachmentsInExam;
+      const includeLinkedAttachments = !!this.plugin.settings.studyAssistant.privacy.includeLinkedAttachmentsInExam;
+      if (includeEmbeddedAttachments || includeLinkedAttachments) {
         for (const note of rankedNotes) {
           const refs = new Set<string>();
-          const wikiRe = /!\[\[([^\]]+)\]\]/g;
-          let m: RegExpExecArray | null;
-          while ((m = wikiRe.exec(note.content)) !== null) {
-            const raw = String(m[1] || "").trim();
-            if (!raw) continue;
-            const filePart = raw.split("|")[0]?.split("#")[0]?.trim();
-            if (filePart) refs.add(filePart);
+          const sourceContent = String((note as { rawContent?: string }).rawContent || note.content || "");
+          if (includeEmbeddedAttachments) {
+            for (const ref of this._extractEmbedRefs(sourceContent)) refs.add(ref);
           }
-          const mdRe = /!\[[^\]]*\]\(([^)]+)\)/g;
-          while ((m = mdRe.exec(note.content)) !== null) {
-            const raw = String(m[1] || "").trim();
-            if (!raw) continue;
-            refs.add(raw.replace(/^<|>$/g, ""));
+          if (includeLinkedAttachments) {
+            for (const ref of this._extractLinkedRefs(sourceContent)) refs.add(ref);
           }
+
           for (const ref of refs) {
             const resolved = resolveImageFile(this.app, note.path, ref);
             if (!(resolved instanceof TFile)) continue;
@@ -2223,11 +2317,13 @@ export class SproutExamGeneratorView extends ItemView {
         }
       }
 
+      const dedupedAttachmentUrls = Array.from(new Set([...this._attachedFiles.map(f => f.dataUrl), ...noteEmbedUrls]));
+
       const questions = await generateExamQuestions({
         settings: this.plugin.settings.studyAssistant,
         notes: rankedNotes,
         config: this._config,
-        attachedFileDataUrls: [...this._attachedFiles.map(f => f.dataUrl), ...noteEmbedUrls],
+        attachedFileDataUrls: dedupedAttachmentUrls,
       });
 
       this._attachedFiles = [];

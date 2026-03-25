@@ -432,7 +432,7 @@ border: 1px solid var(--color-base-30);
   width: max-content;
   min-width: 230px;
   border: 1px solid var(--color-base-35) !important;
-  background: color-mix(in srgb, var(--color-base-00) 75%, transparent 25%) !important;
+  background: color-mix(in srgb, var(--color-base-00) 85%, transparent 15%) !important;
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
   z-index: 5000;

@@ -117,6 +117,7 @@ export type SproutSettings = {
       assistant: string;
       noteReview: string;
       generator: string;
+      tests: string;
     };
     generatorTypes: {
       basic: boolean;
@@ -138,10 +139,18 @@ export type SproutSettings = {
       includeImagesInAsk: boolean;
       includeImagesInReview: boolean;
       includeImagesInFlashcard: boolean;
-      /** Allow attaching vault files (images/PDFs) to Companion messages. */
+      /** Auto-attach embedded non-markdown vault files from the active note in Companion. */
       includeAttachmentsInCompanion: boolean;
-      /** Allow attaching vault files (images/PDFs) to exam/test generation. */
+      /** Append one-hop linked markdown note content as plain text context in Companion. */
+      includeLinkedNotesInCompanion: boolean;
+      /** Auto-attach one-hop linked non-markdown vault files from the active note in Companion. */
+      includeLinkedAttachmentsInCompanion: boolean;
+      /** Auto-attach embedded non-markdown vault files from source notes in Tests. */
       includeAttachmentsInExam: boolean;
+      /** Append one-hop linked markdown note content as plain text context in Tests. */
+      includeLinkedNotesInExam: boolean;
+      /** Auto-attach one-hop linked non-markdown vault files from source notes in Tests. */
+      includeLinkedAttachmentsInExam: boolean;
       previewPayload: boolean;
       saveChatHistory: boolean;
       syncDeletesToProvider: boolean;

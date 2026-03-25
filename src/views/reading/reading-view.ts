@@ -2742,11 +2742,20 @@ function setupGuidebookCarousel(el: HTMLElement) {
 
 function setupFlashcardFlip(el: HTMLElement) {
   if (!el.classList.contains('sprout-macro-flashcards')) return;
+  type FlashcardFlipElement = HTMLElement & { __sproutFlipAC?: AbortController };
+  const flipEl = el as FlashcardFlipElement;
   const content = el.querySelector<HTMLElement>('.sprout-card-content');
   if (!content) return;
   const question = content.querySelector<HTMLElement>('.sprout-flashcard-question');
   const answer = content.querySelector<HTMLElement>('.sprout-flashcard-answer');
   if (!question || !answer) return;
+
+  // Abort any previous flip handler so stale listeners referencing
+  // detached Q/A elements don't block the current handler.
+  const prev = flipEl.__sproutFlipAC;
+  if (prev) prev.abort();
+  const ac = new AbortController();
+  flipEl.__sproutFlipAC = ac;
 
   let showingAnswer = false;
 
@@ -2789,7 +2798,7 @@ function setupFlashcardFlip(el: HTMLElement) {
     window.setTimeout(() => {
       el.classList.remove('sprout-flashcard-animating');
     }, 360);
-  });
+  }, { signal: ac.signal });
 
   applyFaceState();
   window.setTimeout(recalcHeight, 0);

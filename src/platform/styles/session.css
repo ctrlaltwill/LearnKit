@@ -292,19 +292,17 @@
     padding: 1.5rem 0 2rem;
 }
 
-/* Flashcard study mode: sticky action dock (note-review style) */
+/* Flashcard study mode: keep actions in normal flow after session content */
 .sprout .lk-session-card.sprout-session-has-dock {
-  --sprout-session-dock-space: 128px;
+  --sprout-session-dock-space: 0px;
 }
 
 .sprout .lk-session-card.sprout-session-has-dock > section {
-  padding-bottom: var(--sprout-session-dock-space);
+  padding-bottom: 0;
 }
 
 .sprout .lk-session-card > footer.sprout-session-study-dock {
-  position: sticky;
-  bottom: 16px;
-  z-index: 80;
+  position: static;
   margin: 1.2rem;
   padding: 1.2rem;
   border: 1px solid var(--color-base-35);
@@ -578,7 +576,7 @@
 .sprout .sprout-session-more-popover {
   min-width: 230px;
   border: 1px solid var(--color-base-35) !important;
-  background: color-mix(in srgb, var(--color-base-00) 75%, transparent 25%) !important;
+  background: color-mix(in srgb, var(--color-base-00) 85%, transparent 15%) !important;
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
 }
@@ -1569,11 +1567,10 @@
   }
 
   body.is-mobile .sprout .lk-session-card.sprout-session-has-dock {
-    --sprout-session-dock-space: 152px;
+    --sprout-session-dock-space: 0px;
   }
 
   body.is-mobile .sprout .lk-session-card > footer.sprout-session-study-dock {
-    bottom: 72px;
     margin: 0 12px 12px;
     padding: 10px;
   }

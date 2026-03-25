@@ -3282,10 +3282,18 @@ export class SproutSettingsTab extends PluginSettingTab {
         ),
     );
 
+    new Setting(wrapper)
+      .setName(this._tx("ui.settings.studyAssistant.sections.contextFiles", "Context sources"))
+      .setHeading();
+
+    new Setting(wrapper)
+      .setName(this._tx("ui.settings.studyAssistant.sections.companionContextFiles", "Companion sources"))
+      .setHeading();
+
     withDependentSetting(
       new Setting(wrapper)
-        .setName(this._tx("ui.settings.studyAssistant.privacy.includeAttachmentsInCompanion.name", "Always include file attachments in Companion"))
-        .setDesc(this._tx("ui.settings.studyAssistant.privacy.includeAttachmentsInCompanion.desc", "Automatically include embedded vault file attachments from the active note in Companion messages (for example images, PDFs, and docs; markdown links are excluded). This may increase token usage."))
+        .setName(this._tx("ui.settings.studyAssistant.privacy.includeAttachmentsInCompanion.name", "Include embedded attachments"))
+        .setDesc(this._tx("ui.settings.studyAssistant.privacy.includeAttachmentsInCompanion.desc", "Include files embedded in the current note, like PDFs or images. Some free models may not support attachments."))
         .addToggle((toggle) =>
           toggle.setValue(!!this.plugin.settings.studyAssistant.privacy.includeAttachmentsInCompanion).onChange(async (value) => {
             this.plugin.settings.studyAssistant.privacy.includeAttachmentsInCompanion = !!value;
@@ -3296,22 +3304,32 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     withDependentSetting(
       new Setting(wrapper)
-        .setName(this._tx("ui.settings.studyAssistant.privacy.includeAttachmentsInExam.name", "Always include file attachments in Tests"))
-        .setDesc(this._tx("ui.settings.studyAssistant.privacy.includeAttachmentsInExam.desc", "Automatically include embedded vault file attachments from test source notes (for example images, PDFs, and docs; markdown links are excluded). This may increase token usage."))
+        .setName(this._tx("ui.settings.studyAssistant.privacy.includeLinkedNotesInCompanion.name", "Include linked notes as text"))
+        .setDesc(this._tx("ui.settings.studyAssistant.privacy.includeLinkedNotesInCompanion.desc", "Include notes directly linked from the current note as plain text context. Links inside those notes are not included. Since this is sent as text, it should work with all models."))
         .addToggle((toggle) =>
-          toggle.setValue(!!this.plugin.settings.studyAssistant.privacy.includeAttachmentsInExam).onChange(async (value) => {
-            this.plugin.settings.studyAssistant.privacy.includeAttachmentsInExam = !!value;
+          toggle.setValue(!!this.plugin.settings.studyAssistant.privacy.includeLinkedNotesInCompanion).onChange(async (value) => {
+            this.plugin.settings.studyAssistant.privacy.includeLinkedNotesInCompanion = !!value;
             await this.plugin.saveAll();
           }),
         ),
     );
 
-    new Setting(wrapper).setName(this._tx("ui.settings.studyAssistant.sections.askMode", "Ask Mode")).setHeading();
+    withDependentSetting(
+      new Setting(wrapper)
+        .setName(this._tx("ui.settings.studyAssistant.privacy.includeLinkedAttachmentsInCompanion.name", "Include linked attachments"))
+        .setDesc(this._tx("ui.settings.studyAssistant.privacy.includeLinkedAttachmentsInCompanion.desc", "Include non-markdown files directly linked from the current note. Some free models may not support attachments."))
+        .addToggle((toggle) =>
+          toggle.setValue(!!this.plugin.settings.studyAssistant.privacy.includeLinkedAttachmentsInCompanion).onChange(async (value) => {
+            this.plugin.settings.studyAssistant.privacy.includeLinkedAttachmentsInCompanion = !!value;
+            await this.plugin.saveAll();
+          }),
+        ),
+    );
 
     withDependentSetting(
       new Setting(wrapper)
-        .setName(this._tx("ui.settings.studyAssistant.prompts.assistant.name", "Custom instructions"))
-        .setDesc(this._tx("ui.settings.studyAssistant.prompts.assistant.desc", "Optional instructions used only in Ask Mode."))
+        .setName(this._tx("ui.settings.studyAssistant.prompts.companion.name", "Companion custom instructions"))
+        .setDesc(this._tx("ui.settings.studyAssistant.prompts.companion.desc", "Optional extra instructions for Companion. Sent as plain text."))
         .addTextArea((text) => {
           text.inputEl.placeholder = this._tx("ui.settings.studyAssistant.prompts.placeholder", "Enter custom instructions here");
           text.setValue(this.plugin.settings.studyAssistant.prompts.assistant || "");
@@ -3322,82 +3340,61 @@ export class SproutSettingsTab extends PluginSettingTab {
         }),
     );
 
+    new Setting(wrapper)
+      .setName(this._tx("ui.settings.studyAssistant.sections.testsContextFiles", "Test sources"))
+      .setHeading();
+
     withDependentSetting(
       new Setting(wrapper)
-        .setName(this._tx("ui.settings.studyAssistant.ask.includeImages.name", "Attach note images"))
-        .setDesc(this._tx("ui.settings.studyAssistant.ask.includeImages.desc", "Include embedded note images in Ask Mode messages."))
+        .setName(this._tx("ui.settings.studyAssistant.privacy.includeAttachmentsInExam.name", "Include embedded attachments"))
+        .setDesc(this._tx("ui.settings.studyAssistant.privacy.includeAttachmentsInExam.desc", "Include files embedded in test source notes, like PDFs or images. Some free models may not support attachments."))
         .addToggle((toggle) =>
-          toggle.setValue(!!this.plugin.settings.studyAssistant.privacy.includeImagesInAsk).onChange(async (value) => {
-            this.plugin.settings.studyAssistant.privacy.includeImagesInAsk = !!value;
+          toggle.setValue(!!this.plugin.settings.studyAssistant.privacy.includeAttachmentsInExam).onChange(async (value) => {
+            this.plugin.settings.studyAssistant.privacy.includeAttachmentsInExam = !!value;
             await this.plugin.saveAll();
           }),
         ),
     );
 
-    new Setting(wrapper).setName(this._tx("ui.settings.studyAssistant.sections.reviewMode", "Review Mode")).setHeading();
-
     withDependentSetting(
       new Setting(wrapper)
-        .setName(this._tx("ui.settings.studyAssistant.prompts.review.name", "Custom instructions"))
-        .setDesc(this._tx("ui.settings.studyAssistant.prompts.review.desc", "Optional instructions used only in Review Mode."))
-        .addTextArea((text) => {
-          text.inputEl.placeholder = this._tx("ui.settings.studyAssistant.prompts.placeholder", "Enter custom instructions here");
-          text.setValue(this.plugin.settings.studyAssistant.prompts.noteReview || "");
-          text.onChange(async (value) => {
-            this.plugin.settings.studyAssistant.prompts.noteReview = String(value || "");
-            await this.plugin.saveAll();
-          });
-        }),
-    );
-
-    withDependentSetting(
-      new Setting(wrapper)
-        .setName(this._tx("ui.settings.studyAssistant.review.includeImages.name", "Attach note images"))
-        .setDesc(this._tx("ui.settings.studyAssistant.review.includeImages.desc", "Include embedded note images in Review Mode messages."))
+        .setName(this._tx("ui.settings.studyAssistant.privacy.includeLinkedNotesInExam.name", "Include linked notes as text"))
+        .setDesc(this._tx("ui.settings.studyAssistant.privacy.includeLinkedNotesInExam.desc", "Include notes directly linked from each test source note as plain text context. Links inside those notes are not included. Since this is sent as text, it should work with all models."))
         .addToggle((toggle) =>
-          toggle.setValue(!!this.plugin.settings.studyAssistant.privacy.includeImagesInReview).onChange(async (value) => {
-            this.plugin.settings.studyAssistant.privacy.includeImagesInReview = !!value;
+          toggle.setValue(!!this.plugin.settings.studyAssistant.privacy.includeLinkedNotesInExam).onChange(async (value) => {
+            this.plugin.settings.studyAssistant.privacy.includeLinkedNotesInExam = !!value;
             await this.plugin.saveAll();
           }),
         ),
     );
 
-    new Setting(wrapper).setName(this._tx("ui.settings.studyAssistant.sections.flashcardMode", "Flashcard Mode")).setHeading();
+    withDependentSetting(
+      new Setting(wrapper)
+        .setName(this._tx("ui.settings.studyAssistant.privacy.includeLinkedAttachmentsInExam.name", "Include linked attachments"))
+        .setDesc(this._tx("ui.settings.studyAssistant.privacy.includeLinkedAttachmentsInExam.desc", "Include non-markdown files directly linked from test source notes. Some free models may not support attachments."))
+        .addToggle((toggle) =>
+          toggle.setValue(!!this.plugin.settings.studyAssistant.privacy.includeLinkedAttachmentsInExam).onChange(async (value) => {
+            this.plugin.settings.studyAssistant.privacy.includeLinkedAttachmentsInExam = !!value;
+            await this.plugin.saveAll();
+          }),
+        ),
+    );
 
     withDependentSetting(
       new Setting(wrapper)
-        .setName(this._tx("ui.settings.studyAssistant.prompts.generator.name", "Custom instructions"))
-        .setDesc(this._tx("ui.settings.studyAssistant.prompts.generator.desc", "Optional instructions used only in Flashcard Mode."))
+        .setName(this._tx("ui.settings.studyAssistant.prompts.tests.name", "Tests custom instructions"))
+        .setDesc(this._tx("ui.settings.studyAssistant.prompts.tests.desc", "Optional extra instructions for test generation. Sent as plain text."))
         .addTextArea((text) => {
           text.inputEl.placeholder = this._tx("ui.settings.studyAssistant.prompts.placeholder", "Enter custom instructions here");
-          text.setValue(this.plugin.settings.studyAssistant.prompts.generator || "");
+          text.setValue(this.plugin.settings.studyAssistant.prompts.tests || "");
           text.onChange(async (value) => {
-            this.plugin.settings.studyAssistant.prompts.generator = String(value || "");
+            this.plugin.settings.studyAssistant.prompts.tests = String(value || "");
             await this.plugin.saveAll();
           });
         }),
     );
 
     const flashcardModelIsVisionCapable = modelLikelySupportsVision(this.plugin.settings.studyAssistant.model);
-    const flashcardImagesDesc = flashcardModelIsVisionCapable
-      ? this._tx("ui.settings.studyAssistant.flashcard.includeImages.desc", "Include embedded note images in Flashcard Mode messages.")
-      : this._tx(
-        "ui.settings.studyAssistant.flashcard.includeImages.notVisionCapable.desc",
-        "This model does not support images. Choose a vision-capable model to enable image input for Flashcard Mode.",
-      );
-
-    const flashcardImagesSetting = withDependentSetting(
-      new Setting(wrapper)
-        .setName(this._tx("ui.settings.studyAssistant.flashcard.includeImages.name", "Attach note images"))
-        .setDesc(flashcardImagesDesc)
-        .addToggle((toggle) =>
-          toggle.setValue(!!this.plugin.settings.studyAssistant.privacy.includeImagesInFlashcard).onChange(async (value) => {
-            this.plugin.settings.studyAssistant.privacy.includeImagesInFlashcard = !!value;
-            await this.plugin.saveAll();
-          }),
-        ),
-    );
-    flashcardImagesSetting.setDisabled(!flashcardModelIsVisionCapable);
 
     withDependentSetting(new Setting(wrapper).setName(this._tx("ui.settings.studyAssistant.sections.flashcardGeneration", "Flashcard generation")).setHeading());
 

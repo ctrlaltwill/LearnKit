@@ -1760,6 +1760,44 @@ export class SproutAssistantPopup {
     return Array.from(refs);
   }
 
+  private extractLinkedRefs(markdown: string): string[] {
+    const refs = new Set<string>();
+
+    // Non-embed wikilinks: [[path]]
+    const wikiRe = /(^|[^!])\[\[([^\]]+)\]\]/g;
+    let match: RegExpExecArray | null;
+    while ((match = wikiRe.exec(markdown)) !== null) {
+      const raw = String(match[2] || "").trim();
+      if (!raw) continue;
+      const filePart = raw.split("|")[0]?.split("#")[0]?.trim();
+      if (filePart) refs.add(filePart);
+    }
+
+    // Non-embed markdown links: [label](path)
+    const mdRe = /(^|[^!])\[[^\]]*\]\(([^)]+)\)/g;
+    while ((match = mdRe.exec(markdown)) !== null) {
+      const raw = String(match[2] || "").trim();
+      if (!raw) continue;
+      const normalized = raw.replace(/^<|>$/g, "");
+      if (/^(?:https?:|mailto:|obsidian:|file:)/i.test(normalized)) continue;
+      refs.add(normalized);
+    }
+
+    return Array.from(refs);
+  }
+
+  private _dedupeDataUrls(urls: string[]): string[] {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const value of urls) {
+      const v = String(value || "").trim();
+      if (!v || seen.has(v)) continue;
+      seen.add(v);
+      out.push(v);
+    }
+    return out;
+  }
+
   private arrayBufferToBase64(data: ArrayBuffer): string {
     const bytes = new Uint8Array(data);
     if (!bytes.length) return "";
@@ -1824,6 +1862,82 @@ export class SproutAssistantPopup {
       }
     }
     return out;
+  }
+
+  private async buildNoteLinkedAttachmentUrls(file: TFile, markdown: string): Promise<string[]> {
+    const linkedRefs = this.extractLinkedRefs(markdown);
+    if (!linkedRefs.length) return [];
+
+    const out: string[] = [];
+    for (const ref of linkedRefs) {
+      const resolved = resolveImageFile(this.plugin.app, file.path, ref);
+      if (!(resolved instanceof TFile)) continue;
+      const ext = String(resolved.extension || "").toLowerCase();
+      if (ext === "md") continue;
+      if (!isSupportedAttachmentExt(ext)) continue;
+      try {
+        const attached = await readVaultFileAsAttachment(this.plugin.app, resolved);
+        if (attached) out.push(attached.dataUrl);
+      } catch {
+        // Skip unreadable linked files.
+      }
+    }
+
+    return out;
+  }
+
+  private async buildLinkedNotesTextContext(file: TFile, markdown: string): Promise<string> {
+    const linkedRefs = this.extractLinkedRefs(markdown);
+    if (!linkedRefs.length) return "";
+
+    const sections: string[] = [];
+    const seen = new Set<string>();
+    const maxNotes = 6;
+    const maxCharsPerNote = 8000;
+    const maxCharsTotal = 30000;
+    let totalChars = 0;
+
+    for (const ref of linkedRefs) {
+      if (sections.length >= maxNotes || totalChars >= maxCharsTotal) break;
+      const resolved = resolveImageFile(this.plugin.app, file.path, ref);
+      if (!(resolved instanceof TFile)) continue;
+      if (String(resolved.extension || "").toLowerCase() !== "md") continue;
+      if (resolved.path === file.path) continue;
+      if (seen.has(resolved.path)) continue;
+      seen.add(resolved.path);
+
+      let content = "";
+      try {
+        content = String(await this.plugin.app.vault.cachedRead(resolved) || "").trim();
+      } catch {
+        content = "";
+      }
+      if (!content) continue;
+
+      const allowed = Math.min(maxCharsPerNote, maxCharsTotal - totalChars);
+      if (allowed <= 0) break;
+      const clipped = content.slice(0, allowed);
+      totalChars += clipped.length;
+
+      sections.push(`### ${resolved.path}\n${clipped}`);
+    }
+
+    if (!sections.length) return "";
+    return [
+      "Children page additional, secondary context:",
+      ...sections,
+    ].join("\n\n");
+  }
+
+  private _appendPlainTextCustomInstructions(noteContent: string, customInstructions: string, label: string): string {
+    const extra = String(customInstructions || "").trim();
+    const base = String(noteContent || "");
+    if (!extra) return base;
+    const block = [
+      `Additional ${label} custom instructions (plain text context):`,
+      extra,
+    ].join("\n");
+    return base ? `${base}\n\n${block}` : block;
   }
 
   private renderMarkdownMessage(parent: HTMLElement, text: string): void {
@@ -2422,6 +2536,21 @@ export class SproutAssistantPopup {
       const noteEmbedUrls = settings.privacy.includeAttachmentsInCompanion && file
         ? await this.buildNoteEmbedNonImageAttachmentUrls(file, imageRefs)
         : [];
+      const linkedAttachmentUrls = settings.privacy.includeLinkedAttachmentsInCompanion && file
+        ? await this.buildNoteLinkedAttachmentUrls(file, noteContent)
+        : [];
+      const linkedNotesContext = settings.privacy.includeLinkedNotesInCompanion && file
+        ? await this.buildLinkedNotesTextContext(file, noteContent)
+        : "";
+      const noteContentWithLinked = linkedNotesContext
+        ? `${noteContent}\n\n${linkedNotesContext}`
+        : noteContent;
+      const noteContentForAi = this._appendPlainTextCustomInstructions(
+        noteContentWithLinked,
+        settings.prompts.assistant,
+        "Companion",
+      );
+      const allAttachmentUrls = this._dedupeDataUrls([...attachedFileDataUrls, ...noteEmbedUrls, ...linkedAttachmentUrls]);
       const conversationId = getRemoteConversationForMode(this.remoteConversationsByMode, "assistant")?.conversationId;
 
       const result = await generateStudyAssistantChatReply({
@@ -2429,10 +2558,10 @@ export class SproutAssistantPopup {
         input: {
           mode: "ask" as StudyAssistantChatMode,
           notePath: file?.path || "",
-          noteContent,
+          noteContent: noteContentForAi,
           imageRefs,
           imageDataUrls,
-          attachedFileDataUrls: [...attachedFileDataUrls, ...noteEmbedUrls],
+          attachedFileDataUrls: allAttachmentUrls,
           includeImages,
           userMessage,
           customInstructions: settings.prompts.assistant,
@@ -2493,6 +2622,21 @@ export class SproutAssistantPopup {
       const noteEmbedUrls = settings.privacy.includeAttachmentsInCompanion
         ? await this.buildNoteEmbedNonImageAttachmentUrls(file, imageRefs)
         : [];
+      const linkedAttachmentUrls = settings.privacy.includeLinkedAttachmentsInCompanion
+        ? await this.buildNoteLinkedAttachmentUrls(file, noteContent)
+        : [];
+      const linkedNotesContext = settings.privacy.includeLinkedNotesInCompanion
+        ? await this.buildLinkedNotesTextContext(file, noteContent)
+        : "";
+      const noteContentWithLinked = linkedNotesContext
+        ? `${noteContent}\n\n${linkedNotesContext}`
+        : noteContent;
+      const noteContentForAi = this._appendPlainTextCustomInstructions(
+        noteContentWithLinked,
+        settings.prompts.assistant,
+        "Companion",
+      );
+      const allAttachmentUrls = this._dedupeDataUrls([...threadReviewAttachedUrls, ...noteEmbedUrls, ...linkedAttachmentUrls]);
       const conversationId = getRemoteConversationForMode(this.remoteConversationsByMode, "review")?.conversationId;
 
       const result = await generateStudyAssistantChatReply({
@@ -2500,13 +2644,13 @@ export class SproutAssistantPopup {
         input: {
           mode: "review",
           notePath: file.path,
-          noteContent,
+          noteContent: noteContentForAi,
           imageRefs,
           imageDataUrls,
-          attachedFileDataUrls: [...threadReviewAttachedUrls, ...noteEmbedUrls],
+          attachedFileDataUrls: allAttachmentUrls,
           includeImages,
           userMessage: draft,
-          customInstructions: settings.prompts.noteReview,
+          customInstructions: settings.prompts.assistant,
           reviewDepth: depthOverride ?? this.reviewDepth,
           conversationId,
         },
@@ -2555,6 +2699,21 @@ export class SproutAssistantPopup {
       const noteEmbedUrls = settings.privacy.includeAttachmentsInExam
         ? await this.buildNoteEmbedNonImageAttachmentUrls(file, this.extractImageRefs(noteContent))
         : [];
+      const linkedAttachmentUrls = settings.privacy.includeLinkedAttachmentsInExam
+        ? await this.buildNoteLinkedAttachmentUrls(file, noteContent)
+        : [];
+      const linkedNotesContext = settings.privacy.includeLinkedNotesInExam
+        ? await this.buildLinkedNotesTextContext(file, noteContent)
+        : "";
+      const noteContentWithLinked = linkedNotesContext
+        ? `${noteContent}\n\n${linkedNotesContext}`
+        : noteContent;
+      const noteContentForAi = this._appendPlainTextCustomInstructions(
+        noteContentWithLinked,
+        settings.prompts.tests,
+        "Tests",
+      );
+      const allAttachmentUrls = this._dedupeDataUrls([...threadTestAttachedUrls, ...noteEmbedUrls, ...linkedAttachmentUrls]);
 
       const config: import("../../exam-generator/exam-generator-types").ExamGeneratorConfig = {
         difficulty: "medium",
@@ -2564,7 +2723,7 @@ export class SproutAssistantPopup {
         appliedScenarios: false,
         timed: false,
         durationMinutes: 15,
-        customInstructions: "",
+        customInstructions: String(settings.prompts.tests || "").trim(),
         includeFlashcards: false,
         sourceMode: "selected",
         folderPath: "",
@@ -2574,9 +2733,9 @@ export class SproutAssistantPopup {
 
       const questions = await generateExamQuestions({
         settings,
-        notes: [{ path: file.path, title: file.basename || file.name, content: noteContent }],
+        notes: [{ path: file.path, title: file.basename || file.name, content: noteContentForAi }],
         config,
-        attachedFileDataUrls: [...threadTestAttachedUrls, ...noteEmbedUrls],
+        attachedFileDataUrls: allAttachmentUrls,
       });
 
       if (!questions.length) {
@@ -2672,6 +2831,21 @@ export class SproutAssistantPopup {
       const noteEmbedUrls = settings.privacy.includeAttachmentsInCompanion
         ? await this.buildNoteEmbedNonImageAttachmentUrls(file, imageRefs)
         : [];
+      const linkedAttachmentUrls = settings.privacy.includeLinkedAttachmentsInCompanion
+        ? await this.buildNoteLinkedAttachmentUrls(file, noteContent)
+        : [];
+      const linkedNotesContext = settings.privacy.includeLinkedNotesInCompanion
+        ? await this.buildLinkedNotesTextContext(file, noteContent)
+        : "";
+      const noteContentWithLinked = linkedNotesContext
+        ? `${noteContent}\n\n${linkedNotesContext}`
+        : noteContent;
+      const noteContentForAi = this._appendPlainTextCustomInstructions(
+        noteContentWithLinked,
+        settings.prompts.assistant,
+        "Companion",
+      );
+      const allAttachmentUrls = this._dedupeDataUrls([...reviewAttachedUrls, ...noteEmbedUrls, ...linkedAttachmentUrls]);
       const conversationId = getRemoteConversationForMode(this.remoteConversationsByMode, "review")?.conversationId;
 
       const result = await generateStudyAssistantChatReply({
@@ -2679,13 +2853,13 @@ export class SproutAssistantPopup {
         input: {
           mode: "review",
           notePath: file.path,
-          noteContent,
+          noteContent: noteContentForAi,
           imageRefs,
           imageDataUrls,
-          attachedFileDataUrls: [...reviewAttachedUrls, ...noteEmbedUrls],
+          attachedFileDataUrls: allAttachmentUrls,
           includeImages,
           userMessage: draft,
-          customInstructions: settings.prompts.noteReview,
+          customInstructions: settings.prompts.assistant,
           reviewDepth: depthOverride ?? this.reviewDepth,
           conversationId,
         },
@@ -2991,7 +3165,7 @@ export class SproutAssistantPopup {
       const threadContext = this._buildGenerateThreadContext();
       const conversationId = getRemoteConversationForMode(this.remoteConversationsByMode, "generate")?.conversationId;
       const customInstructions = [
-        String(settings.prompts.generator || "").trim(),
+        String(settings.prompts.assistant || "").trim(),
         threadContext,
         extraRequest
           ? this._tx(
@@ -3225,12 +3399,27 @@ export class SproutAssistantPopup {
       const noteEmbedUrls = settings.privacy.includeAttachmentsInCompanion
         ? await this.buildNoteEmbedNonImageAttachmentUrls(file, imageRefs)
         : [];
+      const linkedAttachmentUrls = settings.privacy.includeLinkedAttachmentsInCompanion
+        ? await this.buildNoteLinkedAttachmentUrls(file, noteContent)
+        : [];
+      const linkedNotesContext = settings.privacy.includeLinkedNotesInCompanion
+        ? await this.buildLinkedNotesTextContext(file, noteContent)
+        : "";
+      const noteContentWithLinked = linkedNotesContext
+        ? `${noteContent}\n\n${linkedNotesContext}`
+        : noteContent;
+      const noteContentForAi = this._appendPlainTextCustomInstructions(
+        noteContentWithLinked,
+        settings.prompts.assistant,
+        "Companion",
+      );
+      const allAttachmentUrls = this._dedupeDataUrls([...threadGenAttachedUrls, ...noteEmbedUrls, ...linkedAttachmentUrls]);
       const targetSuggestionCount = Math.max(1, Math.min(10, Math.round(Number(settings.generatorTargetCount) || 5)));
       const extraRequest = String(userMessage || "").trim();
       const threadContext = this._buildAssistantThreadGenerationContext();
       const conversationId = getRemoteConversationForMode(this.remoteConversationsByMode, "generate")?.conversationId;
       const customInstructions = [
-        String(settings.prompts.generator || "").trim(),
+        String(settings.prompts.assistant || "").trim(),
         threadContext,
         extraRequest
           ? this._tx(
@@ -3242,10 +3431,10 @@ export class SproutAssistantPopup {
       ].filter(Boolean).join("\n\n");
       const generationInputBase = {
         notePath: file.path,
-        noteContent,
+        noteContent: noteContentForAi,
         imageRefs,
         imageDataUrls,
-        attachedFileDataUrls: [...threadGenAttachedUrls, ...noteEmbedUrls],
+        attachedFileDataUrls: allAttachmentUrls,
         includeImages,
         enabledTypes,
         targetSuggestionCount,
