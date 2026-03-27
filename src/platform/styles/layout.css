@@ -83,7 +83,8 @@
 
 /* ---- Content sizing & padding ---- */
 
-/* Keep ONLY the top-level sprout-content-view constrained */
+/* Keep ONLY the top-level sprout-content-view constrained.
+   Block layout so every root shell sizes to its own content. */
 .sprout .sprout-view-content {
   position: relative;
   top: 0;
@@ -91,10 +92,8 @@
   padding: 80px 20px;
   margin: 0 auto;
 
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  flex: 1;
+  display: block;
+  flex: 1 1 0%;
   overflow: hidden auto;
 }
 
@@ -102,6 +101,56 @@
   body.is-mobile .sprout .sprout-view-content {
     /* 40px base + 60px for Obsidian's mobile bottom toolbar (env() is 0 in webview) */
     padding-bottom: 100px;
+  }
+
+  body.is-mobile {
+    --lk-shell-padding-mobile: 8px;
+  }
+
+  /* Mobile shells: border radius tweak */
+  body.is-mobile .sprout :is(
+    .sprout-view-content-shell,
+    .lk-home-content-shell,
+    .lk-review-content-shell,
+    .lk-browser-content-shell,
+    .sprout-analytics-content-shell,
+    .sprout-exam-generator-content-shell,
+    .sprout-settings-content-shell,
+    .sprout-note-review-content-shell
+  ) {
+    border-radius: var(--radius-m) !important;
+  }
+
+  /* Mobile card spacing inside shells: keep consistent 8px rhythm. */
+  body.is-mobile .sprout :is(
+    .sprout-view-content,
+    .sprout-view-content-shell,
+    .lk-home-content-shell,
+    .lk-review-content-shell,
+    .lk-browser-content-shell,
+    .sprout-analytics-content-shell,
+    .sprout-exam-generator-content-shell,
+    .sprout-settings-content-shell,
+    .sprout-note-review-content-shell,
+    .lk-home-root,
+    .lk-review-root,
+    .lk-browser-view,
+    .sprout-analytics-root,
+    .sprout-exam-generator-root,
+    .sprout-settings-view-root,
+    .sprout-note-review-root
+  ) {
+    gap: 8px !important;
+  }
+
+  body.is-mobile .sprout .sprout-view-content > * + * {
+    margin-top: 8px;
+  }
+
+  body.is-mobile .sprout .sprout-view-content {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* Prevent horizontal scrolling on mobile across all Sprout views */
@@ -116,10 +165,15 @@
   }
 }
 
-/* Keep scrollbar at the edge while preserving content padding */
-.sprout .sprout-view-content > * {
-  padding: 20px;
+/* Keep scrollbar at the edge while preserving content padding.
+   Also apply consistent vertical spacing between child shells. */
+sprout .sprout-view-content>* {
   box-sizing: border-box;
+  padding: var(--lk-shell-padding-desktop);
+}
+
+.sprout .sprout-view-content > * + * {
+  margin-top: 12px;
 }
 
 /* Root container width management */
@@ -133,8 +187,6 @@
   width: 100%;
   margin-left: auto;
   margin-right: auto;
-  min-height: 0;
-  gap: 12px;
 }
 
 .sprout[data-sprout-wide="1"] .sprout-view-content {
@@ -156,12 +208,14 @@
 /* Shared shell style for page content panels. */
 .sprout .sprout-view-content-shell {
   width: 100%;
+  padding: var(--lk-shell-padding-desktop);
   max-width: min(var(--lk-home-max-width, 1280px), calc(100% - var(--lk-shell-gutter-desktop)));
   margin: 0 auto;
   box-sizing: border-box;
   border-radius: var(--radius-l);
   border: var(--color-base-30) 1px solid;
   background-color: var(--color-base-20);
+  padding: var(--lk-shell-padding-desktop);
 }
 
 .workspace-leaf-content.sprout[data-sprout-wide="1"] .sprout-view-content-shell,
@@ -199,6 +253,135 @@
     max-width: 100%;
     padding-left: var(--lk-shell-padding-mobile);
     padding-right: var(--lk-shell-padding-mobile);
+  }
+
+  body.is-mobile .sprout .sprout-view-content > * {
+    padding: var(--lk-shell-padding-mobile);
+  }
+
+  /* Force title strips into a two-row mobile layout: row 1 text, row 2 controls. */
+  body.is-mobile .sprout :is(
+    .sprout-view-title-strip,
+    .lk-home-title-strip,
+    .sprout-analytics-title-strip,
+    .sprout-exam-generator-title-strip,
+    .sprout-coach-title-strip,
+    .lk-browser-title-strip,
+    .lk-review-title-strip,
+    .lk-review-title-strip-deck,
+    .sprout-review-title-strip-deck,
+    .sprout-note-review-title-strip,
+    .sprout-settings-title-strip
+  ) {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    margin-top: 50px;
+    gap: 8px;
+  }
+
+  body.is-mobile .sprout :is(
+    .lk-home-title-row,
+    .lk-browser-header-row,
+    .lk-review-title-row,
+    .sprout-review-title-row,
+    .sprout-note-review-title-row,
+    .sprout-exam-generator-topline,
+    .sprout-exam-generator-setup-topline,
+    .sprout-coach-wizard-topline
+  ) {
+    display: flex;
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center !important;
+    row-gap: 8px;
+    align-items: center !important;
+  }
+
+  body.is-mobile .sprout :is(
+    .sprout-exam-generator-topline-right,
+    .sprout-exam-generator-setup-topline-right,
+    .sprout-coach-wizard-topline-right,
+    .lk-review-title-timer-host,
+    .sprout-review-title-timer-host
+  ) {
+    width: 100%;
+    justify-content: center !important;
+    align-items: center;
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  body.is-mobile .sprout :is(
+    .sprout-view-title-strip,
+    .lk-home-title-strip,
+    .sprout-analytics-title-strip,
+    .sprout-exam-generator-title-strip,
+    .sprout-coach-title-strip,
+    .lk-browser-title-strip,
+    .lk-review-title-strip,
+    .lk-review-title-strip-deck,
+    .sprout-review-title-strip-deck,
+    .sprout-note-review-title-strip,
+    .sprout-settings-title-strip
+  ) :is(
+    .sprout-inline-sentence,
+    .lk-home-title-row,
+    .lk-browser-header-row,
+    .lk-review-title-row,
+    .sprout-review-title-row,
+    .sprout-note-review-title-row,
+    .sprout-exam-generator-topline,
+    .sprout-exam-generator-setup-topline,
+    .sprout-coach-wizard-topline
+  ) > :first-child > .text-muted-foreground {
+    display: none !important;
+  }
+
+  body.is-mobile .sprout :is(
+    .sprout-view-title-strip-label,
+    .lk-home-title-label,
+    .lk-browser-header-title,
+    .lk-review-title-label,
+    .sprout-review-title-label,
+    .sprout-note-review-title-label,
+    .sprout-analytics-title-label,
+    .sprout-exam-generator-title-label,
+    .sprout-coach-wizard-title
+  ) {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  body.is-mobile .sprout :is(
+    .sprout-view-title-strip-description,
+    .lk-home-title-description,
+    .lk-home-title-subtitle,
+    .lk-browser-header-description,
+    .lk-review-title-subtitle,
+    .sprout-note-review-title-subtitle,
+    [class*="title-strip-description"],
+    [class*="title-subtitle"],
+    [class*="title-description"]
+  ) {
+    display: none !important;
+  }
+
+  body.is-mobile .sprout .sprout-settings-view-tab-row {
+    justify-content: center;
+  }
+
+  /* Enforce consistent mobile input corner radius across themes. */
+  body.is-mobile .sprout :is(
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+    select,
+    textarea
+  ) {
+    border-radius: var(--radius-md) !important;
   }
 }
 

@@ -2049,7 +2049,7 @@ export class SproutCoachView extends ItemView {
 
     if (!this._shellEl) {
       root.empty();
-      root.classList.add("bc", "sprout-view-content", "flex", "flex-col", "lk-home-root");
+      root.classList.add("bc", "sprout-view-content", "lk-home-root");
       this.containerEl.addClass("sprout");
       this._applyMaxWidth();
 

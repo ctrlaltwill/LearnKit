@@ -30,7 +30,7 @@
   --lk-row-height-default: 42px;
   --lk-shell-gutter-desktop: 80px;
   --lk-shell-padding-desktop: 16px;
-  --lk-shell-padding-mobile: 16px;
+  --lk-shell-padding-mobile: 4px;
   --lk-title-strip-padding-desktop: 40px 20px 20px;
   --lk-view-title-strip-padding-desktop: 50px 80px 30px;
   --lk-title-strip-padding-mobile: 16px 16px 12px;
@@ -61,4 +61,12 @@
 
 body {
   --radius-m: var(--lk-radius-lg);
+}
+
+@media (max-width: 767px) {
+  body.is-mobile {
+    /* Keep content shells near 0.6rem side margins on phones. */
+    --lk-shell-gutter-desktop: 1.2rem;
+    --lk-shell-padding-mobile: 8px;
+  }
 }

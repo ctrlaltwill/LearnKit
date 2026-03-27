@@ -183,7 +183,7 @@ export class SproutHomeView extends ItemView {
     }
 
     this._rootEl = root;
-    root.classList.add("bc", "sprout-view-content", "flex", "flex-col", "lk-home-root");
+    root.classList.add("bc", "sprout-view-content", "lk-home-root");
 
     this.containerEl.addClass("sprout");
 
@@ -233,11 +233,19 @@ export class SproutHomeView extends ItemView {
     const titleHost = titleFrame.strip;
     const title = titleFrame.row;
     const headingEl = titleFrame.title;
-    headingEl.textContent = "Home";
+    title.classList.add("lk-home-title-row");
+    titleFrame.left.classList.add("lk-home-title-copy");
+    titleFrame.right.classList.add("lk-home-title-actions");
+    headingEl.classList.add("lk-home-title-label");
+    const isMobileTitle = document.body.classList.contains("is-mobile");
+    const titleLearn = tx("ui.view.home.mobileBrand.learn", "Learn");
+    const titleKit = tx("ui.view.home.mobileBrand.kit", "Kit");
+    headingEl.textContent = isMobileTitle ? `${titleLearn}${titleKit}` : tx("ui.view.home.title", "Home");
     const subtitleRow = titleFrame.subtitle;
+    subtitleRow.classList.add("lk-home-title-subtitle");
 
     const quickStudyBtn = document.createElement("button");
-    quickStudyBtn.className = "bc sprout-btn-accent inline-flex items-center gap-2";
+    quickStudyBtn.className = "bc lk-home-quick-study-btn sprout-btn-accent inline-flex items-center gap-2";
     quickStudyBtn.type = "button";
     quickStudyBtn.setAttribute("aria-label", tx("ui.home.quickAction.startStudying", "Start studying"));
     quickStudyBtn.setAttribute("data-tooltip-position", "bottom");

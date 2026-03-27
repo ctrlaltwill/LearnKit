@@ -689,12 +689,15 @@ export class SproutHeader {
   }
 
   private installHeaderDropdownNav(active: SproutHeaderPage) {
+    const isMobile = document.body.classList.contains("is-mobile");
     // Render the page-switcher in the left nav area.
-    const navHost =
-      (this.deps.containerEl.querySelector<HTMLElement>(
-        ":scope > .view-header .view-header-left .view-header-nav-buttons",
-      )) ??
-      (this.deps.containerEl.querySelector<HTMLElement>(".view-header .view-header-left .view-header-nav-buttons"));
+    const navHost = isMobile
+      ? ((this.deps.containerEl.querySelector<HTMLElement>(":scope > .view-header .view-actions")) ??
+          (this.deps.containerEl.querySelector<HTMLElement>(".view-header .view-actions")))
+      : ((this.deps.containerEl.querySelector<HTMLElement>(
+          ":scope > .view-header .view-header-left .view-header-nav-buttons",
+        )) ??
+          (this.deps.containerEl.querySelector<HTMLElement>(".view-header .view-header-left .view-header-nav-buttons")));
 
     if (!navHost) return;
 
@@ -711,36 +714,39 @@ export class SproutHeader {
     navTrigger.type = "button";
     navTrigger.id = `${this.headerNavId}-trigger`;
     navTrigger.className = "sprout-btn-toolbar h-7 px-2 text-xs inline-flex items-center gap-2";
+    if (isMobile) navTrigger.classList.add("sprout-mobile-nav-trigger");
     navTrigger.setAttribute("aria-haspopup", "menu");
     navTrigger.setAttribute("aria-expanded", "false");
     navTrigger.setAttribute("aria-label", "Open menu");
     navTrigger.setAttribute("data-tooltip-position", "bottom");
     navRoot.appendChild(navTrigger);
 
-    const trigText = document.createElement("span");
-    trigText.className = "truncate";
-    trigText.textContent =
-      active === "home"
-        ? "Home"
-        : active === "cards"
-          ? "Flashcards"
-          : active === "notes"
-            ? "Notes"
-          : active === "exam"
-            ? "Tests"
-          : active === "coach"
-            ? "Coach"
-            : active === "analytics"
-              ? "Analytics"
-              : active === "library"
-                ? "Library"
-                : "Settings";
-    navTrigger.appendChild(trigText);
+    if (!isMobile) {
+      const trigText = document.createElement("span");
+      trigText.className = "truncate";
+      trigText.textContent =
+        active === "home"
+          ? "Home"
+          : active === "cards"
+            ? "Flashcards"
+            : active === "notes"
+              ? "Notes"
+            : active === "exam"
+              ? "Tests"
+            : active === "coach"
+              ? "Coach"
+              : active === "analytics"
+                ? "Analytics"
+                : active === "library"
+                  ? "Library"
+                  : "Settings";
+      navTrigger.appendChild(trigText);
+    }
 
     const trigIcon = document.createElement("span");
     trigIcon.className = "inline-flex items-center justify-center [&_svg]:size-4";
     trigIcon.setAttribute("aria-hidden", "true");
-    setIcon(trigIcon, "chevron-down");
+    setIcon(trigIcon, isMobile ? "menu" : "chevron-down");
     navTrigger.appendChild(trigIcon);
 
     navTrigger.addEventListener("click", (ev) => {

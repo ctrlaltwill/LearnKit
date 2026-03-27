@@ -1227,6 +1227,44 @@
   .sprout .sprout-exam-generator-inline-wrap {
     grid-template-columns: 1fr;
   }
+
+  /* Keep source-step copy consistent with app UI typography on mobile. */
+  .sprout .sprout-exam-generator-source-body,
+  .sprout .sprout-exam-generator-source-body h4,
+  .sprout .sprout-exam-generator-source-body label,
+  .sprout .sprout-exam-generator-source-body .sprout-exam-generator-label,
+  .sprout .sprout-exam-generator-source-body .sprout-exam-generator-select-trigger {
+    font-family: var(--font-interface);
+  }
+}
+
+@media (max-width: 767px) {
+  body.is-mobile .sprout .sprout-exam-generator-title-strip .sprout-inline-sentence {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  body.is-mobile .sprout .sprout-exam-generator-title-strip .sprout-inline-sentence > :first-child {
+    width: 100%;
+    text-align: center;
+    align-items: center;
+  }
+
+  body.is-mobile .sprout .sprout-exam-generator-title-strip .sprout-exam-generator-title-label {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+
+  body.is-mobile .sprout .sprout-exam-generator-title-strip .sprout-inline-sentence > :last-child {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 }
 
 /* ---- Attachment area (source stage) ---- */

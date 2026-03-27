@@ -226,8 +226,8 @@ export class SproutSettingsTab extends PluginSettingTab {
     }
 
     new Setting(wrapper)
-      .setName(this._tx("ui.settings.backups.rollingDaily.name", "Enable rolling daily backup"))
-      .setDesc(this._tx("ui.settings.backups.rollingDaily.desc", "Keep one automatic daily backup (daily-backup.db). Manual backups are never auto-deleted."))
+      .setName(this._tx("ui.settings.backups.rollingDaily.name", "Rolling daily backup"))
+      .setDesc(this._tx("ui.settings.backups.rollingDaily.desc", "Keep one automatic daily backup. Manual backups are never auto-deleted."))
       .addToggle((t) =>
         t.setValue(backupCfg.rollingDailyEnabled).onChange(async (v) => {
           backupCfg.rollingDailyEnabled = v;
@@ -244,10 +244,10 @@ export class SproutSettingsTab extends PluginSettingTab {
     {
       const createItem = wrapper.createDiv({ cls: "setting-item" });
       const createInfo = createItem.createDiv({ cls: "setting-item-info" });
-      createInfo.createDiv({ cls: "setting-item-name", text: this._tx("ui.settings.backups.createBackup.name", "Create manual backup") });
+      createInfo.createDiv({ cls: "setting-item-name", text: this._tx("ui.settings.backups.createBackup.name", "Create backup") });
       createInfo.createDiv({
         cls: "setting-item-description",
-        text: this._tx("ui.settings.backups.createBackup.desc", "Save a manual restore point. Use this before risky edits or migrations."),
+        text: this._tx("ui.settings.backups.createBackup.desc", "Save a snapshot of scheduling and analytics data. Use before risky edits or migrations."),
       });
       const createControl = createItem.createDiv({ cls: "setting-item-control" });
       const btnCreate = createControl.createEl("button", { text: this._tx("ui.settings.backups.createBackup.button", "Create manual backup") });
@@ -667,14 +667,14 @@ export class SproutSettingsTab extends PluginSettingTab {
     // full settings UI.
     if (!this.onRequestRerender) {
       const wrapper = containerEl.createDiv({ cls: "sprout-settings-wrapper sprout-settings" });
-      new Setting(wrapper).setName(this._tx("ui.settings.sections.sprout", "Sprout")).setHeading();
+      new Setting(wrapper).setName(this._tx("ui.settings.sections.sprout", "Learn" + "Kit")).setHeading();
       const desc = wrapper.createDiv({ cls: "setting-item" });
       const info = desc.createDiv({ cls: "setting-item-info" });
       info.createDiv({
         cls: "setting-item-description",
         text: this._tx(
           "ui.settings.redirect.description",
-          "Sprout settings live inside the plugin. Click the button below to open them.",
+          "Learn" + "Kit settings live inside the plugin. Click the button below to open them.",
         ),
       });
       new Setting(wrapper)
@@ -693,16 +693,33 @@ export class SproutSettingsTab extends PluginSettingTab {
     // Create a wrapper for all settings (everything should render inside this)
     const wrapper = containerEl.createDiv({ cls: "sprout-settings-wrapper sprout-settings" });
 
+    // ── General ──
     this.renderAppearanceSection(wrapper);
-    this.renderAudioSection(wrapper);
-    this.renderCardsSection(wrapper);
     this.renderReadingViewSection(wrapper);
-    this.renderStudySection(wrapper);
-    this.renderNoteReviewSection(wrapper);
+
+    // ── Audio ──
+    this.renderAudioSection(wrapper);
+
+    // ── Companion ──
     this.renderStudyAssistantSection(wrapper);
-    this.renderSchedulingSection(wrapper);
+
+    // ── Data & Maintenance ──
     this.renderStorageSection(wrapper);
+
+    // ── Flashcards ──
+    this.renderCardsSection(wrapper);
     this.renderSyncSection(wrapper);
+
+    // ── Notes ──
+    this.renderNoteReviewSection(wrapper);
+
+    // ── Reminders (rendered inside renderStudySection) ──
+
+    // ── Studying ──
+    this.renderStudySection(wrapper);
+    this.renderSchedulingSection(wrapper);
+
+    // ── Reset ──
     this.renderResetSection(wrapper);
 
     this._styleSettingsButtons(wrapper);
@@ -761,8 +778,8 @@ export class SproutSettingsTab extends PluginSettingTab {
     };
 
     new Setting(wrapper)
-      .setName(this._tx("ui.settings.appearance.theme.name", "Theme"))
-      .setDesc(this._tx("ui.settings.appearance.theme.desc", "Choose the Sprout theme preset."))
+      .setName(this._tx("ui.settings.appearance.theme.name", "Theme preset"))
+      .setDesc(this._tx("ui.settings.appearance.theme.desc", "Choose the visual theme preset."))
       .then((s) => {
         const preset = this.plugin.settings.general.themePreset ?? "glass";
         this._addSimpleSelect(s.controlEl, {
@@ -786,11 +803,11 @@ export class SproutSettingsTab extends PluginSettingTab {
     let setAccentPickerValue: ((hex: string) => void) | null = null;
 
     new Setting(wrapper)
-      .setName(this._tx("ui.settings.appearance.themeAccent.name", "Theme accent"))
+      .setName(this._tx("ui.settings.appearance.themeAccent.name", "Accent colour"))
       .setDesc(
         this._tx(
           "ui.settings.appearance.themeAccent.desc",
-          "Choose a Sprout accent color override. Reset to inherit your active Obsidian theme accent.",
+          "Choose a custom accent colour. Reset to inherit from your active " + "Obsidian" + " theme.",
         ),
       )
       .addColorPicker((picker) => {
@@ -818,8 +835,8 @@ export class SproutSettingsTab extends PluginSettingTab {
       });
 
     new Setting(wrapper)
-      .setName(this._tx("ui.settings.appearance.enableAnimations.name", "Enable animations"))
-      .setDesc(this._tx("ui.settings.appearance.enableAnimations.desc", "Show fade-up animations when pages load."))
+      .setName(this._tx("ui.settings.appearance.enableAnimations.name", "Animations"))
+      .setDesc(this._tx("ui.settings.appearance.enableAnimations.desc", "Enable transitions and animations across the interface."))
       .addToggle((t) =>
         t.setValue(this.plugin.settings?.general?.enableAnimations ?? true).onChange(async (v) => {
           if (!this.plugin.settings.general) this.plugin.settings.general = {} as typeof this.plugin.settings.general;
@@ -830,8 +847,8 @@ export class SproutSettingsTab extends PluginSettingTab {
       );
 
     new Setting(wrapper)
-      .setName(this._tx("ui.settings.appearance.showGreeting.name", "Show greeting text"))
-      .setDesc(this._tx("ui.settings.appearance.showGreeting.desc", "Turn off to show only \"home\" on the home page."))
+      .setName(this._tx("ui.settings.appearance.showGreeting.name", "Home greeting"))
+      .setDesc(this._tx("ui.settings.appearance.showGreeting.desc", "Display a personalised greeting on the home page."))
       .addToggle((t) => {
         t.setValue(this.plugin.settings.general.showGreeting !== false);
         t.onChange(async (v) => {
@@ -844,8 +861,8 @@ export class SproutSettingsTab extends PluginSettingTab {
     new Setting(wrapper).setName(this._tx("ui.settings.sections.userDetails", "User Details")).setHeading();
 
     new Setting(wrapper)
-      .setName(this._tx("ui.settings.appearance.userName.name", "User name"))
-      .setDesc(this._tx("ui.settings.appearance.userName.desc", "Your name."))
+      .setName(this._tx("ui.settings.appearance.userName.name", "Name"))
+      .setDesc(this._tx("ui.settings.appearance.userName.desc", "Set your display name."))
       .addText((t) => {
         t.setPlaceholder(this._tx("ui.settings.appearance.userName.placeholder", "Your name"));
         t.setValue(String(this.plugin.settings.general.userName ?? ""));
@@ -868,11 +885,11 @@ export class SproutSettingsTab extends PluginSettingTab {
     const currentLocale = resolveInterfaceLocale(this.plugin.settings?.general?.interfaceLanguage);
 
     this._addSearchablePopover(wrapper, {
-      name: t(currentLocale, "settings.general.interfaceLanguage.name", "Interface language"),
+      name: t(currentLocale, "settings.general.interfaceLanguage.name", "Language"),
       description: t(
         currentLocale,
         "settings.general.interfaceLanguage.desc",
-        "Choose the language used by Sprout's interface. More languages will appear here as translations are added.",
+        "Set the language used across the interface.",
       ),
       options: localeOptions,
       value: currentLocale,
@@ -889,12 +906,12 @@ export class SproutSettingsTab extends PluginSettingTab {
     });
 
     new Setting(wrapper)
-      .setName(t(currentLocale, "settings.general.translationHelp.name", "Help translate Sprout"))
+      .setName(t(currentLocale, "settings.general.translationHelp.name", "Help translate"))
       .setDesc(
         t(
           currentLocale,
           "settings.general.translationHelp.desc",
-          "Sprout translations are crowdsourced. Contribute a language, improve wording, or help review existing translations.",
+          "Translations are community-contributed. Help add a language or improve existing wording.",
         ),
       )
       .addButton((b) =>
@@ -921,9 +938,9 @@ export class SproutSettingsTab extends PluginSettingTab {
         cls: "setting-item-description",
         text: this._tx(
           "ui.settings.audio.description",
-          "Read flashcard content aloud using your system's built-in text-to-speech. " +
-            "Non-Latin scripts are detected automatically and matched to the best available system voice. " +
-            "Latin-script text uses your chosen default voice.",
+          "Read flashcard content aloud using built-in text-to-speech. " +
+            "Non-Latin scripts are auto-detected and matched to the best available voice. " +
+            "Latin-script text uses your default voice.",
         ),
       });
     }
@@ -931,12 +948,11 @@ export class SproutSettingsTab extends PluginSettingTab {
     const audio = this.plugin.settings.audio;
 
     new Setting(wrapper)
-      .setName(this._tx("ui.settings.audio.enabled.name", "Enable text to speech"))
+      .setName(this._tx("ui.settings.audio.enabled.name", "Text to speech"))
       .setDesc(
         this._tx(
           "ui.settings.audio.enabled.desc",
-          "Enable or disable text to speech for cards that match your audio settings. " +
-            "If \"Limit to group\" is set, only that group is read aloud.",
+          "Read flashcard content aloud during study. Respects the group filter when set.",
         ),
       )
       .addToggle((t) => {
@@ -982,11 +998,11 @@ export class SproutSettingsTab extends PluginSettingTab {
         });
 
       new Setting(detailsWrapper)
-        .setName(this._tx("ui.settings.audio.autoplay.name", "Autoplay audio"))
+        .setName(this._tx("ui.settings.audio.autoplay.name", "Autoplay"))
         .setDesc(
           this._tx(
             "ui.settings.audio.autoplay.desc",
-            "Automatically read the question when a card appears, then the answer when it is revealed.",
+            "Read the question when a card appears, then the answer when revealed.",
           ),
         )
         .addToggle((t) => {
@@ -998,8 +1014,8 @@ export class SproutSettingsTab extends PluginSettingTab {
         });
 
       new Setting(detailsWrapper)
-        .setName(this._tx("ui.settings.audio.widgetReplay.name", "Sidebar widget read aloud"))
-        .setDesc(this._tx("ui.settings.audio.widgetReplay.desc", "Automatically read card content in the sidebar widget and show replay buttons."))
+        .setName(this._tx("ui.settings.audio.widgetReplay.name", "Widget read-aloud"))
+        .setDesc(this._tx("ui.settings.audio.widgetReplay.desc", "Read card content aloud in the sidebar widget and show replay buttons."))
         .addToggle((t) => {
           t.setValue((audio as Record<string, unknown>).widgetReplay !== false);
           t.onChange(async (v) => {
@@ -1009,8 +1025,8 @@ export class SproutSettingsTab extends PluginSettingTab {
         });
 
       new Setting(detailsWrapper)
-        .setName(this._tx("ui.settings.audio.gatekeeperReplay.name", "Gatekeeper read aloud"))
-        .setDesc(this._tx("ui.settings.audio.gatekeeperReplay.desc", "Automatically read gatekeeper question and answer content and show replay buttons."))
+        .setName(this._tx("ui.settings.audio.gatekeeperReplay.name", "Gatekeeper read-aloud"))
+        .setDesc(this._tx("ui.settings.audio.gatekeeperReplay.desc", "Read gatekeeper content aloud and show replay buttons."))
         .addToggle((t) => {
           t.setValue((audio as Record<string, unknown>).gatekeeperReplay === true);
           t.onChange(async (v) => {
@@ -1020,12 +1036,12 @@ export class SproutSettingsTab extends PluginSettingTab {
         });
 
       this._addSearchablePopover(detailsWrapper, {
-        name: this._tx("ui.settings.audio.clozeAnswerMode.name", "Cloze answer read mode"),
+        name: this._tx("ui.settings.audio.clozeAnswerMode.name", "Cloze read mode"),
         description:
           this._tx(
             "ui.settings.audio.clozeAnswerMode.desc",
-            "\"Just the answer\" reads only the cloze answer (for example, \"mitochondria\"). " +
-              "\"Full sentence\" reads the full sentence with the answer filled in.",
+            "Just the answer reads the cloze deletion only. " +
+              "Full sentence reads the complete sentence with the answer filled in.",
           ),
         options: [
           { value: "cloze-only", label: this._tx("ui.settings.audio.clozeAnswerMode.option.clozeOnly", "Just the answer") },
@@ -1065,11 +1081,11 @@ export class SproutSettingsTab extends PluginSettingTab {
       flagsRoutingSetting.descEl.appendText(this._tx("ui.settings.audio.flagRouting.guide.trailing", " for a guide on using flags."));
 
       new Setting(detailsWrapper)
-        .setName(this._tx("ui.settings.audio.flagRouting.speakLabel.name", "Speak language name before flag segments"))
+        .setName(this._tx("ui.settings.audio.flagRouting.speakLabel.name", "Announce language name"))
         .setDesc(
           this._tx(
             "ui.settings.audio.flagRouting.speakLabel.desc",
-            "Say the language name before each flag-switched segment (for example: \"spanish\").",
+            "Say the language name before each flag-switched segment.",
           ),
         )
         .addToggle((t) => {
@@ -1088,8 +1104,8 @@ export class SproutSettingsTab extends PluginSettingTab {
         description:
           this._tx(
             "ui.settings.audio.defaultVoice.desc",
-            "Choose the accent and dialect for Latin-script text (English, Spanish, French, etc.). " +
-              "Also sets the word used for \"blank\" on cloze fronts.",
+            "Set the accent and dialect for Latin-script text. " +
+              "Also determines the word for blank on cloze fronts.",
           ),
           options: langOptions.map((o) => ({ value: o.value, label: o.label, flagCode: o.flagCode })),
         value: audio.defaultLanguage || "en-US",
@@ -1185,7 +1201,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
       new Setting(detailsWrapper)
         .setName(this._tx("ui.settings.audio.rate.name", "Speech rate"))
-        .setDesc(this._tx("ui.settings.audio.rate.desc", "How fast the voice speaks."))
+        .setDesc(this._tx("ui.settings.audio.rate.desc", "Adjust how fast the voice speaks."))
         .addSlider((s) => {
           s.setLimits(0.5, 2.0, 0.1);
           s.setValue(audio.rate ?? 1.0);
@@ -1198,7 +1214,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
       new Setting(detailsWrapper)
         .setName(this._tx("ui.settings.audio.pitch.name", "Speech pitch"))
-        .setDesc(this._tx("ui.settings.audio.pitch.desc", "How high or low the voice sounds."))
+        .setDesc(this._tx("ui.settings.audio.pitch.desc", "Adjust voice pitch."))
         .addSlider((s) => {
           s.setLimits(0.5, 2.0, 0.1);
           s.setValue(audio.pitch ?? 1.0);
@@ -1210,7 +1226,7 @@ export class SproutSettingsTab extends PluginSettingTab {
         });
 
       new Setting(detailsWrapper)
-        .setName(this._tx("ui.settings.audio.testVoice.name", "Test voice"))
+        .setName(this._tx("ui.settings.audio.testVoice.name", "Preview voice"))
         .setDesc(this._tx("ui.settings.audio.testVoice.desc", "Play a sample to hear the current voice settings."))
         .addButton((btn) => {
           btn.setButtonText(this._tx("ui.settings.audio.testVoice.playButton", "Play sample"));
@@ -1284,7 +1300,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName(this._tx("ui.settings.cards.cloze.mode.name", "Cloze mode"))
-      .setDesc(this._tx("ui.settings.cards.cloze.mode.desc", "Choose how cloze cards are answered: standard blanks or typed input."))
+      .setDesc(this._tx("ui.settings.cards.cloze.mode.desc", "Set the answer mode for cloze deletions."))
       .then((s) => {
         this._addSimpleSelect(s.controlEl, {
           options: [
@@ -1318,7 +1334,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName(this._tx("ui.settings.cards.imageOcclusion.revealMode.name", "Reveal mode"))
-      .setDesc(this._tx("ui.settings.cards.imageOcclusion.revealMode.desc", "For hide-all cards: \"reveal group\" shows only the answer group, and \"reveal all\" shows every group."))
+      .setDesc(this._tx("ui.settings.cards.imageOcclusion.revealMode.desc", "On hide-all cards, show the target group only or all groups at once."))
       .then((s) => {
         this._addSimpleSelect(s.controlEl, {
           options: [
@@ -1582,8 +1598,8 @@ export class SproutSettingsTab extends PluginSettingTab {
     };
 
     new Setting(wrapper)
-      .setName(this._tx("ui.settings.reading.enableCardStyling.name", "Enable card styling"))
-      .setDesc(this._tx("ui.settings.reading.enableCardStyling.desc", "Turn off to use native reading view styling."))
+      .setName(this._tx("ui.settings.reading.enableCardStyling.name", "Card styling"))
+      .setDesc(this._tx("ui.settings.reading.enableCardStyling.desc", "Render flashcards with custom styling in reading view. Turn off to use default " + "Obsidian" + " rendering."))
       .addToggle((t) => {
         t.setValue(!!this.plugin.settings.general.enableReadingStyles);
         t.onChange(async (enabled) => {
@@ -1603,8 +1619,8 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     const presetOrder: Array<"flashcards" | "markdown"> = ["flashcards", "markdown"];
     const readingThemeSetting = new Setting(wrapper)
-      .setName(this._tx("ui.settings.reading.theme.name", "Reading view theme"))
-      .setDesc(this._tx("ui.settings.reading.theme.desc", "Choose the style used in reading view cards."));
+      .setName(this._tx("ui.settings.reading.theme.name", "Card style"))
+      .setDesc(this._tx("ui.settings.reading.theme.desc", "Set the visual style used for flashcards in reading view."));
 
     const options = presetOrder.map((key) => {
       if (key === "flashcards") {
@@ -1640,7 +1656,7 @@ export class SproutSettingsTab extends PluginSettingTab {
     if (rv.activeMacro === "flashcards") {
       new Setting(wrapper)
         .setName(this._tx("ui.settings.reading.flashcards.displayEditButton.name", "Show edit button"))
-        .setDesc(this._tx("ui.settings.reading.flashcards.displayEditButton.desc", "Show edit button on flashcards."))
+        .setDesc(this._tx("ui.settings.reading.flashcards.displayEditButton.desc", "Display an edit button when hovering over a flashcard in reading view."))
         .addToggle((t) => {
           t.setValue(!!activeCfg.fields.displayEditButton);
           t.onChange(async (v) => {
@@ -1651,7 +1667,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
       new Setting(wrapper)
         .setName(this._tx("ui.settings.reading.flashcards.displayAudioButton.name", "Show audio button"))
-        .setDesc(this._tx("ui.settings.reading.flashcards.displayAudioButton.desc", "Show text-to-speech controls on flashcards."))
+        .setDesc(this._tx("ui.settings.reading.flashcards.displayAudioButton.desc", "Display a text-to-speech button on flashcards in reading view."))
         .addToggle((t) => {
           t.setValue(!!activeCfg.fields.displayAudioButton);
           t.onChange(async (v) => {
@@ -1681,37 +1697,37 @@ export class SproutSettingsTab extends PluginSettingTab {
 
       addMarkdownFieldToggle(
         this._tx("ui.settings.reading.markdown.fields.title.name", "Show title"),
-        this._tx("ui.settings.reading.markdown.fields.title.desc", "Display card titles in clean markdown."),
+        this._tx("ui.settings.reading.markdown.fields.title.desc", "Display the card title field."),
         "title",
       );
       addMarkdownFieldToggle(
         this._tx("ui.settings.reading.markdown.fields.question.name", "Show question"),
-        this._tx("ui.settings.reading.markdown.fields.question.desc", "Display question content in clean markdown."),
+        this._tx("ui.settings.reading.markdown.fields.question.desc", "Display the question field."),
         "question",
       );
       addMarkdownFieldToggle(
         this._tx("ui.settings.reading.markdown.fields.options.name", "Show options"),
-        this._tx("ui.settings.reading.markdown.fields.options.desc", "Display options for cards that include them."),
+        this._tx("ui.settings.reading.markdown.fields.options.desc", "Display multiple-choice options when available."),
         "options",
       );
       addMarkdownFieldToggle(
         this._tx("ui.settings.reading.markdown.fields.answer.name", "Show answer"),
-        this._tx("ui.settings.reading.markdown.fields.answer.desc", "Display answer content in clean markdown."),
+        this._tx("ui.settings.reading.markdown.fields.answer.desc", "Display the answer field."),
         "answer",
       );
       addMarkdownFieldToggle(
         this._tx("ui.settings.reading.markdown.fields.info.name", "Show info"),
-        this._tx("ui.settings.reading.markdown.fields.info.desc", "Display metadata and context details."),
+        this._tx("ui.settings.reading.markdown.fields.info.desc", "Display the info and context field."),
         "info",
       );
       addMarkdownFieldToggle(
         this._tx("ui.settings.reading.markdown.fields.groups.name", "Show groups"),
-        this._tx("ui.settings.reading.markdown.fields.groups.desc", "Display group tags when available."),
+        this._tx("ui.settings.reading.markdown.fields.groups.desc", "Display group tags."),
         "groups",
       );
       addMarkdownFieldToggle(
         this._tx("ui.settings.reading.markdown.fields.labels.name", "Show field labels"),
-        this._tx("ui.settings.reading.markdown.fields.labels.desc", "Display labels like Question, Answer, and Info."),
+        this._tx("ui.settings.reading.markdown.fields.labels.desc", "Display labels above each field, like Question, Answer, and Info."),
         "labels",
       );
     }
@@ -1768,7 +1784,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName(this._tx("ui.settings.study.autoAdvance.name", "Auto-advance"))
-      .setDesc(this._tx("ui.settings.study.autoAdvance.desc", "Automatically marks unanswered cards as failed and advances after the timer."))
+      .setDesc(this._tx("ui.settings.study.autoAdvance.desc", "Mark unanswered cards as failed and advance after the timer expires."))
       .addToggle((t) =>
         t.setValue(this.plugin.settings.study.autoAdvanceEnabled).onChange(async (v) => {
           const prev = this.plugin.settings.study.autoAdvanceEnabled;
@@ -1786,7 +1802,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     autoAdvanceSecondsSetting = new Setting(wrapper)
       .setName(this._tx("ui.settings.study.autoAdvanceAfter.name", "Auto-advance after"))
-      .setDesc(this._tx("ui.settings.study.autoAdvanceAfter.desc", "Delay in seconds (applies to reviewer and widget)."))
+      .setDesc(this._tx("ui.settings.study.autoAdvanceAfter.desc", "Seconds before auto-advance triggers. Applies to reviewer and widget."))
       .addSlider((s) =>
         s
           .setLimits(3, 60, 1)
@@ -1809,7 +1825,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName(this._tx("ui.settings.study.gradingButtons.name", "Grading buttons"))
-      .setDesc(this._tx("ui.settings.study.gradingButtons.desc", "Choose your grading layout."))
+      .setDesc(this._tx("ui.settings.study.gradingButtons.desc", "Number of grading buttons shown during review."))
       .then((s) => {
         this._addSimpleSelect(s.controlEl, {
           options: [
@@ -1905,7 +1921,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName(this._tx("ui.settings.study.siblingManagement.name", "Sibling card management"))
-      .setDesc(this._tx("ui.settings.study.siblingManagement.desc", "Choose how sibling cards are handled."))
+      .setDesc(this._tx("ui.settings.study.siblingManagement.desc", "Control how sibling cards are queued during a session."))
       .then((s) => {
         this._addSimpleSelect(s.controlEl, {
           options: [
@@ -1951,7 +1967,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName(this._tx("ui.settings.study.analytics.includePractice.name", "Include practice sessions"))
-      .setDesc(this._tx("ui.settings.study.analytics.includePractice.desc", "Include practice-mode note review actions in analytics charts."))
+      .setDesc(this._tx("ui.settings.study.analytics.includePractice.desc", "Count practice-mode note reviews in analytics charts."))
       .addToggle((t) => {
         const current = this.plugin.settings.study.analyticsIncludePracticeNoteReview !== false;
         t.setValue(current);
@@ -1963,7 +1979,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName(this._tx("ui.settings.study.analytics.topicHierarchy.name", "Topic hierarchy"))
-      .setDesc(this._tx("ui.settings.study.analytics.topicHierarchy.desc", "Controls how topic mastery groups weak areas."))
+      .setDesc(this._tx("ui.settings.study.analytics.topicHierarchy.desc", "Set how topic mastery groups weak areas."))
       .then((s) => {
         this._addSimpleSelect(s.controlEl, {
           options: [
@@ -2013,7 +2029,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName(this._tx("ui.settings.study.analytics.focusCount.name", "Weak topics shown"))
-      .setDesc(this._tx("ui.settings.study.analytics.focusCount.desc", "How many weak topics appear in suggested next-review focus."))
+      .setDesc(this._tx("ui.settings.study.analytics.focusCount.desc", "Number of weak topics shown in the suggested next-review focus."))
       .addText((t) => {
         t.setValue(String(this.plugin.settings.study.analyticsFocusTopicCount ?? 7));
         t.onChange(async (v) => {
@@ -2070,8 +2086,8 @@ export class SproutSettingsTab extends PluginSettingTab {
     new Setting(wrapper).setName(this._tx("ui.settings.sections.launchReminders", "Launch reminders")).setHeading();
 
     new Setting(wrapper)
-      .setName(this._tx("ui.settings.study.launchReminders.enabled.name", "Enable reminders on launch"))
-      .setDesc(this._tx("ui.settings.study.launchReminders.enabled.desc", "Show one reminder after Obsidian starts."))
+      .setName(this._tx("ui.settings.study.launchReminders.enabled.name", "Show launch reminder"))
+      .setDesc(this._tx("ui.settings.study.launchReminders.enabled.desc", "Show one reminder shortly after " + "Obsidian" + " starts."))
       .addToggle((t) => {
         t.setValue(!!this.plugin.settings.reminders.showOnStartup);
         t.onChange(async (v) => {
@@ -2088,8 +2104,8 @@ export class SproutSettingsTab extends PluginSettingTab {
       });
 
     startupDelaySetting = new Setting(wrapper)
-      .setName(this._tx("ui.settings.study.launchReminders.delay.name", "Launch delay"))
-      .setDesc(this._tx("ui.settings.study.launchReminders.delay.desc", "Delay before launch reminders appear (seconds)."))
+      .setName(this._tx("ui.settings.study.launchReminders.delay.name", "Launch reminder delay"))
+      .setDesc(this._tx("ui.settings.study.launchReminders.delay.desc", "Seconds to wait before showing the launch reminder."))
       .addText((t) =>
         t
           .setPlaceholder(this._tx("ui.settings.study.launchReminders.delay.placeholder", "1"))
@@ -2110,8 +2126,8 @@ export class SproutSettingsTab extends PluginSettingTab {
     new Setting(wrapper).setName(this._tx("ui.settings.sections.routineReminders", "Routine reminders")).setHeading();
 
     new Setting(wrapper)
-      .setName(this._tx("ui.settings.study.routineReminders.enabled.name", "Enable routine reminders"))
-      .setDesc(this._tx("ui.settings.study.routineReminders.enabled.desc", "Show recurring reminders while Obsidian is open."))
+      .setName(this._tx("ui.settings.study.routineReminders.enabled.name", "Show routine reminders"))
+      .setDesc(this._tx("ui.settings.study.routineReminders.enabled.desc", "Show recurring reminders while " + "Obsidian" + " stays open."))
       .addToggle((t) => {
         t.setValue(!!this.plugin.settings.reminders.repeatEnabled);
         t.onChange(async (v) => {
@@ -2128,8 +2144,8 @@ export class SproutSettingsTab extends PluginSettingTab {
       });
 
     repeatIntervalSetting = new Setting(wrapper)
-      .setName(this._tx("ui.settings.study.routineReminders.frequency.name", "Reminder frequency"))
-      .setDesc(this._tx("ui.settings.study.routineReminders.frequency.desc", "Time between routine reminders (minutes)."))
+      .setName(this._tx("ui.settings.study.routineReminders.frequency.name", "Routine reminder interval"))
+      .setDesc(this._tx("ui.settings.study.routineReminders.frequency.desc", "Minutes between routine reminders."))
       .addText((t) =>
         t
           .setPlaceholder(this._tx("ui.settings.study.routineReminders.frequency.placeholder", "30"))
@@ -2150,7 +2166,7 @@ export class SproutSettingsTab extends PluginSettingTab {
     new Setting(wrapper).setName(this._tx("ui.settings.sections.gatekeeperPopups", "Gatekeeper popups")).setHeading();
 
     new Setting(wrapper)
-      .setName(this._tx("ui.settings.study.gatekeeperPopups.enabled.name", "Enable gatekeeper popups"))
+      .setName(this._tx("ui.settings.study.gatekeeperPopups.enabled.name", "Enable recurring gatekeeper popups"))
       .setDesc(this._tx("ui.settings.study.gatekeeperPopups.enabled.desc", "Show recurring gatekeeper popups with due questions."))
       .addToggle((t) => {
         t.setValue(!!this.plugin.settings.reminders.gatekeeperEnabled);
@@ -2168,8 +2184,8 @@ export class SproutSettingsTab extends PluginSettingTab {
       });
 
     new Setting(wrapper)
-      .setName(this._tx("ui.settings.study.gatekeeperPopups.onLaunch.name", "Enable gatekeeper on launch"))
-      .setDesc(this._tx("ui.settings.study.gatekeeperPopups.onLaunch.desc", "Show gatekeeper once after Obsidian starts."))
+      .setName(this._tx("ui.settings.study.gatekeeperPopups.onLaunch.name", "Show gatekeeper on launch"))
+      .setDesc(this._tx("ui.settings.study.gatekeeperPopups.onLaunch.desc", "Show gatekeeper once shortly after " + "Obsidian" + " starts."))
       .addToggle((t) => {
         t.setValue(!!this.plugin.settings.reminders.gatekeeperOnStartup);
         t.onChange(async (v) => {
@@ -2187,8 +2203,8 @@ export class SproutSettingsTab extends PluginSettingTab {
     gatekeeperBehaviourHeading = new Setting(wrapper).setName(this._tx("ui.settings.sections.gatekeeperBehaviour", "Gatekeeper behaviour")).setHeading();
 
     gatekeeperFrequencySetting = new Setting(wrapper)
-      .setName(this._tx("ui.settings.study.gatekeeperBehaviour.frequency.name", "Gatekeeper frequency"))
-      .setDesc(this._tx("ui.settings.study.gatekeeperBehaviour.frequency.desc", "Time between gatekeeper popups (minutes)."))
+      .setName(this._tx("ui.settings.study.gatekeeperBehaviour.frequency.name", "Gatekeeper interval"))
+      .setDesc(this._tx("ui.settings.study.gatekeeperBehaviour.frequency.desc", "Minutes between gatekeeper popups."))
       .addText((t) =>
         t
           .setPlaceholder(this._tx("ui.settings.study.gatekeeperBehaviour.frequency.placeholder", "30"))
@@ -2207,11 +2223,11 @@ export class SproutSettingsTab extends PluginSettingTab {
       );
 
     gatekeeperDueQuestionsSetting = new Setting(wrapper)
-      .setName(this._tx("ui.settings.study.gatekeeperBehaviour.dueQuestions.name", "Number of due questions"))
+      .setName(this._tx("ui.settings.study.gatekeeperBehaviour.dueQuestions.name", "Questions per popup"))
       .setDesc(
         this._tx(
           "ui.settings.study.gatekeeperBehaviour.dueQuestions.desc",
-          "Number of due questions shown in each gatekeeper popup. If fewer due questions are available, all due cards are shown. If none are due, gatekeeper is skipped.",
+          "Due questions included in each popup. If fewer are due, all are shown. If none are due, the popup is skipped.",
         ),
       )
       .addText((t) =>
@@ -2236,7 +2252,7 @@ export class SproutSettingsTab extends PluginSettingTab {
       .setDesc(
         this._tx(
           "ui.settings.study.gatekeeperBehaviour.scope.desc",
-          "Choose what gatekeeper blocks: the full workspace or only the current tab.",
+          "Set whether gatekeeper blocks the full workspace or only the current tab.",
         ),
       )
       .then((s) => {
@@ -2277,7 +2293,7 @@ export class SproutSettingsTab extends PluginSettingTab {
       .setDesc(
         this._tx(
           "ui.settings.study.gatekeeperBehaviour.pauseWhileStudying.desc",
-          "Pause gatekeeper while you are in sprout study tabs. The countdown resumes when you leave.",
+          "Pause the gatekeeper timer while in study tabs. It resumes when you leave.",
         ),
       )
       .addToggle((t) => {
@@ -2298,7 +2314,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     gatekeeperBypassSetting = new Setting(wrapper)
       .setName(this._tx("ui.settings.study.gatekeeperBypass.enabled.name", "Enable gatekeeper bypass"))
-      .setDesc(this._tx("ui.settings.study.gatekeeperBypass.enabled.desc", "Allow closing gatekeeper before all shown questions are completed."))
+      .setDesc(this._tx("ui.settings.study.gatekeeperBypass.enabled.desc", "Allow closing gatekeeper before finishing all shown questions."))
       .addToggle((t) => {
         t.setValue(!!this.plugin.settings.reminders.gatekeeperAllowSkip);
         t.onChange(async (v) => {
@@ -2315,8 +2331,8 @@ export class SproutSettingsTab extends PluginSettingTab {
       });
 
     gatekeeperBypassWarningSetting = new Setting(wrapper)
-      .setName(this._tx("ui.settings.study.gatekeeperBypass.warning.name", "Enable bypass warning"))
-      .setDesc(this._tx("ui.settings.study.gatekeeperBypass.warning.desc", "Show a confirmation before bypassing gatekeeper."))
+      .setName(this._tx("ui.settings.study.gatekeeperBypass.warning.name", "Warn before bypassing gatekeeper"))
+      .setDesc(this._tx("ui.settings.study.gatekeeperBypass.warning.desc", "Show a confirmation before closing gatekeeper early."))
       .addToggle((t) => {
         t.setValue(!!this.plugin.settings.reminders.gatekeeperBypassWarning);
         t.onChange(async (v) => {
@@ -2374,7 +2390,7 @@ export class SproutSettingsTab extends PluginSettingTab {
       .setName(this._tx("ui.settings.noteReview.filter.name", "Include or exclude notes"))
       .setDesc(this._tx(
         "ui.settings.noteReview.filter.desc",
-        "Search and select folders, notes, tags, and properties. Include selects matching notes; Exclude removes matching notes from that result.",
+        "Filter by folders, notes, tags, or properties. Include adds matching notes; Exclude removes them.",
       ))
       .then((setting) => {
         const files = this.app.vault.getMarkdownFiles();
@@ -2787,12 +2803,12 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper).setDesc(this._tx(
       "ui.settings.noteReview.schedulerInfo.desc",
-      "FSRS adapts to your recall and uses your card-scheduling targets. LKRS uses fixed day steps and a daily review target for predictable pacing.",
+      "FSRS adapts to recall using card-scheduling targets. LKRS uses fixed day steps and a daily review target.",
     ));
 
     const algoSetting = new Setting(wrapper)
       .setName(this._tx("ui.settings.noteReview.algorithm.name", "Scheduling algorithm"))
-      .setDesc(this._tx("ui.settings.noteReview.algorithm.desc", "Choose how note review timing is scheduled."));
+      .setDesc(this._tx("ui.settings.noteReview.algorithm.desc", "Algorithm used to schedule note reviews."));
 
     let rerenderAlgorithmFields: (() => void) | null = null;
 
@@ -2821,7 +2837,7 @@ export class SproutSettingsTab extends PluginSettingTab {
       if (noteCfg.algorithm === "fsrs") {
         new Setting(dynamicHost)
           .setName(this._tx("ui.settings.noteReview.fsrs.mode.name", "FSRS mode"))
-          .setDesc(this._tx("ui.settings.noteReview.fsrs.mode.desc", "FSRS uses the same scheduling controls as card study. Tune retention and steps below."));
+          .setDesc(this._tx("ui.settings.noteReview.fsrs.mode.desc", "Uses the same scheduling controls as card study. Adjust retention and steps below."));
 
         new Setting(dynamicHost)
           .setName(this._tx("ui.settings.noteReview.fsrs.retention.name", "Retention target"))
@@ -2837,7 +2853,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
         new Setting(dynamicHost)
           .setName(this._tx("ui.settings.noteReview.fsrs.learningSteps.name", "Learning steps (minutes)"))
-          .setDesc(this._tx("ui.settings.noteReview.fsrs.learningSteps.desc", "Comma-separated learning intervals. Example: 10,1440"))
+          .setDesc(this._tx("ui.settings.noteReview.fsrs.learningSteps.desc", "Comma-separated intervals in minutes. Example: 10,1440"))
           .addText((t) =>
             t
               .setValue((this.plugin.settings.scheduling.learningStepsMinutes ?? [10, 1440]).join(","))
@@ -2850,7 +2866,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
         new Setting(dynamicHost)
           .setName(this._tx("ui.settings.noteReview.fsrs.relearningSteps.name", "Relearning steps (minutes)"))
-          .setDesc(this._tx("ui.settings.noteReview.fsrs.relearningSteps.desc", "Comma-separated relearning intervals. Example: 10"))
+          .setDesc(this._tx("ui.settings.noteReview.fsrs.relearningSteps.desc", "Comma-separated intervals in minutes after a lapse. Example: 10"))
           .addText((t) =>
             t
               .setValue((this.plugin.settings.scheduling.relearningStepsMinutes ?? [10]).join(","))
@@ -2982,15 +2998,17 @@ export class SproutSettingsTab extends PluginSettingTab {
       cls: "setting-item-description",
       text: this._tx(
         "ui.settings.studyAssistant.info.desc",
-        "Companion uses your own API key. Your cost depends on the provider and model you choose. Free and paid options are both supported (for example, Google, OpenRouter, Anthropic, OpenAI, and Perplexity). LearnKit does not add subscription fees or API markups. For a free option, start with Auto Router on OpenRouter.",
+        "Companion uses your own API key. Cost depends on the provider and model. " +
+          "Free and paid providers are supported — Google, OpenRouter, Anthropic, OpenAI, Perplexity, and more. " +
+          "No subscription fees or API markups. For a free start, try Auto Router on OpenRouter.",
       ),
     });
 
     new Setting(wrapper).setName(this._tx("ui.settings.studyAssistant.sections.enableSprig", "Enable Companion")).setHeading();
 
     new Setting(wrapper)
-      .setName(this._tx("ui.settings.studyAssistant.enabled.name", "Enable Companion"))
-      .setDesc(this._tx("ui.settings.studyAssistant.enabled.desc", "Turn Companion on or off. Add an API key below to use it."))
+      .setName(this._tx("ui.settings.studyAssistant.enabled.name", "Companion"))
+      .setDesc(this._tx("ui.settings.studyAssistant.enabled.desc", "Toggle Companion on or off. Requires an API key."))
       .addToggle((toggle) =>
         toggle.setValue(!!this.plugin.settings.studyAssistant.enabled).onChange(async (value) => {
           this.plugin.settings.studyAssistant.enabled = !!value;
@@ -3007,10 +3025,10 @@ export class SproutSettingsTab extends PluginSettingTab {
       );
 
     new Setting(wrapper)
-      .setName(this._tx("ui.settings.studyAssistant.modalButtonVisibility.name", "Companion button visibility"))
+      .setName(this._tx("ui.settings.studyAssistant.modalButtonVisibility.name", "Button visibility"))
       .setDesc(this._tx(
         "ui.settings.studyAssistant.modalButtonVisibility.desc",
-        "Choose when the Companion button appears in the bottom-right of note workspaces. Default: On hover.",
+        "Control when the Companion button appears in note workspaces.",
       ))
       .then((setting) => {
         this._addSimpleSelect(setting.controlEl, {
@@ -3031,7 +3049,7 @@ export class SproutSettingsTab extends PluginSettingTab {
       .setName(this._tx("ui.settings.studyAssistant.sidebarWidgetInfo.name", "Sidebar widget"))
       .setDesc(this._tx(
         "ui.settings.studyAssistant.widgetLaunchInfo.desc",
-        "Prefer the sidebar? Open Study Companion Widget from the command palette.",
+        "Open the Companion widget from the command palette to use it in the sidebar.",
       ));
 
     new Setting(wrapper).setName(this._tx("ui.settings.studyAssistant.sections.provider", "AI Provider")).setHeading();
@@ -3057,7 +3075,7 @@ export class SproutSettingsTab extends PluginSettingTab {
     withDependentSetting(
       new Setting(wrapper)
         .setName(this._tx("ui.settings.studyAssistant.provider.name", "AI provider"))
-        .setDesc(this._tx("ui.settings.studyAssistant.provider.desc", "Choose the provider Companion should use."))
+        .setDesc(this._tx("ui.settings.studyAssistant.provider.desc", "Set the AI provider for Companion."))
         .then((setting) => {
           this._addSimpleSelect(setting.controlEl, {
             options: providerOptions,
@@ -3122,7 +3140,7 @@ export class SproutSettingsTab extends PluginSettingTab {
     withDependentSetting(
       new Setting(wrapper)
         .setName(this._tx("ui.settings.studyAssistant.model.name", "Model"))
-        .setDesc(this._tx("ui.settings.studyAssistant.model.desc", "Choose the model Companion should use for this provider."))
+        .setDesc(this._tx("ui.settings.studyAssistant.model.desc", "Set the model for the selected provider."))
         .then((setting) => {
           if (provider === "custom") {
             setting.controlEl.empty();
@@ -3157,7 +3175,7 @@ export class SproutSettingsTab extends PluginSettingTab {
                   ? this._tx("ui.settings.studyAssistant.openrouter.loading", "Loading OpenRouter models. You can still enter a model ID manually.")
                   : this._openRouterModelsError
                     ? this._tx("ui.settings.studyAssistant.openrouter.loadError", "Could not load OpenRouter models right now. Enter a model ID manually.")
-                    : this._tx("ui.settings.studyAssistant.openrouter.model.desc", "Choose an OpenRouter model. Names are readable, IDs stay API-correct."),
+                    : this._tx("ui.settings.studyAssistant.openrouter.model.desc", "Pick an OpenRouter model. Display names are readable, IDs stay API-correct."),
               );
               setting.controlEl.empty();
               setting.addText((text) => {
@@ -3174,7 +3192,7 @@ export class SproutSettingsTab extends PluginSettingTab {
             const modelAnchor = setting.settingEl;
             this._addSearchablePopover(wrapper, {
               name: this._tx("ui.settings.studyAssistant.model.name", "Model"),
-              description: this._tx("ui.settings.studyAssistant.openrouter.model.desc", "Choose an OpenRouter model. Names are readable, IDs stay API-correct."),
+              description: this._tx("ui.settings.studyAssistant.openrouter.model.desc", "Pick an OpenRouter model. Display names are readable, IDs stay API-correct."),
               options: modelOptions,
               value: currentModel || modelOptions[0]?.value || "",
               onChange: (value) => {
@@ -3239,7 +3257,7 @@ export class SproutSettingsTab extends PluginSettingTab {
         .setDesc(
           this._tx(
               `ui.settings.studyAssistant.keys.${currentKeyToken}.desc`,
-            "Stored in {path}. If you use Git, add only this file to .gitignore so other Sprout settings can still sync across devices.",
+            "Stored at {path}. Add this file to .gitignore if syncing with Git.",
             { path: apiKeysPath },
           ),
         )
@@ -3272,7 +3290,7 @@ export class SproutSettingsTab extends PluginSettingTab {
         .setName(this._tx("ui.settings.studyAssistant.privacy.syncDeletesToProvider.name", "Delete chats on provider too"))
         .setDesc(this._tx(
           "ui.settings.studyAssistant.privacy.syncDeletesToProvider.desc",
-          "When supported, deleting or resetting chats in LearnKit also requests deletion on the provider.",
+          "When supported, deleting or resetting chats also requests deletion from the provider.",
         ))
         .addToggle((toggle) =>
           toggle.setValue(!!this.plugin.settings.studyAssistant.privacy.syncDeletesToProvider).onChange(async (value) => {
@@ -3286,6 +3304,49 @@ export class SproutSettingsTab extends PluginSettingTab {
       .setName(this._tx("ui.settings.studyAssistant.sections.contextFiles", "Context sources"))
       .setHeading();
 
+    const contextLimitOptions = [
+      { value: "conservative", label: this._tx("ui.settings.studyAssistant.privacy.contextLimit.conservative", "Conservative") },
+      { value: "standard", label: this._tx("ui.settings.studyAssistant.privacy.contextLimit.standard", "Standard") },
+      { value: "extended", label: this._tx("ui.settings.studyAssistant.privacy.contextLimit.extended", "Extended") },
+      { value: "none", label: this._tx("ui.settings.studyAssistant.privacy.contextLimit.none", "No limit") },
+    ];
+
+    withDependentSetting(
+      new Setting(wrapper)
+        .setName(this._tx("ui.settings.studyAssistant.privacy.linkedContextLimit.name", "Linked notes context limit"))
+        .setDesc(this._tx("ui.settings.studyAssistant.privacy.linkedContextLimit.desc", "Set how much linked note text to include. Conservative: 3 notes / 12k chars. Standard: 6 / 30k. Extended: 12 / 60k. No limit: all."))
+        .then((s) => {
+          this._addSimpleSelect(s.controlEl, {
+            options: contextLimitOptions,
+            value: this.plugin.settings.studyAssistant.privacy.linkedContextLimit || "standard",
+            onChange: (value) => {
+              void (async () => {
+                this.plugin.settings.studyAssistant.privacy.linkedContextLimit = value as "conservative" | "standard" | "extended" | "none";
+                await this.plugin.saveAll();
+              })();
+            },
+          });
+        }),
+    );
+
+    withDependentSetting(
+      new Setting(wrapper)
+        .setName(this._tx("ui.settings.studyAssistant.privacy.textAttachmentContextLimit.name", "Text attachment context limit"))
+        .setDesc(this._tx("ui.settings.studyAssistant.privacy.textAttachmentContextLimit.desc", "Set how much attached file text to include. Conservative: 3 files / 18k chars. Standard: 6 / 48k. Extended: 12 / 96k. No limit: all."))
+        .then((s) => {
+          this._addSimpleSelect(s.controlEl, {
+            options: contextLimitOptions,
+            value: this.plugin.settings.studyAssistant.privacy.textAttachmentContextLimit || "standard",
+            onChange: (value) => {
+              void (async () => {
+                this.plugin.settings.studyAssistant.privacy.textAttachmentContextLimit = value as "conservative" | "standard" | "extended" | "none";
+                await this.plugin.saveAll();
+              })();
+            },
+          });
+        }),
+    );
+
     new Setting(wrapper)
       .setName(this._tx("ui.settings.studyAssistant.sections.companionContextFiles", "Companion sources"))
       .setHeading();
@@ -3293,7 +3354,7 @@ export class SproutSettingsTab extends PluginSettingTab {
     withDependentSetting(
       new Setting(wrapper)
         .setName(this._tx("ui.settings.studyAssistant.privacy.includeAttachmentsInCompanion.name", "Include embedded attachments"))
-        .setDesc(this._tx("ui.settings.studyAssistant.privacy.includeAttachmentsInCompanion.desc", "Include files embedded in the current note, like PDFs or images. Some free models may not support attachments."))
+        .setDesc(this._tx("ui.settings.studyAssistant.privacy.includeAttachmentsInCompanion.desc", "Send embedded files from the current note such as PDFs or images. Some free models may not support attachments."))
         .addToggle((toggle) =>
           toggle.setValue(!!this.plugin.settings.studyAssistant.privacy.includeAttachmentsInCompanion).onChange(async (value) => {
             this.plugin.settings.studyAssistant.privacy.includeAttachmentsInCompanion = !!value;
@@ -3305,7 +3366,7 @@ export class SproutSettingsTab extends PluginSettingTab {
     withDependentSetting(
       new Setting(wrapper)
         .setName(this._tx("ui.settings.studyAssistant.privacy.includeLinkedNotesInCompanion.name", "Include linked notes as text"))
-        .setDesc(this._tx("ui.settings.studyAssistant.privacy.includeLinkedNotesInCompanion.desc", "Include notes directly linked from the current note as plain text context. Links inside those notes are not included. Since this is sent as text, it should work with all models."))
+        .setDesc(this._tx("ui.settings.studyAssistant.privacy.includeLinkedNotesInCompanion.desc", "Send linked notes from the current note as plain text. Nested links are excluded. Works with all models."))
         .addToggle((toggle) =>
           toggle.setValue(!!this.plugin.settings.studyAssistant.privacy.includeLinkedNotesInCompanion).onChange(async (value) => {
             this.plugin.settings.studyAssistant.privacy.includeLinkedNotesInCompanion = !!value;
@@ -3317,7 +3378,7 @@ export class SproutSettingsTab extends PluginSettingTab {
     withDependentSetting(
       new Setting(wrapper)
         .setName(this._tx("ui.settings.studyAssistant.privacy.includeLinkedAttachmentsInCompanion.name", "Include linked attachments"))
-        .setDesc(this._tx("ui.settings.studyAssistant.privacy.includeLinkedAttachmentsInCompanion.desc", "Include non-markdown files directly linked from the current note. Some free models may not support attachments."))
+        .setDesc(this._tx("ui.settings.studyAssistant.privacy.includeLinkedAttachmentsInCompanion.desc", "Send non-markdown files linked from the current note. Some free models may not support attachments."))
         .addToggle((toggle) =>
           toggle.setValue(!!this.plugin.settings.studyAssistant.privacy.includeLinkedAttachmentsInCompanion).onChange(async (value) => {
             this.plugin.settings.studyAssistant.privacy.includeLinkedAttachmentsInCompanion = !!value;
@@ -3328,8 +3389,8 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     withDependentSetting(
       new Setting(wrapper)
-        .setName(this._tx("ui.settings.studyAssistant.prompts.companion.name", "Companion custom instructions"))
-        .setDesc(this._tx("ui.settings.studyAssistant.prompts.companion.desc", "Optional extra instructions for Companion. Sent as plain text."))
+        .setName(this._tx("ui.settings.studyAssistant.prompts.companion.name", "Custom instructions"))
+        .setDesc(this._tx("ui.settings.studyAssistant.prompts.companion.desc", "Extra instructions sent to Companion as plain text."))
         .addTextArea((text) => {
           text.inputEl.placeholder = this._tx("ui.settings.studyAssistant.prompts.placeholder", "Enter custom instructions here");
           text.setValue(this.plugin.settings.studyAssistant.prompts.assistant || "");
@@ -3347,7 +3408,7 @@ export class SproutSettingsTab extends PluginSettingTab {
     withDependentSetting(
       new Setting(wrapper)
         .setName(this._tx("ui.settings.studyAssistant.privacy.includeAttachmentsInExam.name", "Include embedded attachments"))
-        .setDesc(this._tx("ui.settings.studyAssistant.privacy.includeAttachmentsInExam.desc", "Include files embedded in test source notes, like PDFs or images. Some free models may not support attachments."))
+        .setDesc(this._tx("ui.settings.studyAssistant.privacy.includeAttachmentsInExam.desc", "Send embedded files from test source notes such as PDFs or images. Some free models may not support attachments."))
         .addToggle((toggle) =>
           toggle.setValue(!!this.plugin.settings.studyAssistant.privacy.includeAttachmentsInExam).onChange(async (value) => {
             this.plugin.settings.studyAssistant.privacy.includeAttachmentsInExam = !!value;
@@ -3359,7 +3420,7 @@ export class SproutSettingsTab extends PluginSettingTab {
     withDependentSetting(
       new Setting(wrapper)
         .setName(this._tx("ui.settings.studyAssistant.privacy.includeLinkedNotesInExam.name", "Include linked notes as text"))
-        .setDesc(this._tx("ui.settings.studyAssistant.privacy.includeLinkedNotesInExam.desc", "Include notes directly linked from each test source note as plain text context. Links inside those notes are not included. Since this is sent as text, it should work with all models."))
+        .setDesc(this._tx("ui.settings.studyAssistant.privacy.includeLinkedNotesInExam.desc", "Send linked notes from test source notes as plain text. Nested links are excluded. Works with all models."))
         .addToggle((toggle) =>
           toggle.setValue(!!this.plugin.settings.studyAssistant.privacy.includeLinkedNotesInExam).onChange(async (value) => {
             this.plugin.settings.studyAssistant.privacy.includeLinkedNotesInExam = !!value;
@@ -3371,7 +3432,7 @@ export class SproutSettingsTab extends PluginSettingTab {
     withDependentSetting(
       new Setting(wrapper)
         .setName(this._tx("ui.settings.studyAssistant.privacy.includeLinkedAttachmentsInExam.name", "Include linked attachments"))
-        .setDesc(this._tx("ui.settings.studyAssistant.privacy.includeLinkedAttachmentsInExam.desc", "Include non-markdown files directly linked from test source notes. Some free models may not support attachments."))
+        .setDesc(this._tx("ui.settings.studyAssistant.privacy.includeLinkedAttachmentsInExam.desc", "Send non-markdown files linked from test source notes. Some free models may not support attachments."))
         .addToggle((toggle) =>
           toggle.setValue(!!this.plugin.settings.studyAssistant.privacy.includeLinkedAttachmentsInExam).onChange(async (value) => {
             this.plugin.settings.studyAssistant.privacy.includeLinkedAttachmentsInExam = !!value;
@@ -3382,8 +3443,8 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     withDependentSetting(
       new Setting(wrapper)
-        .setName(this._tx("ui.settings.studyAssistant.prompts.tests.name", "Tests custom instructions"))
-        .setDesc(this._tx("ui.settings.studyAssistant.prompts.tests.desc", "Optional extra instructions for test generation. Sent as plain text."))
+        .setName(this._tx("ui.settings.studyAssistant.prompts.tests.name", "Custom instructions"))
+        .setDesc(this._tx("ui.settings.studyAssistant.prompts.tests.desc", "Extra instructions for test generation. Sent as plain text."))
         .addTextArea((text) => {
           text.inputEl.placeholder = this._tx("ui.settings.studyAssistant.prompts.placeholder", "Enter custom instructions here");
           text.setValue(this.plugin.settings.studyAssistant.prompts.tests || "");
@@ -3454,7 +3515,7 @@ export class SproutSettingsTab extends PluginSettingTab {
     withDependentSetting(
       new Setting(wrapper)
         .setName(this._tx("ui.settings.studyAssistant.generatorOutput.title.name", "Include titles"))
-        .setDesc(this._tx("ui.settings.studyAssistant.generatorOutput.title.desc", "Companion-generated flashcards can include title rows."))
+        .setDesc(this._tx("ui.settings.studyAssistant.generatorOutput.title.desc", "Add title rows to generated flashcards."))
         .addToggle((toggle) =>
           toggle.setValue(!!this.plugin.settings.studyAssistant.generatorOutput.includeTitle).onChange(async (value) => {
             this.plugin.settings.studyAssistant.generatorOutput.includeTitle = !!value;
@@ -3466,7 +3527,7 @@ export class SproutSettingsTab extends PluginSettingTab {
     withDependentSetting(
       new Setting(wrapper)
         .setName(this._tx("ui.settings.studyAssistant.generatorOutput.info.name", "Include extra information"))
-        .setDesc(this._tx("ui.settings.studyAssistant.generatorOutput.info.desc", "Companion-generated flashcards can include extra information rows."))
+        .setDesc(this._tx("ui.settings.studyAssistant.generatorOutput.info.desc", "Add extra information rows to generated flashcards."))
         .addToggle((toggle) =>
           toggle.setValue(!!this.plugin.settings.studyAssistant.generatorOutput.includeInfo).onChange(async (value) => {
             this.plugin.settings.studyAssistant.generatorOutput.includeInfo = !!value;
@@ -3478,7 +3539,7 @@ export class SproutSettingsTab extends PluginSettingTab {
     withDependentSetting(
       new Setting(wrapper)
         .setName(this._tx("ui.settings.studyAssistant.generatorOutput.groups.name", "Include groups"))
-        .setDesc(this._tx("ui.settings.studyAssistant.generatorOutput.groups.desc", "Companion-generated flashcards can include group rows."))
+        .setDesc(this._tx("ui.settings.studyAssistant.generatorOutput.groups.desc", "Add group rows to generated flashcards."))
         .addToggle((toggle) =>
           toggle.setValue(!!this.plugin.settings.studyAssistant.generatorOutput.includeGroups).onChange(async (value) => {
             this.plugin.settings.studyAssistant.generatorOutput.includeGroups = !!value;
@@ -3797,7 +3858,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName(this._tx("ui.settings.scheduling.preset.name", "Preset"))
-      .setDesc(this._tx("ui.settings.scheduling.preset.desc", "Apply a scheduling preset to learning steps, relearning steps, and retention. Choose custom to keep your values."))
+      .setDesc(this._tx("ui.settings.scheduling.preset.desc", "Apply a preset to learning steps, relearning steps, and retention. Choose Custom to keep current values."))
       .then((s) => {
         presetHandle = this._addSimpleSelect(s.controlEl, {
           options: presets.map((p) => ({ value: p.key, label: p.label })),
@@ -3853,7 +3914,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName(this._tx("ui.settings.scheduling.learningSteps.name", "Learning steps"))
-      .setDesc(this._tx("ui.settings.scheduling.learningSteps.desc", "Comma-separated minutes. Examples: 10 or 10,1440."))
+      .setDesc(this._tx("ui.settings.scheduling.learningSteps.desc", "Comma-separated learning intervals in minutes."))
       .addText((t) =>
         t.setValue(String((sched.learningStepsMinutes ?? []).join(","))).onChange(async (v) => {
           const prev = (sched.learningStepsMinutes ?? []).slice();
@@ -3915,8 +3976,18 @@ export class SproutSettingsTab extends PluginSettingTab {
       );
 
     new Setting(wrapper)
+      .setName(this._tx("ui.settings.scheduling.enableFuzz.name", "Fuzz intervals"))
+      .setDesc(this._tx("ui.settings.scheduling.enableFuzz.desc", "Add slight randomness to review intervals so cards due on the same day spread out."))
+      .addToggle((t) =>
+        t.setValue(sched.enableFuzz ?? true).onChange(async (v) => {
+          sched.enableFuzz = v;
+          await this.plugin.saveAll();
+        }),
+      );
+
+    new Setting(wrapper)
       .setName(this._tx("ui.settings.scheduling.reset.name", "Reset scheduling"))
-      .setDesc(this._tx("ui.settings.scheduling.reset.desc", "Reset all cards to new and clear scheduling fields. Back up first if you may want to restore."))
+      .setDesc(this._tx("ui.settings.scheduling.reset.desc", "Reset all cards to new and clear scheduling data. Create a backup first."))
       .addButton((b) =>
         b.setButtonText(this._tx("ui.settings.scheduling.reset.button", "Reset…")).onClick(() => {
           new ConfirmResetSchedulingModal(this.app, this.plugin).open();
@@ -4089,8 +4160,8 @@ export class SproutSettingsTab extends PluginSettingTab {
       });
 
     new Setting(wrapper)
-      .setName(this._tx("ui.settings.storage.deleteOrphanedImages.name", "Delete orphaned image occlusion images"))
-      .setDesc(this._tx("ui.settings.storage.deleteOrphanedImages.desc", "During sync, automatically delete image occlusion files whose cards were removed from notes."))
+      .setName(this._tx("ui.settings.storage.deleteOrphanedImages.name", "Delete orphaned masks"))
+      .setDesc(this._tx("ui.settings.storage.deleteOrphanedImages.desc", "Automatically remove image occlusion files during sync when their cards no longer exist."))
       .addToggle((t) =>
         t.setValue(this.plugin.settings.storage?.deleteOrphanedImages ?? true).onChange(async (v) => {
           const prev = this.plugin.settings.storage?.deleteOrphanedImages ?? true;
@@ -4105,7 +4176,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName(this._tx("ui.settings.storage.cardAttachmentFolder.name", "Card attachment folder"))
-      .setDesc(this._tx("ui.settings.storage.cardAttachmentFolder.desc", "Folder where flashcard images and media are saved."))
+      .setDesc(this._tx("ui.settings.storage.cardAttachmentFolder.desc", "Folder for flashcard images and media."))
       .addText((t) => {
         const allFolders = listVaultFolders(this.app);
 
@@ -4274,7 +4345,7 @@ export class SproutSettingsTab extends PluginSettingTab {
       .setDesc(
         this._tx(
           "ui.settings.storage.vaultSync.enabled.desc",
-          "Save a copy of scheduling databases (.db files) to a vault folder so Obsidian Sync can transfer them between devices.",
+          "Copy scheduling databases to a vault folder so " + "Obsidian" + " Sync can transfer them between devices.",
         ),
       )
       .addToggle((t) => {
@@ -4446,7 +4517,7 @@ export class SproutSettingsTab extends PluginSettingTab {
         }),
       );
 
-    const cardDelimiterSetting = new Setting(wrapper)
+    new Setting(wrapper)
       .setName(this._tx("ui.settings.sync.cardDelimiter.name", "Card delimiter"))
       .setDesc(
         this._tx("ui.settings.sync.cardDelimiter.desc", "Character used to separate fields in card markup."),
@@ -4481,16 +4552,6 @@ export class SproutSettingsTab extends PluginSettingTab {
         });
       });
 
-    cardDelimiterSetting.descEl.appendText(" ");
-    const delimiterGuideLink = cardDelimiterSetting.descEl.createEl("a", {
-      text: this._tx("ui.settings.sync.cardDelimiter.guide.link", "Click here"),
-      href: "#",
-    });
-    delimiterGuideLink.onclick = (evt) => {
-      evt.preventDefault();
-      void this.app.workspace.openLinkText("Custom-Delimiters", "", false);
-    };
-    cardDelimiterSetting.descEl.appendText(this._tx("ui.settings.sync.cardDelimiter.guide.trailing", " for the custom delimiters guide."));
   }
 
   private renderResetSection(wrapper: HTMLElement): void {
@@ -4538,7 +4599,7 @@ export class SproutSettingsTab extends PluginSettingTab {
           s,
           this._tx(
             "ui.settings.reset.analytics.warning",
-            "This permanently deletes your analytics history. It can be restored from a backup in Settings. Make one before resetting.",
+            "This permanently deletes analytics history. Restore from a backup in Settings. Create one before resetting.",
           ),
         );
       })
@@ -4553,13 +4614,13 @@ export class SproutSettingsTab extends PluginSettingTab {
 
     new Setting(wrapper)
       .setName(this._tx("ui.settings.reset.scheduling.name", "Reset scheduling"))
-      .setDesc(this._tx("ui.settings.reset.scheduling.desc", "Reset all cards to new and clear scheduling fields."))
+      .setDesc(this._tx("ui.settings.reset.scheduling.desc", "Reset all cards to new and clear scheduling data."))
       .then((s) => {
         this._appendSettingWarning(
           s,
           this._tx(
             "ui.settings.reset.scheduling.warning",
-            "This resets scheduling for every card. It can be restored from a backup in Settings. Make one before resetting.",
+            "This resets scheduling for every card. Restore from a backup in Settings. Create one before resetting.",
           ),
         );
       })
@@ -4585,7 +4646,7 @@ export class SproutSettingsTab extends PluginSettingTab {
           s,
           this._tx(
             "ui.settings.reset.deleteAllFlashcards.warning",
-            "This permanently removes flashcards from your notes and clears plugin data. It cannot be restored from Sprout Settings. Ensure you have a full vault backup before continuing.",
+            "This permanently removes flashcards from notes and clears plugin data. It cannot be restored from " + "Learn" + "Kit settings. Ensure you have a full vault backup before continuing.",
           ),
         );
       })

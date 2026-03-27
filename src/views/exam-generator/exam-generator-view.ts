@@ -29,6 +29,7 @@ import {
   SUPPORTED_FILE_ACCEPT,
 } from "../../platform/integrations/ai/attachment-helpers";
 import { resolveImageFile } from "../../platform/image-occlusion/io-helpers";
+import { getLinkedContextLimits } from "../../platform/integrations/ai/study-assistant-types";
 import { mountSearchPopoverList, type SearchPopoverOption } from "../shared/search-popover-list";
 import { collectVaultTagAndPropertyPairs, decodePropertyPair, extractFilePropertyPairs, extractFileTags } from "../shared/scope-metadata";
 import { formatAttachmentChipLabel } from "../shared/attachment-chip-label";
@@ -155,7 +156,7 @@ export class SproutExamGeneratorView extends ItemView {
     this.containerEl.addClass("sprout");
 
     this._rootEl = this.contentEl;
-    this._rootEl.classList.add("bc", "sprout-view-content", "sprout-exam-generator-root", "flex", "flex-col", "min-h-0");
+    this._rootEl.classList.add("bc", "sprout-view-content", "sprout-exam-generator-root");
 
     this._header = createViewHeader({
       view: this,
@@ -2207,9 +2208,8 @@ export class SproutExamGeneratorView extends ItemView {
 
     const sections: string[] = [];
     const seen = new Set<string>();
-    const maxNotes = 6;
-    const maxCharsPerNote = 8000;
-    const maxCharsTotal = 30000;
+    const limits = getLinkedContextLimits(this.plugin.settings.studyAssistant.privacy.linkedContextLimit);
+    const { maxNotes, maxCharsPerNote, maxCharsTotal } = limits;
     let totalChars = 0;
 
     for (const ref of linkedRefs) {

@@ -1,6 +1,7 @@
 import { requestUrl } from "obsidian";
 import type { SproutSettings } from "../../types/settings";
 import type { StudyAssistantProvider } from "./study-assistant-types";
+import { getTextAttachmentLimits, type ContextLimitPreset } from "./study-assistant-types";
 import { splitTextLikeAttachmentDataUrls } from "./attachment-helpers";
 
 type CompletionMode = "text" | "json";
@@ -324,16 +325,15 @@ function buildOpenAiContentBlocks(attachments: ParsedAttachment[]): unknown[] {
   });
 }
 
-function buildTextAttachmentContext(dataUrls: string[]): {
+function buildTextAttachmentContext(dataUrls: string[], preset?: ContextLimitPreset): {
   binaryDataUrls: string[];
   textContext: string;
 } {
   const { binaryDataUrls, textBlocks } = splitTextLikeAttachmentDataUrls(dataUrls || []);
   if (!textBlocks.length) return { binaryDataUrls, textContext: "" };
 
-  const maxFiles = 6;
-  const maxCharsPerFile = 12000;
-  const maxCharsTotal = 48000;
+  const limits = getTextAttachmentLimits(preset);
+  const { maxFiles, maxCharsPerFile, maxCharsTotal } = limits;
   let total = 0;
   const lines: string[] = [
     "Additional attached text context:",
@@ -395,7 +395,7 @@ export async function requestStudyAssistantCompletionDetailed(params: {
 
   if (!model) throw new Error("Missing model name in Study Companion settings.");
 
-  const textAttachmentPrep = buildTextAttachmentContext(attachedFileDataUrls);
+  const textAttachmentPrep = buildTextAttachmentContext(attachedFileDataUrls, settings.privacy.textAttachmentContextLimit);
   const effectiveUserPrompt = textAttachmentPrep.textContext
     ? `${userPrompt}\n\n${textAttachmentPrep.textContext}`
     : userPrompt;

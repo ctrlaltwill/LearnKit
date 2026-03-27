@@ -116,6 +116,8 @@ export const DEFAULT_SETTINGS: SproutSettings = {
       includeAttachmentsInExam: false,
       includeLinkedNotesInExam: false,
       includeLinkedAttachmentsInExam: false,
+      linkedContextLimit: "standard",
+      textAttachmentContextLimit: "standard",
       previewPayload: true,
       saveChatHistory: true,
       syncDeletesToProvider: false,
@@ -145,6 +147,7 @@ export const DEFAULT_SETTINGS: SproutSettings = {
     learningStepsMinutes: [10, 1440],
     relearningStepsMinutes: [10],
     requestRetention: 0.9,
+    enableFuzz: true,
   },
 
   noteReview: {

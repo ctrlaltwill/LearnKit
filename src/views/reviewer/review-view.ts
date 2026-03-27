@@ -1956,7 +1956,6 @@ export class SproutReviewerView extends ItemView {
 
     root.classList.add("sprout-view-content");
     root.classList.add("lk-review-root");
-    root.classList.add("flex", "flex-col");
     root.setAttribute("data-lk-review-mode", this.mode);
     this.containerEl.addClass("sprout");
     if (!preservedCoachStrip) {

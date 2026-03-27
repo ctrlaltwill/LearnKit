@@ -45,7 +45,7 @@ export function renderPagination(
 
   if (totalRows <= size) {
     const small = document.createElement("div");
-    small.className = "text-sm text-muted-foreground";
+    small.className = "text-sm text-muted-foreground lk-browser-page-indicator";
     small.textContent = totalRows === 0
       ? tx("ui.browser.pagination.pageXofY", "Page {page} / {total}", { page: 0, total: 0 })
       : tx("ui.browser.pagination.pageXofY", "Page {page} / {total}", { page: 1, total: 1 });

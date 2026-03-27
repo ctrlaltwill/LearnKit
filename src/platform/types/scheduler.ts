@@ -66,6 +66,8 @@ export type SchedulerSettings = {
   relearningStepsMinutes: number[];
   /** Target recall probability at review time (e.g. 0.90). */
   requestRetention: number;
+  /** When true, add slight randomness to review intervals to prevent clustering. */
+  enableFuzz: boolean;
 };
 
 /** Four-button rating values used by the reviewer UI. */

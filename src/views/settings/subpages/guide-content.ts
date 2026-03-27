@@ -24,7 +24,6 @@ function convertDocsLinksForObsidianGuide(markdown: string): string {
 
 const PREFERRED_GUIDE_FILES = [
   "Home.md",
-  "Wiki-Tree.md",
   "Getting-Started.md",
   "Installation.md",
   "Syncing.md",
@@ -76,7 +75,7 @@ const PREFERRED_GUIDE_FILES = [
 ];
 
 export const GUIDE_CATEGORIES: GuideCategory[] = [
-  { key: "home", label: tx("ui.guide.categories.home", "Home"), icon: "house", sections: [{ pageKeys: ["Home", "Wiki-Tree"] }] },
+  { key: "home", label: tx("ui.guide.categories.home", "Home"), icon: "house", sections: [{ pageKeys: ["Home"] }] },
   {
     key: "getting-started",
     label: tx("ui.guide.categories.gettingStarted", "Getting Started"),
@@ -189,7 +188,6 @@ const GUIDE_LABEL_MAP: Record<string, string> = {
 
 const GUIDE_ICON_MAP: Record<string, string> = {
   Home: "house",
-  "Wiki-Tree": "git-branch",
   "Getting-Started": "rocket",
   Installation: "download",
   "Anki-Export-&-Import": "arrow-right-left",
@@ -296,7 +294,6 @@ export async function loadGuidePages(app: App, pluginDir?: string): Promise<Guid
 
   const order = [
     "Home",
-    "Wiki-Tree",
     "Getting-Started",
     "Installation",
     "Syncing",

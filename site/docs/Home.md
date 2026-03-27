@@ -26,7 +26,3 @@ LearnKit is an Obsidian-native study system for turning notes into flashcards, s
 - [Backups](./Backups)
 - [AI Usage Policy](./AI-Usage-Policy)
 - [About LearnKit](./Support-LearnKit)
-
-## Full Tree
-
-- [Wiki Tree](./Wiki-Tree)

@@ -17,6 +17,14 @@
   padding: 1.2rem;
 }
 
+@media (max-width: 767px) {
+  body.is-mobile .sprout .card,
+  body.is-mobile .sprout .small-card,
+  body.is-mobile .small-card {
+    padding: 0.8rem;
+  }
+}
+
 /* Dark mode card polish (Basecoat-aligned) */
 .theme-dark .sprout .card,
 .theme-dark .sprout .card.sprout-ana-card,
@@ -1923,6 +1931,16 @@ body.is-mobile .sprout .sprout-coach-scope-actions-grid {
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   align-items: stretch;
+}
+
+@media (max-width: 767px) {
+  body.is-mobile .sprout .sprout-coach-dashboard-body,
+  body.is-mobile .sprout .sprout-coach-dashboard-top-row,
+  body.is-mobile .sprout .sprout-coach-charts-wrap,
+  body.is-mobile .sprout .sprout-coach-health-grid,
+  body.is-mobile .sprout .sprout-coach-gauges-grid {
+    gap: 8px;
+  }
 }
 
 @media (max-width: 720px) {

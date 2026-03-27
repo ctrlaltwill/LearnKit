@@ -285,8 +285,6 @@ export class SproutAnalyticsView extends ItemView {
       "sprout-view-content",
       "sprout-analytics-root",
       "w-full",
-      "flex",
-      "flex-col",
     );
 
     this.containerEl.addClass("sprout");
@@ -341,8 +339,8 @@ export class SproutAnalyticsView extends ItemView {
     const titleFrame = createTitleStripFrame({
       root,
       stripClassName: "lk-home-title-strip sprout-analytics-title-strip",
-      rowClassName: "flex items-center justify-between gap-2.5 max-md:flex-col max-md:items-start",
-      leftClassName: "flex min-w-0 flex-col gap-1",
+      rowClassName: "sprout-analytics-title-row flex items-center justify-between gap-2.5 max-md:flex-col max-md:items-center",
+      leftClassName: "sprout-analytics-title-copy flex min-w-0 flex-col gap-1 max-md:items-center max-md:text-center",
       prepend: false,
     });
     const { strip: titleStrip, right: titleRight, title, subtitle } = titleFrame;
@@ -354,7 +352,7 @@ export class SproutAnalyticsView extends ItemView {
     );
 
     const filtersWrap = document.createElement("div");
-    filtersWrap.className = "flex flex-wrap items-center gap-2 ml-auto max-md:ml-0";
+    filtersWrap.className = "flex flex-wrap items-center gap-2 ml-auto max-md:ml-0 sprout-analytics-filter-buttons";
 
     const mkFilterBtn = (
       section: "flashcards" | "notes" | "tests",
@@ -364,7 +362,7 @@ export class SproutAnalyticsView extends ItemView {
       const active = this._isSectionVisible(section);
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "bc sprout-btn-toolbar inline-flex items-center gap-2 h-8 px-3 text-sm";
+      btn.className = "bc sprout-btn-toolbar inline-flex items-center gap-2 h-8 px-3 text-sm sprout-analytics-filter-btn";
       btn.classList.toggle("is-active", active);
       btn.classList.toggle("sprout-btn-control", active);
       btn.classList.toggle("sprout-btn-outline-muted", !active);
@@ -372,11 +370,12 @@ export class SproutAnalyticsView extends ItemView {
       btn.setAttribute("data-tooltip-position", "top");
 
       const icon = document.createElement("span");
-      icon.className = "inline-flex items-center justify-center [&_svg]:size-3.5";
+      icon.className = "inline-flex items-center justify-center [&_svg]:size-3.5 sprout-analytics-filter-icon";
       setIcon(icon, iconName);
       btn.appendChild(icon);
 
       const text = document.createElement("span");
+      text.className = "sprout-analytics-filter-text";
       text.textContent = label;
       btn.appendChild(text);
 
@@ -1419,11 +1418,11 @@ export class SproutAnalyticsView extends ItemView {
 
     // Bottom controls need summary declared before first renderTable() call.
     const bottom = document.createElement("div");
-    bottom.className = "bc mt-2.5 flex flex-row items-center gap-2";
+    bottom.className = "bc sprout-analytics-stats-bottom mt-2.5 flex flex-row items-center gap-2";
     statsCard.appendChild(bottom);
 
     const summaryWrap = document.createElement("div");
-    summaryWrap.className = "bc flex flex-col gap-1 shrink-0";
+    summaryWrap.className = "bc sprout-analytics-stats-summary flex flex-col gap-1 shrink-0";
     const summary = document.createElement("div");
     summary.className = "bc text-sm text-muted-foreground";
     summary.textContent = "";
@@ -1431,11 +1430,11 @@ export class SproutAnalyticsView extends ItemView {
     bottom.appendChild(summaryWrap);
 
     const center = document.createElement("div");
-    center.className = "bc flex-1 min-w-0 flex items-center justify-center";
+    center.className = "bc sprout-analytics-stats-center flex-1 min-w-0 flex items-center justify-center";
     bottom.appendChild(center);
 
     const right = document.createElement("div");
-    right.className = "bc ml-auto shrink-0 flex flex-row flex-nowrap items-center gap-2";
+    right.className = "bc sprout-analytics-stats-actions ml-auto shrink-0 flex flex-row flex-nowrap items-center gap-2";
     bottom.appendChild(right);
 
     const formatStudyTime = (minutes: number) => {
@@ -1563,10 +1562,10 @@ export class SproutAnalyticsView extends ItemView {
 
     };
 
-    const rowsLbl = right.createDiv({ cls: "bc text-sm text-muted-foreground" });
+    const rowsLbl = right.createDiv({ cls: "bc sprout-analytics-stats-rows-label text-sm text-muted-foreground" });
     rowsLbl.textContent = tx("ui.analytics.table.rows", "Rows");
 
-    const rowsWrap = right.createDiv({ cls: "bc sprout relative inline-flex" });
+    const rowsWrap = right.createDiv({ cls: "bc sprout sprout-analytics-stats-rows-wrap relative inline-flex" });
     const rowsBtn = rowsWrap.createEl("button", { cls: "bc sprout-btn-toolbar sprout-btn-filter inline-flex h-7 min-w-11 items-center justify-between gap-2 px-3 text-sm" });
     rowsBtn.setAttribute("aria-haspopup", "menu");
     rowsBtn.setAttribute("aria-expanded", "false");
@@ -1724,7 +1723,7 @@ export class SproutAnalyticsView extends ItemView {
       else openRowsMenu();
     });
 
-    const pagerHost = right.createDiv({ cls: "bc flex items-center" });
+    const pagerHost = right.createDiv({ cls: "bc sprout-analytics-stats-pager flex items-center" });
 
     const renderPager = () => {
       while (pagerHost.firstChild) pagerHost.removeChild(pagerHost.firstChild);
@@ -1736,6 +1735,8 @@ export class SproutAnalyticsView extends ItemView {
       if (!Number.isFinite(currentPage) || currentPage < 0) currentPage = 0;
       if (currentPage > totalPages - 1) currentPage = totalPages - 1;
 
+      const isMobile = document.body.classList.contains("is-mobile");
+
       if (totalRows <= size) {
         const small = document.createElement("div");
         small.className = "bc text-sm text-muted-foreground";
@@ -1746,9 +1747,68 @@ export class SproutAnalyticsView extends ItemView {
         return;
       }
 
+      if (isMobile) {
+        const nav = document.createElement("nav");
+        nav.setAttribute("role", "navigation");
+        nav.className = "bc sprout-analytics-stats-pager-nav flex items-center gap-1";
+        pagerHost.appendChild(nav);
+
+        const current = currentPage + 1;
+        const totalPagesLocal = totalPages;
+
+        const prev = document.createElement("button");
+        prev.type = "button";
+        prev.className = "bc sprout-btn-toolbar h-8 px-2";
+        prev.setAttribute("aria-label", tx("ui.analytics.table.prevPage", "Previous page"));
+        prev.disabled = currentPage <= 0;
+        prev.addEventListener("click", (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          if (prev.disabled) return;
+          currentPage = Math.max(0, currentPage - 1);
+          renderTable();
+          renderPager();
+        });
+        const prevIcon = document.createElement("span");
+        prevIcon.setAttribute("aria-hidden", "true");
+        prevIcon.className = "bc inline-flex items-center justify-center [&_svg]:size-4";
+        setIcon(prevIcon, "chevron-left");
+        prev.appendChild(prevIcon);
+        nav.appendChild(prev);
+
+        const pageState = document.createElement("div");
+        pageState.className = "bc text-sm text-muted-foreground px-1";
+        pageState.textContent = tx("ui.analytics.table.pageXofY", "Page {page} / {total}", {
+          page: current,
+          total: totalPagesLocal,
+        });
+        nav.appendChild(pageState);
+
+        const next = document.createElement("button");
+        next.type = "button";
+        next.className = "bc sprout-btn-toolbar h-8 px-2";
+        next.setAttribute("aria-label", tx("ui.analytics.table.nextPage", "Next page"));
+        next.disabled = currentPage >= totalPagesLocal - 1;
+        next.addEventListener("click", (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          if (next.disabled) return;
+          currentPage = Math.min(totalPagesLocal - 1, currentPage + 1);
+          renderTable();
+          renderPager();
+        });
+        const nextIcon = document.createElement("span");
+        nextIcon.setAttribute("aria-hidden", "true");
+        nextIcon.className = "bc inline-flex items-center justify-center [&_svg]:size-4";
+        setIcon(nextIcon, "chevron-right");
+        next.appendChild(nextIcon);
+        nav.appendChild(next);
+        return;
+      }
+
       const nav = document.createElement("nav");
       nav.setAttribute("role", "navigation");
-      nav.className = "bc flex items-center gap-2";
+      nav.className = "bc sprout-analytics-stats-pager-nav flex items-center gap-2";
       pagerHost.appendChild(nav);
 
       const mkBtn = (label: string, tooltip: string, disabled: boolean, active: boolean, onClick: () => void) => {

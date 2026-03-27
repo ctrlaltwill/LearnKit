@@ -57,6 +57,8 @@ function makeSettings(): SproutSettings["studyAssistant"] {
       previewPayload: false,
       saveChatHistory: false,
       syncDeletesToProvider: false,
+      linkedContextLimit: "standard",
+      textAttachmentContextLimit: "standard",
     },
   };
 }

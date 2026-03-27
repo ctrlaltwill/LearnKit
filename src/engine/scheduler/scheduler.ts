@@ -277,7 +277,7 @@ function buildFsrsParams(cfg: SchedulerSettings): FsrsParams {
   return generatorParameters({
     request_retention: requestRetention,
     maximum_interval: 36500,
-    enable_fuzz: false,
+    enable_fuzz: cfg.enableFuzz ?? true,
     enable_short_term: true,
     learning_steps: learning.length ? learning : ["10m"],
     relearning_steps: relearning,

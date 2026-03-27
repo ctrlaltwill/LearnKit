@@ -2766,6 +2766,7 @@ color: var(--color-base-100);
     overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    padding-top: 0;
   }
 
   body.is-mobile .sprout .sprout-settings-tab-content-wrapper,
@@ -2780,7 +2781,70 @@ color: var(--color-base-100);
   }
 
   body.is-mobile .sprout .sprout-guide-content-inner {
-    padding: 16px 14px 24px;
+    padding: 36px 14px 24px;
+  }
+
+  body.is-mobile .sprout .sprout-guide-content-inner.sprout-guide-content-inner--snap {
+    padding-top: calc(36px + 2rem);
+  }
+
+  body.is-mobile .sprout .sprout-guide-layout {
+    --sprout-guide-topbar-clearance: 104px;
+  }
+
+  body.is-mobile .sprout .sprout-settings-title-strip {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  body.is-mobile .sprout .sprout-settings-title-strip > .sprout-inline-sentence {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  body.is-mobile .sprout .sprout-settings-title-strip > .sprout-inline-sentence > :first-child {
+    width: 100%;
+    flex: 0 0 auto;
+    align-items: center;
+    text-align: center;
+  }
+
+  body.is-mobile .sprout .sprout-settings-title-strip .sprout-view-title-strip-label {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+
+  body.is-mobile .sprout .sprout-settings-title-strip > .sprout-inline-sentence > :last-child {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    justify-content: stretch;
+    align-items: stretch;
+  }
+
+  body.is-mobile .sprout .sprout-settings-title-strip .sprout-settings-title-tab-btn {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+  }
+
+  body.is-mobile .sprout .sprout-settings-title-strip .sprout-settings-title-tab-btn .sprout-settings-title-tab-btn-icon {
+    display: none;
+  }
+
+  body.is-mobile .sprout .sprout-settings-title-strip :is(
+    .sprout-settings-view-tab-row,
+    .sprout-settings-tab-nav,
+    .sprout-settings-tab-nav-main
+  ) {
+    width: 100%;
+    flex-wrap: wrap;
   }
 
   body.is-mobile .sprout .sprout-settings-view-tab-row {
@@ -2822,8 +2886,9 @@ color: var(--color-base-100);
   }
 
   body.is-mobile .sprout .sprout-release-nav {
-    flex-wrap: wrap;
-    overflow-x: hidden;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   body.is-mobile .sprout .sprout-release-nav-frame::before,
@@ -2837,6 +2902,7 @@ color: var(--color-base-100);
     padding: 0 10px;
     font-size: var(--sprout-font-2xs);
     line-height: 1.2;
+    border-radius: var(--radius-md);
   }
 
   body.is-mobile .sprout .sprout-settings-action-btn,

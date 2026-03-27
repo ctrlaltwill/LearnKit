@@ -73,6 +73,38 @@
 }
 
 @media (max-width: 767px) {
+  body.is-mobile .sprout .sprout-analytics-root {
+    gap: 8px !important;
+  }
+
+  .sprout .sprout-analytics-root {
+    gap: 8px !important;
+  }
+
+  /* Use a single column gap rhythm for analytics sections on narrow screens. */
+  body.is-mobile .sprout .sprout-analytics-content-shell > .w-full.space-y-4,
+  .sprout .sprout-analytics-content-shell > .w-full.space-y-4 {
+    display: flex;
+    flex-direction: column;
+    gap: 8px !important;
+  }
+
+  /* Analytics body wrapper uses `space-y-4`; enforce 8px spacing on mobile. */
+  body.is-mobile .sprout .sprout-analytics-content-shell > .w-full.space-y-4 > :not([hidden]) ~ :not([hidden]),
+  .sprout .sprout-analytics-content-shell > .w-full.space-y-4 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0 !important;
+  }
+
+  /* Analytics rows commonly use `gap-4`; normalize to 8px on mobile. */
+  body.is-mobile .sprout .sprout-analytics-content-shell :is(.sprout-ana-grid, .grid),
+  .sprout .sprout-analytics-content-shell :is(.sprout-ana-grid, .grid) {
+    gap: 8px !important;
+  }
+
+  body.is-mobile .sprout .sprout-analytics-content-shell > * + * {
+    margin-top: 8px !important;
+  }
+
   .sprout .sprout-analytics-title-strip {
     max-width: 100%;
     padding-left: var(--lk-shell-padding-mobile);
@@ -418,6 +450,100 @@
 .sprout .sprout-analytics-root .table tbody tr:hover td:last-child {
   border-top-right-radius: var(--radius-md);
   border-bottom-right-radius: var(--radius-md);
+}
+
+/* Daily stats footer controls: mobile-only tidy layout. */
+body.is-mobile .sprout .sprout-analytics-stats-card .sprout-analytics-stats-bottom {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  align-items: stretch;
+}
+
+body.is-mobile .sprout .sprout-analytics-stats-card .sprout-analytics-stats-summary {
+  width: 100%;
+}
+
+body.is-mobile .sprout .sprout-analytics-stats-card .sprout-analytics-stats-summary .text-sm {
+  font-size: var(--sprout-font-xs);
+  line-height: 1.35;
+}
+
+body.is-mobile .sprout .sprout-analytics-stats-card .sprout-analytics-stats-center,
+body.is-mobile .sprout .sprout-analytics-stats-card .sprout-analytics-stats-actions {
+  width: 100%;
+  margin-left: 0;
+}
+
+body.is-mobile .sprout .sprout-analytics-stats-card .sprout-analytics-stats-center {
+  justify-content: flex-start;
+}
+
+body.is-mobile .sprout .sprout-analytics-stats-card .sprout-analytics-stats-actions {
+  justify-content: space-between;
+  gap: 8px;
+}
+
+body.is-mobile .sprout .sprout-analytics-stats-card .sprout-analytics-stats-rows-label {
+  display: none;
+}
+
+body.is-mobile .sprout .sprout-analytics-stats-card .sprout-analytics-export-btn {
+  min-height: 28px;
+  padding: 4px 0;
+}
+
+body.is-mobile .sprout .sprout-analytics-stats-card .sprout-analytics-stats-pager {
+  margin-left: auto;
+}
+
+body.is-mobile .sprout .sprout-analytics-stats-card .sprout-analytics-stats-pager-nav {
+  gap: 4px;
+}
+
+body.is-mobile .sprout .sprout-analytics-title-strip .lk-home-title-description,
+body.is-mobile .sprout .sprout-analytics-title-strip .text-muted-foreground {
+  display: none !important;
+}
+
+body.is-mobile .sprout .sprout-analytics-title-strip > .sprout-analytics-title-row {
+  align-items: center;
+  justify-content: center;
+}
+
+body.is-mobile .sprout .sprout-analytics-title-strip .sprout-analytics-title-copy {
+  width: 100%;
+  align-items: center;
+  text-align: center;
+}
+
+body.is-mobile .sprout .sprout-analytics-title-strip .sprout-analytics-filter-buttons {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  justify-content: center;
+}
+
+body.is-mobile .sprout .sprout-analytics-title-strip .sprout-analytics-filter-btn {
+  width: 100%;
+  min-width: 0;
+  justify-content: center;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+body.is-mobile .sprout .sprout-analytics-title-strip .sprout-analytics-filter-icon {
+  display: none;
+}
+
+/* Mobile analytics card layout: keep all top-level card groups at 8px spacing. */
+body.is-mobile .sprout .sprout-analytics-root {
+  gap: 8px !important;
+}
+
+body.is-mobile .sprout .sprout-analytics-root > :is(.sprout-ana-grid, .grid) {
+  gap: 8px !important;
 }
 
 

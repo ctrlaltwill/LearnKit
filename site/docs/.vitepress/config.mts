@@ -94,7 +94,6 @@ export default defineConfig({
         text: "Home",
         items: [
           { text: toTitle("Home"), link: toPath("Home") },
-          { text: toTitle("Wiki-Tree"), link: toPath("Wiki-Tree") },
         ],
       },
       {

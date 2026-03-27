@@ -30,6 +30,7 @@ import type {
   StudyAssistantReviewDepth,
   StudyAssistantSuggestion,
 } from "../../../platform/integrations/ai/study-assistant-types";
+import { getLinkedContextLimits } from "../../../platform/integrations/ai/study-assistant-types";
 import { getTtsService } from "../../../platform/integrations/tts/tts-service";
 import { t } from "../../../platform/translations/translator";
 import {
@@ -1060,6 +1061,33 @@ export class SproutAssistantPopup {
     return t(this.plugin.settings?.general?.interfaceLanguage, token, fallback, vars);
   }
 
+  private _toggleNativeLeftSidebar(): void {
+    const commandApi = this.plugin.app.commands;
+    if (commandApi?.executeCommandById("app:toggle-left-sidebar")) return;
+    if (commandApi?.executeCommandById("app:toggle-sidebar")) return;
+
+    const workspaceLike = this.plugin.app.workspace as unknown as {
+      leftSplit?: { toggle?: () => void };
+    };
+    workspaceLike.leftSplit?.toggle?.();
+  }
+
+  private _navigateFromHeaderMenu(target: "home" | "flashcards" | "settings"): void {
+    this._headerMenuOpen = false;
+    this.close(true);
+    this.render();
+
+    if (target === "home") {
+      void this.plugin.openHomeTab();
+      return;
+    }
+    if (target === "flashcards") {
+      void this.plugin.openBrowserTab();
+      return;
+    }
+    void this.plugin.openSettingsTab(false, "settings");
+  }
+
   private _isAssistantEnabled(): boolean {
     return !!this.plugin.settings?.studyAssistant?.enabled;
   }
@@ -1886,25 +1914,30 @@ export class SproutAssistantPopup {
     return out;
   }
 
+  private _lastLinkedContextStats: { included: number; skipped: number; truncatedNotes: number } = { included: 0, skipped: 0, truncatedNotes: 0 };
+
   private async buildLinkedNotesTextContext(file: TFile, markdown: string): Promise<string> {
+    this._lastLinkedContextStats = { included: 0, skipped: 0, truncatedNotes: 0 };
     const linkedRefs = this.extractLinkedRefs(markdown);
     if (!linkedRefs.length) return "";
 
     const sections: string[] = [];
     const seen = new Set<string>();
-    const maxNotes = 6;
-    const maxCharsPerNote = 8000;
-    const maxCharsTotal = 30000;
+    const limits = getLinkedContextLimits(this.plugin.settings.studyAssistant.privacy.linkedContextLimit);
+    const { maxNotes, maxCharsPerNote, maxCharsTotal } = limits;
     let totalChars = 0;
+    let validLinkedCount = 0;
 
     for (const ref of linkedRefs) {
-      if (sections.length >= maxNotes || totalChars >= maxCharsTotal) break;
       const resolved = resolveImageFile(this.plugin.app, file.path, ref);
       if (!(resolved instanceof TFile)) continue;
       if (String(resolved.extension || "").toLowerCase() !== "md") continue;
       if (resolved.path === file.path) continue;
       if (seen.has(resolved.path)) continue;
       seen.add(resolved.path);
+
+      validLinkedCount += 1;
+      if (sections.length >= maxNotes || totalChars >= maxCharsTotal) continue;
 
       let content = "";
       try {
@@ -1915,18 +1948,31 @@ export class SproutAssistantPopup {
       if (!content) continue;
 
       const allowed = Math.min(maxCharsPerNote, maxCharsTotal - totalChars);
-      if (allowed <= 0) break;
+      if (allowed <= 0) continue;
       const clipped = content.slice(0, allowed);
+      if (clipped.length < content.length) this._lastLinkedContextStats.truncatedNotes += 1;
       totalChars += clipped.length;
 
       sections.push(`### ${resolved.path}\n${clipped}`);
     }
+
+    this._lastLinkedContextStats.included = sections.length;
+    this._lastLinkedContextStats.skipped = Math.max(0, validLinkedCount - sections.length);
 
     if (!sections.length) return "";
     return [
       "Children page additional, secondary context:",
       ...sections,
     ].join("\n\n");
+  }
+
+  private _emitLinkedContextTruncationNotice(): void {
+    const { skipped, truncatedNotes } = this._lastLinkedContextStats;
+    if (!skipped && !truncatedNotes) return;
+    const parts: string[] = [];
+    if (truncatedNotes > 0) parts.push(`${truncatedNotes} linked note${truncatedNotes > 1 ? "s" : ""} truncated`);
+    if (skipped > 0) parts.push(`${skipped} linked note${skipped > 1 ? "s" : ""} skipped`);
+    new Notice(`LearnKit – ${parts.join(", ")} due to context limits. Adjust in Settings → Companion → Context sources.`);
   }
 
   private _appendPlainTextCustomInstructions(noteContent: string, customInstructions: string, label: string): string {
@@ -2542,6 +2588,7 @@ export class SproutAssistantPopup {
       const linkedNotesContext = settings.privacy.includeLinkedNotesInCompanion && file
         ? await this.buildLinkedNotesTextContext(file, noteContent)
         : "";
+      this._emitLinkedContextTruncationNotice();
       const noteContentWithLinked = linkedNotesContext
         ? `${noteContent}\n\n${linkedNotesContext}`
         : noteContent;
@@ -2628,6 +2675,7 @@ export class SproutAssistantPopup {
       const linkedNotesContext = settings.privacy.includeLinkedNotesInCompanion
         ? await this.buildLinkedNotesTextContext(file, noteContent)
         : "";
+      this._emitLinkedContextTruncationNotice();
       const noteContentWithLinked = linkedNotesContext
         ? `${noteContent}\n\n${linkedNotesContext}`
         : noteContent;
@@ -2705,6 +2753,7 @@ export class SproutAssistantPopup {
       const linkedNotesContext = settings.privacy.includeLinkedNotesInExam
         ? await this.buildLinkedNotesTextContext(file, noteContent)
         : "";
+      this._emitLinkedContextTruncationNotice();
       const noteContentWithLinked = linkedNotesContext
         ? `${noteContent}\n\n${linkedNotesContext}`
         : noteContent;
@@ -2837,6 +2886,7 @@ export class SproutAssistantPopup {
       const linkedNotesContext = settings.privacy.includeLinkedNotesInCompanion
         ? await this.buildLinkedNotesTextContext(file, noteContent)
         : "";
+      this._emitLinkedContextTruncationNotice();
       const noteContentWithLinked = linkedNotesContext
         ? `${noteContent}\n\n${linkedNotesContext}`
         : noteContent;
@@ -3405,6 +3455,7 @@ export class SproutAssistantPopup {
       const linkedNotesContext = settings.privacy.includeLinkedNotesInCompanion
         ? await this.buildLinkedNotesTextContext(file, noteContent)
         : "";
+      this._emitLinkedContextTruncationNotice();
       const noteContentWithLinked = linkedNotesContext
         ? `${noteContent}\n\n${linkedNotesContext}`
         : noteContent;
@@ -4011,6 +4062,20 @@ export class SproutAssistantPopup {
 
     // ---- Header ----
     const header = root.createDiv({ cls: "sprout-assistant-popup-header" });
+    const mobileSidebarBtn = header.createEl("button", {
+      cls: "clickable-icon sprout-assistant-popup-mobile-sidebar-btn",
+    });
+    mobileSidebarBtn.type = "button";
+    mobileSidebarBtn.setAttribute("aria-label", "Toggle sidebar");
+    mobileSidebarBtn.setAttribute("title", "Toggle sidebar");
+    mobileSidebarBtn.setAttribute("data-tooltip-position", "top");
+    setIcon(mobileSidebarBtn, "menu");
+    mobileSidebarBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this._toggleNativeLeftSidebar();
+    });
+
     const headerLeft = header.createDiv({ cls: "sprout-assistant-popup-header-left" });
     headerLeft.createDiv({ cls: "sprout-assistant-popup-header-title", text: "Companion" });
 
@@ -4019,18 +4084,26 @@ export class SproutAssistantPopup {
       headerLeft.createDiv({ cls: "sprout-assistant-popup-header-note", text: noteName });
     }
 
+    const centerBrand = header.createDiv({ cls: "sprout-assistant-popup-header-center-brand" });
+    const centerBrandIcon = centerBrand.createSpan({ cls: "sprout-assistant-popup-header-center-brand-icon" });
+    centerBrandIcon.setAttribute("aria-hidden", "true");
+    setIcon(centerBrandIcon, "sprout-brand-horizontal");
+
     const headerActions = header.createDiv({ cls: "sprout-assistant-popup-header-actions" });
     const menuWrap = headerActions.createDiv({ cls: "sprout-assistant-popup-header-menu" });
 
     const menuBtn = menuWrap.createEl("button", { cls: "sprout-assistant-popup-overflow" });
-    const menuActionsLabel = "Actions";
+    const isMobileHeaderNav = document.body.classList.contains("is-mobile");
+    const menuActionsLabel = isMobileHeaderNav
+      ? this._tx("ui.common.navigationMenu", "Navigation menu")
+      : "Actions";
     menuBtn.type = "button";
     menuBtn.setAttribute("aria-label", menuActionsLabel);
     menuBtn.setAttribute("title", menuActionsLabel);
     menuBtn.setAttribute("aria-haspopup", "menu");
     menuBtn.setAttribute("aria-expanded", this._headerMenuOpen ? "true" : "false");
     menuBtn.setAttribute("data-tooltip-position", "top");
-    setIcon(menuBtn, "ellipsis");
+    setIcon(menuBtn, isMobileHeaderNav ? "menu" : "ellipsis");
     menuBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -4052,6 +4125,62 @@ export class SproutAssistantPopup {
       document.body.appendChild(menuPortalRoot);
     }
     const menuList = menuPopover.createDiv({ cls: "sprout-assistant-popup-header-menu-list" });
+
+    const openHome = menuList.createDiv({ cls: "sprout-assistant-popup-header-menu-item is-mobile-nav-item group" });
+    openHome.setAttribute("role", "menuitem");
+    openHome.setAttribute("tabindex", "0");
+    const openHomeIcon = openHome.createSpan({ cls: "sprout-assistant-popup-header-menu-icon inline-flex items-center justify-center text-muted-foreground" });
+    openHomeIcon.setAttribute("aria-hidden", "true");
+    setIcon(openHomeIcon, "house");
+    openHome.createSpan({ text: this._tx("ui.common.home", "Home") });
+    openHome.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this._navigateFromHeaderMenu("home");
+    });
+    openHome.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      this._navigateFromHeaderMenu("home");
+    });
+
+    const openFlashcards = menuList.createDiv({ cls: "sprout-assistant-popup-header-menu-item is-mobile-nav-item group" });
+    openFlashcards.setAttribute("role", "menuitem");
+    openFlashcards.setAttribute("tabindex", "0");
+    const openFlashcardsIcon = openFlashcards.createSpan({ cls: "sprout-assistant-popup-header-menu-icon inline-flex items-center justify-center text-muted-foreground" });
+    openFlashcardsIcon.setAttribute("aria-hidden", "true");
+    setIcon(openFlashcardsIcon, "layers");
+    openFlashcards.createSpan({ text: this._tx("ui.common.studyFlashcards", "Study flashcards") });
+    openFlashcards.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this._navigateFromHeaderMenu("flashcards");
+    });
+    openFlashcards.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      this._navigateFromHeaderMenu("flashcards");
+    });
+
+    const openSettingsNav = menuList.createDiv({ cls: "sprout-assistant-popup-header-menu-item is-mobile-nav-item group" });
+    openSettingsNav.setAttribute("role", "menuitem");
+    openSettingsNav.setAttribute("tabindex", "0");
+    const openSettingsNavIcon = openSettingsNav.createSpan({ cls: "sprout-assistant-popup-header-menu-icon inline-flex items-center justify-center text-muted-foreground" });
+    openSettingsNavIcon.setAttribute("aria-hidden", "true");
+    setIcon(openSettingsNavIcon, "settings");
+    openSettingsNav.createSpan({ text: this._tx("ui.common.settings", "Settings") });
+    openSettingsNav.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this._navigateFromHeaderMenu("settings");
+    });
+    openSettingsNav.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      this._navigateFromHeaderMenu("settings");
+    });
+
+    menuList.createDiv({ cls: "sprout-assistant-popup-header-menu-divider is-mobile-nav-divider" });
 
     const openGuide = menuList.createDiv({ cls: "sprout-assistant-popup-header-menu-item group" });
     openGuide.setAttribute("role", "menuitem");

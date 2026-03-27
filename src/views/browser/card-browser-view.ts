@@ -293,6 +293,16 @@ export class SproutCardBrowserView extends ItemView {
     };
   }
 
+  private _isPhoneMobile(): boolean {
+    if (!document.body.classList.contains("is-mobile")) return false;
+    return typeof window.matchMedia === "function" ? window.matchMedia("(max-width: 767px)").matches : true;
+  }
+
+  private _effectivePageSize(): number {
+    if (this._isPhoneMobile()) return 10;
+    return Math.max(1, Math.floor(Number(this.pageSize) || 5));
+  }
+
   // ── Width mode ──────────────────────────────────────────
 
   private _applyWidthMode() {
@@ -758,7 +768,7 @@ export class SproutCardBrowserView extends ItemView {
     if (!host) return;
     renderPagination(host, totalRows, {
       pageIndex: this.pageIndex,
-      pageSize: this.pageSize,
+      pageSize: this._effectivePageSize(),
       interfaceLanguage: this.plugin.settings?.general?.interfaceLanguage,
       setPageIndex: (idx) => { this.pageIndex = idx; },
       refreshTable: () => this.refreshTable(),
@@ -780,7 +790,7 @@ export class SproutCardBrowserView extends ItemView {
     );
     const total = rows.length;
 
-    const size = Math.max(1, Math.floor(Number(this.pageSize) || 5));
+    const size = this._effectivePageSize();
     const totalPages = Math.max(1, Math.ceil(total / size));
     if (this.pageIndex > totalPages - 1) this.pageIndex = Math.max(0, totalPages - 1);
     if (this.pageIndex < 0) this.pageIndex = 0;
@@ -848,9 +858,12 @@ export class SproutCardBrowserView extends ItemView {
     if (this._summaryEl) {
       const from = total === 0 ? 0 : startIdx + 1;
       const to = total === 0 ? 0 : endIdx;
+      const isPhoneMobile = this._isPhoneMobile();
       this._summaryEl.textContent = total === 0
         ? this._tx("ui.browser.summary.showingZeroOfZero", "Showing 0 of 0")
-        : this._tx("ui.browser.summary.showingRange", "Showing {from} to {to} of {total}", { from, to, total });
+        : isPhoneMobile
+          ? this._tx("ui.browser.summary.showingCountOfTotal", "Showing {count} of {total}", { count: to, total })
+          : this._tx("ui.browser.summary.showingRange", "Showing {from} to {to} of {total}", { from, to, total });
     }
 
     this._renderPagination(total);
@@ -871,7 +884,7 @@ export class SproutCardBrowserView extends ItemView {
     root.empty();
     this._rootEl = root;
 
-    root.classList.add("bc", "sprout-view-content", "lk-browser-view", "lk-browser-width", "flex", "flex-col");
+    root.classList.add("bc", "sprout-view-content", "lk-browser-view", "lk-browser-width");
     root.setAttribute("data-lk-browser-root", "1");
     this._syncDensityDataset();
 
@@ -943,7 +956,7 @@ export class SproutCardBrowserView extends ItemView {
       typeFilter: this.typeFilter,
       stageFilter: this.stageFilter,
       dueFilter: this.dueFilter,
-      pageSize: this.pageSize,
+      pageSize: this._effectivePageSize(),
       pageIndex: this.pageIndex,
       sortKey: this.sortKey,
       sortAsc: this.sortAsc,

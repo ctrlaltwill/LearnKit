@@ -36,6 +36,27 @@
   background-color: transparent !important;
   border: none !important;
   border-radius: 0 !important;
+
+  /* Flexed root: title strip top, scrolling content middle, dock bottom */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: 20px;
+}
+
+/* ---- Flexed note-review layout: pinned header, scrolling content, pinned dock ---- */
+
+.sprout .sprout-note-review-root > .sprout-note-review-title-strip {
+  flex: 0 0 auto;
+  z-index: 10;
+}
+
+.sprout .sprout-note-review-root > .sprout-note-review-content-shell {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .sprout .sprout-note-review-title-row {
@@ -62,7 +83,7 @@
   --sprout-note-review-dock-space: 86px;
   --sprout-note-review-edge-fade: 40px;
   --sprout-note-review-topbar-inset: 1.2rem;
-  --sprout-note-review-topbar-clearance: 120px;
+  --sprout-note-review-topbar-clearance: 5rem;
   position: relative;
   min-height: 0;
   display: flex;
@@ -75,6 +96,7 @@
   border-radius: 0 !important;
   background: transparent !important;
   border: none !important;
+  flex: 1 1 auto;
 }
 
 .sprout .sprout-note-review-stage {
@@ -83,10 +105,11 @@
   flex-direction: column;
   overflow: hidden;
   flex: 1 1 auto;
+  margin-top: 0px;
   min-height: 0;
 border: 1px solid var(--color-base-30);
     border-radius: var(--radius-md);
-  background: transparent !important;
+  background: var(--color-base-00);
 }
 
 .sprout .sprout-note-review-topbar {
@@ -136,6 +159,7 @@ border: 1px solid var(--color-base-30);
   padding: 0;
   border: none !important;
   background: transparent !important;
+  flex: 1 1 auto;
 }
 
 .sprout .sprout-note-review-content:has(.sprout-note-review-empty) {
@@ -200,6 +224,18 @@ border: 1px solid var(--color-base-30);
   width: 100%;
   padding: 0 2.4rem;
 }
+
+.sprout .sprout-note-review-note-body > .sprout-note-review-session-header {
+  display: block;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.sprout .sprout-note-review-note-body .sprout-session-location-text {
+  display: none !important;
+}
+
+
 
 @media (max-width: 720px) {
   .sprout .sprout-note-review-note-body {
@@ -278,24 +314,9 @@ border: 1px solid var(--color-base-30);
   align-items: center;
   justify-content: center;
   gap: 8px;
-  height: 28px;
-  padding: 0 8px;
-  border-radius: var(--radius-s, 4px);
-  border: 1px solid var(--color-base-35) !important;
-  background-color: var(--color-base-20) !important;
-  color: var(--text-normal) !important;
-  font-weight: 500;
-  line-height: 1;
   white-space: nowrap;
   text-align: center;
-  box-shadow: none;
-  transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease;
-}
-
-.sprout .sprout-note-review-queue-count:is(:hover, :focus-within, :active) {
-  background-color: var(--color-base-30) !important;
-  border-color: var(--color-base-40) !important;
-  color: var(--color-base-100) !important;
+  cursor: default;
 }
 
 .sprout .sprout-note-review-queue-count-label {
@@ -304,6 +325,22 @@ border: 1px solid var(--color-base-30);
   line-height: inherit;
   letter-spacing: 0.01em;
   text-align: center;
+}
+
+/* Keep queue-count chip visually aligned with the More button style. */
+.sprout .sprout-note-review-queue-count,
+.sprout .sprout-note-review-more-trigger {
+  height: 36px;
+  padding: 4px 12px;
+  border-radius: var(--radius-s, 4px);
+  border: 1px solid var(--color-base-35) !important;
+  background-color: var(--color-base-20) !important;
+  color: var(--text-normal) !important;
+  font-size: 0.9rem;
+    font-weight: 400;
+  line-height: 1;
+  box-shadow: none;
+  transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease;
 }
 
 .sprout .sprout-note-review-dock-buttons {
@@ -405,7 +442,7 @@ border: 1px solid var(--color-base-30);
   align-items: center;
   justify-content: center;
   gap: 8px;
-  height: 28px;
+  height: 36px;
   padding: 0 8px;
   border-radius: var(--radius-s, 4px);
   border: 1px solid var(--color-base-35) !important;
@@ -421,6 +458,13 @@ border: 1px solid var(--color-base-30);
   background-color: var(--color-base-30) !important;
   border-color: var(--color-base-40) !important;
   color: var(--color-base-100) !important;
+}
+
+@media (min-width: 768px) {
+  .sprout .sprout-note-review-more-trigger .lucide-ellipsis,
+  .sprout .sprout-note-review-more-trigger > span:first-child {
+    display: none;
+  }
 }
 
 .sprout .sprout-note-review-more-trigger:focus-visible {
@@ -509,56 +553,105 @@ border: 1px solid var(--color-base-30);
 }
 
 @media (max-width: 767px) {
+  body.is-mobile .sprout .sprout-note-review-topbar-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  body.is-mobile .sprout .sprout-note-review-topbar-actions {
+    display: none !important;
+  }
+
+  body.is-mobile .sprout .sprout-note-review-root > .sprout-note-review-title-strip {
+    display: none !important;
+  }
+
+  /* Flexed note-review root: reduced bottom padding for Obsidian mobile toolbar */
+  body.is-mobile .sprout .sprout-note-review-root {
+    margin-top: 16px;
+    padding-bottom: 100px;
+    overflow: hidden !important;
+  }
+
+  body.is-mobile .sprout .sprout-note-review-content-shell {
+    margin-top: 40px;
+    /* Reduced from 100px: flexed root padding-bottom handles Obsidian toolbar offset */
+    padding-bottom: 8px !important;
+  }
+
+  /* Neutralize inherited home-shell sibling spacing (lk-home-content-shell > * + *).
+     In note review this adds extra top gap above the panel. */
+  body.is-mobile .sprout .sprout-note-review-content-shell > * + * {
+    margin-top: 0 !important;
+  }
+
   .sprout .sprout-note-review-panel {
-    --sprout-note-review-dock-space: 120px;
+    --sprout-note-review-dock-space: 96px;
     --sprout-note-review-edge-fade: 32px;
-    --sprout-note-review-topbar-inset: 1.2rem;
-    --sprout-note-review-topbar-clearance: 80px;
+    --sprout-note-review-topbar-inset: 8px;
+    --sprout-note-review-topbar-clearance: 118px;
   }
 
   .sprout .sprout-note-review-content {
     padding: 0 0 var(--sprout-note-review-dock-space);
+    background: var(--color-base-00) !important;
   }
 
-  .sprout .sprout-note-review-article {
-    padding: var(--sprout-note-review-topbar-clearance) 0 0;
+  body.is-mobile .sprout .sprout-note-review-topbar {
+    grid-template-columns: 1fr;
+    padding: 8px;
+  }
+
+   body.is-mobile .sprout .sprout-note-review-article {
+    min-height: auto;
+    padding: calc(var(--sprout-note-review-topbar-clearance) - 90px) 0 calc(var(--sprout-note-review-dock-space) + 70px);
+  }
+
+  .sprout .sprout-note-review-note-body {
+    padding: 0 8px !important;
   }
 
   .sprout .sprout-note-review-panel {
-    margin-left: 14px;
-    margin-right: 14px;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    margin-left: 0;
+    margin-right: 0;
   }
 
-  .sprout .sprout-note-review-topbar {
-    margin: 0;
+  /* Note review dock on mobile: only Deferred + Completed buttons, 50% each */
+  body.is-mobile .sprout .sprout-note-review-dock {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 8px;
+    gap: 0;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
   }
 
-  .sprout .sprout-note-review-dock {
-    left: 1.2rem;
-    right: 1.2rem;
-    bottom: 1.2rem;
-    grid-template-columns: 1fr;
+  /* Hide queue count and more menu on mobile */
+  body.is-mobile .sprout .sprout-note-review-dock-left,
+  body.is-mobile .sprout .sprout-note-review-dock-right {
+    display: none;
+  }
+
+  body.is-mobile .sprout .sprout-note-review-dock-buttons {
+    display: flex;
+    flex-wrap: nowrap;
+    width: 100%;
     gap: 8px;
   }
 
-  .sprout .sprout-note-review-dock-left,
-  .sprout .sprout-note-review-dock-right {
+  body.is-mobile .sprout .sprout-note-review-dock-buttons > button {
+    flex: 1 1 0;
+    min-width: 0;
     justify-content: center;
   }
 
-  .sprout .sprout-note-review-dock-buttons {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-
-  .sprout .sprout-note-review-dock-buttons > button {
-    width: 100%;
-  }
-
-  .sprout .sprout-note-review-more-popover {
-    right: 50%;
-    transform: translateX(50%);
+  /* Hide kbd hints on mobile dock buttons */
+  body.is-mobile .sprout .sprout-note-review-dock-buttons > button :is(kbd, .kbd) {
+    display: none;
   }
 }

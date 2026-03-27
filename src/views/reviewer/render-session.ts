@@ -201,7 +201,7 @@ function questionNumberWithinNote(session: Session, card: CardRecord): number {
 function fallbackQuestionTitle(session: Session, card: CardRecord): string {
   const page = pageNameFromSourcePath(String(card.sourceNotePath || ""));
   const questionWord = toQuestionOrdinalWord(questionNumberWithinNote(session, card));
-  return `${page} - Question ${questionWord}`;
+  return `${page} \u2013 Question ${questionWord}`;
 }
 
 function extractInfoField(card: CardRecord): string | null {
@@ -996,7 +996,6 @@ function renderOqContent(ctx: CardRenderCtx): void {
 export function renderSessionMode(args: Args) {
   const tx = (token: string, fallback: string, vars?: Record<string, string | number>) =>
     t(args.interfaceLanguage, token, fallback, vars);
-  const exitToDecksLabel = `${tx("ui.reviewer.session.exitTo", "Exit to")} ${tx("ui.anki.import.preview.decks", "Decks")}`;
   const skipEnabled = !!(args.enableSkipButton ?? args.skipEnabled);
   const practiceMode = !!args.practiceMode;
   const four = !!args.fourButtonMode;
@@ -1006,11 +1005,11 @@ export function renderSessionMode(args: Args) {
     window.matchMedia("(max-width: 700px)").matches;
   const applyAOS = !!args.applyAOS;
   const delayMs = Number.isFinite(args.aosDelayMs) ? Number(args.aosDelayMs) : applyAOS ? 100 : 0;
-
+  
   const canUndo = !!args.canUndo && typeof args.undoLast === "function";
   const hasStartPractice = typeof args.startPractice === "function";
   const canStartPractice = !practiceMode && (!!args.canStartPractice || hasStartPractice);
-
+  
   const card = args.currentCard();
   const id = card ? String(card.id) : "";
   const graded = args.session?.graded?.[id] || null;
@@ -1027,6 +1026,7 @@ export function renderSessionMode(args: Args) {
   wrap.className = "bc card w-full";
   // Optional: keep a plugin hook class for any small overrides you still want.
   wrap.classList.add("bc-session-card", "lk-session-card", "m-0");
+  wrap.classList.toggle("sprout-session-answer-revealed", !!args.showAnswer || !!graded);
   const resetAosState = () => {
     wrap.classList.remove("aos-init", "aos-animate", "sprout-aos-fallback");
   };
@@ -1057,38 +1057,6 @@ export function renderSessionMode(args: Args) {
     args.container.dataset.deckBrowserAosOnce = "0";
   }
 
-  // ===== Top-right button: quit for regular sessions, back for coach-scoped sessions =====
-  const quitBtn = document.createElement("button");
-  quitBtn.type = "button";
-  const coachBackLabel = (args.coachBackLabel || "Back to Coach").trim() || "Back to Coach";
-  if (args.coachSessionMode) {
-    quitBtn.className =
-      "bc sprout-btn-toolbar sprout-btn-filter h-7 px-3 text-sm inline-flex items-center gap-2 sprout-scope-clear-btn sprout-reviewer-coach-back-btn";
-    quitBtn.setAttribute("aria-label", coachBackLabel);
-  } else {
-    quitBtn.className =
-      "bc sprout-btn-toolbar sprout-btn-filter h-7 px-3 text-sm inline-flex items-center gap-2 sprout-scope-clear-btn sprout-session-quit-btn";
-    quitBtn.setAttribute("aria-label", exitToDecksLabel);
-  }
-  quitBtn.setAttribute("data-tooltip-position", "top");
-  const quitIconWrap = document.createElement("span");
-  quitIconWrap.className = "bc inline-flex items-center justify-center";
-  quitBtn.appendChild(quitIconWrap);
-  setIcon(quitIconWrap, "x");
-  if (args.coachSessionMode) {
-    const backLabel = document.createElement("span");
-    backLabel.setAttribute("data-sprout-label", "true");
-    backLabel.textContent = coachBackLabel;
-    quitBtn.appendChild(backLabel);
-  } else {
-    const exitLabel = document.createElement("span");
-    exitLabel.className = "bc";
-    exitLabel.setAttribute("data-sprout-label", "true");
-    exitLabel.textContent = exitToDecksLabel;
-    quitBtn.appendChild(exitLabel);
-  }
-  quitBtn.addEventListener("click", () => args.backToDecks());
-
   // Create section once for both empty and card-present states
   const section = document.createElement("section");
   section.className = "bc flex flex-col gap-3";
@@ -1110,11 +1078,6 @@ export function renderSessionMode(args: Args) {
       ? tx("ui.reviewer.session.practiceComplete", "Practice complete")
       : tx("ui.reviewer.session.noCardsDue", "No cards are due");
     header.appendChild(titleWrap);
-
-    const topbarActions = document.createElement("div");
-    topbarActions.className = "bc sprout-session-topbar-actions";
-    topbarActions.appendChild(quitBtn);
-    header.appendChild(topbarActions);
 
     // Section: Practice session message (centered, no alert wrapper)
     if (practiceMode) {
@@ -1224,11 +1187,6 @@ export function renderSessionMode(args: Args) {
   const titleWrap = document.createElement("div");
   titleWrap.className = "bc sprout-session-topbar-title sprout-question-title";
   header.appendChild(titleWrap);
-
-  const topbarActions = document.createElement("div");
-  topbarActions.className = "bc sprout-session-topbar-actions";
-  topbarActions.appendChild(quitBtn);
-  header.appendChild(topbarActions);
 
   const titleEl = titleWrap;
   // Render title as markdown to support wiki links and LaTeX
@@ -1424,6 +1382,12 @@ export function renderSessionMode(args: Args) {
     iconWrap.className = "bc inline-flex items-center justify-center";
     setIcon(iconWrap, "pencil");
     editBtn.appendChild(iconWrap);
+
+    const editLabel = document.createElement("span");
+    editLabel.className = "bc";
+    editLabel.setAttribute("data-sprout-mobile-label", "true");
+    editLabel.textContent = t(args.interfaceLanguage, "ui.reviewer.edit", "Edit");
+    editBtn.appendChild(editLabel);
   }
   footerLeft.appendChild(editBtn);
   footer.appendChild(footerLeft);
@@ -1437,13 +1401,18 @@ export function renderSessionMode(args: Args) {
     !graded &&
     ((card.type === "basic" || card.type === "reversed" || card.type === "reversed-child" || card.type === "cloze" || card.type === "cloze-child" || ioLike) && !!args.showAnswer);
 
+  // Grading / next buttons (in center)
+  const mainRow = document.createElement("div");
+  mainRow.className = "bc flex flex-wrap items-center justify-center gap-2 sprout-session-study-dock-buttons";
+  let hasMainRowContent = false;
+
   // Basic/Cloze/IO: reveal gate
   if (
     (card.type === "basic" || card.type === "reversed" || card.type === "reversed-child" || card.type === "cloze" || card.type === "cloze-child" || ioLike) &&
     !args.showAnswer &&
     !graded
   ) {
-    footerCenter.appendChild(
+    mainRow.appendChild(
       makeTextButton({
         label: "Reveal",
         className: "sprout-btn-toolbar",
@@ -1454,12 +1423,8 @@ export function renderSessionMode(args: Args) {
         kbd: isPhoneMobile ? undefined : "↵",
       }),
     );
+    hasMainRowContent = true;
   }
-
-  // Grading / next buttons (in center)
-  const mainRow = document.createElement("div");
-  mainRow.className = "bc flex flex-wrap items-center justify-center gap-2 sprout-session-study-dock-buttons";
-  let hasMainRowContent = false;
 
   if (!graded) {
     if (canGradeNow) {
@@ -1497,7 +1462,7 @@ export function renderSessionMode(args: Args) {
       } else {
         // Normal mode: grading buttons
         const group = document.createElement("div");
-        group.className = "bc flex flex-wrap justify-center gap-2";
+        group.className = "bc flex flex-wrap justify-center gap-2 sprout-session-study-dock-grade-group";
         mainRow.appendChild(group);
         hasMainRowContent = true;
 
@@ -1641,6 +1606,17 @@ export function renderSessionMode(args: Args) {
       interfaceLanguage: args.interfaceLanguage,
     }),
   );
+
+  if (isPhoneMobile) {
+    const moreBtn = footerRight.querySelector<HTMLButtonElement>(".lk-review-more-icon-btn");
+    if (moreBtn && !moreBtn.querySelector("[data-sprout-mobile-label]")) {
+      const menuLabel = document.createElement("span");
+      menuLabel.className = "bc";
+      menuLabel.setAttribute("data-sprout-mobile-label", "true");
+      menuLabel.textContent = t(args.interfaceLanguage, "ui.reviewer.more.label", "Menu");
+      moreBtn.appendChild(menuLabel);
+    }
+  }
   footer.appendChild(footerRight);
 
   args.container.appendChild(wrap);

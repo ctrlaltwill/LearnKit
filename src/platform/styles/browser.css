@@ -798,15 +798,16 @@
 }
 
 .sprout .sprout-sticky-th {
-  position: sticky;
   top: var(--sprout-sticky-top, 0px);
-  z-index: 20;
-  background-color: var(--lk-browser-header-bg);
-  background-clip: padding-box;
-  box-shadow: 0 1px 0 var(--lk-browser-border-soft);
-  height: 40px;
-  vertical-align: middle;
-  padding: 0;
+    z-index: 20;
+    background-color: var(--color-base-00) !important;
+    border-bottom: 1px solid var(--color-base-60) !important;
+    box-shadow: 0 1px 0 var(--lk-browser-border-soft);
+    vertical-align: middle;
+    background-clip: padding-box;
+    height: 40px;
+    padding: 0;
+    position: sticky;
 }
 
 .sprout .lk-browser-io-wrap {
@@ -998,8 +999,6 @@ font-size: var(--sprout-font-xs);
 }
 
 .sprout .lk-browser-view .table thead th {
-  background-color: var(--theme-base-10);
-  border-bottom: 1px solid var(--lk-browser-border-soft);
   font-size: var(--font-ui-small);
   color: var(--text-muted);
   text-transform: none;
@@ -1243,6 +1242,18 @@ body.is-mobile .sprout .lk-browser-bottom-card {
   padding: 8px;
 }
 
+body.is-mobile .sprout .lk-browser-view {
+  gap: 8px;
+}
+
+body.is-mobile .sprout .lk-browser-cards-stack {
+  gap: 8px;
+}
+
+body.is-mobile .sprout .lk-browser-table-card {
+  padding: 0 !important;
+}
+
 body.is-mobile .sprout .lk-browser-search-group,
 body.is-mobile .sprout .lk-browser-controls-row {
   width: 100%;
@@ -1262,6 +1273,45 @@ body.is-mobile .sprout .lk-browser-density-toggle {
 body.is-mobile .sprout .lk-browser-density-btn {
   min-width: 0;
   flex: 1 1 calc((100% - 8px) / 2);
+}
+
+/* Mobile title strip: Deck Browser title on top, two 50% action buttons below. */
+@media (max-width: 767px) {
+  body.is-mobile .sprout .lk-browser-title-strip > .sprout-inline-sentence {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  body.is-mobile .sprout .lk-browser-title-strip > .sprout-inline-sentence > :first-child {
+    width: 100%;
+    flex: 0 0 auto;
+    align-items: center;
+    text-align: center;
+  }
+
+  body.is-mobile .sprout .lk-browser-title-strip .lk-browser-title-strip-label {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+
+  body.is-mobile .sprout .lk-browser-title-strip > .sprout-inline-sentence > .lk-browser-density-toggle {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    justify-content: stretch;
+    align-self: stretch;
+  }
+
+  body.is-mobile .sprout .lk-browser-title-strip > .sprout-inline-sentence > .lk-browser-density-toggle .lk-browser-density-btn {
+    width: 100%;
+    min-width: 0;
+    flex: 0 0 auto;
+    justify-content: center;
+  }
 }
 
 /* ---- Browser toolbar action buttons ---- */
@@ -1371,7 +1421,8 @@ body.is-mobile .sprout .lk-browser-filter-columns-wrap .lk-browser-filter > butt
 
 body.is-mobile .sprout .lk-browser-action-btn {
   min-width: 0;
-  flex: 1 1 calc((100% - 8px) / 2);
+  flex: 1 1 calc((100% - 16px) / 3);
+  width: calc((100% - 16px) / 3);
   justify-content: center;
   white-space: nowrap;
 }
@@ -1379,7 +1430,31 @@ body.is-mobile .sprout .lk-browser-action-btn {
 body.is-mobile .sprout .lk-browser-action-btn-suspend,
 body.is-mobile .sprout .lk-browser-action-btn-edit,
 body.is-mobile .sprout .lk-browser-action-btn-reset {
+  width: calc((100% - 16px) / 3);
+}
+
+body.is-mobile .sprout .lk-browser-filter-columns-wrap,
+body.is-mobile .sprout .lk-browser-action-btn-suspend {
   width: calc((100% - 8px) / 2);
+  min-width: 0;
+  flex: 1 1 calc((100% - 8px) / 2);
+}
+
+body.is-mobile .sprout .lk-browser-filter-columns-wrap .lk-browser-filter > button,
+body.is-mobile .sprout .lk-browser-action-btn-suspend {
+  justify-content: center !important;
+  gap: 6px !important;
+}
+
+body.is-mobile .sprout .lk-browser-filter-columns-wrap .lk-browser-filter > button :is(
+  [class*="svg-icon"],
+  svg
+),
+body.is-mobile .sprout .lk-browser-action-btn-suspend :is(
+  [class*="svg-icon"],
+  svg
+) {
+  margin: 0 !important;
 }
 
 body.is-mobile .sprout .lk-browser-action-btn-suspend {
@@ -1392,6 +1467,109 @@ body.is-mobile .sprout .lk-browser-action-btn-reset {
 
 body.is-mobile .sprout .lk-browser-action-btn-edit {
   order: 6;
+}
+
+body.is-mobile .sprout .lk-browser-action-btn [class*="svg-icon"],
+body.is-mobile .sprout .lk-browser-action-btn svg {
+  display: inline-flex;
+}
+
+body.is-mobile .sprout .lk-browser-controls-row :is(
+  .lk-browser-filter .sprout-btn-toolbar,
+  .lk-browser-action-btn
+) {
+  height: 28px !important;
+  min-height: 28px !important;
+  padding: 0 8px !important;
+  border-radius: var(--radius-md) !important;
+  border: 1px solid var(--color-base-35) !important;
+  background: color-mix(in oklab, var(--background) 85%, transparent 15%) !important;
+  color: var(--text-normal) !important;
+  font-size: var(--sprout-font-xs) !important;
+  gap: 6px !important;
+}
+
+body.is-mobile .sprout .lk-browser-controls-row .lk-browser-filter .sprout-btn-toolbar {
+  justify-content: space-between;
+}
+
+body.is-mobile .sprout .lk-browser-controls-row .lk-browser-filter-columns-wrap .lk-browser-filter .sprout-btn-toolbar {
+  justify-content: center !important;
+}
+
+body.is-mobile .sprout .lk-browser-view .table thead th,
+body.is-mobile .sprout .lk-browser-view .sprout-sticky-th {
+  background-color: var(--color-base-00) !important;
+  border-bottom: 1px solid var(--color-base-60) !important;
+  background-clip: padding-box;
+  color: var(--text-normal) !important;
+}
+
+body.is-mobile .sprout .lk-browser-view .table thead th span,
+body.is-mobile .sprout .lk-browser-view .lk-browser-th-label {
+  color: var(--text-normal) !important;
+}
+
+@media (max-width: 767px) {
+  body.is-mobile .sprout .lk-browser-bottom-bar {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  body.is-mobile .sprout .lk-browser-summary-wrap {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  body.is-mobile .sprout .lk-browser-selection-row,
+  body.is-mobile .sprout .lk-browser-rows-control,
+  body.is-mobile .sprout .lk-browser-page-indicator {
+    display: none !important;
+  }
+
+  body.is-mobile .sprout .lk-browser-bottom-right {
+    display: flex !important;
+    flex: 0 0 auto;
+    margin-left: auto;
+  }
+
+  body.is-mobile .sprout .lk-browser-pager-host {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  body.is-mobile .sprout .lk-browser-pagination {
+    gap: 6px;
+  }
+
+  body.is-mobile .sprout .lk-browser-pagination button[aria-label^="Page "] {
+    display: none !important;
+  }
+
+  body.is-mobile .sprout .lk-browser-pagination .sprout-btn-toolbar:disabled {
+    display: none !important;
+  }
+}
+
+body.is-mobile .sprout .lk-browser-controls-row :is(
+  .lk-browser-filter .sprout-btn-toolbar,
+  .lk-browser-action-btn
+) :is(
+  [class*="svg-icon"],
+  svg
+) {
+  display: inline-flex !important;
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  min-height: 14px;
+  opacity: 0.95;
+  color: currentColor;
+  stroke: currentColor;
 }
 
 /* Keep browser layout stable when mobile keyboard opens */
@@ -1426,40 +1604,53 @@ body.is-mobile .sprout .lk-browser-bottom-bar {
 
 body.is-mobile .sprout .lk-browser-summary-wrap,
 body.is-mobile .sprout .lk-browser-bottom-right {
-  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   min-width: 0;
   margin-left: 0;
 }
 
 body.is-mobile .sprout .lk-browser-summary-wrap {
-  gap: 4px;
-}
+  gap: 0;
+  flex-wrap: nowrap;
 
 body.is-mobile .sprout .lk-browser-selection-row {
   align-items: center;
   justify-content: flex-start;
   gap: 8px;
-  flex-wrap: wrap;
-}
+  justify-content: flex-end;
+  flex-wrap: nowrap;
 
 body.is-mobile .sprout .lk-browser-bottom-right {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  display: none;
   flex-wrap: wrap;
   gap: 8px;
 }
-
-body.is-mobile .sprout .lk-browser-rows-control {
+  width: auto;
+  justify-content: flex-end;
+  margin-left: auto;
   flex: 0 0 auto;
 }
 
-body.is-mobile .sprout .lk-browser-pager-host {
+  width: auto;
   width: 100%;
   justify-content: flex-start;
 }
 
 body.is-mobile .sprout .lk-browser-pagination {
+
+body.is-mobile .sprout .lk-browser-pagination button[aria-label^="Page "] {
+  display: none;
+}
+
+body.is-mobile .sprout .lk-browser-selection-row .lk-browser-clear-selection {
+  display: none;
+}
   width: 100%;
   overflow-x: auto;
   white-space: nowrap;

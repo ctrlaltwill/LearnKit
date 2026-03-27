@@ -185,7 +185,7 @@ export class SproutSettingsView extends ItemView {
       t(this.plugin.settings?.general?.interfaceLanguage, token, fallback);
     const tabs = [
       { id: "guide", label: tx("ui.topTabs.guide", "Guide"), icon: "book-open" },
-      { id: "about", label: tx("ui.topTabs.about.releaseNotes", "Release Notes"), icon: "package" },
+      { id: "about", label: tx("ui.topTabs.about.releases", "Releases"), icon: "package" },
       { id: "settings", label: tx("ui.topTabs.settings", "Settings"), icon: "settings" },
     ];
 
@@ -226,7 +226,7 @@ export class SproutSettingsView extends ItemView {
     const tx = (token: string, fallback: string) =>
       t(this.plugin.settings?.general?.interfaceLanguage, token, fallback);
     if (this._activeTab === "guide") return tx("ui.topTabs.guide", "Guide");
-    if (this._activeTab === "about") return tx("ui.topTabs.about.releaseNotes", "Release Notes");
+    if (this._activeTab === "about") return tx("ui.topTabs.about.releases", "Releases");
     return tx("ui.view.settings.title", "Settings");
   }
 
@@ -319,8 +319,6 @@ export class SproutSettingsView extends ItemView {
       "bc",
       "sprout-view-content",
       "sprout-settings-view-root",
-      "flex",
-      "flex-col",
     );
 
     this.containerEl.addClass("sprout");
@@ -445,7 +443,6 @@ export class SproutSettingsView extends ItemView {
         | "renderAboutTab"
         | "renderGeneralTab"
         | "renderCardsTab"
-        | "renderReadingViewTab"
         | "renderStudyTab"
         | "renderAudioTab"
         | "renderStorageTab"
@@ -458,7 +455,6 @@ export class SproutSettingsView extends ItemView {
       const displayableAdapter = adapter as unknown as DisplayableSettingsAdapter;
       const settingsSubTabs: Array<{ id: string; label: string; paneTitle?: string; method: Exclude<RenderMethodName, "renderAboutTab" | "renderGuideTab"> }> = [
         { id: "general", label: tx("ui.settings.subTabs.general", "General"), method: "renderGeneralTab" },
-        { id: "appearance", label: tx("ui.settings.subTabs.appearance", "Appearance"), method: "renderReadingViewTab" },
         { id: "audio", label: tx("ui.settings.subTabs.audio", "Audio"), method: "renderAudioTab" },
         {
           id: "assistant",
@@ -466,17 +462,17 @@ export class SproutSettingsView extends ItemView {
           paneTitle: tx("ui.settings.subTabs.assistantPane", "Companion"),
           method: "renderStudyTab",
         },
-        { id: "cards", label: tx("ui.settings.subTabs.cards", "Flashcards"), method: "renderCardsTab" },
-        { id: "note-review", label: tx("ui.settings.subTabs.noteReview", "Notes"), paneTitle: tx("ui.settings.subTabs.noteReviewPane", "Notes"), method: "renderStudyTab" },
-        { id: "reminders", label: tx("ui.settings.subTabs.reminders", "Reminders"), method: "renderStudyTab" },
-        { id: "reset", label: tx("ui.settings.subTabs.reset", "Reset"), method: "renderResetTab" },
         {
-          id: "storage",
-          label: tx("ui.settings.subTabs.storageSync", "Storage & Sync"),
-          paneTitle: tx("ui.settings.subTabs.storageSyncPane", "Storage and Sync"),
+          id: "data",
+          label: tx("ui.settings.subTabs.data", "Data & Maintenance"),
+          paneTitle: tx("ui.settings.subTabs.dataPane", "Data and Maintenance"),
           method: "renderStorageTab",
         },
-        { id: "study", label: tx("ui.settings.subTabs.study", "Card Study"), paneTitle: tx("ui.settings.subTabs.studyPane", "Card Study"), method: "renderStudyTab" },
+        { id: "cards", label: tx("ui.settings.subTabs.cards", "Flashcards"), method: "renderCardsTab" },
+        { id: "notes", label: tx("ui.settings.subTabs.notes", "Notes"), paneTitle: tx("ui.settings.subTabs.notesPane", "Notes"), method: "renderStudyTab" },
+        { id: "reminders", label: tx("ui.settings.subTabs.reminders", "Reminders"), method: "renderStudyTab" },
+        { id: "studying", label: tx("ui.settings.subTabs.studying", "Studying"), paneTitle: tx("ui.settings.subTabs.studyingPane", "Studying"), method: "renderStudyTab" },
+        { id: "reset", label: tx("ui.settings.subTabs.reset", "Reset"), method: "renderResetTab" },
       ];
 
       const methodMap: Record<string, RenderMethodName> = {
@@ -523,16 +519,15 @@ export class SproutSettingsView extends ItemView {
           btn.className = "bc inline-flex items-center gap-2 h-9 px-3 text-sm sprout-settings-subtab-btn sprout-settings-action-btn";
           btn.type = "button";
           const tooltipMap: Record<string, string> = {
-            audio: tx("ui.settings.subTabs.tooltip.audio", "Open audio options"),
-            cards: tx("ui.settings.subTabs.tooltip.cards", "Open flashcards options"),
             general: tx("ui.settings.subTabs.tooltip.general", "Open general options"),
-            appearance: tx("ui.settings.subTabs.tooltip.appearance", "Open appearance options"),
+            cards: tx("ui.settings.subTabs.tooltip.cards", "Open flashcards options"),
+            studying: tx("ui.settings.subTabs.tooltip.studying", "Open studying options"),
+            notes: tx("ui.settings.subTabs.tooltip.notes", "Open notes options"),
             assistant: tx("ui.settings.subTabs.tooltip.assistant", "Open companion options"),
+            audio: tx("ui.settings.subTabs.tooltip.audio", "Open audio options"),
             reminders: tx("ui.settings.subTabs.tooltip.reminders", "Open reminders options"),
+            data: tx("ui.settings.subTabs.tooltip.data", "Open data and maintenance options"),
             reset: tx("ui.settings.subTabs.tooltip.reset", "Open reset options"),
-            storage: tx("ui.settings.subTabs.tooltip.storage", "Open storage & sync options"),
-            study: tx("ui.settings.subTabs.tooltip.study", "Open study options"),
-            "note-review": tx("ui.settings.subTabs.tooltip.noteReview", "Open notes options"),
           };
           btn.setAttribute("aria-label", tooltipMap[sub.id] ?? tx("ui.settings.subTabs.tooltip.openOptions", "Open options"));
           btn.setAttribute("data-tooltip-position", "bottom");
@@ -548,6 +543,12 @@ export class SproutSettingsView extends ItemView {
           });
           group.appendChild(btn);
           subNav.appendChild(group);
+        });
+
+        // Scroll the active subtab button into view so off-screen tabs are visible
+        requestAnimationFrame(() => {
+          const activeBtn = subNav.querySelector<HTMLElement>(".is-active");
+          activeBtn?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
         });
 
         const updateSettingsHeaderClearance = () => {
@@ -2049,14 +2050,15 @@ export class SproutSettingsView extends ItemView {
     }
 
     const sectionMap: Record<string, string[]> = {
-      general: ["User details", "Language", "General"],
-      appearance: [
+      general: [
+        "User details",
+        "Language",
+        "General",
         t(locale, "ui.settings.sections.theme", "Theme"),
-        t(locale, "ui.settings.sections.appearance", "Appearance"),
+        "Theme",
         t(locale, "ui.settings.sections.readingView", "Reading view"),
         t(locale, "ui.settings.sections.readingViewStyles", "Reading view styles"),
         t(locale, "ui.settings.sections.macroStyles", "Reading style preset"),
-        "Theme",
         "Reading view",
         "Reading style preset",
         "Reading styles preset",
@@ -2067,25 +2069,24 @@ export class SproutSettingsView extends ItemView {
         "Sub-macro settings",
         "Custom style CSS",
       ],
-      audio: ["Text to speech", "Voice and accent", "Voice tuning"],
-      cards: ["Basic cards", "Cloze", "Image occlusion", "Multiple choice", "Ordered questions"],
-      storage: [
-        "Attachment storage",
-        t(locale, "ui.settings.sections.vaultSync", "Obsidian sync database storage"),
-        "Obsidian sync database storage",
-        "Data backup",
+      cards: [
+        "Basic cards",
+        "Cloze",
+        "Image occlusion",
+        "Multiple choice",
+        "Ordered questions",
         "Syncing",
       ],
-      study: [
+      studying: [
         t(locale, "ui.settings.sections.studySessions", "Card study sessions"),
         "Study sessions",
         "Card study sessions",
         "Scheduling",
       ],
-      "note-review": [
+      notes: [
         t(locale, "ui.settings.noteReview.selection.heading", "Note selection"),
         t(locale, "ui.settings.noteReview.scheduling.heading", "Scheduling"),
-        t(locale, "ui.settings.subTabs.noteReviewPane", "Notes"),
+        t(locale, "ui.settings.subTabs.notesPane", "Notes"),
         "Notes",
         "Note selection",
         "Scheduling",
@@ -2105,12 +2106,21 @@ export class SproutSettingsView extends ItemView {
         "Optional flashcard fields",
         "Generated fields",
       ],
+      audio: ["Text to speech", "Flag-aware routing", "Voice and accent", "Voice tuning"],
       reminders: [
         "Launch reminders",
         "Routine reminders",
         "Gatekeeper popups",
         "Gatekeeper behaviour",
         "Gatekeeper bypass",
+      ],
+      data: [
+        "Attachment storage",
+        t(locale, "ui.settings.sections.vaultSync", "Obsidian Sync database storage"),
+        "Obsidian Sync database storage",
+        "Obsidian sync database storage",
+        "Data backup",
+        "Analytics coaching",
       ],
       reset: ["Reset", "Danger zone"],
     };
@@ -2138,8 +2148,12 @@ export class SproutSettingsView extends ItemView {
    */
   public navigateToTab(tabId: string, options?: { reanimateEntrance?: boolean }) {
     const topTabs = new Set(["guide", "about", "settings"]);
-    const settingsSubTabs = new Set(["general", "appearance", "audio", "cards", "storage", "study", "note-review", "assistant", "reminders", "reset"]);
-    const normalizedTabId = tabId === "reading" ? "appearance" : tabId;
+    const settingsSubTabs = new Set(["general", "audio", "cards", "data", "studying", "notes", "assistant", "reminders", "reset"]);
+    const normalizedTabId = tabId === "reading" || tabId === "appearance" ? "general"
+      : tabId === "storage" ? "data"
+      : tabId === "study" ? "studying"
+      : tabId === "note-review" ? "notes"
+      : tabId;
 
     if (topTabs.has(normalizedTabId)) {
       this._activeTab = normalizedTabId;

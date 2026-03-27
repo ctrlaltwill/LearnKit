@@ -163,6 +163,42 @@ body.is-mobile .sprout .sprout-deck-group-popover {
   width: 100% !important;
 }
 
+body.is-mobile .sprout .lk-review-title-strip-deck .lk-review-title-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  justify-items: center;
+  align-items: center;
+  gap: 8px;
+}
+
+body.is-mobile .sprout .lk-review-title-strip-deck .lk-review-title-row > :first-child {
+  width: 100%;
+  text-align: center;
+}
+
+body.is-mobile .sprout .lk-review-title-strip-deck .lk-review-title-row > :last-child,
+body.is-mobile .sprout .lk-review-title-strip-deck .lk-review-title-timer-host {
+  width: 100%;
+}
+
+body.is-mobile .sprout .lk-review-title-strip-deck .sprout-deck-title-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+
+body.is-mobile .sprout .lk-review-title-strip-deck .sprout-deck-group-combo {
+  width: auto;
+  min-width: 0;
+}
+
+body.is-mobile .sprout .lk-review-title-strip-deck .sprout-deck-study-all-btn,
+body.is-mobile .sprout .lk-review-title-strip-deck .sprout-deck-group-trigger,
+body.is-mobile .sprout .lk-review-title-strip-deck .sprout-deck-group-combo {
+  width: 100% !important;
+}
+
 body.is-mobile .sprout .sprout-deck-left-actions {
   display: flex;
   flex-wrap: wrap;
@@ -344,6 +380,12 @@ body.is-mobile .sprout .sprout-deck-expand-buttons .sprout-btn-toolbar {
   background-color: color-mix(in oklab, var(--background) 80%, transparent 20%) !important;
   border: var(--color-base-30) 1px solid !important;
   border-radius: var(--radius-l) !important;
+}
+
+@media (max-width: 767px) {
+  body.is-mobile .sprout .sprout-deck-table-wrap {
+    padding: 0.8rem !important;
+  }
 }
 
 .sprout .sprout-deck-table-wrap:hover {

@@ -236,6 +236,8 @@ export function normaliseSettingsInPlace(s: SproutSettings): void {
     0.97,
   );
 
+  s.scheduling.enableFuzz = s.scheduling.enableFuzz ?? DEFAULT_SETTINGS.scheduling.enableFuzz;
+
   s.noteReview ??= clonePlain(DEFAULT_SETTINGS.noteReview);
   s.noteReview.algorithm = s.noteReview.algorithm === "lkrs" ? "lkrs" : "fsrs";
   s.noteReview.enableSessionAnimations = s.noteReview.enableSessionAnimations ?? DEFAULT_SETTINGS.noteReview.enableSessionAnimations;

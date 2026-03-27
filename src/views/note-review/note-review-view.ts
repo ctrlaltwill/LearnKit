@@ -939,7 +939,7 @@ export class SproutNoteReviewView extends ItemView {
     const locationText = this._buildSessionLocation(note);
     if (!locationText) return;
 
-    const header = root.createEl("header", { cls: "bc px-6 pt-4 pb-2" });
+    const header = root.createEl("header", { cls: "bc px-6 pt-4 pb-2 sprout-note-review-session-header" });
     const locationRow = header.createDiv({ cls: "bc flex items-center gap-2 min-w-0" });
     locationRow.createDiv({
       cls: "bc text-muted-foreground sprout-session-location-text",
@@ -963,9 +963,8 @@ export class SproutNoteReviewView extends ItemView {
   private async _renderCurrentNoteContent(host: HTMLElement, note: TFile, token: number): Promise<void> {
     const article = document.createElement("div");
     article.className = "sprout-note-review-article card";
-    this._renderNoteReviewSessionHeader(article, note);
-
     const body = article.createDiv({ cls: "sprout-note-review-note-body markdown-rendered" });
+    this._renderNoteReviewSessionHeader(body, note);
 
     try {
       const markdown = await this.app.vault.read(note);
@@ -1194,7 +1193,7 @@ export class SproutNoteReviewView extends ItemView {
     }
 
     this._rootEl = root;
-    root.classList.add("bc", "sprout-view-content", "sprout-note-review-root", "flex", "flex-col", "min-h-0");
+    root.classList.add("bc", "sprout-view-content", "sprout-note-review-root");
     this.containerEl.addClass("sprout");
     this.setTitle?.(this.getDisplayText());
     if (!preservedCoachStrip) {
@@ -1283,6 +1282,7 @@ export class SproutNoteReviewView extends ItemView {
 
     const panel = contentShell.createDiv({ cls: "sprout-note-review-panel" });
     const lang = this.plugin.settings?.general?.interfaceLanguage;
+    const isMobile = document.body.classList.contains("is-mobile");
     const coachLabel = "Coach";
     const backToCoachLabel = `Back to ${coachLabel}`;
     const exitToHomeLabel = `${t(lang, "ui.reviewer.session.exitTo", "Exit to")} ${t(lang, "ui.reviewer.session.scope.home", "Home")}`;
@@ -1291,7 +1291,7 @@ export class SproutNoteReviewView extends ItemView {
     topBar.createDiv({
       cls: "bc sprout-note-review-topbar-title",
       text: current
-        ? `Note: ${current.basename}`
+        ? (isMobile ? current.basename : `Note: ${current.basename}`)
         : t(this.plugin.settings?.general?.interfaceLanguage, "ui.view.noteReview.title", "Notes"),
     });
     const topBarActions = topBar.createDiv({ cls: "sprout-note-review-topbar-actions" });
@@ -1371,7 +1371,7 @@ export class SproutNoteReviewView extends ItemView {
     setCssProps(countCard, "--sprout-note-review-progress", `${Math.round(progress * 100)}%`);
     countCard.createDiv({
       cls: "sprout-note-review-queue-count-label",
-      text: `${remainingCount} out of ${totalCount} remaining`,
+      text: isMobile ? `${remainingCount} remaining` : `${remainingCount} out of ${totalCount} remaining`,
     });
 
     const buttonGroup = controls.createDiv({ cls: "sprout-note-review-dock-buttons" });
@@ -1425,19 +1425,26 @@ export class SproutNoteReviewView extends ItemView {
       });
     }
 
-    const right = controls.createDiv({ cls: "sprout-note-review-dock-right" });
-    const moreWrap = right.createDiv({ cls: "sprout-note-review-more" });
-    this._moreWrapEl = moreWrap;
-    const moreBtn = moreWrap.createEl("button", { text: "More" });
-    moreBtn.disabled = !current || this._practiceMode || this._coachNoScheduling;
-    moreBtn.classList.add("sprout-note-review-more-trigger", "bc", "sprout-btn-toolbar");
-    moreBtn.setAttr("aria-label", "More actions");
-    const moreKbd = moreBtn.createEl("kbd", { text: "M" });
-    moreKbd.classList.add("bc", "kbd", "ml-2");
-    moreBtn.setAttr("data-tooltip-position", "top");
-    moreBtn.addEventListener("click", () => {
-      this._toggleDockMore();
-    });
+    if (!isMobile) {
+      const right = controls.createDiv({ cls: "sprout-note-review-dock-right" });
+      const moreWrap = right.createDiv({ cls: "sprout-note-review-more" });
+      this._moreWrapEl = moreWrap;
+      const moreBtn = moreWrap.createEl("button");
+      moreBtn.disabled = !current || this._practiceMode || this._coachNoScheduling;
+      moreBtn.classList.add("sprout-note-review-more-trigger", "bc", "sprout-btn-toolbar");
+      moreBtn.setAttr("aria-label", "More actions");
+      const moreIconWrap = moreBtn.createSpan({ cls: "bc inline-flex items-center justify-center" });
+      setIcon(moreIconWrap, "ellipsis");
+      moreBtn.createSpan({ cls: "bc sprout-note-review-more-label", text: "More" });
+      const moreKbd = moreBtn.createEl("kbd", { text: "M" });
+      moreKbd.classList.add("bc", "kbd", "ml-2");
+      moreBtn.setAttr("data-tooltip-position", "top");
+      moreBtn.addEventListener("click", () => {
+        this._toggleDockMore();
+      });
+    } else {
+      this._moreWrapEl = null;
+    }
 
     this._syncOverflowLayout(panel);
   }

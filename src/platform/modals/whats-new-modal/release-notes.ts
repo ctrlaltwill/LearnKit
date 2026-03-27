@@ -25,6 +25,36 @@ export interface ReleaseNote {
  * 3. The modal will automatically show for users upgrading to that version
  */
 export const RELEASE_NOTES: Record<string, ReleaseNote> = {
+  "1.2.5": {
+    version: "1.2.5",
+    title: "1.2.5",
+    releaseDate: "2026-03-27",
+    content: `
+# LearnKit 1.2.5
+LearnKit 1.2.5 is a quality update focused on mobile support, settings clarity, and AI-assisted workflow improvements.
+
+## What's Changed
+
+### Mobile support (WIP)
+- Better support for mobile app usage across key study and settings surfaces.
+- Continued responsive and interaction polish for smaller screens.
+
+### Settings copy updates
+- Updated settings labels and descriptions to improve clarity and reduce ambiguity.
+
+### AI tools context and attachments
+- Updated settings for attachments and context handling in AI-powered tools.
+- Improved defaults and wording for study assistant context sources.
+
+## What's New
+- More consistent context-source behavior in study assistant generation.
+- Better attachment flow coverage in AI-related study workflows.
+- New context-limit presets for linked notes and text attachments (Conservative, Standard, Extended, No limit).
+- New scheduling option to enable interval fuzzing for better due-date spread.
+- Additional UI polish across review, modal, and settings experiences.
+    `.trim(),
+  },
+
   "1.2.0": {
     version: "1.2.0",
     title: "1.2.0",

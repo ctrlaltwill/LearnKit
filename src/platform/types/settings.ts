@@ -151,6 +151,10 @@ export type SproutSettings = {
       includeLinkedNotesInExam: boolean;
       /** Auto-attach one-hop linked non-markdown vault files from source notes in Tests. */
       includeLinkedAttachmentsInExam: boolean;
+      /** Controls how much linked-note text context is included. */
+      linkedContextLimit: "conservative" | "standard" | "extended" | "none";
+      /** Controls how much text-attachment context is included. */
+      textAttachmentContextLimit: "conservative" | "standard" | "extended" | "none";
       previewPayload: boolean;
       saveChatHistory: boolean;
       syncDeletesToProvider: boolean;
@@ -197,6 +201,8 @@ export type SproutSettings = {
     relearningStepsMinutes: number[];
     /** Target recall probability (0.80 – 0.97). */
     requestRetention: number;
+    /** When true, add slight randomness to review intervals to prevent clustering. */
+    enableFuzz: boolean;
   };
 
   // Note Review — reading scheduler + filter

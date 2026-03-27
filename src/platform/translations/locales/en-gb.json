@@ -113,6 +113,8 @@
   "ui.about.sections.aboutSprout": "About LearnKit",
   "ui.view.settings.title": "Settings",
   "ui.view.home.title": "Home",
+  "ui.view.home.mobileBrand.learn": "Learn",
+  "ui.view.home.mobileBrand.kit": "Kit",
   "ui.view.analytics.title": "Analytics",
   "ui.view.study.title": "Study",
   "ui.view.browser.title": "Library",

@@ -36,7 +36,6 @@ This docs structure tracks the same top-level actions you see in the app header 
 
 ## Related
 
-- [Wiki Tree](./Wiki-Tree)
 - [Home](./Home)
 
 ## Full settings reference

@@ -774,6 +774,29 @@
   overflow: visible;
 }
 
+.sprout-assistant-popup-mobile-sidebar-btn,
+.sprout-assistant-popup-header-center-brand,
+.sprout-assistant-popup-header-menu-item.is-mobile-nav-item,
+.sprout-assistant-popup-header-menu-divider.is-mobile-nav-divider {
+  display: none;
+}
+
+.sprout-assistant-popup-header-center-brand {
+  align-items: center;
+  justify-content: center;
+}
+
+.sprout-assistant-popup-header-center-brand-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sprout-assistant-popup-header-center-brand-icon .svg-icon {
+  width: 98px;
+  height: auto;
+}
+
 .sprout-assistant-popup-overflow {
   --sprout-assistant-overflow-collapsed-width: 36px;
   --sprout-assistant-overflow-expanded-width: 102px;
@@ -2461,11 +2484,48 @@
 /* ---- Mobile responsive ---- */
 @media (max-width: 480px) {
   .sprout-assistant-popup {
-    width: calc(100% - 16px);
-    right: 8px;
+    width: calc(100% - 8px);
+    right: 4px;
     bottom: 72px;
     height: calc(100% - 100px);
     border-radius: 12px;
+  }
+
+  .sprout-assistant-popup:not(.sprout-assistant-popup-embedded) .sprout-assistant-popup-header {
+    display: grid;
+    grid-template-columns: 36px 1fr 36px;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 8px;
+  }
+
+  .sprout-assistant-popup:not(.sprout-assistant-popup-embedded) .sprout-assistant-popup-mobile-sidebar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    border-radius: var(--radius-md);
+  }
+
+  .sprout-assistant-popup:not(.sprout-assistant-popup-embedded) .sprout-assistant-popup-header-left {
+    display: none;
+  }
+
+  .sprout-assistant-popup:not(.sprout-assistant-popup-embedded) .sprout-assistant-popup-header-center-brand {
+    display: flex;
+  }
+
+  .sprout-assistant-popup:not(.sprout-assistant-popup-embedded) .sprout-assistant-popup-header-actions {
+    justify-self: end;
+    gap: 0;
+  }
+
+  .sprout-assistant-popup:not(.sprout-assistant-popup-embedded) .sprout-assistant-popup-header-menu-item.is-mobile-nav-item,
+  .sprout-assistant-popup:not(.sprout-assistant-popup-embedded) .sprout-assistant-popup-header-menu-divider.is-mobile-nav-divider {
+    display: flex;
   }
 
   .sprout-assistant-trigger {

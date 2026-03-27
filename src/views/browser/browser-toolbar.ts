@@ -137,7 +137,7 @@ export function buildBrowserLayout(
 
   // ── Toolbar / filters ──
   const top = document.createElement("div");
-  top.className = "flex flex-col gap-4 w-full";
+  top.className = "flex flex-col gap-4 w-full lk-browser-cards-stack";
   root.appendChild(top);
 
   const searchCard = document.createElement("div");
@@ -492,7 +492,7 @@ export function buildBrowserLayout(
 
   const clearSelection = document.createElement("div");
   clearSelection.className =
-    "inline-flex items-center gap-1 text-sm font-semibold text-muted-foreground cursor-pointer";
+    "inline-flex items-center gap-1 text-sm font-semibold text-muted-foreground cursor-pointer lk-browser-clear-selection";
   const clearIcon = document.createElement("span");
   clearIcon.className = "inline-flex items-center justify-center [&_svg]:size-3";
   setIcon(clearIcon, "x");

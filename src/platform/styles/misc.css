@@ -702,7 +702,7 @@
 }
 
 .sprout .rounded-lg {
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-md) !important;
 }
 
 .sprout h1,
