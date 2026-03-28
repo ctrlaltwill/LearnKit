@@ -11,31 +11,17 @@
 > [!IMPORTANT]
 > **1.2.5 is the current release.** If you are updating from a version before 1.2.3, review the [1.2.3 migration notes](release/1.2.3/RELEASE_NOTES.md#important-plugin-id-migration) first because the plugin ID changed in that release.
 
-LearnKit helps you remember what you write. It brings flashcards, note review, test generation, and AI-assisted study workflows directly into Obsidian, so your vault becomes a place to learn, not just store information.
+LearnKit helps you remember what you write. It brings flashcards, note review, tests, and AI-assisted study tools into Obsidian, so your vault becomes a place to learn, not just store information.
 
-Flashcards are where LearnKit started, but the goal is bigger: to become the memory layer for your vault, connecting note-taking, review, and long-term retention in one system.
+Flashcards are where LearnKit started, but the goal is broader: to turn your vault into a memory layer that connects notes, review, and long-term retention.
 
 ## Why LearnKit
 
-Most note apps help you capture information. LearnKit helps you keep it.
-
-Instead of splitting your workflow across notes, flashcards, AI tools, and external apps, LearnKit brings study and retention into the same place you already think and write.
-
-LearnKit replaces a fragmented workflow with one connected system. Your notes, flashcards, review history, tests, and AI study tools live in the same environment, which means less setup, less duplication, and less friction when it is time to study.
-
-## Built for learners who revisit their notes
-
-If you study from your notes, LearnKit is designed for you. It is a strong fit for exam prep, technical subjects, language study, and any workflow where long-term retention matters.
-
-It works especially well if you already take structured notes in Obsidian and want review built into the same vault.
-
-## From install to first review
-
-LearnKit is designed to be usable immediately. Add it to your vault, make one card, review one note, and generate one test session to see the full workflow in action.
+Most note apps help you capture information. LearnKit helps you keep it. It keeps flashcards, note review, tests, and study tools in the same vault you already use, making it a strong fit for exam preparation, technical subjects, language learning, and any workflow where long-term retention matters.
 
 ## Start learning from your vault
 
-LearnKit is easiest to understand once you use it. Install it, study one note, and see how the workflow fits your vault.
+LearnKit is easiest to understand once you use it. Install it, study one note or generate a test, and see how the workflow fits your vault.
 
 - [Install with BRAT](https://github.com/TfTHacker/obsidian42-brat)
 - [Explore documentation](https://ctrlaltwill.github.io/LearnKit/)
@@ -79,24 +65,13 @@ LearnKit is easiest to understand once you use it. Install it, study one note, a
 
 ### Companion — AI learning assistant
 
-Companion is LearnKit's built-in AI study assistant, designed to help you work directly with the notes you already have.
+Companion is LearnKit's built-in AI study assistant for working directly with the notes you already have.
 
-- **Answer questions** about the note you are reading or the topic you are studying.
-- **Generate flashcards** from note content in seconds.
-- **Generate tests** and practice prompts from your notes.
-- **Review note content** and surface clear, actionable feedback.
+- **Answer questions** about what you are reading.
+- **Generate flashcards and tests** from note content.
+- **Review notes** and surface actionable feedback.
 
-Understand faster, tighten your notes, and create study-ready material without leaving Obsidian.
-
-Custom skills and note editing are planned for future Companion updates.
-
-You **bring your own API key** — zero subscriptions, zero markups. Companion works with free-tier providers such as Google and OpenRouter, as well as premium platforms including Anthropic, OpenAI, and Perplexity.
-
-Free models are a good way to get started, but not every model supports every Companion workflow, and premium models generally perform better for more demanding tasks such as working with attachments. To start for free, we recommend Free Model Router or Auto Router via OpenRouter.
-
-## Built to work without AI
-
-AI can speed up study workflows, but LearnKit is useful without it. Companion is an optional layer for question answering, feedback, and generation tasks. The core learning system stands on its own.
+Turn notes into study-ready material without leaving Obsidian.
 
 ## Feature highlights
 
@@ -115,9 +90,12 @@ If you are deciding whether LearnKit fits your workflow, start here.
 
 - **Do I need AI to use LearnKit?** No. AI is an optional layer in LearnKit, not a requirement. You can use the main study workflow without connecting any model provider.
 - **Is LearnKit free?** Yes. LearnKit itself is free and open source. Companion does not add a subscription layer, but external model providers may charge depending on the API you use.
+- **How does Companion work?** Companion uses your own API key, so there are no subscriptions or markups from LearnKit. It works with providers including Google, OpenRouter, Anthropic, OpenAI, and Perplexity.
+- **Do all AI models support every Companion feature?** No. Free models are a good way to get started, but capability varies by model. Premium models generally perform better for more demanding tasks such as working with attachments.
 - **Can I use LearnKit with my existing notes?** Yes. LearnKit is designed to work with the notes you already have in Obsidian, so you can turn existing material into cards, reviews, and tests instead of starting from scratch.
 - **Does it work with Anki?** Yes. LearnKit supports Anki import and export for decks, media, and scheduling-related data where supported. Image Occlusion cards are currently skipped on import and are not exported.
 - **Does it work on mobile?** Yes. LearnKit is not desktop-only, though some workflows may feel better on larger screens. Check the docs for current platform notes and limitations.
+- **What is planned for Companion?** Custom skills and note editing are planned for future updates.
 
 ## License & Credits
 
