@@ -608,7 +608,7 @@ export class SproutNoteReviewView extends ItemView {
       ? t(lang, "ui.reviewer.session.backToCoach", "Back to Coach")
       : t(lang, "ui.reviewer.session.returnToHome", "Return to Home");
     if (!isPhoneMobile) {
-      const kbd = homeBtn.createEl("kbd", { text: "Q", cls: "bc kbd ml-2" });
+      homeBtn.createEl("kbd", { text: "Q", cls: "bc kbd ml-2" });
     }
     homeBtn.addEventListener("click", () => {
       void this._quitToHome();
@@ -623,7 +623,7 @@ export class SproutNoteReviewView extends ItemView {
       practiceBtn.setAttr("data-tooltip-position", "top");
       practiceBtn.textContent = t(lang, "ui.reviewer.session.startPractice", "Start Practice");
       if (!isPhoneMobile) {
-        const kbd = practiceBtn.createEl("kbd", { text: "↵", cls: "bc kbd ml-2" });
+        practiceBtn.createEl("kbd", { text: "↵", cls: "bc kbd ml-2" });
       }
       practiceBtn.addEventListener("click", () => {
         this._startPracticeSession();

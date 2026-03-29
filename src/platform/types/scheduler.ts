@@ -68,6 +68,8 @@ export type SchedulerSettings = {
   requestRetention: number;
   /** When true, add slight randomness to review intervals to prevent clustering. */
   enableFuzz: boolean;
+  /** Custom FSRS weight vector produced by the optimizer. When set, overrides the default weights. */
+  fsrsWeights?: number[];
 };
 
 /** Four-button rating values used by the reviewer UI. */

@@ -2084,6 +2084,8 @@ export class SproutSettingsView extends ItemView {
         t(locale, "ui.settings.sections.scheduling", "Flashcard scheduling"),
         "Flashcard scheduling",
         "Scheduling",
+        t(locale, "ui.settings.sections.optimisation", "Optimisation"),
+        "Optimisation",
       ],
       notes: [
         t(locale, "ui.settings.noteReview.selection.heading", "Note selection"),

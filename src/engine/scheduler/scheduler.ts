@@ -281,6 +281,7 @@ function buildFsrsParams(cfg: SchedulerSettings): FsrsParams {
     enable_short_term: true,
     learning_steps: learning.length ? learning : ["10m"],
     relearning_steps: relearning,
+    ...(cfg.fsrsWeights?.length ? { w: cfg.fsrsWeights } : {}),
   });
 }
 

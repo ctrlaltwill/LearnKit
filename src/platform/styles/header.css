@@ -242,10 +242,10 @@
 
 /* --- Header action buttons (custom style matching header bg) --- */
 .sprout .sprout-header .sprout-btn-toolbar {
-  background-color: color-mix(in srgb, var(--color-base-40) 8%, transparent 92%);
+  background-color: transparent;
   color: var(--text-normal);
   font-size: var(--sprout-font-xs);
-  border: 1px solid color-mix(in srgb, var(--color-base-70) 14%, transparent 86%);
+  border: 1px solid transparent;
   border-radius: var(--radius-md);
   box-shadow: none;
   transition: all 0.15s ease-in-out, color 0.15s ease-in-out, border-color 0.15s ease-in-out;
@@ -253,9 +253,9 @@
 
 /* Keep the Tools trigger (btn-icon-outline) visually consistent with other header actions. */
 .sprout .sprout-header .lk-more-wrap .btn-icon-outline.sprout-btn-toolbar {
-  background-color: color-mix(in srgb, var(--color-base-40) 8%, transparent 92%) !important;
-  color: var(--text-normal) !important;
-  border: 1px solid color-mix(in srgb, var(--color-base-70) 14%, transparent 86%) !important;
+  background-color: transparent;
+  color: var(--text-normal);
+  border: 1px solid transparent;
 }
 
 /* Keep header actions icon-first; text labels slide in on hover/focus. */

@@ -3840,6 +3840,8 @@ export class SproutSettingsTab extends PluginSettingTab {
       },
     ];
 
+    const selectOptions = presets.map((p) => ({ value: p.key, label: p.label }));
+
     /** Detects which preset matches the current scheduling parameters. */
     const detectPresetKey = (): string => {
       const curLearning = sched.learningStepsMinutes ?? [];
@@ -3862,6 +3864,18 @@ export class SproutSettingsTab extends PluginSettingTab {
     let presetHandle: { getValue: () => string; setValue: (v: string) => void } | null = null;
     let isSyncingPreset = false;
 
+    // Handles for programmatic UI sync when a preset is applied
+    let learningStepsInput: { setValue: (v: string) => unknown } | null = null;
+    let relearningStepsInput: { setValue: (v: string) => unknown } | null = null;
+    let retentionSlider: { setValue: (v: number) => unknown } | null = null;
+
+    /** Push current sched values into the input controls. */
+    const syncInputs = () => {
+      learningStepsInput?.setValue(String((sched.learningStepsMinutes ?? []).join(",")));
+      relearningStepsInput?.setValue(String((sched.relearningStepsMinutes ?? []).join(",")));
+      retentionSlider?.setValue(clamp(Number(sched.requestRetention) || 0.9, 0.8, 0.97));
+    };
+
     /** Programmatically syncs the preset dropdown to match current values. */
     const syncPresetDropdown = () => {
       if (!presetHandle) return;
@@ -3882,7 +3896,7 @@ export class SproutSettingsTab extends PluginSettingTab {
       .setDesc(this._tx("ui.settings.scheduling.preset.desc", "Apply a preset to learning steps, relearning steps, and retention. Choose Custom to keep current values."))
       .then((s) => {
         presetHandle = this._addSimpleSelect(s.controlEl, {
-          options: presets.map((p) => ({ value: p.key, label: p.label })),
+          options: selectOptions,
           separatorAfterIndex: 0,
           value: detectPresetKey(),
 
@@ -3895,6 +3909,7 @@ export class SproutSettingsTab extends PluginSettingTab {
 
               if (p.key === "custom") {
                 this.queueSettingsNotice("scheduling.preset", this._noticeLines.fsrsPresetCustom);
+                await this.plugin.saveAll();
                 return;
               }
 
@@ -3906,6 +3921,7 @@ export class SproutSettingsTab extends PluginSettingTab {
               sched.relearningStepsMinutes = (p.relearning ?? []).slice();
               sched.requestRetention = p.retention;
 
+              syncInputs();
               await this.plugin.saveAll();
 
               this.queueSettingsNotice("scheduling.preset", this._noticeLines.fsrsPreset(p.label), 0);
@@ -3936,7 +3952,8 @@ export class SproutSettingsTab extends PluginSettingTab {
     new Setting(wrapper)
       .setName(this._tx("ui.settings.scheduling.learningSteps.name", "Learning steps"))
       .setDesc(this._tx("ui.settings.scheduling.learningSteps.desc", "Comma-separated learning intervals in minutes."))
-      .addText((t) =>
+      .addText((t) => {
+        learningStepsInput = t;
         t.setValue(String((sched.learningStepsMinutes ?? []).join(","))).onChange(async (v) => {
           const prev = (sched.learningStepsMinutes ?? []).slice();
           const arr = parsePositiveNumberListCsv(v);
@@ -3950,13 +3967,14 @@ export class SproutSettingsTab extends PluginSettingTab {
               this._noticeLines.learningSteps(sched.learningStepsMinutes),
             );
           }
-        }),
-      );
+        });
+      });
 
     new Setting(wrapper)
       .setName(this._tx("ui.settings.scheduling.relearningSteps.name", "Relearning steps"))
       .setDesc(this._tx("ui.settings.scheduling.relearningSteps.desc", "Comma-separated minutes used after lapses."))
-      .addText((t) =>
+      .addText((t) => {
+        relearningStepsInput = t;
         t.setValue(String((sched.relearningStepsMinutes ?? []).join(","))).onChange(async (v) => {
           const prev = (sched.relearningStepsMinutes ?? []).slice();
           const arr = parsePositiveNumberListCsv(v);
@@ -3970,13 +3988,14 @@ export class SproutSettingsTab extends PluginSettingTab {
               this._noticeLines.relearningSteps(sched.relearningStepsMinutes),
             );
           }
-        }),
-      );
+        });
+      });
 
     new Setting(wrapper)
       .setName(this._tx("ui.settings.scheduling.requestedRetention.name", "Requested retention"))
       .setDesc(this._tx("ui.settings.scheduling.requestedRetention.desc", "Target recall probability at review time. Typical range: 0.85-0.95."))
-      .addSlider((s) =>
+      .addSlider((s) => {
+        retentionSlider = s;
         s
           .setLimits(0.8, 0.97, 0.01)
           .setValue(clamp(Number(sched.requestRetention) || 0.9, 0.8, 0.97))
@@ -3993,8 +4012,8 @@ export class SproutSettingsTab extends PluginSettingTab {
                 this._noticeLines.requestRetention(sched.requestRetention),
               );
             }
-          }),
-      );
+          });
+      });
 
     new Setting(wrapper)
       .setName(this._tx("ui.settings.scheduling.enableFuzz.name", "Fuzz intervals"))
@@ -4006,14 +4025,116 @@ export class SproutSettingsTab extends PluginSettingTab {
         }),
       );
 
-    new Setting(wrapper)
-      .setName(this._tx("ui.settings.scheduling.reset.name", "Reset scheduling"))
-      .setDesc(this._tx("ui.settings.scheduling.reset.desc", "Reset all cards to new and clear scheduling data. Create a backup first."))
-      .addButton((b) =>
-        b.setButtonText(this._tx("ui.settings.scheduling.reset.button", "Reset…")).onClick(() => {
-          new ConfirmResetSchedulingModal(this.app, this.plugin).open();
-        }),
-      );
+    // ----------------------------
+    // Optimisation
+    // ----------------------------
+    new Setting(wrapper).setName(this._tx("ui.settings.sections.optimisation", "Optimisation")).setHeading();
+
+    const hasWeights = () => {
+      const weights = (sched as { fsrsWeights?: unknown }).fsrsWeights;
+      if (!Array.isArray(weights)) return false;
+      return (weights as unknown[]).length > 0;
+    };
+
+    const optimiseDesc = () =>
+      hasWeights()
+        ? this._tx(
+            "ui.settings.optimisation.optimise.descActive",
+            "Personalised FSRS parameters are active. The algorithm uses weights trained on your review history to predict your forgetting curve. This works alongside any preset above.",
+          )
+        : this._tx(
+            "ui.settings.optimisation.optimise.desc",
+            "Train FSRS parameters on your review history to personalise how intervals are calculated. This improves scheduling accuracy without changing your learning steps, retention, or preset. 250+ graded reviews recommended for best results.",
+          );
+
+    const optimiseSetting = new Setting(wrapper)
+      .setName(this._tx("ui.settings.optimisation.optimise.name", "Optimise FSRS parameters"))
+      .setDesc(optimiseDesc());
+
+    // "Optimise…" button
+    let optimiseBtn: HTMLButtonElement | null = null;
+    optimiseSetting.addButton((b) => {
+      optimiseBtn = b.buttonEl;
+      b.setButtonText(
+        hasWeights()
+          ? this._tx("ui.settings.optimisation.optimise.buttonRerun", "Re-optimise…")
+          : this._tx("ui.settings.optimisation.optimise.button", "Optimise…"),
+      ).onClick(() => {
+        void (async () => {
+          const { optimizeFsrsWeights } = await import("../../engine/scheduler/fsrs-optimizer");
+
+          const reviewLog = this.plugin.store.data.reviewLog ?? [];
+
+          b.setButtonText(this._tx("ui.settings.optimisation.optimise.running", "Optimising…"));
+          b.setDisabled(true);
+          if (clearBtn) clearBtn.disabled = true;
+
+          // Yield to the UI before running the CPU-intensive optimizer
+          await new Promise((r) => setTimeout(r, 50));
+
+          try {
+            const result = optimizeFsrsWeights(reviewLog, (pct) => {
+              b.setButtonText(`${pct}%`);
+            });
+
+            if (!result) {
+              new Notice(
+                this._tx(
+                  "ui.settings.optimisation.optimise.insufficient",
+                  "LearnKit – No graded reviews found. Review some cards first, then try again.",
+                ),
+              );
+              return;
+            }
+
+            sched.fsrsWeights = result.weights;
+            await this.plugin.saveAll();
+
+            // Update UI to reflect active state
+            optimiseSetting.setDesc(optimiseDesc());
+            b.setButtonText(this._tx("ui.settings.optimisation.optimise.buttonRerun", "Re-optimise…"));
+            if (clearBtn) clearBtn.classList.remove("sprout-settings-conditional-hidden");
+
+            new Notice(
+              this._tx(
+                "ui.settings.optimisation.optimise.success",
+                "LearnKit – Parameters optimised from {count} reviews.",
+                { count: String(result.reviewCount) },
+              ),
+            );
+          } finally {
+            b.setDisabled(false);
+            if (clearBtn) clearBtn.disabled = false;
+          }
+        })();
+      });
+    });
+
+    // "Clear" button — only visible when weights are active
+    let clearBtn: HTMLButtonElement | null = null;
+    optimiseSetting.addButton((b) => {
+      clearBtn = b.buttonEl;
+      b.setButtonText(this._tx("ui.settings.optimisation.optimise.clear", "Clear"))
+        .setWarning()
+        .onClick(async () => {
+          delete sched.fsrsWeights;
+          await this.plugin.saveAll();
+
+          // Update UI to reflect cleared state
+          optimiseSetting.setDesc(optimiseDesc());
+          if (optimiseBtn) optimiseBtn.textContent = this._tx("ui.settings.optimisation.optimise.button", "Optimise…");
+          clearBtn!.classList.add("sprout-settings-conditional-hidden");
+
+          new Notice(
+            this._tx(
+              "ui.settings.optimisation.optimise.cleared",
+              "LearnKit – Optimised parameters cleared. Using default FSRS weights.",
+            ),
+          );
+        });
+      // Hide if no weights are active
+      clearBtn.classList.toggle("sprout-settings-conditional-hidden", !hasWeights());
+    });
   }
 
   private renderStorageSection(wrapper: HTMLElement): void {
