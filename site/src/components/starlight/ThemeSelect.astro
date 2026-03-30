@@ -3,18 +3,31 @@ import { LaptopIcon, MoonIcon, SunIcon } from "@lucide/astro";
 ---
 
 <starlight-theme-select>
-  <label class="sr-only" for="starlight-theme-native">Theme</label>
-  <div class="lk-theme-select">
-    <span class="lk-theme-icon" aria-hidden="true">
-      <SunIcon class="theme-icon theme-icon-light size-4" />
-      <MoonIcon class="theme-icon theme-icon-dark size-4" />
-      <LaptopIcon class="theme-icon theme-icon-auto size-4" />
-    </span>
-    <select id="starlight-theme-native" class="lk-theme-select-control">
-      <option value="light">Light</option>
-      <option value="dark">Dark</option>
-      <option value="auto">Auto</option>
-    </select>
+  <div
+    data-slot="tabs"
+    data-orientation="horizontal"
+    data-default-value="auto"
+    class="lk-theme-tabs"
+    data-value="auto"
+  >
+    <div
+      role="tablist"
+      data-slot="tabs-list"
+      data-variant="indicator"
+      class="lk-theme-tablist"
+      aria-label="Theme"
+    >
+      <div aria-hidden="true" data-slot="tabs-indicator" class="lk-theme-indicator"></div>
+      <button title="Light theme" type="button" role="tab" data-slot="tabs-trigger" data-value="light" class="lk-theme-tab">
+        <SunIcon class="size-4" />
+      </button>
+      <button title="Dark theme" type="button" role="tab" data-slot="tabs-trigger" data-value="dark" class="lk-theme-tab">
+        <MoonIcon class="size-4" />
+      </button>
+      <button title="Auto (system)" type="button" role="tab" data-slot="tabs-trigger" data-value="auto" class="lk-theme-tab">
+        <LaptopIcon class="size-4" />
+      </button>
+    </div>
   </div>
 </starlight-theme-select>
 
@@ -42,6 +55,35 @@ import { LaptopIcon, MoonIcon, SunIcon } from "@lucide/astro";
   const getPreferredColorScheme = (): Exclude<Theme, "auto"> =>
     matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
 
+  const syncPickers = (theme: Theme): void => {
+    document.querySelectorAll("starlight-theme-select").forEach((picker) => {
+      if (!(picker instanceof HTMLElement)) return;
+      const tabsRoot = picker.querySelector("[data-slot='tabs']");
+      if (!(tabsRoot instanceof HTMLElement)) return;
+
+      tabsRoot.dataset.value = theme;
+
+      picker.querySelectorAll("[role='tab']").forEach((tab, index) => {
+        if (!(tab instanceof HTMLButtonElement)) return;
+        const selected = tab.dataset.value === theme;
+        tab.setAttribute("aria-selected", String(selected));
+        tab.setAttribute("tabindex", selected ? "0" : "-1");
+        tab.dataset.state = selected ? "active" : "inactive";
+        if (selected) {
+          tabsRoot.style.setProperty("--active-tab-left", `${tab.offsetLeft}px`);
+          tabsRoot.style.setProperty("--active-tab-width", `${tab.offsetWidth}px`);
+          tabsRoot.style.setProperty("--active-tab-top", `${tab.offsetTop}px`);
+          tabsRoot.style.setProperty("--active-tab-height", `${tab.offsetHeight}px`);
+          tabsRoot.dataset.defaultValue = theme;
+        }
+
+        if (!selected && index === 0 && !picker.querySelector("[data-state='active']")) {
+          tab.setAttribute("tabindex", "0");
+        }
+      });
+    });
+  };
+
   const applyTheme = (theme: Theme): void => {
     const resolved = theme === "auto" ? getPreferredColorScheme() : theme;
     document.documentElement.dataset.theme = resolved;
@@ -49,6 +91,7 @@ import { LaptopIcon, MoonIcon, SunIcon } from "@lucide/astro";
     document.documentElement.classList.toggle("dark", resolved === "dark");
     storeTheme(theme);
     window.StarlightThemeProvider?.updatePickers(theme);
+    syncPickers(theme);
   };
 
   matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
@@ -58,15 +101,27 @@ import { LaptopIcon, MoonIcon, SunIcon } from "@lucide/astro";
   class StarlightThemeSelect extends HTMLElement {
     constructor() {
       super();
-      const select = this.querySelector("#starlight-theme-native");
-      if (!(select instanceof HTMLSelectElement)) return;
+      const tabs = [...this.querySelectorAll("[role='tab']")].filter(
+        (tab): tab is HTMLButtonElement => tab instanceof HTMLButtonElement,
+      );
+      if (tabs.length === 0) return;
 
       const theme = loadTheme();
-      select.value = theme;
       applyTheme(theme);
 
-      select.addEventListener("change", () => {
-        applyTheme(parseTheme(select.value));
+      tabs.forEach((tab, index) => {
+        tab.addEventListener("click", () => {
+          const value = parseTheme(tab.dataset.value);
+          applyTheme(value);
+        });
+
+        tab.addEventListener("keydown", (event) => {
+          if (!(event.key === "ArrowRight" || event.key === "ArrowLeft")) return;
+          event.preventDefault();
+          const direction = event.key === "ArrowRight" ? 1 : -1;
+          const nextIndex = (index + direction + tabs.length) % tabs.length;
+          tabs[nextIndex]?.click();
+        });
       });
     }
   }
@@ -75,50 +130,73 @@ import { LaptopIcon, MoonIcon, SunIcon } from "@lucide/astro";
 </script>
 
 <style>
-  .theme-icon {
-    display: none;
+  .lk-theme-tabs {
+    --active-tab-left: 4px;
+    --active-tab-width: 30px;
+    --active-tab-top: 3px;
+    --active-tab-height: 28px;
+    display: flex;
   }
 
-  :global(html[data-theme-choice="light"]) .theme-icon-light {
-    display: block;
-  }
-
-  :global(html[data-theme-choice="dark"]) .theme-icon-dark {
-    display: block;
-  }
-
-  :global(html[data-theme-choice="auto"]) .theme-icon-auto {
-    display: block;
-  }
-
-  .lk-theme-select {
+  .lk-theme-tablist {
     position: relative;
-  }
-
-  .lk-theme-icon {
-    position: absolute;
-    top: 50%;
-    left: 0.7rem;
-    transform: translateY(-50%);
     display: inline-flex;
-    color: var(--muted-foreground);
-    pointer-events: none;
-  }
-
-  .lk-theme-select-control {
-    min-height: 2.5rem;
-    min-width: 6.75rem;
-    padding: 0.5rem 2rem 0.5rem 2rem;
-    border: 1px solid var(--border);
+    width: fit-content;
+    align-items: center;
+    justify-content: center;
+    height: 2.25rem;
+    padding: 0.125rem;
+    border: 1px solid var(--input);
     border-radius: calc(var(--radius) - 2px);
-    background: var(--background);
-    color: var(--foreground);
-    font: inherit;
-    box-shadow: var(--shadow-sm);
+    background: var(--muted);
+    color: var(--muted-foreground);
   }
 
-  .lk-theme-select-control:focus {
-    outline: 2px solid color-mix(in oklab, var(--primary) 50%, transparent);
+  .lk-theme-indicator {
+    pointer-events: none;
+    position: absolute;
+    top: var(--active-tab-top);
+    left: var(--active-tab-left);
+    z-index: 0;
+    width: var(--active-tab-width);
+    height: var(--active-tab-height);
+    border-radius: calc(var(--radius) - 3px);
+    background: var(--background);
+    box-shadow: var(--shadow-sm);
+    transition:
+      left 150ms ease,
+      width 150ms ease,
+      top 150ms ease,
+      height 150ms ease;
+  }
+
+  .lk-theme-tab {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.875rem;
+    height: 1.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: calc(var(--radius) - 4px);
+    background: transparent;
+    color: color-mix(in oklab, var(--foreground) 60%, transparent);
+    cursor: pointer;
+    transition: color 120ms ease;
+  }
+
+  .lk-theme-tab:hover {
+    color: var(--foreground);
+  }
+
+  .lk-theme-tab[data-state="active"] {
+    color: var(--foreground);
+  }
+
+  .lk-theme-tab:focus-visible {
+    outline: 2px solid color-mix(in oklab, var(--accent) 40%, transparent);
     outline-offset: 2px;
   }
 </style>
