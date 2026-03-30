@@ -1,0 +1,42 @@
+---
+import config from "virtual:starlight/user-config";
+
+const homeHref = import.meta.env.BASE_URL;
+---
+
+<a class="title-wrapper lk-site-title" href={homeHref} aria-label={`${config.title} home`}>
+  <span class="lk-site-title__icon" aria-hidden="true"></span>
+  <span class="lk-site-title__text">{config.title}</span>
+</a>
+
+<style>
+  .lk-site-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--accent);
+    text-decoration: none;
+    line-height: 1;
+  }
+
+  .lk-site-title:hover {
+    color: var(--accent);
+    opacity: 0.95;
+  }
+
+  .lk-site-title__icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    background-color: currentColor;
+    -webkit-mask: url("../../../branding/LearnKit Icon.svg") center / contain no-repeat;
+    mask: url("../../../branding/LearnKit Icon.svg") center / contain no-repeat;
+    flex: 0 0 auto;
+  }
+
+  .lk-site-title__text {
+    font-size: 1rem;
+    font-weight: 700;
+    color: currentColor;
+    letter-spacing: -0.01em;
+  }
+</style>

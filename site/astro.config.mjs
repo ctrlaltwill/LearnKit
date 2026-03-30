@@ -51,7 +51,7 @@ export default defineConfig({
         PageTitle: "./src/components/starlight/PageTitle.astro",
         Pagination: "./src/components/starlight/Pagination.astro",
         PageFrame: "starlight-theme-bejamas/overrides/PageFrame.astro",
-        SiteTitle: "starlight-theme-bejamas/overrides/SiteTitle.astro",
+        SiteTitle: "./src/components/starlight/SiteTitle.astro",
         MobileTableOfContents:
           "starlight-theme-bejamas/overrides/MobileTableOfContents.astro",
         Footer: "starlight-theme-bejamas/overrides/Footer.astro",

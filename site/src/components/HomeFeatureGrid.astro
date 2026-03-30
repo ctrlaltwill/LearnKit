@@ -9,9 +9,9 @@ const topFeatures = [
     Icon: Layers3,
   },
   {
-    title: "AI Learning Tools",
+    title: "Companion",
     description:
-      "Generate practice material from your notes, refine prompts with context, and keep output review-ready without leaving your vault.",
+      "Companion turns your notes into flashcards, tests, and study support on demand, helping you go from raw material to review-ready practice faster.",
     Icon: Sparkles,
   },
 ];
@@ -32,15 +32,14 @@ const bottomFeatures = [
 ];
 
 const orderedQuestionExample = [
-  "T | Cardiac cycle |",
-  "OQ | Arrange the phases of the cardiac cycle in order |",
-  "1 | Atrial systole |",
-  "2 | Isovolumetric contraction |",
-  "3 | Ventricular ejection |",
-  "4 | Isovolumetric relaxation |",
-  "5 | Ventricular filling |",
-  "I | The cycle repeats with each heartbeat |",
-  "G | Cardiology |",
+  "T | Water cycle |",
+  "OQ | Arrange the stages of the water cycle in order |",
+  "1 | Evaporation |",
+  "2 | Condensation |",
+  "3 | Precipitation |",
+  "4 | Collection |",
+  "I | Water moves continuously through the atmosphere and the Earth's surface |",
+  "G | Earth science |",
 ].join("\n");
 ---
 
@@ -63,11 +62,11 @@ const orderedQuestionExample = [
 
   <article class="workflow-card">
     <div class="workflow-copy">
-      <p class="workflow-kicker">Markdown first with example</p>
-      <h2 class="workflow-title">Write once in markdown, review anywhere.</h2>
+      <p class="workflow-kicker">Markdown first</p>
+      <h2 class="workflow-title">Your note becomes the answer key.</h2>
       <p class="workflow-body">
-        The sequence you write in your note becomes the answer key. Add the block once, sync, and
-        LearnKit turns it into an ordered-question review card.
+        LearnKit is markdown-first by design. Write the structure once in your note, sync it, and
+        review it as an interactive ordered-question card.
       </p>
       <div class="workflow-links">
         <a href="./Ordered-Questions">See the ordered-question format</a>
@@ -75,7 +74,7 @@ const orderedQuestionExample = [
     </div>
 
     <div class="workflow-code">
-      <p class="code-label">Example note block</p>
+      <p class="code-label">In your note</p>
       <pre><code>{orderedQuestionExample}</code></pre>
     </div>
   </article>
@@ -180,10 +179,10 @@ const orderedQuestionExample = [
 
   .workflow-code {
     align-self: stretch;
-    padding: 1rem;
-    border-radius: 1.1rem;
-    background: color-mix(in oklab, var(--muted) 85%, var(--background));
-    border: 1px solid color-mix(in oklab, var(--border) 88%, transparent);
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    border: 0;
   }
 
   .code-label {
@@ -201,6 +200,9 @@ const orderedQuestionExample = [
     font-size: 0.93rem;
     line-height: 1.7;
     color: var(--foreground);
+    background: transparent;
+    border: 0;
+    padding: 0;
   }
 
   .workflow-code code {
