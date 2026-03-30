@@ -2,7 +2,6 @@
 title: "Support LearnKit"
 ---
 
-# Support LearnKit
 
 LearnKit is an open-source project built to keep spaced repetition, note review, and study workflows inside your Obsidian vault.
 

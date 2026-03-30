@@ -2,7 +2,6 @@
 title: "Tests"
 ---
 
-# Tests
 
 Tests helps you generate structured question rounds from your notes and card content.
 

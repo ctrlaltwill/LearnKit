@@ -2,7 +2,6 @@
 title: "Installation"
 ---
 
-# Installation
 
 LearnKit is currently waiting for official Obsidian Community Plugins approval.
 

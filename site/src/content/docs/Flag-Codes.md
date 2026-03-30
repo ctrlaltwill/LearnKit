@@ -2,7 +2,6 @@
 title: "Flag Codes"
 ---
 
-# Flag Codes
 
 Use these codes inside flag tokens such as `{{es}}`, `{{gb}}`, or `{{us-ca}}`.
 

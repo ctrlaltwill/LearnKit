@@ -2,7 +2,6 @@
 title: "Settings"
 ---
 
-# Settings
 
 Settings is the reference page for LearnKit's in-plugin settings view.
 

@@ -2,7 +2,6 @@
 title: "Wiki Tree"
 ---
 
-# Wiki Tree
 
 This tree mirrors the current app navigation and guide categories.
 

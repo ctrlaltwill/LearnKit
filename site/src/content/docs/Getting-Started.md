@@ -2,7 +2,6 @@
 title: "Getting Started"
 ---
 
-# Getting Started
 
 This page is the fastest route from installation to your first successful review session.
 

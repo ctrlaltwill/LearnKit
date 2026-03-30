@@ -2,7 +2,6 @@
 title: "Grading"
 ---
 
-# Grading
 
 Grading is how you tell LearnKit how well you recalled a flashcard.
 

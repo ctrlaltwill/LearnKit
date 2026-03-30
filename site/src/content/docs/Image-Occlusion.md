@@ -2,7 +2,6 @@
 title: "Image Occlusion"
 ---
 
-# Image Occlusion
 
 Image occlusion lets you hide labelled parts of an image and recall them during review.
 

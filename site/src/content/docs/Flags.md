@@ -2,7 +2,6 @@
 title: "Flags"
 ---
 
-# Flags
 
 LearnKit supports inline flag tokens inside flashcard text.
 

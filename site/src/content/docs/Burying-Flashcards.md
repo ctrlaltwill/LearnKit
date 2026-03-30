@@ -2,7 +2,6 @@
 title: "Burying Flashcards"
 ---
 
-# Burying Flashcards
 
 Last modified: 30/03/2026
 

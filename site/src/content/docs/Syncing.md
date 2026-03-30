@@ -2,7 +2,6 @@
 title: "Syncing"
 ---
 
-# Syncing
 
 Syncing is how LearnKit turns supported content in your notes into up-to-date study material.
 

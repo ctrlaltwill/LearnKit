@@ -2,7 +2,6 @@
 title: "Analytics"
 ---
 
-# Analytics
 
 Analytics is LearnKit's dashboard for reviewing what you have studied, how your flashcards are aging, and how your note review and test activity are trending.
 

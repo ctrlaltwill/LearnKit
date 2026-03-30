@@ -2,7 +2,6 @@
 title: "Backups"
 ---
 
-# Backups
 
 LearnKit backups are there to recover your study state if something goes wrong.
 

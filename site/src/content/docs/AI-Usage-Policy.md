@@ -2,7 +2,6 @@
 title: "AI Usage Policy"
 ---
 
-# AI Usage Policy
 
 LearnKit's AI features are designed to help you study faster, not to replace your judgement.
 

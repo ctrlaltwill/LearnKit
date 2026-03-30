@@ -2,7 +2,6 @@
 title: "Flashcard Formatting"
 ---
 
-# Flashcard Formatting
 
 LearnKit flashcard content supports standard Markdown formatting, code, links, images, and math.
 

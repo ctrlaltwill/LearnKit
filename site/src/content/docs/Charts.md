@@ -2,7 +2,6 @@
 title: "Charts"
 ---
 
-# Charts
 
 This page explains the charts shown inside [Analytics](./Analytics).
 

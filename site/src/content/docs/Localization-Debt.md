@@ -2,7 +2,6 @@
 title: "Localization Debt"
 ---
 
-# Localization Debt
 
 This page is a contributor-facing tracker for parts of LearnKit that still need better translation coverage.
 

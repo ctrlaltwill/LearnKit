@@ -2,7 +2,6 @@
 title: "Widget"
 ---
 
-# Widget
 
 The LearnKit widget is the quick-review sidebar for the note you are currently working in.
 

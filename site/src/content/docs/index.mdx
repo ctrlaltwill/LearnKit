@@ -1,37 +1,65 @@
 ---
 title: LearnKit Docs
 description: LearnKit documentation for flashcards, studying, settings, Companion, and maintenance workflows.
+template: splash
+hero:
+  title: LearnKit
+  tagline: Markdown-first learning in Obsidian, powered by FSRS.
+  image:
+    html: "🎓"
+  actions:
+    - text: Get started
+      link: ./Getting-Started
+      icon: right-arrow
+    - text: Explore Companion
+      link: ./Companion-Features
+      variant: minimal
+      icon: right-arrow
 ---
 
-# LearnKit Docs
+import { Card, CardGrid } from "@astrojs/starlight/components";
 
-LearnKit turns your Obsidian vault into a study system built around flashcards, note review, tests, and FSRS scheduling.
+## Why LearnKit
 
-## Start here
+LearnKit helps you study what you write, without leaving your vault.
 
-- [Getting Started](./Getting-Started)
+<CardGrid stagger>
+  <Card title="Companion Workflow" icon="seti:chat">
+    Ask questions about notes, review notes with feedback, generate tests, and create flashcards from the same context.
+  </Card>
+  <Card title="Markdown-First Flashcards" icon="seti:markdown">
+    Author cards directly in your notes so your study material stays close to the source and easy to maintain.
+  </Card>
+  <Card title="Rich Card Types" icon="seti:library">
+    Use basic and reversed cards, cloze deletions, image occlusion, multiple choice, and ordered sequences.
+  </Card>
+  <Card title="FSRS Scheduling" icon="seti:calendar">
+    FSRS spaces cards intelligently so you see material when it matters instead of reviewing on fixed intervals.
+  </Card>
+</CardGrid>
+
+## Core Paths
+
+<CardGrid>
+  <Card title="Start Learning" href="./Getting-Started" icon="seti:rocket">
+    Set up LearnKit and run your first review flow.
+  </Card>
+  <Card title="Build Flashcards" href="./Flashcards" icon="seti:book">
+    Create and manage high-quality flashcards from your markdown notes.
+  </Card>
+  <Card title="Use Companion" href="./Companion-Features" icon="seti:light-bulb">
+    Turn notes into study prompts, practice tests, and draft cards.
+  </Card>
+  <Card title="Tune Scheduling" href="./Scheduling" icon="seti:graph-line">
+    Understand intervals, retention behavior, and long-term pacing.
+  </Card>
+</CardGrid>
+
+## Popular Docs
+
 - [First Review in 5 Minutes](./First-Review-in-5-Minutes)
-- [Installation](./Installation)
-- [What LearnKit Is](./What-LearnKit-Is)
-
-## Core workflows
-
-- [Flashcards](./Flashcards)
-- [Study Sessions](./Study-Sessions)
-- [Notes](./Notes)
-- [Tests](./Tests)
-- [Coach](./Coach)
-
-## Key tools
-
 - [Flashcard Library](./Flashcard-Library)
-- [Analytics](./Analytics)
+- [Coach](./Coach)
+- [Tests](./Tests)
 - [Settings Explained](./Settings-Explained)
 - [Backups](./Backups)
-
-## Companion and support
-
-- [Companion Features](./Companion-Features)
-- [Guide for Free Usage](./Guide-for-Free-Usage)
-- [AI Usage Policy](./AI-Usage-Policy)
-- [Support LearnKit](./Support-LearnKit)

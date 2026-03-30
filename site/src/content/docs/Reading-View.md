@@ -2,7 +2,6 @@
 title: "Reading View"
 ---
 
-# Reading View
 
 Reading View controls how LearnKit flashcards are rendered inside Obsidian's reading mode.
 

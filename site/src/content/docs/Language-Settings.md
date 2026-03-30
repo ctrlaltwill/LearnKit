@@ -2,7 +2,6 @@
 title: "Language Settings"
 ---
 
-# Language Settings
 
 Language Settings covers the language-related audio controls inside LearnKit.
 

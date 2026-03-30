@@ -2,7 +2,6 @@
 title: "Guide for Free Usage"
 ---
 
-# Guide for Free Usage
 
 Companion uses a bring-your-own-key model.
 

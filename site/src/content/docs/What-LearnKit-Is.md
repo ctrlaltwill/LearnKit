@@ -2,7 +2,6 @@
 title: "What LearnKit Is"
 ---
 
-# What LearnKit Is
 
 LearnKit is an Obsidian-native study system that turns your notes into material you can actively review.
 

@@ -2,7 +2,6 @@
 title: "Flashcard Library"
 ---
 
-# Flashcard Library
 
 Last modified: 30/03/2026
 

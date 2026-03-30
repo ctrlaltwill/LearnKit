@@ -2,7 +2,6 @@
 title: "Companion Usage"
 ---
 
-# Companion Usage
 
 Companion has three working modes: `Ask`, `Review`, and `Generate`.
 

@@ -2,7 +2,6 @@
 title: "Custom Reading Styles"
 ---
 
-# Custom Reading Styles
 
 Custom Reading View styling is not a live user-facing option in the current settings UI.
 

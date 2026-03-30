@@ -2,7 +2,6 @@
 title: "Reminders"
 ---
 
-# Reminders
 
 Reminders help you come back to study while Obsidian stays open.
 

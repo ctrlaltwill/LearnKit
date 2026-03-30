@@ -2,7 +2,6 @@
 title: "Multiple Choice Questions"
 ---
 
-# Multiple Choice Questions
 
 Multiple choice flashcards test recognition and discrimination.
 

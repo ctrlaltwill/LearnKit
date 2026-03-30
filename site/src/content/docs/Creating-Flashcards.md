@@ -2,7 +2,6 @@
 title: "Creating Flashcards"
 ---
 
-# Creating Flashcards
 
 You can create flashcards either with guided UI actions or by writing them directly in Markdown.
 

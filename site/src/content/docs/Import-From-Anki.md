@@ -2,7 +2,6 @@
 title: "Import From Anki"
 ---
 
-# Import From Anki
 
 LearnKit can import from and export to Anki using `.apkg` files.
 

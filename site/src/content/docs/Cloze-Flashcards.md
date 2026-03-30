@@ -2,7 +2,6 @@
 title: "Cloze Flashcards"
 ---
 
-# Cloze Flashcards
 
 Last modified: 30/03/2026
 

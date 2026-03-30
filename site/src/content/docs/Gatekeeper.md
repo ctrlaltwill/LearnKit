@@ -2,7 +2,6 @@
 title: "Gatekeeper"
 ---
 
-# Gatekeeper
 
 Gatekeeper is LearnKit's stricter reminder mode.
 

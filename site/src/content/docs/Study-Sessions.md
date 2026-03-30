@@ -2,7 +2,6 @@
 title: "Study Sessions"
 ---
 
-# Study Sessions
 
 Study Sessions is the main review flow in LearnKit.
 

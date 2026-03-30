@@ -2,7 +2,6 @@
 title: "Settings Explained"
 ---
 
-# Settings Explained
 
 Settings Explained is the shortcut page for picking the right LearnKit settings tab.
 

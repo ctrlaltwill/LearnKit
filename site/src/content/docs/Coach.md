@@ -2,7 +2,6 @@
 title: "Coach"
 ---
 
-# Coach
 
 Coach helps you turn a large study scope into a realistic day-by-day plan.
 

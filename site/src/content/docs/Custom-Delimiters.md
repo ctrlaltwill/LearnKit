@@ -2,7 +2,6 @@
 title: "Custom Delimiters"
 ---
 
-# Custom Delimiters
 
 LearnKit uses `|` as the default field delimiter in flashcard markup.
 

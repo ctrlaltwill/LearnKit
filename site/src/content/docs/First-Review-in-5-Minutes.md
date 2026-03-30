@@ -2,7 +2,6 @@
 title: "First Review in 5 Minutes"
 ---
 
-# First Review in 5 Minutes
 
 This page gets you from installation to your first real LearnKit review as quickly as possible.
 

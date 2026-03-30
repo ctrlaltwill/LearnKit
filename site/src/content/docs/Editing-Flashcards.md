@@ -2,7 +2,6 @@
 title: "Editing Flashcards"
 ---
 
-# Editing Flashcards
 
 You can edit flashcards in several places, depending on what kind of change you need to make.
 

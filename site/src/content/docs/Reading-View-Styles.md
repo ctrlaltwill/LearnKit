@@ -2,7 +2,6 @@
 title: "Reading View Styles"
 ---
 
-# Reading View Styles
 
 LearnKit currently exposes two Reading View styles in `Settings -> General -> Reading view`.
 

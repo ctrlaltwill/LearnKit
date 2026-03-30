@@ -2,7 +2,6 @@
 title: "Companion Configuration"
 ---
 
-# Companion Configuration
 
 Use `Settings -> Companion` to control provider access, privacy, note context, and generation behaviour.
 

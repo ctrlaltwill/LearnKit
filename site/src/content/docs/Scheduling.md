@@ -2,7 +2,6 @@
 title: "Scheduling"
 ---
 
-# Scheduling
 
 Scheduling is the reference page for LearnKit's flashcard scheduler.
 

@@ -2,7 +2,6 @@
 title: "Ordered Questions"
 ---
 
-# Ordered Questions
 
 Ordered questions test whether you can place items into the correct sequence.
 

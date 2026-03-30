@@ -2,7 +2,6 @@
 title: "Companion Setting Up"
 ---
 
-# Companion Setting Up
 
 Use this page for the shortest safe path from `disabled` to `usable`.
 

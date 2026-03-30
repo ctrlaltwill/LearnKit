@@ -2,7 +2,6 @@
 title: "Notes"
 ---
 
-# Notes
 
 LearnKit works best when your notes stay at the center of the workflow.
 

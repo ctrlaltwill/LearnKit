@@ -2,7 +2,6 @@
 title: "Companion Features"
 ---
 
-# Companion Features
 
 Companion is LearnKit's AI workspace for note-aware help, critique, and draft generation.
 

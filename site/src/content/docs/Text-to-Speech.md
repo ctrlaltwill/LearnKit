@@ -2,7 +2,6 @@
 title: "Text to Speech"
 ---
 
-# Text to Speech
 
 LearnKit can read flashcard content aloud using your device's built-in speech engine.
 

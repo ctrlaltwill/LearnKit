@@ -1,5 +1,6 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
+import starlightThemeNext from "starlight-theme-next";
 import { docsSidebarTree, toStarlightSidebar } from "./src/docs-structure.mts";
 
 const DEFAULT_BASE = "/LearnKit";
@@ -39,9 +40,10 @@ export default defineConfig({
     starlight({
       title: "LearnKit",
       description: "LearnKit documentation and user guides",
+      plugins: [starlightThemeNext()],
       sidebar: toStarlightSidebar(docsSidebarTree),
       editLink: {
-        baseUrl: "https://github.com/ctrlaltwill/LearnKit/edit/main/site/src/content/docs/",
+        baseUrl: "https://github.com/ctrlaltwill/LearnKit/edit/main/site/",
       },
       lastUpdated: true,
       pagination: true,

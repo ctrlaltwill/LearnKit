@@ -2,7 +2,6 @@
 title: "Flashcards"
 ---
 
-# Flashcards
 
 Flashcards are the core active-recall workflow in LearnKit.
 

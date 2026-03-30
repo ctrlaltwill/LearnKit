@@ -2,7 +2,6 @@
 title: "Keyboard Shortcuts"
 ---
 
-# Keyboard Shortcuts
 
 Keyboard shortcuts are the fastest way to create clozes and move through reviews.
 
