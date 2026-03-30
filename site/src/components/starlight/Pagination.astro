@@ -1,0 +1,57 @@
+---
+import Button from "../bejamas/Button.astro";
+import { ArrowLeft, ArrowRight } from "@lucide/astro";
+
+const { dir, pagination } = Astro.locals.starlightRoute;
+const { prev, next } = pagination;
+const isRtl = dir === "rtl";
+---
+
+<div class="print:hidden z-10 pagination-links" dir={dir}>
+  {
+    prev && (
+      <Button as="a" href={prev.href} rel="prev" variant="outline">
+        {isRtl ? <ArrowRight class="size-4" /> : <ArrowLeft class="size-4" />}
+        {prev.label}
+      </Button>
+    )
+  }
+  {
+    next && (
+      <Button as="a" href={next.href} rel="next" variant="outline">
+        {isRtl ? <ArrowLeft class="size-4" /> : <ArrowRight class="size-4" />}
+        {next.label}
+      </Button>
+    )
+  }
+</div>
+
+<style>
+  @layer starlight.core {
+    .pagination-links {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      margin-top: calc(var(--spacing) * 5);
+    }
+
+    [rel="next"] {
+      justify-content: end;
+      text-align: end;
+      flex-direction: row-reverse;
+      margin-left: auto;
+    }
+
+    svg {
+      flex-shrink: 0;
+    }
+
+    .page-footer {
+      margin-top: calc(var(--spacing) * 6);
+    }
+
+    .sl-justify-between {
+      justify-content: space-between;
+    }
+  }
+</style>

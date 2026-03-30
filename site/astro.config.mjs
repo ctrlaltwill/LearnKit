@@ -1,6 +1,6 @@
 import { defineConfig } from "astro/config";
+import tailwindcss from "@tailwindcss/vite";
 import starlight from "@astrojs/starlight";
-import starlightThemeNext from "starlight-theme-next";
 import { docsSidebarTree, toStarlightSidebar } from "./src/docs-structure.mts";
 
 const DEFAULT_BASE = "/LearnKit";
@@ -32,6 +32,7 @@ export default defineConfig({
   site: resolveSite(),
   base: resolveBase(),
   vite: {
+    plugins: [tailwindcss()],
     build: {
       assetsInlineLimit: 0,
     },
@@ -40,8 +41,32 @@ export default defineConfig({
     starlight({
       title: "LearnKit",
       description: "LearnKit documentation and user guides",
-      plugins: [starlightThemeNext()],
+      customCss: [
+        "./src/styles/custom.css",
+        "starlight-theme-bejamas/styles/theme.css",
+      ],
+      components: {
+        Header: "./src/components/starlight/Header.astro",
+        Hero: "./src/components/starlight/Hero.astro",
+        PageTitle: "./src/components/starlight/PageTitle.astro",
+        Pagination: "./src/components/starlight/Pagination.astro",
+        PageFrame: "starlight-theme-bejamas/overrides/PageFrame.astro",
+        SiteTitle: "starlight-theme-bejamas/overrides/SiteTitle.astro",
+        MobileTableOfContents:
+          "starlight-theme-bejamas/overrides/MobileTableOfContents.astro",
+        Footer: "starlight-theme-bejamas/overrides/Footer.astro",
+        ThemeSelect: "./src/components/starlight/ThemeSelect.astro",
+        ThemeProvider: "starlight-theme-bejamas/overrides/ThemeProvider.astro",
+      },
       sidebar: toStarlightSidebar(docsSidebarTree),
+      social: [
+        {
+          icon: "github",
+          label: "GitHub",
+          href: "https://github.com/ctrlaltwill/LearnKit",
+        },
+      ],
+      credits: false,
       editLink: {
         baseUrl: "https://github.com/ctrlaltwill/LearnKit/edit/main/site/",
       },

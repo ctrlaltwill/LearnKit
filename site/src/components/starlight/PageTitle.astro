@@ -1,0 +1,89 @@
+---
+import Button from "../bejamas/Button.astro";
+import { ArrowLeft, ArrowRight } from "@lucide/astro";
+
+const { dir, pagination, entry } = Astro.locals.starlightRoute;
+const { prev, next } = pagination;
+const isRtl = dir === "rtl";
+---
+
+<div
+  class:list={[
+    "sl-bejamas-docs-title",
+    entry.data.template === "splash" && "mt-10",
+    entry.data.template === "splash" && "px-0 sm:px-6 md:px-8",
+  ]}
+>
+  <div class="flex items-center">
+    <h1 id="_top" class="tracking-tight">{Astro.locals.starlightRoute.entry.data.title}</h1>
+  </div>
+
+  {
+    entry.data.template !== "splash" && (
+      <div class="sl-bejamas-docs-title-buttons">
+        {prev && (
+          <Button as="a" href={isRtl ? next?.href : prev.href} variant="outline" size="icon-sm">
+            <ArrowLeft class="size-4" />
+          </Button>
+        )}
+        {next && (
+          <Button as="a" href={isRtl ? prev?.href : next.href} variant="outline" size="icon-sm">
+            <ArrowRight class="size-4" />
+          </Button>
+        )}
+      </div>
+    )
+  }
+
+  {
+    entry.data.description && <p class="sl-bejamas-description">{entry.data.description}</p>
+  }
+</div>
+
+<style>
+  @layer bejamas {
+    .sl-bejamas-docs-title {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+      align-items: center;
+    }
+
+    .sl-bejamas-docs-title-buttons {
+      gap: 0.5rem;
+      display: none;
+    }
+
+    @media (min-width: 50rem) {
+      .sl-bejamas-docs-title-buttons {
+        display: flex;
+      }
+    }
+  }
+
+  .sl-bejamas-description {
+    color: var(--muted-foreground);
+    text-wrap: balance;
+    margin-top: calc(var(--spacing) * 4);
+    margin-bottom: calc(var(--spacing) * 2);
+    width: 100%;
+    max-width: 52ch;
+  }
+
+  @layer starlight.core {
+    h1 {
+      font-size: 1.875rem;
+      line-height: 1.2;
+      font-weight: 500;
+      color: var(--sl-color-white);
+    }
+
+    @media (min-width: 50rem) {
+      h1 {
+        font-size: 2.25rem;
+        line-height: calc(2.5 / 2.25);
+      }
+    }
+  }
+</style>

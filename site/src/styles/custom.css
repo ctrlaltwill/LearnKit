@@ -1,15 +1,62 @@
+@layer base, starlight, bejamas, theme, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
 :root {
-  --sl-color-accent-low: #d7ead8;
-  --sl-color-accent: #2f7d57;
-  --sl-color-accent-high: #1e4d37;
-  --sl-color-white: #f8faf8;
-  --sl-color-gray-1: #eef3ef;
-  --sl-color-gray-2: #dce6df;
-  --sl-color-gray-3: #b6c8bb;
-  --sl-color-gray-4: #7c9786;
-  --sl-color-gray-5: #506657;
-  --sl-color-gray-6: #33453a;
-  --sl-color-black: #17211b;
+  --background: #fcfcfb;
+  --foreground: #18211d;
+  --muted: #f2f3f1;
+  --muted-foreground: #667169;
+  --border: #dde2dd;
+  --input: #e7ebe7;
+  --secondary: #eff2ee;
+  --secondary-foreground: #18211d;
+  --primary: #2f6e52;
+  --primary-foreground: #f6fbf7;
+  --accent-foreground: #f6fbf7;
+  --radius: 0.75rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 1rem;
+  --shadow-sm: 0 1px 2px 0 rgb(24 33 29 / 0.06);
+  --hero-logo-color: #203129;
+
+  --sl-color-accent-low: #e4efe7;
+  --sl-color-accent: var(--primary);
+  --sl-color-accent-high: #1f513b;
+  --sl-color-white: #f7faf7;
+  --sl-color-gray-1: #ecf0ec;
+  --sl-color-gray-2: #dfe4df;
+  --sl-color-gray-3: #b3bdb5;
+  --sl-color-gray-4: #7a867d;
+  --sl-color-gray-5: var(--border);
+  --sl-color-gray-6: #2d3731;
+  --sl-color-black: transparent;
+}
+
+html.dark,
+html[data-theme="dark"] {
+  --background: #111614;
+  --foreground: #edf3ee;
+  --muted: #171d1a;
+  --muted-foreground: #95a199;
+  --border: #273029;
+  --input: #202924;
+  --secondary: #1a221d;
+  --secondary-foreground: #edf3ee;
+  --primary: #84bc9b;
+  --primary-foreground: #102017;
+  --accent-foreground: #edf3ee;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.24);
+  --hero-logo-color: #e8f3eb;
+
+  --sl-color-accent-low: #183124;
+  --sl-color-accent-high: #b8dcc4;
+  --sl-color-gray-1: #edf3ee;
+  --sl-color-gray-2: #cbd7ce;
+  --sl-color-gray-3: #95a199;
+  --sl-color-gray-4: #6b766f;
+  --sl-color-gray-6: #141a17;
 }
 
 html {
@@ -17,11 +64,40 @@ html {
 }
 
 .hero {
-  background:
-    radial-gradient(circle at top right, rgba(47, 125, 87, 0.16), transparent 26%),
-    linear-gradient(180deg, rgba(215, 234, 216, 0.35), rgba(215, 234, 216, 0));
+  background: none;
+}
+
+.hero-html {
+  align-items: center;
+  justify-content: center;
+}
+
+.learnkit-hero-logo {
+  display: block;
+  width: min(100%, 23rem);
+  aspect-ratio: 1;
+  background-color: var(--hero-logo-color);
+  -webkit-mask: url("../../branding/LearnKit Icon.svg") center / contain no-repeat;
+  mask: url("../../branding/LearnKit Icon.svg") center / contain no-repeat;
 }
 
 .content-panel {
   border-radius: 18px;
+}
+
+.content-panel h1,
+.content-panel h2,
+.content-panel h3 {
+  letter-spacing: -0.02em;
+}
+
+.sl-markdown-content a:not(.sl-link-button) {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+@media (max-width: 50rem) {
+  .learnkit-hero-logo {
+    width: min(72vw, 18rem);
+  }
 }

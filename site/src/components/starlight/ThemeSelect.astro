@@ -1,0 +1,124 @@
+---
+import { LaptopIcon, MoonIcon, SunIcon } from "@lucide/astro";
+---
+
+<starlight-theme-select>
+  <label class="sr-only" for="starlight-theme-native">Theme</label>
+  <div class="lk-theme-select">
+    <span class="lk-theme-icon" aria-hidden="true">
+      <SunIcon class="theme-icon theme-icon-light size-4" />
+      <MoonIcon class="theme-icon theme-icon-dark size-4" />
+      <LaptopIcon class="theme-icon theme-icon-auto size-4" />
+    </span>
+    <select id="starlight-theme-native" class="lk-theme-select-control">
+      <option value="light">Light</option>
+      <option value="dark">Dark</option>
+      <option value="auto">Auto</option>
+    </select>
+  </div>
+</starlight-theme-select>
+
+<script is:inline>
+  window.StarlightThemeProvider?.updatePickers();
+</script>
+
+<script>
+  type Theme = "auto" | "dark" | "light";
+
+  const storageKey = "starlight-theme";
+
+  const parseTheme = (theme: unknown): Theme =>
+    theme === "auto" || theme === "dark" || theme === "light" ? theme : "auto";
+
+  const loadTheme = (): Theme =>
+    parseTheme(typeof localStorage !== "undefined" && localStorage.getItem(storageKey));
+
+  const storeTheme = (theme: Theme): void => {
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(storageKey, theme === "auto" ? "" : theme);
+    }
+  };
+
+  const getPreferredColorScheme = (): Exclude<Theme, "auto"> =>
+    matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+
+  const applyTheme = (theme: Theme): void => {
+    const resolved = theme === "auto" ? getPreferredColorScheme() : theme;
+    document.documentElement.dataset.theme = resolved;
+    document.documentElement.dataset.themeChoice = theme;
+    document.documentElement.classList.toggle("dark", resolved === "dark");
+    storeTheme(theme);
+    window.StarlightThemeProvider?.updatePickers(theme);
+  };
+
+  matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
+    if (loadTheme() === "auto") applyTheme("auto");
+  });
+
+  class StarlightThemeSelect extends HTMLElement {
+    constructor() {
+      super();
+      const select = this.querySelector("#starlight-theme-native");
+      if (!(select instanceof HTMLSelectElement)) return;
+
+      const theme = loadTheme();
+      select.value = theme;
+      applyTheme(theme);
+
+      select.addEventListener("change", () => {
+        applyTheme(parseTheme(select.value));
+      });
+    }
+  }
+
+  customElements.define("starlight-theme-select", StarlightThemeSelect);
+</script>
+
+<style>
+  .theme-icon {
+    display: none;
+  }
+
+  :global(html[data-theme-choice="light"]) .theme-icon-light {
+    display: block;
+  }
+
+  :global(html[data-theme-choice="dark"]) .theme-icon-dark {
+    display: block;
+  }
+
+  :global(html[data-theme-choice="auto"]) .theme-icon-auto {
+    display: block;
+  }
+
+  .lk-theme-select {
+    position: relative;
+  }
+
+  .lk-theme-icon {
+    position: absolute;
+    top: 50%;
+    left: 0.7rem;
+    transform: translateY(-50%);
+    display: inline-flex;
+    color: var(--muted-foreground);
+    pointer-events: none;
+  }
+
+  .lk-theme-select-control {
+    min-height: 2.5rem;
+    min-width: 6.75rem;
+    padding: 0.5rem 2rem 0.5rem 2rem;
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) - 2px);
+    background: var(--background);
+    color: var(--foreground);
+    font: inherit;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .lk-theme-select-control:focus {
+    outline: 2px solid color-mix(in oklab, var(--primary) 50%, transparent);
+    outline-offset: 2px;
+  }
+</style>

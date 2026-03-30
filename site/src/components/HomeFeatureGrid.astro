@@ -1,33 +1,33 @@
 ---
-import { Bot, BrainCircuit, Layers3, NotebookPen, Sparkles } from "@lucide/astro";
+import { BrainCircuit, Clock3, Layers3, NotebookPen } from "@lucide/astro";
 
 const topFeatures = [
   {
-    title: "Markdown-Native Authoring",
+    title: "Markdown-first",
     description:
-      "Write flashcards where you already take notes so the source material and the study material stay in one place.",
+      "Keep the note and the review material in the same place.",
     Icon: NotebookPen,
   },
   {
-    title: "Rich Card Types",
+    title: "More than basic cards",
     description:
-      "Use cloze, image occlusion, multiple choice, and ordered questions without leaving the same workflow.",
+      "Use cloze, image occlusion, multiple choice, and ordered questions in one workflow.",
     Icon: Layers3,
   },
 ];
 
 const bottomFeatures = [
   {
-    title: "Study Modes That Match The Job",
+    title: "Review from the right view",
     description:
-      "Move between Notes, Flashcards, Tests, Coach, and the Study Widget depending on whether you are learning, checking, or planning.",
+      "Study from Notes, Flashcards, Tests, Coach, or the Widget depending on the job.",
     Icon: BrainCircuit,
   },
   {
-    title: "Companion And FSRS",
+    title: "FSRS scheduling",
     description:
-      "Use Companion for generation and explanation, then let FSRS keep the review load realistic over time.",
-    Icon: Bot,
+      "Let retention-based spacing decide when cards come back.",
+    Icon: Clock3,
   },
 ];
 
@@ -63,30 +63,19 @@ const orderedQuestionExample = [
 
   <article class="workflow-card">
     <div class="workflow-copy">
-      <p class="workflow-kicker">
-        <span class="workflow-kicker-icon" aria-hidden="true">
-          <Sparkles size={16} stroke-width={2.25} />
-        </span>
-        From note to review in one loop
-      </p>
-      <h2 class="workflow-title">Author cards inside the note, then study what you actually wrote.</h2>
+      <p class="workflow-kicker">Ordered questions in markdown</p>
+      <h2 class="workflow-title">One note becomes the answer key.</h2>
       <p class="workflow-body">
-        LearnKit reads structured markdown inside your vault, turns it into flashcards and practice material,
-        and keeps the note itself as the source of truth.
+        The sequence you write in the note becomes the review answer. Add the block once, sync, and
+        LearnKit turns it into a drag-to-order prompt.
       </p>
-      <div class="workflow-steps" aria-label="LearnKit study loop">
-        <p><strong>1.</strong> Write or refine the note.</p>
-        <p><strong>2.</strong> Add the flashcard block directly in context.</p>
-        <p><strong>3.</strong> Sync once and start reviewing.</p>
-      </div>
       <div class="workflow-links">
-        <a href="./First-Review-in-5-Minutes">Start in 5 minutes</a>
-        <a href="./Ordered-Questions">See ordered questions</a>
+        <a href="./Ordered-Questions">See the ordered-question format</a>
       </div>
     </div>
 
     <div class="workflow-code">
-      <p class="code-label">Ordered question in a note</p>
+      <p class="code-label">Example note block</p>
       <pre><code>{orderedQuestionExample}</code></pre>
     </div>
   </article>
@@ -125,18 +114,12 @@ const orderedQuestionExample = [
     padding: 1.3rem;
     border: 1px solid var(--sl-color-gray-5);
     border-radius: 1.25rem;
-    background:
-      radial-gradient(circle at top right, rgba(245, 158, 11, 0.18), transparent 38%),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.56), rgba(255, 255, 255, 0.18)),
-      var(--sl-color-black);
-    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+    background: var(--background);
+    box-shadow: 0 6px 18px color-mix(in oklab, var(--foreground) 4%, transparent);
   }
 
   :global([data-theme="dark"]) .feature-card {
-    background:
-      radial-gradient(circle at top right, rgba(245, 158, 11, 0.12), transparent 38%),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01)),
-      rgba(255, 255, 255, 0.02);
+    background: color-mix(in oklab, var(--background) 88%, var(--muted));
     box-shadow: none;
   }
 
@@ -147,73 +130,34 @@ const orderedQuestionExample = [
     padding: 1.35rem;
     border: 1px solid var(--sl-color-gray-5);
     border-radius: 1.4rem;
-    background:
-      linear-gradient(135deg, rgba(20, 27, 42, 0.96), rgba(39, 59, 91, 0.94)),
-      var(--sl-color-black);
-    color: white;
-    overflow: hidden;
-    position: relative;
-  }
-
-  .workflow-card::after {
-    content: "";
-    position: absolute;
-    inset: auto -6rem -7rem auto;
-    width: 14rem;
-    height: 14rem;
-    border-radius: 999px;
-    background: radial-gradient(circle, rgba(245, 158, 11, 0.28), transparent 70%);
-    pointer-events: none;
+    background: color-mix(in oklab, var(--background) 72%, var(--muted));
   }
 
   .workflow-copy,
   .workflow-code {
-    position: relative;
-    z-index: 1;
+    min-width: 0;
   }
 
   .workflow-kicker {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.55rem;
     margin: 0 0 0.9rem;
-    font-size: 0.88rem;
+    font-size: 0.8rem;
     font-weight: 650;
-    color: rgba(255, 244, 214, 0.96);
-  }
-
-  .workflow-kicker-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.85rem;
-    height: 1.85rem;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.12);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
   }
 
   .workflow-title {
     margin: 0;
     font-size: clamp(1.5rem, 2vw, 2rem);
     line-height: 1.15;
-    color: white;
+    color: var(--foreground);
   }
 
   .workflow-body {
     margin: 0.9rem 0 0;
-    color: rgba(234, 241, 255, 0.9);
+    color: var(--muted-foreground);
     line-height: 1.7;
-  }
-
-  .workflow-steps {
-    display: grid;
-    gap: 0.45rem;
-    margin-top: 1.15rem;
-  }
-
-  .workflow-steps p {
-    margin: 0;
-    color: rgba(255, 244, 214, 0.96);
   }
 
   .workflow-links {
@@ -224,23 +168,22 @@ const orderedQuestionExample = [
   }
 
   .workflow-links a {
-    color: white;
+    color: var(--foreground);
     font-weight: 650;
     text-decoration: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    border-bottom: 1px solid color-mix(in oklab, var(--foreground) 22%, transparent);
   }
 
   .workflow-links a:hover {
-    border-bottom-color: rgba(255, 255, 255, 0.9);
+    border-bottom-color: var(--foreground);
   }
 
   .workflow-code {
     align-self: stretch;
     padding: 1rem;
     border-radius: 1.1rem;
-    background: rgba(7, 12, 22, 0.72);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(8px);
+    background: color-mix(in oklab, var(--muted) 85%, var(--background));
+    border: 1px solid color-mix(in oklab, var(--border) 88%, transparent);
   }
 
   .code-label {
@@ -249,7 +192,7 @@ const orderedQuestionExample = [
     font-weight: 650;
     letter-spacing: 0.02em;
     text-transform: uppercase;
-    color: rgba(255, 244, 214, 0.82);
+    color: var(--muted-foreground);
   }
 
   .workflow-code pre {
@@ -257,7 +200,7 @@ const orderedQuestionExample = [
     overflow-x: auto;
     font-size: 0.93rem;
     line-height: 1.7;
-    color: rgba(248, 250, 252, 0.95);
+    color: var(--foreground);
   }
 
   .workflow-code code {
@@ -282,8 +225,8 @@ const orderedQuestionExample = [
     width: 2.2rem;
     height: 2.2rem;
     border-radius: 999px;
-    background: color-mix(in srgb, var(--sl-color-accent-high) 18%, transparent);
-    color: var(--sl-color-accent-high);
+    background: color-mix(in oklab, var(--primary) 12%, var(--background));
+    color: var(--primary);
     flex: 0 0 auto;
   }
 

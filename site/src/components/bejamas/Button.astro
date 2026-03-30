@@ -1,0 +1,115 @@
+---
+type Variant = "default" | "secondary" | "outline" | "ghost";
+type Size = "default" | "sm" | "icon-sm";
+
+interface Props {
+  as?: "a" | "button";
+  href?: string;
+  variant?: Variant;
+  size?: Size;
+  class?: string;
+  icon?: string;
+}
+
+const {
+  as = "button",
+  href,
+  variant = "default",
+  size = "default",
+  class: className,
+  icon: _icon,
+  ...attrs
+} = Astro.props;
+
+const Tag = as;
+---
+
+<Tag
+  href={as === "a" ? href : undefined}
+  class:list={[
+    "lk-button",
+    `lk-button--${variant}`,
+    size !== "default" && `lk-button--${size}`,
+    className,
+  ]}
+  {...attrs}
+>
+  <slot />
+</Tag>
+
+<style>
+  .lk-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    min-height: 2.75rem;
+    padding: 0.7rem 1rem;
+    border-radius: calc(var(--radius) - 2px);
+    border: 1px solid transparent;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    line-height: 1;
+    transition:
+      border-color 140ms ease,
+      background-color 140ms ease,
+      color 140ms ease,
+      transform 140ms ease;
+    cursor: pointer;
+  }
+
+  .lk-button:hover {
+    transform: translateY(-1px);
+  }
+
+  .lk-button--default {
+    background: var(--foreground);
+    color: var(--background);
+  }
+
+  .lk-button--default:hover {
+    background: color-mix(in oklab, var(--foreground) 92%, white 8%);
+  }
+
+  .lk-button--secondary {
+    background: var(--secondary);
+    color: var(--secondary-foreground);
+    border-color: var(--border);
+  }
+
+  .lk-button--secondary:hover,
+  .lk-button--outline:hover,
+  .lk-button--ghost:hover {
+    background: color-mix(in oklab, var(--secondary) 78%, var(--background));
+    color: var(--foreground);
+  }
+
+  .lk-button--outline {
+    background: transparent;
+    color: var(--foreground);
+    border-color: var(--border);
+  }
+
+  .lk-button--ghost {
+    background: transparent;
+    color: var(--muted-foreground);
+  }
+
+  .lk-button--sm {
+    min-height: 2.35rem;
+    padding: 0.55rem 0.8rem;
+    font-size: 0.9rem;
+  }
+
+  .lk-button--icon-sm {
+    min-height: 2.15rem;
+    min-width: 2.15rem;
+    padding: 0;
+  }
+
+  .lk-button :global(svg) {
+    flex-shrink: 0;
+  }
+  
+</style>
