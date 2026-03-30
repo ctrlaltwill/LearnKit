@@ -2,11 +2,17 @@
 import config from "virtual:starlight/user-config";
 
 const homeHref = import.meta.env.BASE_URL;
+const siteTitle =
+  typeof config.title === "string"
+    ? config.title
+    : typeof config.title?.text === "string"
+      ? config.title.text
+      : "LearnKit";
 ---
 
-<a class="title-wrapper lk-site-title" href={homeHref} aria-label={`${config.title} home`}>
+<a class="title-wrapper lk-site-title" href={homeHref} aria-label={`${siteTitle} home`}>
   <span class="lk-site-title__icon" aria-hidden="true"></span>
-  <span class="lk-site-title__text">{config.title}</span>
+  <span class="lk-site-title__text">{siteTitle}</span>
 </a>
 
 <style>

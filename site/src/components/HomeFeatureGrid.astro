@@ -1,5 +1,5 @@
 ---
-import { BrainCircuit, Clock3, Layers3, Sparkles } from "@lucide/astro";
+import { BrainCircuit, Clock3, Code, Layers3, Sparkles } from "@lucide/astro";
 
 const topFeatures = [
   {
@@ -62,7 +62,12 @@ const orderedQuestionExample = [
 
   <article class="workflow-card">
     <div class="workflow-copy">
-      <p class="workflow-kicker">Markdown first</p>
+      <p class="feature-title workflow-kicker">
+        <span class="feature-icon" aria-hidden="true">
+          <Code size={18} stroke-width={2.25} />
+        </span>
+        <span>Markdown first</span>
+      </p>
       <h2 class="workflow-title">Your note becomes the answer key.</h2>
       <p class="workflow-body">
         LearnKit is markdown-first by design. Write the structure once in your note, sync it, and
@@ -139,11 +144,6 @@ const orderedQuestionExample = [
 
   .workflow-kicker {
     margin: 0 0 0.9rem;
-    font-size: 0.8rem;
-    font-weight: 650;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-    color: var(--muted-foreground);
   }
 
   .workflow-title {
@@ -179,10 +179,10 @@ const orderedQuestionExample = [
 
   .workflow-code {
     align-self: stretch;
-    padding: 0;
-    border-radius: 0;
-    background: transparent;
-    border: 0;
+    padding: 1rem;
+    border-radius: 1.1rem;
+    background: color-mix(in oklab, var(--muted) 85%, var(--background));
+    border: 1px solid color-mix(in oklab, var(--border) 88%, transparent);
   }
 
   .code-label {
@@ -200,9 +200,6 @@ const orderedQuestionExample = [
     font-size: 0.93rem;
     line-height: 1.7;
     color: var(--foreground);
-    background: transparent;
-    border: 0;
-    padding: 0;
   }
 
   .workflow-code code {
