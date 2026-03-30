@@ -3,116 +3,55 @@ import { Code, Cpu, Layers3, Sparkles, Target } from "@lucide/astro";
 
 const topFeatures = [
   {
-    title: "Rich Card Types",
+    title: "Built for Every Recall Style",
     description:
-      "Create basic, cloze, image occlusion, multiple choice, and ordered questions in one flow without splitting your study process.",
+      "Choose the right format for each concept, from quick fact recall to learning sequences and image occlusion.",
     Icon: Layers3,
   },
   {
-    title: "Companion",
+    title: "Companion: From Notes to Practice, Faster",
     description:
-      "Companion turns your notes into flashcards, tests, and study support on demand, helping you go from raw material to review-ready practice faster.",
+      "Companion helps you turn captured ideas into review-ready material without switching between tools.",
     Icon: Sparkles,
   },
 ];
 
 const bottomFeatures = [
   {
-    title: "Coach",
+    title: "Coached to Success",
     description:
-      "Use adaptive guidance for weak areas, get focused follow-up prompts, and keep every session tied to your real notes.",
+      "Coach keeps you moving with focused next steps, smarter follow-up questions, and guidance tied directly to your vault content.",
     Icon: Target,
   },
   {
-    title: "FSRS",
+    title: "Powered by the FSRS Algorithm",
     description:
-      "Retention-based spacing decides when cards return, balancing workload and long-term memory so reviews stay consistent and sustainable.",
+      "Smart spacing powered by FSRS balances effort and retention, so your review queue stays manageable and your memory stays sharp.",
     Icon: Cpu,
   },
 ];
 
-const carouselSlides = [
-  {
-    kicker: "Markdown first",
-    title: "Multiple Choice for fast checks.",
-    description:
-      "Use MCQs when you want clear distractors and exam-style practice from the notes you already trust.",
-    primaryLabel: "See the multiple-choice format",
-    primaryHref: "./Multiple-Choice-Questions",
-    secondaryLabel: "See other flashcard types",
-    secondaryHref: "./Flashcards",
-    codeLabel: "In your note",
-    code: [
-      "T | Mitochondria function |",
-      "MCQ | What is the main function of mitochondria? |",
-      "A | Protein synthesis |",
-      "B | ATP production |",
-      "C | DNA storage |",
-      "D | Lipid transport |",
-      "ANS | B |",
-      "I | Mitochondria generate ATP through cellular respiration |",
-      "G | Cell biology |",
-    ].join("\n"),
-  },
-  {
-    kicker: "Markdown first",
-    title: "Cloze for precise recall.",
-    description:
-      "Cloze cards hide key terms in context, so you practice exact recall without losing the original meaning of your note.",
-    primaryLabel: "See the cloze format",
-    primaryHref: "./Cloze-Flashcards",
-    secondaryLabel: "See other flashcard types",
-    secondaryHref: "./Flashcards",
-    codeLabel: "In your note",
-    code: [
-      "T | Biology core facts |",
-      "C | Photosynthesis occurs in the {{chloroplast}} |",
-      "C | The powerhouse of the cell is the {{mitochondrion}} |",
-      "C | Water boils at {{100 degrees Celsius}} at sea level |",
-      "I | Cloze cards are best for exact terms and formulas |",
-      "G | Biology |",
-    ].join("\n"),
-  },
-  {
-    kicker: "Markdown first",
-    title: "Ordered Questions for sequence memory.",
-    description:
-      "Train process memory with drag-to-order review that mirrors the exact sequence you authored in your markdown.",
-    primaryLabel: "See the ordered-question format",
-    primaryHref: "./Ordered-Questions",
-    secondaryLabel: "See other flashcard types",
-    secondaryHref: "./Flashcards",
-    codeLabel: "In your note",
-    code: [
-      "T | Water cycle |",
-      "OQ | Arrange the stages of the water cycle in order |",
-      "1 | Evaporation |",
-      "2 | Condensation |",
-      "3 | Precipitation |",
-      "4 | Collection |",
-      "I | Water moves continuously through the atmosphere and the Earth's surface |",
-      "G | Earth science |",
-    ].join("\n"),
-  },
-  {
-    kicker: "Markdown first",
-    title: "Basic cards for direct Q and A.",
-    description:
-      "Use simple front-back cards for fast facts, definitions, and high-frequency prompts you want to review every session.",
-    primaryLabel: "See the basic format",
-    primaryHref: "./Basic-&-Reversed-Flashcards",
-    secondaryLabel: "See other flashcard types",
-    secondaryHref: "./Flashcards",
-    codeLabel: "In your note",
-    code: [
-      "T | Geography quick fact |",
-      "Q | What is the capital of Japan? |",
-      "A | Tokyo |",
-      "I | Use basic cards for direct one-step recall |",
-      "G | Geography |",
-    ].join("\n"),
-  },
-];
+const orderedQuestionCard = {
+  kicker: "Markdown first",
+  title: "Ordered Questions for sequence memory.",
+  description:
+    "Train process memory with drag-to-order review that mirrors the exact sequence you authored in your markdown.",
+  primaryLabel: "See the ordered-question format",
+  primaryHref: "./Ordered-Questions",
+  secondaryLabel: "See other flashcard types",
+  secondaryHref: "./Flashcards",
+  codeLabel: "In your note",
+  code: [
+    "T | Water cycle |",
+    "OQ | Arrange the stages of the water cycle in order |",
+    "1 | Evaporation |",
+    "2 | Condensation |",
+    "3 | Precipitation |",
+    "4 | Collection |",
+    "I | Water moves continuously through the atmosphere and the Earth's surface |",
+    "G | Earth science |",
+  ].join("\n"),
+};
 ---
 
 <div class="home-panels">
@@ -132,59 +71,27 @@ const carouselSlides = [
     }
   </div>
 
-  <section class="workflow-carousel" data-carousel aria-label="Flashcard format carousel">
-    <div class="carousel-track">
-      {
-        carouselSlides.map((slide, index) => (
-          <article class="workflow-card workflow-slide" data-slide hidden={index !== 0}>
-            <div class="workflow-copy">
-              <p class="feature-title workflow-kicker">
-                <span class="feature-icon" aria-hidden="true">
-                  <Code size={18} stroke-width={2.25} />
-                </span>
-                <span>{slide.kicker}</span>
-              </p>
-              <h2 class="workflow-title">{slide.title}</h2>
-              <p class="workflow-body">{slide.description}</p>
-              <div class="workflow-links">
-                <a href={slide.primaryHref}>{slide.primaryLabel}</a>
-                <a href={slide.secondaryHref}>{slide.secondaryLabel}</a>
-              </div>
-            </div>
-
-            <div class="workflow-code">
-              <p class="code-label">{slide.codeLabel}</p>
-              <pre><code>{slide.code}</code></pre>
-            </div>
-          </article>
-        ))
-      }
-    </div>
-
-    <div class="carousel-controls" aria-label="Carousel controls">
-      <button class="carousel-nav" type="button" data-prev aria-label="Previous slide">
-        Previous
-      </button>
-      <div class="carousel-dots" role="tablist" aria-label="Select slide">
-        {
-          carouselSlides.map((_, index) => (
-            <button
-              class="carousel-dot"
-              type="button"
-              data-dot
-              data-index={index}
-              role="tab"
-              aria-label={`Go to slide ${index + 1}`}
-              aria-selected={index === 0 ? "true" : "false"}
-            />
-          ))
-        }
+  <article class="workflow-card">
+    <div class="workflow-copy">
+      <p class="feature-title workflow-kicker">
+        <span class="feature-icon" aria-hidden="true">
+          <Code size={18} stroke-width={2.25} />
+        </span>
+        <span>{orderedQuestionCard.kicker}</span>
+      </p>
+      <h2 class="workflow-title">{orderedQuestionCard.title}</h2>
+      <p class="workflow-body">{orderedQuestionCard.description}</p>
+      <div class="workflow-links">
+        <a href={orderedQuestionCard.primaryHref}>{orderedQuestionCard.primaryLabel}</a>
+        <a href={orderedQuestionCard.secondaryHref}>{orderedQuestionCard.secondaryLabel}</a>
       </div>
-      <button class="carousel-nav" type="button" data-next aria-label="Next slide">
-        Next
-      </button>
     </div>
-  </section>
+
+    <div class="workflow-code">
+      <p class="code-label">{orderedQuestionCard.codeLabel}</p>
+      <pre><code>{orderedQuestionCard.code}</code></pre>
+    </div>
+  </article>
 
   <div class="feature-grid" role="list" aria-label="LearnKit advanced highlights">
     {
@@ -243,59 +150,6 @@ const carouselSlides = [
     border: 1px solid var(--sl-color-gray-5);
     border-radius: 1.4rem;
     background: color-mix(in oklab, var(--card) 86%, var(--muted));
-  }
-
-  .workflow-carousel {
-    display: grid;
-    gap: 0.85rem;
-  }
-
-  .carousel-track {
-    position: relative;
-  }
-
-  .workflow-slide {
-    margin: 0;
-  }
-
-  .carousel-controls {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.8rem;
-  }
-
-  .carousel-nav {
-    border: 1px solid var(--sl-color-gray-5);
-    border-radius: 999px;
-    padding: 0.4rem 0.9rem;
-    background: var(--card);
-    color: var(--foreground);
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .carousel-nav:hover {
-    background: color-mix(in oklab, var(--card) 84%, var(--muted));
-  }
-
-  .carousel-dots {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-  }
-
-  .carousel-dot {
-    width: 0.6rem;
-    height: 0.6rem;
-    border-radius: 999px;
-    border: 0;
-    background: color-mix(in oklab, var(--foreground) 18%, transparent);
-    cursor: pointer;
-  }
-
-  .carousel-dot[aria-selected="true"] {
-    background: var(--accent);
   }
 
   .workflow-copy,
@@ -408,61 +262,9 @@ const carouselSlides = [
       grid-template-columns: 1fr;
     }
 
-    .carousel-controls {
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
     .workflow-card,
     .feature-card {
       padding: 1.1rem;
     }
   }
 </style>
-
-<script>
-  (() => {
-    const root = document.querySelector("[data-carousel]");
-    if (!root) return;
-
-    const slides = Array.from(root.querySelectorAll("[data-slide]"));
-    const dots = Array.from(root.querySelectorAll("[data-dot]"));
-    const prev = root.querySelector("[data-prev]");
-    const next = root.querySelector("[data-next]");
-    if (!slides.length || !prev || !next) return;
-
-    let index = 0;
-
-    const render = () => {
-      slides.forEach((slide, slideIndex) => {
-        const active = slideIndex === index;
-        slide.toggleAttribute("hidden", !active);
-      });
-
-      dots.forEach((dot, dotIndex) => {
-        dot.setAttribute("aria-selected", dotIndex === index ? "true" : "false");
-      });
-    };
-
-    prev.addEventListener("click", () => {
-      index = (index - 1 + slides.length) % slides.length;
-      render();
-    });
-
-    next.addEventListener("click", () => {
-      index = (index + 1) % slides.length;
-      render();
-    });
-
-    dots.forEach((dot) => {
-      dot.addEventListener("click", () => {
-        const dotIndex = Number(dot.getAttribute("data-index"));
-        if (Number.isNaN(dotIndex)) return;
-        index = dotIndex;
-        render();
-      });
-    });
-
-    render();
-  })();
-</script>
