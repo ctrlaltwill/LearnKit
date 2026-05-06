@@ -36,6 +36,13 @@ const INTERFACE_LOCALE_REGISTRY: ReadonlyArray<InterfaceLocaleDefinition> = [
     flagCode: "en-us",
     status: "stable",
   },
+  {
+    code: "zh-cn",
+    label: "Chinese (Simplified)",
+    nativeLabel: "简体中文",
+    flagCode: "cn",
+    status: "community",
+  },
 ];
 
 const INTERFACE_LOCALE_SET = new Set(INTERFACE_LOCALE_REGISTRY.map((locale) => locale.code));
@@ -53,6 +60,7 @@ export function normaliseInterfaceLocale(value: unknown): string {
 export function resolveInterfaceLocale(value: unknown): string {
   const candidate = normaliseInterfaceLocale(value);
   if (candidate === "en") return "en-gb";
+  if (candidate === "zh") return "zh-cn";
   return INTERFACE_LOCALE_SET.has(candidate) ? candidate : DEFAULT_INTERFACE_LOCALE;
 }
 
