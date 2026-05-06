@@ -347,8 +347,7 @@ function isFilterIdMatch(id: string, file: TFile, app: App): boolean {
           if (item == null || typeof item === "object") continue;
           if (String(item).trim().toLowerCase() === pair.value) return true;
         }
-      } else if (rawValue != null && typeof rawValue !== "object") {
-        // eslint-disable-next-line @typescript-eslint/no-base-to-string
+      } else if (typeof rawValue === "string" || typeof rawValue === "number" || typeof rawValue === "boolean") {
         if (String(rawValue).trim().toLowerCase() === pair.value) return true;
       }
     }

@@ -47,6 +47,67 @@ function daysToMs(d: number) {
   return d * MS_DAY;
 }
 
+// ── Short-term fuzz (learning/relearning intervals < 2.5 days) ──────
+
+/**
+ * Simple 32-bit hash from a string (used to derive a deterministic seed).
+ */
+function hash32(str: string): number {
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) {
+    h = ((h << 5) + h + str.charCodeAt(i)) | 0;
+  }
+  return h >>> 0;
+}
+
+/**
+ * Tiny seeded PRNG (mulberry32). Returns a float in [0, 1).
+ */
+function mulberry32(seed: number): () => number {
+  let s = seed | 0;
+  return () => {
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Apply short-term fuzz to a due date for learning/relearning cards
+ * whose interval is under ~2.5 days. Only modifies the due timestamp;
+ * stability and difficulty are left untouched.
+ *
+ * Fuzz tiers (mirror FSRS's tiered approach, scaled for minutes/hours):
+ *   < 10 minutes   → ±15%
+ *   10m – 1 hour   → ±10%
+ *   1h  – 1 day    → ±5%
+ */
+function applyShortTermFuzz(
+  dueMs: number,
+  nowMs: number,
+  cardId: string,
+): number {
+  const rawMinutes = (dueMs - nowMs) / 60_000;
+  if (rawMinutes <= 0.5) return dueMs; // too short to fuzz meaningfully
+
+  let factor: number;
+  if (rawMinutes < 10) {
+    factor = 0.15;
+  } else if (rawMinutes < 60) {
+    factor = 0.10;
+  } else {
+    factor = 0.05;
+  }
+
+  const seed = hash32(cardId + ":" + nowMs);
+  const rng = mulberry32(seed);
+  const fuzz = (rng() * 2 - 1) * factor; // [-factor, +factor]
+  const fuzzedMinutes = rawMinutes * (1 + fuzz);
+
+  return nowMs + Math.round(fuzzedMinutes * 60_000);
+}
+
 // Push suspended cards far into the future as a belt-and-suspenders safety net
 // (so they don't accidentally appear in any due-based queues).
 const SUSPEND_FAR_DAYS = 36500; // ~100 years
@@ -474,6 +535,23 @@ function gradeCardFsrs(
 
   const result = engine.next(prevCard, nowDate, mapRating(rating));
   const next = fromFsrsCard(state, result.card);
+
+  // ── Short-term fuzz for learning/relearning intervals < 2.5 days ──
+  // ts-fsrs only fuzzes intervals ≥ 2.5 days. Apply proportional fuzz
+  // to short intervals so learning steps aren't perfectly deterministic.
+  if (
+    cfg.enableFuzz &&
+    (result.card.state === State.Learning || result.card.state === State.Relearning) &&
+    result.card.due.getTime() - now < 2.5 * MS_DAY
+  ) {
+    const fuzzedDue = applyShortTermFuzz(
+      result.card.due.getTime(),
+      now,
+      String(state.id ?? ""),
+    );
+    result.card.due = new Date(fuzzedDue);
+    next.due = fuzzedDue;
+  }
 
   const msToDue = result.card.due.getTime() - nowDate.getTime();
   const daysToDue = Math.max(0, msToDue / MS_DAY);
