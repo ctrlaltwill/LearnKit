@@ -2418,7 +2418,7 @@ function renderSanitizedPlainTextWithCloze(value: string, style?: CleanMarkdownC
 
   for (const cm of clozeMatches) {
     if (cm.index > last) {
-      out += escapeHtml(source.slice(last, cm.index));
+      out += processMarkdownFeatures(source.slice(last, cm.index));
     }
     const answer = cm.content.trim();
     if (answer) {
@@ -2428,14 +2428,14 @@ function renderSanitizedPlainTextWithCloze(value: string, style?: CleanMarkdownC
         const tokenText = `{{c${clozeId}::${answer}}}`;
         out += `<span class="learnkit-cloze-revealed learnkit-clean-markdown-cloze"${spanStyle}>${escapeHtml(tokenText)}</span>`;
       } else {
-        out += `<span class="learnkit-cloze-revealed learnkit-clean-markdown-cloze"${spanStyle}>${escapeHtml(answer)}</span>`;
+        out += `<span class="learnkit-cloze-revealed learnkit-clean-markdown-cloze"${spanStyle}>${processMarkdownFeatures(answer)}</span>`;
       }
     }
     last = cm.index + cm.fullMatch.length;
   }
 
   if (last < source.length) {
-    out += escapeHtml(source.slice(last));
+    out += processMarkdownFeatures(source.slice(last));
   }
 
   return out;

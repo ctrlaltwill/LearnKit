@@ -993,7 +993,7 @@ describe("sync engine", () => {
     const vault = new MemoryVault();
     const file = await vault.create(
       "Notes/ClozeShort.md",
-      "cloze:::The capital of {{France}} is {{Paris}}",
+      "cloze::The capital of {{France}} is {{Paris}}",
     );
     const plugin = makePlugin(vault);
     setCryptoSequence([0]);
@@ -1006,11 +1006,11 @@ describe("sync engine", () => {
     expect(content).toContain("^learnkit-");
   });
 
-  it("normalizes cq::: shorthand via syncQuestionBank", async () => {
+  it("normalizes cq:: shorthand via syncQuestionBank", async () => {
     const vault = new MemoryVault();
     await vault.create(
       "Notes/ClozeBank.md",
-      "cq:::The answer is {{42}}",
+      "cq::The answer is {{42}}",
     );
     const plugin = makePlugin(vault);
     setCryptoSequence([100000000]);
@@ -1027,7 +1027,7 @@ describe("sync engine", () => {
     const vault = new MemoryVault();
     const file = await vault.create(
       "Notes/ClozeAnchor.md",
-      "^learnkit-999888777\ncloze:::Text with {{hidden}}",
+      "^learnkit-999888777\ncloze::Text with {{hidden}}",
     );
     const plugin = makePlugin(vault);
     setCryptoSequence([0]);
@@ -1046,7 +1046,7 @@ describe("sync engine", () => {
     const vault = new MemoryVault();
     const file = await vault.create(
       "Notes/ClozeNumbered.md",
-      "CQ:::{{c2::second}} then {{first}}",
+      "CQ::{{c2::second}} then {{first}}",
     );
     const plugin = makePlugin(vault);
     setCryptoSequence([0]);
@@ -1054,7 +1054,7 @@ describe("sync engine", () => {
     await syncOneFile(plugin, file);
     const content = await vault.read(file);
 
-    expect(content).toContain("CQ | {{c2::second}} then {{c1::first}} |");
+    expect(content).toContain("CQ | {{c2::second}} then {{c3::first}} |");
     expect(content).not.toContain("CQ:::");
   });
 
@@ -1062,7 +1062,7 @@ describe("sync engine", () => {
     const vault = new MemoryVault();
     const file = await vault.create(
       "Notes/ClozeHint.md",
-      "cloze:::The capital of {{France::country}} is {{Paris::city}}",
+      "cloze::The capital of {{France::country}} is {{Paris::city}}",
     );
     const plugin = makePlugin(vault);
     setCryptoSequence([0]);

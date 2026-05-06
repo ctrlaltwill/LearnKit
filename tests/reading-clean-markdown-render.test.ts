@@ -30,11 +30,15 @@ describe("clean markdown renderer", () => {
     const html = __testBuildMarkdownModeContent(card, true);
 
     expect(html).toContain("Basic Question:");
-    expect(html).toContain("What does `git reset --hard` do compared to `git reset &lt;commit-sha&gt;`?");
+    // Backticks are now rendered as <code> elements; < and > are still escaped inside
+    expect(html).toContain("<code>git reset --hard</code>");
+    expect(html).toContain("<code>git reset &lt;commit-sha&gt;</code>");
     expect(html).toContain("Answer:");
-    expect(html).toContain("`git reset --hard` discards **all** changes");
+    // List items with backtick formatting become <code> elements
+    expect(html).toContain("<code>git reset --hard</code> discards <strong>all</strong> changes");
+    expect(html).toContain("<code>git reset &lt;commit-sha&gt;</code> moves HEAD but keeps working directory");
     expect(html).toContain("Extra Information:");
-    expect(html).toContain("Use `git reflog` to recover if needed.");
+    expect(html).toContain("Use <code>git reflog</code> to recover if needed.");
   });
 
   it("uses reversed question field in markdown mode", () => {
@@ -55,6 +59,28 @@ describe("clean markdown renderer", () => {
     expect(html).not.toContain("This should not render as the reversed prompt");
     expect(html).toContain("Answer:");
     expect(html).toContain("Reverse answer");
+  });
+  it("renders cloze cards with backtick code and angle brackets in answers", () => {
+    const card = {
+      anchorId: "144037860",
+      type: "cloze",
+      title: "Shell Commands",
+      fields: {
+        CQ: "To reset a commit in Git, use {{c1::`git reset <commit-sha>`}} and to list files use {{c2::`ls -la`}}.",
+        I: "See `man git` for more details.",
+      },
+    } as never;
+
+    const html = __testBuildMarkdownModeContent(card, true);
+
+    expect(html).toContain("Cloze Question:");
+    // Cloze content should have <code> for backticked text, and < >
+    // appear as entities since they're inside the code span.
+    expect(html).toContain("learnkit-cloze-revealed");
+    expect(html).toContain("<code>git reset &lt;commit-sha&gt;</code>");
+    expect(html).toContain("<code>ls -la</code>");
+    expect(html).toContain("Extra Information:");
+    expect(html).toContain("<code>man git</code>");
   });
 });
 

@@ -14,7 +14,11 @@ import {
   TITLE_OUTSIDE_DELIM_RE,
   ANY_HEADER_DELIM_RE,
   BASIC_SHORTHAND_RE,
+  REVERSED_SHORTHAND_RE,
   CLOZE_SHORTHAND_RE,
+  SR_CLOZE_DELETION_RE,
+  convertSrClozeToShorthand,
+  isMarkdownHeading,
   splitComboVariants,
   splitZipVariants,
   stripClosingDelimiter,
@@ -98,7 +102,7 @@ export type ParsedCard = {
   sourceStartLine: number;
   sourceEndLine: number;
 
-  /** True when this card was parsed from shorthand `:::` syntax. */
+  /** True when this card was parsed from shorthand `::` / `:::` syntax. */
   isShorthand: boolean;
 
   errors: string[];
@@ -178,9 +182,19 @@ function validateClozeText(text: string): string[] {
 /**
  * Auto-number bare `{{text}}` tokens into `{{c1::text}}`, `{{c2::text}}`, etc.
  * Already-numbered `{{cN::text}}` tokens are left untouched.
+ *
+ * Starts numbering from the highest existing cN + 1 so that inserting
+ * new bare tokens after already-numbered ones doesn't create duplicates.
  */
 function autoNumberClozeTokens(text: string): string {
-  let counter = 0;
+  // Find highest existing cN number
+  let maxExisting = 0;
+  const existingRe = /\{\{c(\d+)::/g;
+  let em: RegExpExecArray | null;
+  while ((em = existingRe.exec(text)) !== null) {
+    maxExisting = Math.max(maxExisting, Number(em[1]));
+  }
+  let counter = maxExisting;
   // Replace bare {{text}} (not already {{cN::text}}) with {{cN::text}}
   return text.replace(/\{\{(?!c\d+::)([\s\S]*?)\}\}/g, (_match, content) => {
     counter += 1;
@@ -276,8 +290,28 @@ export function parseCardsFromText(
   text: string,
   ignoreFences = true,
 ): { cards: ParsedCard[] } {
-  const lines = text.split(/\r?\n/);
+  let lines = text.split(/\r?\n/);
   const fenceMask = ignoreFences ? computeFenceMask(lines) : new Array<boolean>(lines.length).fill(false);
+
+  // ── Pre-process: SR cloze deletions → LearnKit shorthand ───────────
+  // Convert ==text==^[hint][^N] to cloze::{{cN::text::hint}} shorthand
+  // so the sync engine expands it to CQ | ... | format.
+  lines = lines.map((ln, idx) => {
+    if (fenceMask[idx]) return ln;
+    // Never parse markdown headings as cards
+    if (isMarkdownHeading(ln)) return ln;
+    // Don't convert lines that are already LearnKit cards
+    if (ANY_HEADER_DELIM_RE().test(ln)) return ln;
+    if (BASIC_SHORTHAND_RE.test(ln)) return ln;
+    if (REVERSED_SHORTHAND_RE.test(ln)) return ln;
+    if (CLOZE_SHORTHAND_RE.test(ln)) return ln;
+    // Check for SR cloze pattern (only if the line is prose, not a header)
+    SR_CLOZE_DELETION_RE.lastIndex = 0;
+    if (SR_CLOZE_DELETION_RE.test(ln)) {
+      return convertSrClozeToShorthand(ln) ?? ln;
+    }
+    return ln;
+  });
 
   const cards: ParsedCard[] = [];
 
@@ -866,8 +900,8 @@ export function parseCardsFromText(
       continue;
     }
 
-    // 11a) Shorthand cloze card: cloze:::text with {{hidden}}  /  cq:::...  /  CQ:::...
-    {
+    // 11a) Shorthand cloze card: cloze::text with {{hidden}}  /  cq::...  /  CQ::...
+    if (!isMarkdownHeading(line)) {
       const cm = line.match(CLOZE_SHORTHAND_RE);
       if (cm) {
         const body = cm[1].trim();
@@ -889,8 +923,8 @@ export function parseCardsFromText(
       }
     }
 
-    // 11b) Shorthand basic card: Question:::Answer
-    {
+    // 11b) Shorthand basic card: Question::Answer
+    if (!isMarkdownHeading(line)) {
       const sm = line.match(BASIC_SHORTHAND_RE);
       if (sm) {
         const qText = sm[1].trim();
@@ -899,6 +933,31 @@ export function parseCardsFromText(
           flush();
           const startLine = pendingIdLine !== null ? pendingIdLine : i;
           current = makeEmptyCard(notePath, startLine, pendingId, pendingTitle, "Q");
+          current.q = qText;
+          current.a = aText;
+          current.isShorthand = true;
+          current.sourceEndLine = i;
+          pendingId = null;
+          pendingIdLine = null;
+          pendingTitle = null;
+          pendingTitleFieldOpen = false;
+          pendingTitlePipeOpen = false;
+          flush();
+          continue;
+        }
+      }
+    }
+
+    // 11c) Shorthand reversed (bidirectional) card: Question:::Answer
+    if (!isMarkdownHeading(line)) {
+      const rm = line.match(REVERSED_SHORTHAND_RE);
+      if (rm) {
+        const qText = rm[1].trim();
+        const aText = rm[2].trim();
+        if (qText && aText) {
+          flush();
+          const startLine = pendingIdLine !== null ? pendingIdLine : i;
+          current = makeEmptyCard(notePath, startLine, pendingId, pendingTitle, "RQ");
           current.q = qText;
           current.a = aText;
           current.isShorthand = true;

@@ -98,13 +98,26 @@ _Cloze card authoring and review context._
 
 _Hotspot card ready for click-mode review._
 
-## Method 3: Quick Cards
+## Method 3: Quick Cards (Preferred Shorthand)
 
-Quick Cards let you write flashcards in a single line using the `:::` shorthand. On sync, LearnKit expands them to the full format.
+Quick Cards let you write flashcards in a single line. On sync, LearnKit expands them to the full pipe-delimited format.
 
-**Basic**
+LearnKit has **three preferred shorthand prefixes**:
+
+| Shorthand | Card Type | Example |
+|---|---|---|
+| `cloze::` / `cq::` / `CQ::` | Cloze | `cloze::The capital of {{France}} is {{Paris}}` |
+| `::` | Basic | `What is the capital of France?::Paris` |
+| `:::` | Reversed | `What is the capital of France?:::Paris` |
+
+> **Coming from Obsidian Spaced Repetition?** LearnKit also accepts SR-style `?` / `??` / `==text==` syntax for automatic migration. See [Migrating From Obsidian SR](../Migrating-From-Obsidian-SR).
+
+Quick Cards are detected on **unindented prose lines only**. Markdown headings (`#`, `##`, etc.) and content inside code fences are never parsed as flashcards, so your section titles and code samples are safe.
+
+### Basic
+
 ```
-What is the capital of France?:::Paris
+What is the capital of France?::Paris
 ```
 
 This expands to:
@@ -113,11 +126,24 @@ Q | What is the capital of France? |
 A | Paris |
 ```
 
-**Cloze**
+### Reversed
 
-Prefix with `cloze:::`, `cq:::`, or `CQ:::`:
+Use `:::` (three colons) for bidirectional cards tested both ways:
 ```
-cloze:::The capital of {{France}} is {{Paris}}
+What is the capital of France?:::Paris
+```
+
+This expands to:
+```
+RQ | What is the capital of France? |
+A | Paris |
+```
+
+### Cloze
+
+Prefix with `cloze::`, `cq::`, or `CQ::`:
+```
+cloze::The capital of {{France}} is {{Paris}}
 ```
 
 This expands to:
@@ -130,7 +156,7 @@ Bare `{{tokens}}` are auto-numbered. If you already include a number like `{{c1:
 Quick Cards also support hints inside bare cloze tokens:
 
 ```
-cloze:::The capital of {{France::country}} is {{Paris::city}}
+cloze::The capital of {{France::country}} is {{Paris::city}}
 ```
 
 This expands to:
@@ -159,7 +185,8 @@ Do not delete or edit that anchor. It links the source note block to the flashca
 - [Editing Flashcards](../Editing-Flashcards)
 - [Flashcard Formatting](../Flashcard-Formatting)
 - [Hotspot Cards](../Hotspot-Cards)
+- [Migrating From Obsidian SR](../Migrating-From-Obsidian-SR)
 
 ---
 
-Last modified: 28/04/2026
+Last modified: 06/05/2026

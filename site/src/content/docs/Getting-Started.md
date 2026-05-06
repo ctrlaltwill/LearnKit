@@ -54,6 +54,10 @@ After your first session, these pages matter most:
 
 See [Import From Anki](../Import-From-Anki) before doing a large migration.
 
+## If You Are Coming From Obsidian Spaced Repetition
+
+LearnKit automatically converts your existing SR-format cards during sync. See [Migrating From Obsidian SR](../Migrating-From-Obsidian-SR).
+
 ---
 
-Last modified: 30/03/2026
+Last modified: 06/05/2026

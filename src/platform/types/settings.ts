@@ -257,6 +257,13 @@ export type LearnKitSettings = {
      * data will be lost on the next sync.
      */
     delimiter: "|" | "@" | "~" | ";";
+    /**
+     * Scope-based file filter for flashcard sync.
+     * Same query format as note review: space-separated tokens like
+     * `scope:vault`, `path:Folder`, `note:path.md`, `tag:tagname`, `prop:key=value`.
+     * Prefix with `-` to exclude. Empty string = sync all files.
+     */
+    syncFilterQuery: string;
   };
 
   // Cards — card-type-specific settings

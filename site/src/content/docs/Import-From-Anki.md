@@ -72,7 +72,8 @@ Create a backup first in [Backups](../Backups) so you can roll back if needed.
 - [Backups](../Backups)
 - [Syncing](../Syncing)
 - [Flashcard Library](../Flashcard-Library)
+- [Migrating From Obsidian SR](../Migrating-From-Obsidian-SR)
 
 ---
 
-Last modified: 30/03/2026
+Last modified: 06/05/2026

@@ -8,7 +8,7 @@
  *  - syncQuestionBank  — runs a full vault-wide sync across all markdown files
  */
 
-import { TFile } from "obsidian";
+import { TFile, type App } from "obsidian";
 import { parseCardsFromText, type ParsedCard } from "../../../engine/parser/parser";
 import { generateUniqueId } from "../../../platform/core/ids";
 import type LearnKitPlugin from "../../../main";
@@ -18,6 +18,7 @@ import {
   FLASHCARD_HEADER_CARD_RE,
   FLASHCARD_HEADER_FIELD_RE,
   BASIC_SHORTHAND_RE,
+  REVERSED_SHORTHAND_RE,
   CLOZE_SHORTHAND_RE,
   COMBO_VARIANT_SEPARATOR,
   getDelimiter,
@@ -26,6 +27,9 @@ import {
   stripClosingDelimiter,
   splitComboVariants,
   splitZipVariants,
+  preprocessSrText,
+  isMarkdownHeading,
+  ANY_HEADER_DELIM_RE,
 } from "../../../platform/core/delimiter";
 import type { CardState } from "../../types/scheduler";
 import { loadSchedulingFromDataJson } from "../../../platform/core/store";
@@ -163,6 +167,197 @@ export function formatSyncNotice(prefix: string, res: SyncNoticeCounts, options:
 }
 
 // ────────────────────────────────────────────
+// shouldSyncFile — scope-based filter guard
+// ────────────────────────────────────────────
+
+/**
+ * Returns `true` if the file should be scanned for flashcards.
+ *
+ * Uses `indexing.syncFilterQuery` — same format as note review:
+ * space-separated tokens like `scope:vault`, `path:Folder`, `note:path.md`,
+ * `tag:tagname`, `prop:key=value`. Prefix with `-` to exclude.
+ * Empty query = sync all files.
+ */
+export function shouldSyncFile(plugin: LearnKitPlugin, file: TFile): boolean {
+  const query = plugin.settings?.indexing?.syncFilterQuery;
+  if (!query) return true;
+
+  const { include, exclude } = parseSyncFilterQuery(query, file);
+
+  // If no include rules, sync everything except what's excluded
+  if (!include.length) return !exclude.some((id) => isFilterIdMatch(id, file, plugin.app));
+
+  // Sync only if file matches at least one include rule AND no exclude rules
+  return (
+    include.some((id) => isFilterIdMatch(id, file, plugin.app)) &&
+    !exclude.some((id) => isFilterIdMatch(id, file, plugin.app))
+  );
+}
+
+// ────────────────────────────────────────────
+// parseSyncFilterQuery — parse query string into include/exclude sets
+// ────────────────────────────────────────────
+
+function safeDecode(v: string): string {
+  try { return decodeURIComponent(v); } catch { return v; }
+}
+
+function parseSyncFilterQuery(
+  query: string,
+  _file: TFile,
+): { include: string[]; exclude: string[] } {
+  const include: string[] = [];
+  const exclude: string[] = [];
+  const parts = String(query)
+    .split(/\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  for (const part of parts) {
+    const lowered = part.toLowerCase();
+    if (lowered === "scope:vault" || lowered === "vault") {
+      include.push("vault::");
+      continue;
+    }
+    if (lowered === "-scope:vault" || lowered === "-vault") {
+      exclude.push("vault::");
+      continue;
+    }
+    if (lowered.startsWith("path:")) {
+      const path = safeDecode(String(part.slice(5)).trim());
+      if (!path) continue;
+      include.push(`folder::${path}`);
+      continue;
+    }
+    if (lowered.startsWith("-path:")) {
+      const path = safeDecode(String(part.slice(6)).trim());
+      if (!path) continue;
+      exclude.push(`folder::${path}`);
+      continue;
+    }
+    if (lowered.startsWith("note:")) {
+      const path = safeDecode(String(part.slice(5)).trim());
+      if (!path) continue;
+      include.push(`note::${path}`);
+      continue;
+    }
+    if (lowered.startsWith("-note:")) {
+      const path = safeDecode(String(part.slice(6)).trim());
+      if (!path) continue;
+      exclude.push(`note::${path}`);
+      continue;
+    }
+    if (lowered.startsWith("tag:")) {
+      const token = safeDecode(String(part.slice(4)).trim()).toLowerCase().replace(/^#+/, "");
+      if (!token) continue;
+      include.push(`tag::${token}`);
+      continue;
+    }
+    if (lowered.startsWith("-tag:")) {
+      const token = safeDecode(String(part.slice(5)).trim()).toLowerCase().replace(/^#+/, "");
+      if (!token) continue;
+      exclude.push(`tag::${token}`);
+      continue;
+    }
+    if (lowered.startsWith("prop:")) {
+      const token = safeDecode(String(part.slice(5)).trim()).toLowerCase();
+      if (!token) continue;
+      include.push(`prop::${token}`);
+      continue;
+    }
+    if (lowered.startsWith("-prop:")) {
+      const token = safeDecode(String(part.slice(6)).trim()).toLowerCase();
+      if (!token) continue;
+      exclude.push(`prop::${token}`);
+      continue;
+    }
+    // Unknown token → passthrough (treated as include for backwards compat)
+    include.push(part);
+  }
+
+  return { include, exclude };
+}
+
+// ────────────────────────────────────────────
+// isFilterIdMatch — check if a single filter ID matches a file
+// ────────────────────────────────────────────
+
+function decodePropPair(raw: string): { key: string; value: string } | null {
+  const source = String(raw);
+  const eq = source.indexOf("=");
+  if (eq <= 0 || eq >= source.length - 1) return null;
+  const key = safeDecode(source.slice(0, eq)).trim().toLowerCase();
+  const value = safeDecode(source.slice(eq + 1)).trim().toLowerCase();
+  if (!key || !value) return null;
+  return { key, value };
+}
+
+function isFilterIdMatch(id: string, file: TFile, app: App): boolean {
+  if (id === "vault::") return true;
+  if (id.startsWith("folder::")) {
+    const folder = id.slice("folder::".length);
+    return file.path === folder || file.path.startsWith(`${folder}/`);
+  }
+  if (id.startsWith("note::")) return file.path === id.slice("note::".length);
+  if (id.startsWith("tag::")) {
+    const token = id.slice("tag::".length).toLowerCase();
+    if (!token) return false;
+    const cache = app.metadataCache.getFileCache(file);
+    // Check inline tags
+    for (const tagRef of cache?.tags ?? []) {
+      const tag = String(tagRef?.tag ?? "").replace(/^#+/, "").trim().toLowerCase();
+      if (tag === token) return true;
+    }
+    // Check frontmatter tags
+    const frontmatter = cache?.frontmatter;
+    if (frontmatter && typeof frontmatter === "object") {
+      const entries = Object.entries(frontmatter as Record<string, unknown>);
+      for (const [key, value] of entries) {
+        const normalizedKey = String(key ?? "").trim().toLowerCase();
+        if (normalizedKey !== "tag" && normalizedKey !== "tags") continue;
+        if (typeof value === "string") {
+          for (const t of String(value).split(/[\s,]+/g).filter(Boolean)) {
+            const tag = t.replace(/^#+/, "").trim().toLowerCase();
+            if (tag === token) return true;
+          }
+        } else if (Array.isArray(value)) {
+          for (const item of value) {
+            const tag = String(item ?? "").replace(/^#+/, "").trim().toLowerCase();
+            if (tag === token) return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+  if (id.startsWith("prop::")) {
+    const pair = decodePropPair(id.slice("prop::".length));
+    if (!pair) return false;
+    const cache = app.metadataCache.getFileCache(file);
+    const frontmatter = cache?.frontmatter;
+    if (!frontmatter || typeof frontmatter !== "object") return false;
+    const entries = Object.entries(frontmatter as Record<string, unknown>);
+    for (const [rawKey, rawValue] of entries) {
+      const key = String(rawKey ?? "").trim().toLowerCase();
+      if (key !== pair.key) continue;
+      if (key === "position" || key === "tags") continue;
+
+      if (Array.isArray(rawValue)) {
+        for (const item of rawValue) {
+          if (item == null || typeof item === "object") continue;
+          if (String(item).trim().toLowerCase() === pair.value) return true;
+        }
+      } else if (rawValue != null && typeof rawValue !== "object") {
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string
+        if (String(rawValue).trim().toLowerCase() === pair.value) return true;
+      }
+    }
+    return false;
+  }
+  return false;
+}
+
+// ────────────────────────────────────────────
 // Helpers: prefix handling (lists / blockquotes / indentation)
 // ────────────────────────────────────────────
 
@@ -184,6 +379,7 @@ function looksLikeFlashcardHeader(rest: string): boolean {
   if (/^\d+(?:\.\d+)?\s*\|\s*/.test(s)) return true;
   if (CLOZE_SHORTHAND_RE.test(s)) return true;
   if (BASIC_SHORTHAND_RE.test(s)) return true;
+  if (REVERSED_SHORTHAND_RE.test(s)) return true;
   return false;
 }
 
@@ -1698,6 +1894,12 @@ export async function syncOneFile(
   return withFileSyncLock(file.path, async () => {
     const vault = plugin.app.vault;
     const now = Date.now();
+
+    // Respect folder exclusion and tag filter settings
+    if (!shouldSyncFile(plugin, file)) {
+      return { idsInserted: 0, anchorsRemoved: 0, newCount: 0, updatedCount: 0, sameCount: 0, quarantinedCount: 0, quarantinedIds: [], removed: 0, deletedDisplayCount: 0, tagsDeleted: 0 };
+    }
+
     const noteCardIdsBefore = collectCardIdsForNote(plugin, file.path);
 
     const groupsBefore = collectGroupKeys(plugin.store.data.cards || {});
@@ -1711,10 +1913,19 @@ export async function syncOneFile(
     const originalText = typeof options?.sourceTextOverride === "string"
       ? options.sourceTextOverride
       : await vault.cachedRead(file);
-    const lines = originalText.split(/\r?\n/);
+
+    // Pre-process SR multi-line blocks (?, ??) into :: / ::: shorthand
+    // BEFORE splitting into lines so the parser and line-based edits agree.
+    const processedText = preprocessSrText(
+      originalText,
+      plugin.settings.indexing.ignoreInCodeFences,
+      (ln: string) => ANY_HEADER_DELIM_RE().test(ln) || isMarkdownHeading(ln),
+    );
+
+    const lines = processedText.split(/\r?\n/);
     const pruneGlobalOrphans = options?.pruneGlobalOrphans ?? true;
 
-    const parseText = normaliseTextForParsing(originalText);
+    const parseText = normaliseTextForParsing(processedText);
     const { cards } = parseCardsFromText(file.path, parseText, plugin.settings.indexing.ignoreInCodeFences);
 
     // If store is empty but we parsed cards, attempt recovery of scheduling snapshot BEFORE we start creating states.
@@ -1767,8 +1978,8 @@ export async function syncOneFile(
       keepIds.add(id);
 
       if (c.isShorthand) {
-        // Shorthand card: replace the ::: line with canonical format.
-        // sourceEndLine is the actual ::: line (sourceStartLine may point to an anchor line above it).
+        // Shorthand card: replace the :: / ::: line with canonical format.
+        // sourceEndLine is the actual shorthand line (sourceStartLine may point to an anchor line above it).
         const shorthandLine = c.sourceEndLine;
         const prefix = inferPrefixAt(lines, shorthandLine);
         const d = getDelimiter();
@@ -1782,6 +1993,11 @@ export async function syncOneFile(
         if (c.type === "cloze") {
           const cqEsc = escapeDelimiterText(c.clozeText ?? "");
           canonicalLines.push(`${prefix}CQ ${d} ${cqEsc} ${d}`);
+        } else if (c.type === "reversed") {
+          const qEsc = escapeDelimiterText(c.q ?? "");
+          const aEsc = escapeDelimiterText(c.a ?? "");
+          canonicalLines.push(`${prefix}RQ ${d} ${qEsc} ${d}`);
+          canonicalLines.push(`${prefix}A ${d} ${aEsc} ${d}`);
         } else {
           const qEsc = escapeDelimiterText(c.q ?? "");
           const aEsc = escapeDelimiterText(c.a ?? "");
@@ -2262,9 +2478,18 @@ export async function syncQuestionBank(plugin: LearnKitPlugin) {
 
     const buildFilePlan = (file: TFile, text: string) => {
       const addedIds: string[] = [];
-      const lines = text.split(/\r?\n/);
 
-      const parseText = normaliseTextForParsing(text);
+      // Pre-process SR multi-line blocks (?, ??) into :: / ::: shorthand
+      // BEFORE splitting into lines so the parser and line-based edits agree.
+      const processedText = preprocessSrText(
+        text,
+        plugin.settings.indexing.ignoreInCodeFences,
+        (ln: string) => ANY_HEADER_DELIM_RE().test(ln) || isMarkdownHeading(ln),
+      );
+
+      const lines = processedText.split(/\r?\n/);
+
+      const parseText = normaliseTextForParsing(processedText);
       const { cards } = parseCardsFromText(file.path, parseText, plugin.settings.indexing.ignoreInCodeFences);
 
       const existingAnchorIds = collectAnchorIdsFromLines(lines);
@@ -2319,7 +2544,7 @@ export async function syncQuestionBank(plugin: LearnKitPlugin) {
         keepIds.add(id);
 
         if (c.isShorthand) {
-          // Shorthand card: replace the ::: line with canonical format.
+          // Shorthand card: replace the :: / ::: line with canonical format.
           const shorthandLine = c.sourceEndLine;
           const prefix = inferPrefixAt(lines, shorthandLine);
           const d = getDelimiter();
@@ -2333,6 +2558,11 @@ export async function syncQuestionBank(plugin: LearnKitPlugin) {
           if (c.type === "cloze") {
             const cqEsc = escapeDelimiterText(c.clozeText ?? "");
             canonicalLines.push(`${prefix}CQ ${d} ${cqEsc} ${d}`);
+          } else if (c.type === "reversed") {
+            const qEsc = escapeDelimiterText(c.q ?? "");
+            const aEsc = escapeDelimiterText(c.a ?? "");
+            canonicalLines.push(`${prefix}RQ ${d} ${qEsc} ${d}`);
+            canonicalLines.push(`${prefix}A ${d} ${aEsc} ${d}`);
           } else {
             const qEsc = escapeDelimiterText(c.q ?? "");
             const aEsc = escapeDelimiterText(c.a ?? "");
@@ -2366,6 +2596,8 @@ export async function syncQuestionBank(plugin: LearnKitPlugin) {
     };
 
     for (const file of mdFiles) {
+      if (!shouldSyncFile(plugin, file)) continue;
+
       try {
         let text = await vault.cachedRead(file);
         let plan = buildFilePlan(file, text);

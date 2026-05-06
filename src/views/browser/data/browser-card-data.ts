@@ -283,6 +283,20 @@ export function applyValueToCard(card: CardRecord, col: ColKey, value: string): 
     return draft;
   }
 
+  if (col === "type") {
+    const validTypes: string[] = [
+      "basic", "reversed", "reversed-child",
+      "mcq", "cloze", "cloze-child",
+      "io", "io-child",
+      "hq", "hq-child",
+      "oq", "combo-child",
+    ];
+    if (validTypes.includes(v)) {
+      (draft as Record<string, unknown>).type = v;
+    }
+    return draft;
+  }
+
   return draft;
 }
 

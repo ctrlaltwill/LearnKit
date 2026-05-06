@@ -123,6 +123,7 @@ export function createSettingsNoticeLines(tx: Tx) {
     }),
     cardDelimiter: (label: string) => tx("ui.settings.notice.cardDelimiter", "Card delimiter: {label}", { label }),
     settingsResetDefaults: tx("ui.settings.reset.notice.defaultsSuccess", "Settings reset to defaults"),
+    syncFilterQuery: (summary: string) => tx("ui.settings.notice.syncFilterQuery", "Sync filter: {summary}", { summary }),
   };
 }
 

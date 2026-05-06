@@ -180,6 +180,7 @@ export const DEFAULT_SETTINGS: LearnKitSettings = {
     ignoreInCodeFences: true,
     idPlacement: "above",
     delimiter: "|",
+    syncFilterQuery: "",
   },
 
   imageOcclusion: {

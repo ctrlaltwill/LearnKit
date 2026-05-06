@@ -15,11 +15,17 @@
 import { describe, it, expect } from "vitest";
 import { parseCardsFromText } from "../src/engine/parser/parser";
 import type { ParsedCard } from "../src/engine/parser/parser";
+import { preprocessSrText, isMarkdownHeading, ANY_HEADER_DELIM_RE } from "../src/platform/core/delimiter";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
 function parse(text: string): ParsedCard[] {
-  return parseCardsFromText("test-note.md", text).cards;
+  // Pre-process SR multi-line blocks so the parser sees :: / ::: shorthand.
+  // This is a no-op when no SR markers are present.
+  const processed = preprocessSrText(text, true, (ln: string) =>
+    ANY_HEADER_DELIM_RE().test(ln) || isMarkdownHeading(ln),
+  );
+  return parseCardsFromText("test-note.md", processed).cards;
 }
 
 function parseOne(text: string): ParsedCard {
@@ -457,11 +463,11 @@ A | Real answer |`
   });
 });
 
-// ── Shorthand basic cards (:::) ─────────────────────────────────────────────
+// ── Shorthand basic cards (::) ──────────────────────────────────────────────
 
-describe("shorthand basic cards (:::)", () => {
+describe("shorthand basic cards (::)", () => {
   it("parses a simple shorthand card", () => {
-    const card = parseOne("Capital of France:::Paris");
+    const card = parseOne("Capital of France::Paris");
     expect(card.type).toBe("basic");
     expect(card.q).toBe("Capital of France");
     expect(card.a).toBe("Paris");
@@ -470,50 +476,36 @@ describe("shorthand basic cards (:::)", () => {
   });
 
   it("trims whitespace around question and answer", () => {
-    const card = parseOne("  What is 2+2  :::  4  ");
+    const card = parseOne("  What is 2+2  ::  4  ");
     expect(card.q).toBe("What is 2+2");
     expect(card.a).toBe("4");
     expect(card.isShorthand).toBe(true);
     expect(card.errors).toHaveLength(0);
   });
 
-  it("splits on the first ::: only", () => {
-    const card = parseOne("Q:::A:::B");
+  it("splits on the first :: only", () => {
+    const card = parseOne("Q::A::B");
     expect(card.q).toBe("Q");
-    expect(card.a).toBe("A:::B");
+    expect(card.a).toBe("A::B");
   });
 
-  it("rejects empty question (:::Answer)", () => {
-    const cards = parse(":::Answer");
+  it("rejects empty question (::Answer)", () => {
+    const cards = parse("::Answer");
     expect(cards).toHaveLength(0);
   });
 
-  it("rejects empty answer (Question:::)", () => {
-    const cards = parse("Question:::");
+  it("rejects empty answer (Question::)", () => {
+    const cards = parse("Question::");
     expect(cards).toHaveLength(0);
   });
 
   it("rejects empty question after trim", () => {
-    const cards = parse("   :::Answer");
+    const cards = parse("   ::Answer");
     expect(cards).toHaveLength(0);
   });
 
   it("rejects empty answer after trim", () => {
-    const cards = parse("Question:::   ");
-    expect(cards).toHaveLength(0);
-  });
-
-  it("does not match Dataview double-colon", () => {
-    const cards = parse("tags:: value");
-    expect(cards).toHaveLength(0);
-  });
-
-  it("does not match inside fenced code blocks", () => {
-    const cards = parse(
-      `\`\`\`
-Question:::Answer
-\`\`\``
-    );
+    const cards = parse("Question::   ");
     expect(cards).toHaveLength(0);
   });
 
@@ -525,7 +517,7 @@ Question:::Answer
   });
 
   it("parses multiple consecutive shorthand cards", () => {
-    const cards = parse("Q1:::A1\nQ2:::A2\nQ3:::A3");
+    const cards = parse("Q1::A1\nQ2::A2\nQ3::A3");
     expect(cards).toHaveLength(3);
     expect(cards[0].q).toBe("Q1");
     expect(cards[0].a).toBe("A1");
@@ -539,7 +531,7 @@ Question:::Answer
       `Q | Regular Q |
 A | Regular A |
 
-Shorthand Q:::Shorthand A`
+Shorthand Q::Shorthand A`
     );
     expect(cards).toHaveLength(2);
     expect(cards[0].type).toBe("basic");
@@ -552,7 +544,7 @@ Shorthand Q:::Shorthand A`
   });
 
   it("attaches a pending anchor ID to a shorthand card", () => {
-    const card = parseOne("^sprout-123456789\nCapital:::Paris");
+    const card = parseOne("^sprout-123456789\nCapital::Paris");
     expect(card.id).toBe("123456789");
     expect(card.q).toBe("Capital");
     expect(card.a).toBe("Paris");
@@ -561,7 +553,7 @@ Shorthand Q:::Shorthand A`
   });
 
   it("attaches a pending title to a shorthand card", () => {
-    const card = parseOne("T | Geography |\nCapital:::Paris");
+    const card = parseOne("T | Geography |\nCapital::Paris");
     expect(card.title).toBe("Geography");
     expect(card.q).toBe("Capital");
     expect(card.a).toBe("Paris");
@@ -572,7 +564,7 @@ Shorthand Q:::Shorthand A`
     const cards = parse(
       `Q | Ongoing Q |
 A | Ongoing A |
-Shorthand:::Answer`
+Shorthand::Answer`
     );
     expect(cards).toHaveLength(2);
     expect(cards[0].q).toBe("Ongoing Q");
@@ -581,85 +573,170 @@ Shorthand:::Answer`
   });
 });
 
-// ── Shorthand cloze cards (cloze/cq/CQ:::) ─────────────────────────────────
+// ── Shorthand reversed cards (:::) ──────────────────────────────────────────
 
-describe("shorthand cloze cards (:::)", () => {
-  it("parses cloze::: with bare {{}} tokens and auto-numbers them", () => {
-    const card = parseOne("cloze:::The capital of {{France}} is {{Paris}}");
+describe("shorthand reversed cards (:::)", () => {
+  it("parses a simple reversed shorthand card", () => {
+    const card = parseOne("Capital of France:::Paris");
+    expect(card.type).toBe("reversed");
+    expect(card.q).toBe("Capital of France");
+    expect(card.a).toBe("Paris");
+    expect(card.isShorthand).toBe(true);
+    expect(card.errors).toHaveLength(0);
+  });
+
+  it("trims whitespace around question and answer", () => {
+    const card = parseOne("  What is 2+2  :::  4  ");
+    expect(card.type).toBe("reversed");
+    expect(card.q).toBe("What is 2+2");
+    expect(card.a).toBe("4");
+    expect(card.isShorthand).toBe(true);
+  });
+
+  it("does not conflict with basic double-colon", () => {
+    // Verify that :: is still basic and ::: is now reversed
+    const basic = parseOne("Q::A");
+    expect(basic.type).toBe("basic");
+    const reversed = parseOne("Q:::A");
+    expect(reversed.type).toBe("reversed");
+  });
+
+  it("rejects empty question (:::Answer)", () => {
+    const cards = parse(":::Answer");
+    expect(cards).toHaveLength(0);
+  });
+
+  it("rejects empty answer (Question:::)", () => {
+    const cards = parse("Question:::");
+    expect(cards).toHaveLength(0);
+  });
+
+  it("does not match inside fenced code blocks", () => {
+    const cards = parse(
+      `\`\`\`
+Question:::Answer
+\`\`\``
+    );
+    expect(cards).toHaveLength(0);
+  });
+
+  it("parses multiple consecutive reversed shorthand cards", () => {
+    const cards = parse("Q1:::A1\nQ2:::A2\nQ3:::A3");
+    expect(cards).toHaveLength(3);
+    expect(cards[0].type).toBe("reversed");
+    expect(cards[0].q).toBe("Q1");
+    expect(cards[0].a).toBe("A1");
+    cards.forEach((c) => expect(c.isShorthand).toBe(true));
+  });
+
+  it("parses reversed shorthand mixed with basic shorthand", () => {
+    const cards = parse("Basic Q::Basic A\nReversed Q:::Reversed A");
+    expect(cards).toHaveLength(2);
+    expect(cards[0].type).toBe("basic");
+    expect(cards[1].type).toBe("reversed");
+  });
+
+  it("attaches a pending anchor ID to a reversed shorthand card", () => {
+    const card = parseOne("^learnkit-123456789\nQ Side:::A Side");
+    expect(card.id).toBe("123456789");
+    expect(card.type).toBe("reversed");
+    expect(card.q).toBe("Q Side");
+    expect(card.a).toBe("A Side");
+    expect(card.isShorthand).toBe(true);
+  });
+
+  it("attaches a pending title to a reversed shorthand card", () => {
+    const card = parseOne("T | Geography |\nCapital:::Paris");
+    expect(card.title).toBe("Geography");
+    expect(card.type).toBe("reversed");
+    expect(card.q).toBe("Capital");
+    expect(card.a).toBe("Paris");
+    expect(card.isShorthand).toBe(true);
+  });
+});
+
+// ── Shorthand cloze cards (cloze/cq/CQ::) ───────────────────────────────────
+
+describe("shorthand cloze cards (::)", () => {
+  it("parses cloze:: with bare {{}} tokens and auto-numbers them", () => {
+    const card = parseOne("cloze::The capital of {{France}} is {{Paris}}");
     expect(card.type).toBe("cloze");
     expect(card.clozeText).toBe("The capital of {{c1::France}} is {{c2::Paris}}");
     expect(card.isShorthand).toBe(true);
     expect(card.errors).toHaveLength(0);
   });
 
-  it("accepts cq::: prefix (lowercase)", () => {
-    const card = parseOne("cq:::The answer is {{42}}");
+  it("accepts cq:: prefix (lowercase)", () => {
+    const card = parseOne("cq::The answer is {{42}}");
     expect(card.type).toBe("cloze");
     expect(card.clozeText).toBe("The answer is {{c1::42}}");
     expect(card.isShorthand).toBe(true);
     expect(card.errors).toHaveLength(0);
   });
 
-  it("accepts CQ::: prefix (uppercase)", () => {
-    const card = parseOne("CQ:::The answer is {{42}}");
+  it("accepts CQ:: prefix (uppercase)", () => {
+    const card = parseOne("CQ::The answer is {{42}}");
     expect(card.type).toBe("cloze");
     expect(card.clozeText).toBe("The answer is {{c1::42}}");
     expect(card.isShorthand).toBe(true);
     expect(card.errors).toHaveLength(0);
   });
 
-  it("accepts Cloze::: prefix (mixed case)", () => {
-    const card = parseOne("Cloze:::The answer is {{42}}");
+  it("accepts Cloze:: prefix (mixed case)", () => {
+    const card = parseOne("Cloze::The answer is {{42}}");
     expect(card.type).toBe("cloze");
     expect(card.clozeText).toBe("The answer is {{c1::42}}");
     expect(card.isShorthand).toBe(true);
   });
 
   it("preserves already-numbered {{cN::}} tokens", () => {
-    const card = parseOne("cloze:::{{c3::alpha}} and {{c1::beta}}");
+    const card = parseOne("cloze::{{c3::alpha}} and {{c1::beta}}");
     expect(card.clozeText).toBe("{{c3::alpha}} and {{c1::beta}}");
     expect(card.errors).toHaveLength(0);
   });
 
   it("auto-numbers bare tokens and preserves numbered ones", () => {
-    const card = parseOne("cq:::{{c1::known}} then {{unknown}} then {{also unknown}}");
-    expect(card.clozeText).toBe("{{c1::known}} then {{c1::unknown}} then {{c2::also unknown}}");
+    const card = parseOne("cq::{{c1::known}} then {{unknown}} then {{also unknown}}");
+    expect(card.clozeText).toBe("{{c1::known}} then {{c2::unknown}} then {{c3::also unknown}}");
   });
 
   it("rejects empty body", () => {
-    const cards = parse("cloze:::");
+    const cards = parse("cloze::");
     expect(cards).toHaveLength(0);
   });
 
   it("rejects body with no cloze tokens", () => {
-    const card = parseOne("cloze:::no tokens here");
+    const card = parseOne("cloze::no tokens here");
     expect(card.type).toBe("cloze");
     expect(card.errors.length).toBeGreaterThan(0);
   });
 
   it("rejects empty cloze token content", () => {
-    const card = parseOne("cloze:::text with {{}}");
+    const card = parseOne("cloze::text with {{}}");
     expect(card.errors.length).toBeGreaterThan(0);
   });
 
   it("does not interfere with basic shorthand", () => {
-    const card = parseOne("What is 2+2:::4");
-    expect(card.type).toBe("basic");
-    expect(card.q).toBe("What is 2+2");
-    expect(card.a).toBe("4");
+    const basic = parseOne("What is 2+2::4");
+    expect(basic.type).toBe("basic");
+    expect(basic.q).toBe("What is 2+2");
+    expect(basic.a).toBe("4");
+    const cloze = parseOne("cloze::What is {{answer}}");
+    expect(cloze.type).toBe("cloze");
+    expect(cloze.clozeText).toBe("What is {{c1::answer}}");
   });
 
   it("does not match inside fenced code blocks", () => {
     const cards = parse(
       `\`\`\`
-cloze:::text with {{hidden}}
+cloze::text with {{hidden}}
 \`\`\``
     );
     expect(cards).toHaveLength(0);
   });
 
   it("attaches a pending anchor ID", () => {
-    const card = parseOne("^learnkit-123456789\ncloze:::The capital is {{Paris}}");
+    const card = parseOne("^learnkit-123456789\ncloze::The capital is {{Paris}}");
     expect(card.id).toBe("123456789");
     expect(card.type).toBe("cloze");
     expect(card.clozeText).toBe("The capital is {{c1::Paris}}");
@@ -667,14 +744,14 @@ cloze:::text with {{hidden}}
   });
 
   it("attaches a pending title", () => {
-    const card = parseOne("T | Geography |\ncq:::The capital is {{Paris}}");
+    const card = parseOne("T | Geography |\ncq::The capital is {{Paris}}");
     expect(card.title).toBe("Geography");
     expect(card.type).toBe("cloze");
     expect(card.clozeText).toBe("The capital is {{c1::Paris}}");
   });
 
   it("parses multiple consecutive cloze shorthand cards", () => {
-    const cards = parse("cloze:::{{A}} is A\ncq:::{{B}} is B");
+    const cards = parse("cloze::{{A}} is A\ncq::{{B}} is B");
     expect(cards).toHaveLength(2);
     expect(cards[0].clozeText).toBe("{{c1::A}} is A");
     expect(cards[1].clozeText).toBe("{{c1::B}} is B");
@@ -685,10 +762,167 @@ cloze:::text with {{hidden}}
   });
 
   it("parses cloze shorthand mixed with basic shorthand", () => {
-    const cards = parse("Q:::A\ncloze:::text {{hidden}}");
+    const cards = parse("Q::A\ncloze::text {{hidden}}");
     expect(cards).toHaveLength(2);
     expect(cards[0].type).toBe("basic");
     expect(cards[1].type).toBe("cloze");
     expect(cards[1].clozeText).toBe("text {{c1::hidden}}");
+  });
+});
+
+// ── SR migration: multi-line basic / reversed (?, ??) ──────────────────────
+
+describe("SR multi-line migration (?, ??)", () => {
+  it("converts multi-line basic (?) to basic card", () => {
+    const cards = parse("What is the capital\n?\nParis");
+    expect(cards).toHaveLength(1);
+    expect(cards[0].type).toBe("basic");
+    expect(cards[0].q).toBe("What is the capital");
+    expect(cards[0].a).toBe("Paris");
+    expect(cards[0].isShorthand).toBe(true);
+  });
+
+  it("converts multi-line reversed (??) to reversed card", () => {
+    const cards = parse("info 1A\n??\ninfo 2A");
+    expect(cards).toHaveLength(1);
+    expect(cards[0].type).toBe("reversed");
+    expect(cards[0].q).toBe("info 1A");
+    expect(cards[0].a).toBe("info 2A");
+    expect(cards[0].isShorthand).toBe(true);
+  });
+
+  it("joins multi-line question and answer text", () => {
+    const cards = parse(
+      `As per the definition
+of "multiline" the prompt
+can be on multiple lines
+?
+same goes for
+the answer`
+    );
+    expect(cards).toHaveLength(1);
+    expect(cards[0].type).toBe("basic");
+    expect(cards[0].q).toBe(
+      'As per the definition of "multiline" the prompt can be on multiple lines'
+    );
+    expect(cards[0].a).toBe("same goes for the answer");
+    expect(cards[0].isShorthand).toBe(true);
+  });
+
+  it("terminates at blank line after answer", () => {
+    const cards = parse(
+      `question text
+?
+answer text
+
+some other prose`
+    );
+    expect(cards).toHaveLength(1);
+    expect(cards[0].q).toBe("question text");
+    expect(cards[0].a).toBe("answer text");
+  });
+
+  it("does not match ? inside pipe-delimited cards", () => {
+    const cards = parse("Q | question |\nA | answer |");
+    expect(cards).toHaveLength(1);
+    expect(cards[0].type).toBe("basic");
+    expect(cards[0].isShorthand).toBe(false);
+  });
+
+  it("does not match ?? inside fenced code blocks", () => {
+    const cards = parse(
+      `\`\`\`
+question
+??
+answer
+\`\`\``
+    );
+    expect(cards).toHaveLength(0);
+  });
+});
+
+// ── SR migration: cloze (==text==) ─────────────────────────────────────────
+
+describe("SR cloze migration (==text==)", () => {
+  it("converts simplified cloze with sequential numbering", () => {
+    const cards = parse(
+      "The first female ==prime minister== of Australia was ==Julia Gillard=="
+    );
+    expect(cards).toHaveLength(1);
+    expect(cards[0].type).toBe("cloze");
+    expect(cards[0].clozeText).toBe(
+      "The first female {{c1::prime minister}} of Australia was {{c2::Julia Gillard}}"
+    );
+    expect(cards[0].isShorthand).toBe(true);
+  });
+
+  it("converts cloze with hints using ^[hint] notation", () => {
+    const cards = parse(
+      "This ==note== doesn't need to have ==number==^[hint] on clozes"
+    );
+    expect(cards).toHaveLength(1);
+    expect(cards[0].type).toBe("cloze");
+    expect(cards[0].clozeText).toBe(
+      "This {{c1::note}} doesn't need to have {{c2::number::hint}} on clozes"
+    );
+    expect(cards[0].isShorthand).toBe(true);
+  });
+
+  it("converts classic cloze with [^N] grouping", () => {
+    const cards = parse(
+      "This is a ==cloze==^[a hint][^1]. This is ==too, but without hint==[^2]. And this one is asked ==together with the first cloze==[^1]."
+    );
+    expect(cards).toHaveLength(1);
+    expect(cards[0].type).toBe("cloze");
+    expect(cards[0].clozeText).toBe(
+      "This is a {{c1::cloze::a hint}}. This is {{c2::too, but without hint}}. And this one is asked {{c1::together with the first cloze}}."
+    );
+    expect(cards[0].isShorthand).toBe(true);
+  });
+
+  it("handles cloze with [^N] but no hint", () => {
+    const cards = parse("First ==cloze==[^1]. Second ==cloze==[^2].");
+    expect(cards).toHaveLength(1);
+    expect(cards[0].type).toBe("cloze");
+    expect(cards[0].clozeText).toBe(
+      "First {{c1::cloze}}. Second {{c2::cloze}}."
+    );
+  });
+
+  it("ignores lines without cloze deletions", () => {
+    const cards = parse("Just a regular line of text.");
+    expect(cards).toHaveLength(0);
+  });
+
+  it("does not interfere with existing CQ cards", () => {
+    const cards = parse("CQ | existing {{c1::card}} |");
+    expect(cards).toHaveLength(1);
+    expect(cards[0].type).toBe("cloze");
+    expect(cards[0].isShorthand).toBe(false);
+    expect(cards[0].clozeText).toBe("existing {{c1::card}}");
+  });
+
+  it("does not match == inside fenced code blocks", () => {
+    const cards = parse(
+      `\`\`\`
+The answer is ==42==
+\`\`\``
+    );
+    expect(cards).toHaveLength(0);
+  });
+
+  it("converts mixed SR cloze and existing shorthand in same note", () => {
+    const cards = parse(
+      `The capital of {{France}} is ==Paris==
+Basic Q::Basic A`
+    );
+    expect(cards).toHaveLength(2);
+    expect(cards[0].type).toBe("cloze");
+    expect(cards[0].clozeText).toBe(
+      "The capital of {{c2::France}} is {{c1::Paris}}"
+    );
+    expect(cards[1].type).toBe("basic");
+    expect(cards[1].q).toBe("Basic Q");
+    expect(cards[1].a).toBe("Basic A");
   });
 });

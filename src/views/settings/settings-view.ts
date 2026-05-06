@@ -648,6 +648,7 @@ export class LearnKitSettingsView extends ItemView {
       if (typeof renderMethod === "function") {
         renderMethod.call(adapter, renderTarget);
         if (tab === "settings") {
+          this._partitionSettingsContentBySubTab(renderTarget, selectedSettingsSubTab?.id ?? "general");
           this._insertSettingsPaneTitle(renderTarget, selectedSettingsSubTab?.paneTitle ?? "Settings");
           this._promoteSettingsHeadingsToH2(renderTarget);
         }

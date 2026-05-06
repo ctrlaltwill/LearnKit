@@ -77,6 +77,7 @@ export const docsSidebarTree: DocsGroup[] = [
       { page: "First-Review-in-5-Minutes", text: "First Review in 5 Minutes" },
       { page: "Getting-Started" },
       { page: "Import-From-Anki" },
+      { page: "Migrating-From-Obsidian-SR", text: "Migrating From Obsidian SR" },
       { page: "Installation" },
       { page: "Syncing" },
     ],

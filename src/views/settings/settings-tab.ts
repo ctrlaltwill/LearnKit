@@ -5213,6 +5213,402 @@ export class LearnKitSettingsTab extends PluginSettingTab {
         });
       });
 
+    // ── Sync scope editor ────────────────────────────────────────────
+    new Setting(wrapper)
+      .setName(
+        this._tx(
+          "ui.settings.sync.filter.name",
+          "Include or exclude notes from sync",
+        ),
+      )
+      .setDesc(
+        this._tx(
+          "ui.settings.sync.filter.desc",
+          "Filter which notes are scanned for flashcards by folders, notes, tags, or properties.",
+        ),
+      )
+      .then((setting) => {
+        const files = this.app.vault.getMarkdownFiles();
+        const notePathSet = new Set(files.map((file) => file.path));
+        const folderSet = new Set<string>();
+        for (const file of files) {
+          const slash = file.path.lastIndexOf("/");
+          if (slash >= 0) folderSet.add(file.path.slice(0, slash));
+        }
+
+        const metadata = collectVaultTagAndPropertyPairs(this.app, files);
+        const baseOptions: SearchPopoverOption[] = [
+          {
+            type: "vault",
+            id: "vault::",
+            label: `Vault: ${this.app.vault.getName()} (${files.length})`,
+            selected: false,
+            searchTexts: [this.app.vault.getName(), "vault", "all notes", "all content"],
+          },
+          ...Array.from(folderSet)
+            .sort((a, b) => a.localeCompare(b))
+            .map((folder) => {
+              const folderName = folder.split("/").filter(Boolean).pop() ?? folder;
+              return {
+                type: "folder" as const,
+                id: `folder::${folder}`,
+                label: `Folder: ${folderName} (${files.filter((file) => file.path.startsWith(`${folder}/`)).length})`,
+                selected: false,
+                searchTexts: [folderName, folder],
+              };
+            }),
+          ...files
+            .sort((a, b) => a.path.localeCompare(b.path))
+            .map((file: TFile) => ({
+              type: "note" as const,
+              id: `note::${file.path}`,
+              label: `Note: ${file.basename}`,
+              selected: false,
+              searchTexts: [file.basename, file.path],
+            })),
+          ...metadata.tags.map((tag) => ({
+            type: "tag" as const,
+            id: `tag::${tag.token}`,
+            label: `Tag: ${tag.display} (${tag.count})`,
+            selected: false,
+            searchTexts: [`#${tag.token}`, `tag:${tag.token}`, tag.display],
+          })),
+          ...metadata.properties.map((pair) => ({
+            type: "property" as const,
+            id: `prop::${encodePropertyPair({ key: pair.key, value: pair.value })}`,
+            label: `${pair.displayKey}: ${pair.displayValue} (${pair.count})`,
+            selected: false,
+            propertyKey: pair.displayKey,
+            propertyValue: pair.displayValue,
+            searchTexts: [
+              `${pair.key}:${pair.value}`,
+              `${pair.key}=${pair.value}`,
+              `${pair.displayKey}:${pair.displayValue}`,
+              `prop:${pair.key}=${pair.value}`,
+            ],
+          })),
+        ];
+
+        const safeDecodeURI = (v: string): string => {
+          try { return decodeURIComponent(v); } catch { return v; }
+        };
+
+        const parseStoredQuery = (query: string): { include: Set<string>; exclude: Set<string>; passthrough: string[] } => {
+          const include = new Set<string>();
+          const exclude = new Set<string>();
+          const passthrough: string[] = [];
+          const parts = String(query || "")
+            .split(/\s+/)
+            .map((part) => part.trim())
+            .filter(Boolean);
+
+          for (const part of parts) {
+            const lowered = part.toLowerCase();
+            if (lowered === "scope:vault" || lowered === "vault") {
+              include.add("vault::");
+              continue;
+            }
+            if (lowered === "-scope:vault" || lowered === "-vault") {
+              exclude.add("vault::");
+              continue;
+            }
+            if (lowered.startsWith("path:")) {
+              const path = safeDecodeURI(String(part.slice(5)).trim());
+              if (!path) continue;
+              include.add(notePathSet.has(path) ? `note::${path}` : `folder::${path}`);
+              continue;
+            }
+            if (lowered.startsWith("-path:")) {
+              const path = safeDecodeURI(String(part.slice(6)).trim());
+              if (!path) continue;
+              exclude.add(notePathSet.has(path) ? `note::${path}` : `folder::${path}`);
+              continue;
+            }
+            if (lowered.startsWith("note:")) {
+              const path = safeDecodeURI(String(part.slice(5)).trim());
+              if (!path) continue;
+              include.add(`note::${path}`);
+              continue;
+            }
+            if (lowered.startsWith("-note:")) {
+              const path = safeDecodeURI(String(part.slice(6)).trim());
+              if (!path) continue;
+              exclude.add(`note::${path}`);
+              continue;
+            }
+            if (lowered.startsWith("tag:")) {
+              const token = safeDecodeURI(String(part.slice(4)).trim()).toLowerCase().replace(/^#+/, "");
+              if (!token) continue;
+              include.add(`tag::${token}`);
+              continue;
+            }
+            if (lowered.startsWith("-tag:")) {
+              const token = safeDecodeURI(String(part.slice(5)).trim()).toLowerCase().replace(/^#+/, "");
+              if (!token) continue;
+              exclude.add(`tag::${token}`);
+              continue;
+            }
+            if (lowered.startsWith("prop:")) {
+              const token = safeDecodeURI(String(part.slice(5)).trim()).toLowerCase();
+              if (!token) continue;
+              include.add(`prop::${token}`);
+              continue;
+            }
+            if (lowered.startsWith("-prop:")) {
+              const token = safeDecodeURI(String(part.slice(6)).trim()).toLowerCase();
+              if (!token) continue;
+              exclude.add(`prop::${token}`);
+              continue;
+            }
+            passthrough.push(part);
+          }
+
+          return { include, exclude, passthrough };
+        };
+
+        const encodeTokenValue = (v: string): string => {
+          try { return encodeURIComponent(v); } catch { return v; }
+        };
+
+        const toToken = (id: string, negate: boolean): string | null => {
+          const prefix = negate ? "-" : "";
+          if (id === "vault::") return `${prefix}scope:vault`;
+          if (id.startsWith("folder::")) return `${prefix}path:${encodeTokenValue(id.slice("folder::".length))}`;
+          if (id.startsWith("note::")) return `${prefix}note:${encodeTokenValue(id.slice("note::".length))}`;
+          if (id.startsWith("tag::")) return `${prefix}tag:${encodeTokenValue(id.slice("tag::".length))}`;
+          if (id.startsWith("prop::")) {
+            const raw = id.slice("prop::".length);
+            const pair = decodePropertyPair(raw);
+            if (!pair) return null;
+            return `${prefix}prop:${encodeURIComponent(pair.key)}=${encodeURIComponent(pair.value)}`;
+          }
+          return null;
+        };
+
+        const parsed = parseStoredQuery(String(this.plugin.settings.indexing.syncFilterQuery ?? ""));
+        const includeSet = parsed.include;
+        const excludeSet = parsed.exclude;
+        const passthroughTokens = parsed.passthrough;
+        const validOptionIds = new Set(baseOptions.map((option) => option.id));
+        for (const id of Array.from(includeSet)) {
+          if (!validOptionIds.has(id)) includeSet.delete(id);
+        }
+        for (const id of Array.from(excludeSet)) {
+          if (!validOptionIds.has(id)) excludeSet.delete(id);
+        }
+
+        setting.controlEl.addClass("learnkit-note-review-scope-control");
+        const controlHost = setting.controlEl.createDiv({ cls: "learnkit-note-review-scope-editor learnkit-note-review-scope-editor" });
+        const includeHost = controlHost.createDiv({ cls: "learnkit-note-review-scope-block learnkit-note-review-scope-block" });
+        const excludeHost = controlHost.createDiv({ cls: "learnkit-note-review-scope-block learnkit-note-review-scope-block" });
+        const summaryEl = controlHost.createDiv({ cls: "learnkit-note-review-scope-summary learnkit-note-review-scope-summary text-xs text-muted-foreground" });
+
+        const persistScopeQuery = async (): Promise<void> => {
+          const includeTokens = Array.from(includeSet)
+            .map((id) => toToken(id, false))
+            .filter((token): token is string => !!token)
+            .sort((a, b) => a.localeCompare(b));
+
+          const excludeTokens = Array.from(excludeSet)
+            .map((id) => toToken(id, true))
+            .filter((token): token is string => !!token)
+            .sort((a, b) => a.localeCompare(b));
+
+          this.plugin.settings.indexing.syncFilterQuery = [...includeTokens, ...excludeTokens, ...passthroughTokens]
+            .filter(Boolean)
+            .join(" ")
+            .trim();
+          await this.plugin.saveAll();
+        };
+
+        let renderInclude: (() => void) | null = null;
+        let renderExclude: (() => void) | null = null;
+
+        const isOptionMatch = (id: string, file: TFile): boolean => {
+          if (id === "vault::") return true;
+          if (id.startsWith("folder::")) {
+            const folder = id.slice("folder::".length);
+            return file.path.startsWith(`${folder}/`);
+          }
+          if (id.startsWith("note::")) return file.path === id.slice("note::".length);
+          if (id.startsWith("tag::")) {
+            const token = id.slice("tag::".length).toLowerCase();
+            if (!token) return false;
+            const tags = new Set(extractFileTags(this.app, file));
+            return tags.has(token);
+          }
+          if (id.startsWith("prop::")) {
+            const pair = decodePropertyPair(id.slice("prop::".length));
+            if (!pair) return false;
+            const props = extractFilePropertyPairs(this.app, file);
+            return props.some((p) => p.key === pair.key && p.value === pair.value);
+          }
+          return false;
+        };
+
+        const renderSyncedNotesSummary = (): void => {
+          const includeIds = Array.from(includeSet);
+          const excludeIds = Array.from(excludeSet);
+          const synced = files.filter((file) => {
+            const includeMatch = !includeIds.length || includeIds.some((id) => isOptionMatch(id, file));
+            if (!includeMatch) return false;
+            const excludedByScope = excludeIds.some((id) => isOptionMatch(id, file));
+            if (excludedByScope) return false;
+            return true;
+          }).length;
+          const scopeSummary = synced === files.length
+            ? this._tx("ui.settings.sync.filter.allNotes", "{count} notes", { count: files.length })
+            : `${synced} / ${files.length} ${files.length === 1 ? "note" : "notes"}`;
+          summaryEl.setText(scopeSummary);
+          this.queueSettingsNotice(
+            "indexing.syncFilterQuery",
+            this._noticeLines.syncFilterQuery(scopeSummary),
+          );
+        };
+
+        const getMatchedNoteCount = (ids: string[]): number => {
+          if (!ids.length) return 0;
+          const matched = new Set<string>();
+          for (const file of files) {
+            if (ids.some((id) => isOptionMatch(id, file))) matched.add(file.path);
+          }
+          return matched.size;
+        };
+
+        const mountScopeBlock = (
+          host: HTMLElement,
+          title: string,
+          activeSet: Set<string>,
+          oppositeSet: Set<string>,
+          emptyText: string,
+        ): { render: () => void } => {
+          host.empty();
+          const titleEl = host.createDiv({ cls: "learnkit-coach-field-label learnkit-coach-field-label", text: title });
+
+          const searchWrap = host.createDiv({ cls: "learnkit-coach-search-wrap learnkit-coach-search-wrap" });
+          const searchIcon = searchWrap.createSpan({ cls: "learnkit-coach-search-icon learnkit-coach-search-icon" });
+          setIcon(searchIcon, "search");
+          const search = searchWrap.createEl("input", {
+            cls: "input h-9",
+            attr: { type: "search", placeholder: "Search..." },
+          });
+
+          const popover = searchWrap.createDiv({ cls: "learnkit-coach-scope-popover learnkit-coach-scope-popover dropdown-menu hidden" });
+          const list = popover.createDiv({ cls: "learnkit-coach-scope-list learnkit-coach-scope-list min-w-56 rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 learnkit-pointer-auto learnkit-pointer-auto learnkit-header-menu-panel learnkit-header-menu-panel" });
+          list.setAttr("role", "menu");
+          list.setAttr("aria-label", `${title} matches`);
+
+          const selectedWrap = host.createDiv({ cls: "learnkit-coach-selected-wrap learnkit-coach-selected-wrap" });
+          const chips = selectedWrap.createDiv({ cls: "learnkit-coach-selected-chips learnkit-coach-selected-chips" });
+
+          let query = "";
+
+          const renderSelected = (): void => {
+            const sorted = Array.from(activeSet).sort((a, b) => a.localeCompare(b));
+            const optionById = new Map(baseOptions.map((option) => [option.id, option]));
+            const resolvedIds = sorted.filter((id) => optionById.has(id));
+            const uniqueResolvedIds: string[] = [];
+            const seenLabels = new Set<string>();
+            for (const id of resolvedIds) {
+              const option = optionById.get(id);
+              if (!option) continue;
+              const label = String(option.label || "").trim().toLowerCase();
+              if (label && seenLabels.has(label)) continue;
+              if (label) seenLabels.add(label);
+              uniqueResolvedIds.push(id);
+            }
+            const matchedCount = getMatchedNoteCount(uniqueResolvedIds);
+            titleEl.setText(`${title} (${matchedCount})`);
+            chips.empty();
+
+            if (!uniqueResolvedIds.length) {
+              chips.createDiv({ cls: "text-xs text-muted-foreground", text: emptyText });
+              return;
+            }
+
+            for (const id of uniqueResolvedIds) {
+              const option = optionById.get(id);
+              if (!option) continue;
+              const chip = chips.createDiv({ cls: "learnkit-coach-chip learnkit-coach-chip" });
+              chip.createSpan({ text: option.label });
+              const remove = chip.createEl("button", { cls: "learnkit-coach-chip-remove learnkit-coach-chip-remove" });
+              remove.type = "button";
+              remove.setAttr("aria-label", "Remove");
+              setIcon(remove, "x");
+              remove.addEventListener("click", () => {
+                activeSet.delete(id);
+                scopePicker.render();
+                renderSelected();
+                renderSyncedNotesSummary();
+                void persistScopeQuery();
+              });
+            }
+          };
+
+          const scopePicker = mountSearchPopoverList({
+            searchInput: search,
+            popoverEl: popover,
+            listEl: list,
+            getQuery: () => query,
+            setQuery: (next) => {
+              query = next;
+            },
+            getOptions: () => baseOptions.map((option) => ({
+              ...option,
+              selected: activeSet.has(option.id),
+            })),
+            onToggle: (id) => {
+              if (activeSet.has(id)) activeSet.delete(id);
+              else {
+                activeSet.add(id);
+                oppositeSet.delete(id);
+              }
+              renderSelected();
+              renderInclude?.();
+              renderExclude?.();
+              renderSyncedNotesSummary();
+              void persistScopeQuery();
+            },
+            emptyTextWhenQuery: "No matching scope items.",
+            emptyTextWhenIdle: "Type to search scope items.",
+            typeFilters: [
+              { type: "folder", label: "Folders" },
+              { type: "note", label: "Notes" },
+              { type: "tag", label: "Tags" },
+              { type: "property", label: "Properties" },
+            ],
+          });
+
+          const render = (): void => {
+            renderSelected();
+            scopePicker.render();
+          };
+
+          render();
+          return { render };
+        };
+
+        const includeBlock = mountScopeBlock(
+          includeHost,
+          this._tx("ui.settings.sync.filter.include.name", "Include"),
+          includeSet,
+          excludeSet,
+          this._tx("ui.settings.sync.filter.include.empty", "No include filters selected."),
+        );
+        renderInclude = includeBlock.render;
+
+        const excludeBlock = mountScopeBlock(
+          excludeHost,
+          this._tx("ui.settings.sync.filter.exclude.name", "Exclude"),
+          excludeSet,
+          includeSet,
+          this._tx("ui.settings.sync.filter.exclude.empty", "No exclude filters selected."),
+        );
+        renderExclude = excludeBlock.render;
+
+        renderSyncedNotesSummary();
+      });
+
   }
 
   private renderResetSection(wrapper: HTMLElement): void {
