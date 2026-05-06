@@ -31,7 +31,7 @@ import type LearnKitPlugin from "../../main";
 import type { Scope, Session, Rating } from "./types";
 import type { CardRecord } from "../../platform/types/card";
 import { getCorrectIndices, isMultiAnswerMcq, normalizeCardOptions } from "../../platform/types/card";
-import { buildSession, getNextDueInScope, type SessionBuildOptions } from "./session";
+import { buildSession, getNextDueInScope, disperseSiblings, collapseSiblingFamilies, type SessionBuildOptions } from "./session";
 import { formatCountdown } from "./timers";
 import { renderClozeFront } from "./question-cloze";
 import type { ClozeRenderOptions } from "./question-cloze";
@@ -1037,6 +1037,16 @@ export class SproutReviewerView extends ItemView {
     let queue = this.buildPracticeQueue(scope, exclude);
     if (!queue.length) queue = this.buildPracticeQueue(scope);
     queue = this._applyHotspotStudyModeToQueue(queue);
+
+    // ── Apply sibling separation (same as scheduled sessions) ─────
+    const siblingMode: string = (this.plugin.settings?.study as Record<string, unknown>)?.siblingMode as string ?? "standard";
+    if (siblingMode === "disperse") {
+      queue = disperseSiblings(queue);
+    } else if (siblingMode === "bury") {
+      const allCards = Object.values(this.plugin.store.data?.cards || {});
+      const states = this.plugin.store.data?.states || {};
+      queue = collapseSiblingFamilies(allCards, queue, states, Date.now());
+    }
 
     if (!queue.length) {
       new Notice(this.tx("ui.reviewer.notice.noPracticeCardsInScope", "No cards available for practice in this scope."));

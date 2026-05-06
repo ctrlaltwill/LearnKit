@@ -7,6 +7,8 @@
  *   - isAvailableNow — Determines if a card's state makes it eligible for study right now
  *   - buildSession — Constructs a full Session object (queue, stats, graded map) for a given scope
  *   - getNextDueInScope — Returns the earliest future due timestamp among cards in the given scope, or null
+ *   - disperseSiblings — Spreads sibling child cards evenly across the queue (disperse mode)
+ *   - collapseSiblingFamilies — Collapses each sibling family to a single active child (bury mode)
  */
 
 import type LearnKitPlugin from "../../main";
@@ -358,7 +360,7 @@ function compareSiblingPriority(a: CardRecord, b: CardRecord, states: Record<str
  * Bury mode collapses each sibling family to a single active child until the
  * current child is no longer new, then the next sibling can appear.
  */
-function collapseSiblingFamilies(
+export function collapseSiblingFamilies(
   cardsInScope: CardRecord[],
   queueCards: CardRecord[],
   states: Record<string, CardState>,
@@ -406,7 +408,7 @@ function collapseSiblingFamilies(
  *    an interleaved sequence where same-parent siblings are maximally spaced.
  * 3. Insert children at evenly-spaced positions among the non-child cards.
  */
-function disperseSiblings(cards: CardRecord[]): CardRecord[] {
+export function disperseSiblings(cards: CardRecord[]): CardRecord[] {
   const children: CardRecord[] = [];
   const others: CardRecord[] = [];
 
