@@ -4,7 +4,7 @@
  *
  * @exports
  *   - isMarkerLine — Tests whether a line is a card anchor (^sprout-...) or ID comment marker
- *   - findCardBlockRangeById — Locates the start and end line indices of a card block in a lines array by card ID
+ *   - findCardBlockRangeById — Locates the start and end line indices of a card block in a lines array by card ID; detects pipe-delimited field boundaries to avoid truncating non-card content after the last card
  *   - buildCardBlockMarkdown — Generates an array of Markdown lines representing a card in canonical pipe-delimited format
  */
 
@@ -30,12 +30,24 @@ export function isMarkerLine(line: string): boolean {
   return ID_COMMENT_RE.test(t) || ANCHOR_LINE_RE.test(t);
 }
 
+// ── Pipe-field helpers for block-boundary detection ───────
+
+/** Matches a pipe-delimited field start: "KEY | ..." */
+const FIELD_START_RE = /^([A-Za-z0-9]+)\s+\|\s?(.*)$/;
+
+/** True if the trimmed line ends with a raw (unescaped) pipe delimiter. */
+function endsWithPipe(line: string): boolean {
+  return /\|\s*$/.test(line.trim());
+}
+
 /**
  * Find the full block for a card by id, robust to blank lines inside the block.
  * Strategy:
  * - Locate by ^sprout-id first; fall back to <!--ID:id--> if needed.
  * - Expand start upward to include adjacent marker duplicates (and blanks between marker lines).
- * - Scan downward; once we've seen any non-marker content, the next marker line starts the next card.
+ * - Scan downward; once we've seen any non-marker content, the next marker line starts the
+ *   next card. If no marker follows, stop when pipe-delimited fields end and non-card prose
+ *   begins — this prevents truncation of content after the last card in a file.
  */
 export function findCardBlockRangeById(lines: string[], id: string): { start: number; end: number } {
   const idLine = `<!--ID:${id}-->`;
@@ -67,23 +79,59 @@ export function findCardBlockRangeById(lines: string[], id: string): { start: nu
   }
   start = s;
 
-  // Scan downward to next marker after we've entered content
+  // Scan downward to find the end of the card block. Tracks multi-line
+  // pipe field state so continuation lines (e.g. second line of a multi-line
+  // answer) are not mistaken for non-card prose.
   let seenContent = false;
+  let inMultiline = false;
   let end = lines.length;
 
   for (let i = start; i < lines.length; i++) {
     const t = (lines[i] || "").trim();
 
+    // ── before we've seen any card content ──
     if (!seenContent) {
       if (t === "" || isMarkerLine(t)) continue;
       seenContent = true;
+      const fm = t.match(FIELD_START_RE);
+      if (fm) {
+        const rest = fm[2];
+        // "KEY |" alone (value on next line) or "KEY | value" (no closing pipe)
+        // both open a multi-line field.
+        if (rest === "" || !endsWithPipe(rest)) inMultiline = true;
+      }
       continue;
     }
 
+    // ── stop at the next card marker ──
     if (isMarkerLine(t)) {
       end = i;
       break;
     }
+
+    // ── SR schedule comment belongs to the card block ──
+    if (/^<!--SR:/.test(t)) continue;
+
+    // ── blank lines are fine within a card block ──
+    if (t === "") continue;
+
+    // ── inside a multi-line pipe field? ──
+    if (inMultiline) {
+      if (endsWithPipe(t)) inMultiline = false;
+      continue;
+    }
+
+    // ── starts a new pipe field? ──
+    const fm = t.match(FIELD_START_RE);
+    if (fm) {
+      const rest = fm[2];
+      if (rest === "" || !endsWithPipe(rest)) inMultiline = true;
+      continue;
+    }
+
+    // ── anything else is non-card content → end of block ──
+    end = i;
+    break;
   }
 
   return { start, end };
