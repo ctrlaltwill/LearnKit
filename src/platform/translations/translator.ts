@@ -12,6 +12,7 @@ import { DEFAULT_INTERFACE_LOCALE, resolveInterfaceLocale } from "./locale-regis
 import EN_BASE_JSON from "./locales/en-base.json";
 import EN_GB_OVERRIDES_JSON from "./locales/en-gb.json";
 import EN_US_OVERRIDES_JSON from "./locales/en-us.json";
+import ZH_CN_JSON from "./locales/zh-cn.json";
 import TOKEN_ALIASES_JSON from "./locales/token-aliases.json";
 
 type TranslationVars = Record<string, string | number>;
@@ -29,6 +30,7 @@ function mergeLocale(
 const MESSAGE_BUNDLES: Readonly<Record<string, Readonly<Record<string, string>>>> = {
   "en-gb": mergeLocale(EN_GB_OVERRIDES_JSON as Readonly<Record<string, string>>),
   "en-us": mergeLocale(EN_US_OVERRIDES_JSON as Readonly<Record<string, string>>),
+  "zh-cn": ZH_CN_JSON as Readonly<Record<string, string>>,
 };
 
 function interpolate(template: string, vars?: TranslationVars): string {
