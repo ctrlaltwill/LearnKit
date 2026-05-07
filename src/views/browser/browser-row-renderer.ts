@@ -21,7 +21,7 @@ import { log } from "../../platform/core/logger";
 import { placePopover, queryFirst, renderLatexMathInElement, renderMarkdownPreviewInElement, replaceChildrenWithHTML, setCssProps } from "../../platform/core/ui";
 import { coerceGroups } from "../../engine/indexing/group-format";
 import { buildAnswerOrOptionsFor, buildQuestionFor } from "../reviewer/fields";
-import { stageLabel, stageLabelTx } from "../reviewer/labels";
+import { stageLabelTx } from "../reviewer/labels";
 import { t } from "../../platform/translations/translator";
 import { handleTabInTextarea } from "../../platform/card-editor/card-editor";
 import { buildPrimaryCardAnchor } from "../../platform/core/identity";
@@ -35,7 +35,6 @@ import {
   forceCellClip,
   fmtDue,
   fmtLocation,
-  typeLabelBrowser,
   typeLabelBrowserTx,
   titleCaseGroupPath,
   formatGroupDisplay,

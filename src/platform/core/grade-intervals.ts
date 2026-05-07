@@ -21,7 +21,7 @@ function formatDaysWithHalfStep(days: number): string {
 }
 
 function isZhLocale(locale: unknown): boolean {
-  const code = String(locale ?? "").trim().toLowerCase();
+  const code = (typeof locale === 'string' ? locale : '').trim().toLowerCase();
   return code.startsWith("zh");
 }
 

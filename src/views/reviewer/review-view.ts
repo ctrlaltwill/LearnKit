@@ -1038,6 +1038,12 @@ export class SproutReviewerView extends ItemView {
     if (!queue.length) queue = this.buildPracticeQueue(scope);
     queue = this._applyHotspotStudyModeToQueue(queue);
 
+    // ── Shuffle practice queue for variety ────────────────────────
+    for (let i = queue.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [queue[i], queue[j]] = [queue[j], queue[i]];
+    }
+
     // ── Apply sibling separation (same as scheduled sessions) ─────
     const siblingMode: string = (this.plugin.settings?.study as Record<string, unknown>)?.siblingMode as string ?? "standard";
     if (siblingMode === "disperse") {

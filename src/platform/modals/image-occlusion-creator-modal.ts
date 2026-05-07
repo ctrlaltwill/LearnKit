@@ -275,7 +275,7 @@ export class ImageOcclusionCreatorModal extends Modal {
             await this.loadImageToCanvas();
             this.updatePlaceholderVisibility();
           } catch (e: unknown) {
-            new Notice(this.tx("ui.io.creator.notice.loadImageFailed", "Failed to load image ({message})", { message: e instanceof Error ? e.message : String(e) }));
+            new Notice(this._tx("ui.io.creator.notice.loadImageFailed", "Failed to load image ({message})", { message: e instanceof Error ? e.message : String(e) }));
           }
         })();
       },
@@ -285,7 +285,7 @@ export class ImageOcclusionCreatorModal extends Modal {
       onResetMasks: () => this.resetMasks(),
       onSetTool: (tool) => this.setTool(tool),
       onRotate: (dir) => void this.rotateImage(dir),
-    }, { tx: this.tx });
+    });
     this.btnUndo = toolbarRefs.btnUndo;
     this.btnRedo = toolbarRefs.btnRedo;
     this.btnAutoMask = toolbarRefs.btnAutoMask;
@@ -508,7 +508,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     const footerRefs = buildFooter(this.modalEl, {
       onCancel: () => this.close(),
       onSave: (mode) => void saveIo(mode),
-    }, defaultMode, { tx: this.tx });
+    }, defaultMode);
 
     // Move the mode picker into content so footer contains action buttons only.
     const modeRow = footerRefs.footerEl.firstElementChild;

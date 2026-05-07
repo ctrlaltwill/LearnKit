@@ -15,20 +15,6 @@ import { type App, requestUrl } from "obsidian";
 import type { GuideCategory, GuidePage } from "./types";
 import { t } from "../../../platform/translations/translator";
 
-interface RawCategorySection {
-  titleToken?: string;
-  titleFallback?: string;
-  pageKeys: string[];
-}
-
-interface RawCategory {
-  key: string;
-  labelToken: string;
-  labelFallback: string;
-  icon: string;
-  sections: RawCategorySection[];
-}
-
 const GUIDE_DEMO_RELATIVE_PREFIX_RE = /^\.\.\/\.\.\/\.\.\/branding\/(?:Demo|demo)\/(.+)$/i;
 const GUIDE_DEMO_RAW_BASE = "https://raw.githubusercontent.com/ctrlaltwill/LearnKit/main/site/branding/Demo/";
 

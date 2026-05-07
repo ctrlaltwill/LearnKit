@@ -22,11 +22,10 @@ import {
   escapePipes,
   parseMcqOptionsFromCell,
 } from "../../views/reviewer/fields";
-import { stageLabel, stageLabelTx } from "../../views/reviewer/labels";
+import { stageLabelTx } from "../../views/reviewer/labels";
 import { createGroupPickerField as createGroupPickerFieldImpl } from "../card-editor/card-editor";
 
 import {
-  typeLabelBrowser,
   typeLabelBrowserTx,
   fmtDue,
   fmtLocation,
@@ -64,7 +63,7 @@ function formatGroupsForInput(groups: string[]): string {
 }
 
 function isLegacyComboType(type: unknown): boolean {
-  return String(type ?? "").toLowerCase() === "combo";
+  return (typeof type === 'string' ? type : '').toLowerCase() === "combo";
 }
 
 type EditableField = "title" | "question" | "answer" | "info" | "groups";

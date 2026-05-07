@@ -141,6 +141,7 @@
   "ui.view.analytics.title": "ui.common.analytics",
   "ui.guide.categories.audio": "ui.common.audio",
   "ui.settings.subTabs.audio": "ui.common.audio",
+  "ui.guide.sections.audio": "ui.common.audio",
   "ui.guide.sections.scope": "ui.common.scope",
   "ui.view.coach.scope.default": "ui.common.scope",
   "ui.home.notice.studyViewNotReady": "ui.shared.notice.studyViewNotReady",

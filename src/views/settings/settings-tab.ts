@@ -5470,7 +5470,7 @@ export class LearnKitSettingsTab extends PluginSettingTab {
           return false;
         };
 
-        const renderSyncedNotesSummary = (): void => {
+        const renderSyncedNotesSummary = (showNotice = true): void => {
           const includeIds = Array.from(includeSet);
           const excludeIds = Array.from(excludeSet);
           const synced = files.filter((file) => {
@@ -5484,10 +5484,12 @@ export class LearnKitSettingsTab extends PluginSettingTab {
             ? this._tx("ui.settings.sync.filter.allNotes", "{count} notes", { count: files.length })
             : `${synced} / ${files.length} ${files.length === 1 ? "note" : "notes"}`;
           summaryEl.setText(scopeSummary);
-          this.queueSettingsNotice(
-            "indexing.syncFilterQuery",
-            this._noticeLines.syncFilterQuery(scopeSummary),
-          );
+          if (showNotice) {
+            this.queueSettingsNotice(
+              "indexing.syncFilterQuery",
+              this._noticeLines.syncFilterQuery(scopeSummary),
+            );
+          }
         };
 
         const getMatchedNoteCount = (ids: string[]): number => {
@@ -5631,7 +5633,7 @@ export class LearnKitSettingsTab extends PluginSettingTab {
         );
         renderExclude = excludeBlock.render;
 
-        renderSyncedNotesSummary();
+        renderSyncedNotesSummary(false);
       });
 
   }

@@ -152,7 +152,7 @@ export class BulkEditModal extends Modal {
 
   const normalizedTypes = cards.map((card) => String(card?.type ?? "").toLowerCase());
   const canBulkToggleType =
-    cards.length > 1 &&
+    cards.length >= 1 &&
     normalizedTypes.length > 0 &&
     normalizedTypes.every((type) => type === "basic" || type === "reversed");
   let selectedBulkType: "basic" | "reversed" = normalizedTypes[0] === "reversed" ? "reversed" : "basic";

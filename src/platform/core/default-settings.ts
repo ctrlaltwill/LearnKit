@@ -101,6 +101,7 @@ export const DEFAULT_SETTINGS: LearnKitSettings = {
       mcq: true,
       oq: true,
       io: true,
+      combo: true,
     },
     generatorTargetCount: 5,
     generatorOutput: {
