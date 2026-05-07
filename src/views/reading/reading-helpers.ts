@@ -47,6 +47,7 @@ import {
 } from "../../platform/core/delimiter";
 import { CARD_ANCHOR_INLINE_RE } from "../../platform/core/identity";
 import { splitComboVariants, splitZipVariants } from "../../platform/core/delimiter";
+import { t } from "../../platform/translations/translator";
 
 /* -----------------------
    Constants
@@ -805,6 +806,7 @@ export function buildInfoSectionHTML(_infoContent: string): string {
 export function buildCollapsibleSectionHTML(label: string, targetSelector: string, innerHtml: string, _markdownId?: string, sectionClass = '') {
   // targetSelector should be unique per card instance; caller supplies a selector string starting with '.'
   const contentId = targetSelector.startsWith('.') ? targetSelector.slice(1) : targetSelector.replace('#','');
+  const toggleAriaLabel = escapeHtml(t(undefined, "ui.reading.toggle.section", "Toggle {label}", { label: escapeHtml(label) }));
 
   // inline Lucide chevron-down SVG; collapsed => rotated right, expanded => down
   const chevronSvg = `<!--lucide:chevron-down--><svg class="learnkit-toggle-chevron learnkit-toggle-chevron-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>`;
@@ -813,7 +815,7 @@ export function buildCollapsibleSectionHTML(label: string, targetSelector: strin
     <div class="learnkit-card-section ${escapeHtml(sectionClass).trim()}">
       <div class="learnkit-section-label">
         <span>${escapeHtml(label)}</span>
-        <button class="learnkit-toggle-btn learnkit-toggle-btn-compact" data-target=".${contentId}" aria-expanded="false" aria-label="Toggle ${escapeHtml(label)}" data-tooltip-position="top">
+        <button class="learnkit-toggle-btn learnkit-toggle-btn-compact" data-target=".${contentId}" aria-expanded="false" aria-label="${toggleAriaLabel}" data-tooltip-position="top">
           ${chevronSvg}
         </button>
       </div>

@@ -33,9 +33,22 @@ export interface GuidePage {
   sourcePath: string;
 }
 
+export interface GuideCategorySection {
+  title?: string;
+  pageKeys: string[];
+  /** @internal token for i18n resolution */
+  _titleToken?: string;
+  /** @internal fallback for i18n resolution */
+  _titleFallback?: string;
+}
+
 export interface GuideCategory {
   key: string;
   label: string;
   icon: string;
-  sections: Array<{ title?: string; pageKeys: string[] }>;
+  sections: GuideCategorySection[];
+  /** @internal token for i18n resolution */
+  _labelToken?: string;
+  /** @internal fallback for i18n resolution */
+  _labelFallback?: string;
 }

@@ -164,7 +164,7 @@ export class BulkEditModal extends Modal {
   const isClozeOnly = normalizedTypes.length > 0 && normalizedTypes.every((type) => type === "cloze");
 
   let fields: Array<{ key: ColKey; label: string; editable: boolean }> = [
-    { key: "id", label: tx("ui.browser.bulkEdit.field.id", "ID"), editable: false },
+    { key: "id", label: tx("ui.browser.bulkEdit.field.id", "Card ID"), editable: false },
     { key: "type", label: tx("ui.browser.bulkEdit.field.type", "Type"), editable: false },
     { key: "stage", label: tx("ui.browser.bulkEdit.field.stage", "Stage"), editable: false },
     { key: "due", label: tx("ui.browser.bulkEdit.field.due", "Due"), editable: false },

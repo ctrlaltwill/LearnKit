@@ -21,7 +21,7 @@ import { log } from "../../platform/core/logger";
 import { placePopover, queryFirst, renderLatexMathInElement, renderMarkdownPreviewInElement, replaceChildrenWithHTML, setCssProps } from "../../platform/core/ui";
 import { coerceGroups } from "../../engine/indexing/group-format";
 import { buildAnswerOrOptionsFor, buildQuestionFor } from "../reviewer/fields";
-import { stageLabel } from "../reviewer/labels";
+import { stageLabel, stageLabelTx } from "../reviewer/labels";
 import { t } from "../../platform/translations/translator";
 import { handleTabInTextarea } from "../../platform/card-editor/card-editor";
 import { buildPrimaryCardAnchor } from "../../platform/core/identity";
@@ -36,6 +36,7 @@ import {
   fmtDue,
   fmtLocation,
   typeLabelBrowser,
+  typeLabelBrowserTx,
   titleCaseGroupPath,
   formatGroupDisplay,
   expandGroupAncestors,
@@ -90,6 +91,9 @@ const setColAttr = (td: HTMLTableCellElement, col: ColKey) => {
 
 const txFromCtx = (ctx: RowRendererContext, token: string, fallback: string, vars?: Record<string, string | number>) =>
   t(ctx.plugin.settings?.general?.interfaceLanguage, token, fallback, vars);
+
+const makeTx = (ctx: RowRendererContext) =>
+  (token: string, fallback: string) => txFromCtx(ctx, token, fallback);
 
 // ── Main entry point ──────────────────────────────────────
 
@@ -225,7 +229,7 @@ export function buildPageTableBody(
     tr.appendChild(idTd);
 
     // ── Type cell ──
-    tr.appendChild(tdMuted(isQuarantined ? txFromCtx(ctx, "ui.browser.row.quarantined", "Quarantined") : typeLabelBrowser(card.type, card), "type"));
+    tr.appendChild(tdMuted(isQuarantined ? txFromCtx(ctx, "ui.browser.row.quarantined", "Quarantined") : typeLabelBrowserTx(makeTx(ctx), card.type, card), "type"));
 
     // ── Stage cell ──
     const stage = isQuarantined ? "quarantined" : String(state?.stage || "new");
@@ -236,13 +240,13 @@ export function buildPageTableBody(
       forceCellClip(td);
       setColAttr(td, "stage");
       const label = document.createElement("div");
-      label.textContent = stageLabel(stage);
+      label.textContent = stageLabelTx(makeTx(ctx), stage);
       td.appendChild(label);
       tr.appendChild(td);
     } else if (stage === "quarantined") {
       tr.appendChild(tdMuted(txFromCtx(ctx, "ui.browser.row.quarantined", "Quarantined"), "stage"));
     } else {
-      tr.appendChild(tdMuted(stageLabel(stage), "stage"));
+      tr.appendChild(tdMuted(stageLabelTx(makeTx(ctx), stage), "stage"));
     }
 
     // ── Due cell ──

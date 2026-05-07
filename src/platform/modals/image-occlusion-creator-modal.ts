@@ -150,7 +150,9 @@ export class ImageOcclusionCreatorModal extends Modal {
   }
 
   private getCreatorLabel(): string {
-    return this.isHotspotMode() ? "Hotspot" : "Image Occlusion";
+    return this.isHotspotMode()
+      ? this._tx("ui.settings.sections.hotspot", "Hotspot")
+      : this._tx("ui.common.imageOcclusion", "Image occlusion");
   }
 
   private getEffectiveInteractionMode(): "click" | "drag-drop" | null {
@@ -170,7 +172,9 @@ export class ImageOcclusionCreatorModal extends Modal {
   onOpen() {
     const editing = !!this.editParentId;
     const creatorLabel = this.getCreatorLabel();
-    const headerTitle = editing ? `Edit ${creatorLabel} Card` : `Add ${creatorLabel} Card`;
+    const headerTitle = editing
+      ? this._tx("ui.io.creator.title.edit", "Edit {creator} card", { creator: creatorLabel })
+      : this._tx("ui.io.creator.title.add", "Add {creator} card", { creator: creatorLabel });
     setModalTitle(this, headerTitle);
 
     scopeModalToWorkspace(this);
@@ -214,7 +218,7 @@ export class ImageOcclusionCreatorModal extends Modal {
 
       const closeBtn = headerEl.createEl("button", {
         cls: "learnkit-btn-toolbar learnkit-btn-toolbar learnkit-btn-filter learnkit-btn-filter h-7 px-3 text-sm inline-flex items-center gap-2 learnkit-scope-clear-btn learnkit-scope-clear-btn learnkit-io-creator-close-btn learnkit-io-creator-close-btn",
-        attr: { type: "button", "aria-label": "Close" },
+        attr: { type: "button", "aria-label": this._tx("ui.common.close", "Close") },
       });
       closeBtn.setAttr("data-tooltip-position", "top");
       const closeIconWrap = closeBtn.createSpan({ cls: "inline-flex items-center justify-center" });
@@ -236,7 +240,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     // ── Title field ─────────────────────────────────────────────────────────
     const titleField = body.createDiv({ cls: "flex flex-col gap-1 learnkit-io-title-field learnkit-io-title-field" });
     const titleLabel = titleField.createEl("label", { cls: "text-sm font-medium" });
-    titleLabel.textContent = "Title";
+    titleLabel.textContent = this._tx("ui.common.title", "Title");
     const titleInput = titleField.createEl("textarea", { cls: "textarea w-full learnkit-io-title-input learnkit-io-title-input" });
     titleInput.rows = 1;
     setCssProps(titleInput, "min-height", "60px");
@@ -253,7 +257,9 @@ export class ImageOcclusionCreatorModal extends Modal {
     // ── Canvas editor label ─────────────────────────────────────────────────
     const canvasSection = body.createDiv({ cls: "flex flex-col gap-2" });
     const canvasLabel = canvasSection.createEl("label", { cls: "text-sm font-medium" });
-    canvasLabel.textContent = this.isHotspotMode() ? "Hotspot editor" : "Image occlusion editor";
+    canvasLabel.textContent = this.isHotspotMode()
+      ? this._tx("ui.io.creator.canvas.hotspotEditor", "Hotspot editor")
+      : this._tx("ui.io.creator.canvas.imageOcclusionEditor", "Image occlusion editor");
     canvasLabel.createSpan({ text: "*", cls: "text-destructive ml-1" });
 
     // ── Toolbar ─────────────────────────────────────────────────────────────
@@ -269,7 +275,7 @@ export class ImageOcclusionCreatorModal extends Modal {
             await this.loadImageToCanvas();
             this.updatePlaceholderVisibility();
           } catch (e: unknown) {
-            new Notice(`Failed to load image (${e instanceof Error ? e.message : String(e)})`);
+            new Notice(this.tx("ui.io.creator.notice.loadImageFailed", "Failed to load image ({message})", { message: e instanceof Error ? e.message : String(e) }));
           }
         })();
       },
@@ -279,7 +285,7 @@ export class ImageOcclusionCreatorModal extends Modal {
       onResetMasks: () => this.resetMasks(),
       onSetTool: (tool) => this.setTool(tool),
       onRotate: (dir) => void this.rotateImage(dir),
-    });
+    }, { tx: this.tx });
     this.btnUndo = toolbarRefs.btnUndo;
     this.btnRedo = toolbarRefs.btnRedo;
     this.btnAutoMask = toolbarRefs.btnAutoMask;
@@ -502,7 +508,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     const footerRefs = buildFooter(this.modalEl, {
       onCancel: () => this.close(),
       onSave: (mode) => void saveIo(mode),
-    }, defaultMode);
+    }, defaultMode, { tx: this.tx });
 
     // Move the mode picker into content so footer contains action buttons only.
     const modeRow = footerRefs.footerEl.firstElementChild;
@@ -1004,7 +1010,7 @@ export class ImageOcclusionCreatorModal extends Modal {
   private openTextInput(stageX: number, stageY: number, dims?: { w: number; h: number }) {
     if (!this.viewportEl) return;
     if (!this.ioImageData) {
-      new Notice(`Add an image first.`);
+      new Notice(this._tx("ui.io.creator.notice.addImageFirst", "Add an image first."));
       return;
     }
     this.clearTextInput(false);
@@ -1036,7 +1042,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     const input = document.createElement("textarea");
     input.className = "textarea learnkit-io-text-input";
     input.rows = 1;
-    input.placeholder = "Type text";
+    input.placeholder = this._tx("ui.io.creator.text.placeholder", "Type text");
     setCssProps(input, "--learnkit-io-text-w", `${Math.max(40, textW * this.t.scale)}px`);
     setCssProps(input, "--learnkit-io-text-h", `${Math.max(30, textH * this.t.scale)}px`);
     setCssProps(input, "--learnkit-io-text-size", `${this.textFontSize}px`);

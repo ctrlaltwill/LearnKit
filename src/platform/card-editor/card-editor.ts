@@ -19,6 +19,7 @@ import { buildAnswerOrOptionsFor, escapePipes } from "../../views/reviewer/field
 import { COMBO_VARIANT_SEPARATOR, COMBO_ZIP_SEPARATOR } from "../core/delimiter";
 import { escapeDelimiterText, getDelimiter } from "../../platform/core/delimiter";
 import { renderMarkdownPreviewInElement, setCssProps } from "../../platform/core/ui";
+import { t } from "../translations/translator";
 import {
   clearNode,
   titleCaseGroupPath,
@@ -47,12 +48,6 @@ const CLOZE_TOOLTIP =
   "Use cloze syntax to hide text in your prompt.\n{{c1::text}} creates the first blank.\nUse {{c2::text}} for a different blank, or reuse {{c1::text}} to reveal together.\nShortcuts: Cmd/Ctrl+Shift+C (new blank), Cmd/Ctrl+Shift+Alt/Option+C (same blank number).";
 const FORMAT_TOOLTIP =
   "Formatting: Cmd+B (bold), Cmd+I (italic).";
-const PLACEHOLDER_TITLE = "Enter a descriptive title for this flashcard";
-const PLACEHOLDER_CLOZE =
-  "Type your text and wrap parts to hide with {{c1::text}}. Use {{c2::text}} for separate deletions, or {{c1::text}} again to hide together.";
-const PLACEHOLDER_QUESTION = "Enter the question you want to answer";
-const PLACEHOLDER_ANSWER = "Enter the answer to your question";
-const PLACEHOLDER_INFO = "Optional: Add extra context or explanation shown on the back of the card";
 
 type ClozeShortcut = "new" | "same";
 
@@ -730,6 +725,7 @@ interface CardEditorConfig {
   showReadOnlyFields?: boolean;
   forceType?: CardType;
   editableFieldHeights?: Partial<Record<"title" | "question" | "answer" | "info", { min: number; max: number }>>;
+  locale?: string;
 }
 
 export interface CardEditorResult {
@@ -747,13 +743,16 @@ export interface CardEditorResult {
 
 export function createCardEditor(config: CardEditorConfig): CardEditorResult {
   const { cards, plugin } = config;
+  const locale = config.locale;
   const safeCards = Array.isArray(cards) ? cards : [];
   const normalizedTypes = safeCards.map((card) => String(card?.type ?? "").toLowerCase());
   if (!normalizedTypes.length && config.forceType) normalizedTypes.push(config.forceType);
   const hasNonCloze = normalizedTypes.some((type) => type !== "cloze");
   const hasMcq = normalizedTypes.some((type) => type === "mcq");
-  const answerLabel = hasMcq ? "Answer / Options" : "Answer";
-  const questionLabel = "Question";
+  const answerLabel = hasMcq
+    ? t(locale, "ui.shared.answerOrOptions", "Answer / Options")
+    : t(locale, "ui.common.answer", "Answer");
+  const questionLabel = t(locale, "ui.common.question", "Question");
   const isClozeOnly = normalizedTypes.length > 0 && normalizedTypes.every((type) => type === "cloze");
 
   const isSingleMcq = safeCards.length === 1 && normalizedTypes[0] === "mcq";
@@ -768,14 +767,14 @@ export function createCardEditor(config: CardEditorConfig): CardEditorResult {
   const formFields: Array<{ key: ColKey; label: string; editable: boolean }> = [];
 
   if (showReadOnlyFields) {
-    formFields.push({ key: "id", label: "ID", editable: false });
-    formFields.push({ key: "type", label: "Type", editable: false });
-    formFields.push({ key: "location", label: "Location", editable: false });
-    formFields.push({ key: "stage", label: "Stage", editable: false });
-    formFields.push({ key: "due", label: "Due", editable: false });
+    formFields.push({ key: "id", label: t(locale, "ui.common.idField", "ID"), editable: false });
+    formFields.push({ key: "type", label: t(locale, "ui.common.type", "Type"), editable: false });
+    formFields.push({ key: "location", label: t(locale, "ui.common.location", "Location"), editable: false });
+    formFields.push({ key: "stage", label: t(locale, "ui.common.stage", "Stage"), editable: false });
+    formFields.push({ key: "due", label: t(locale, "ui.common.due", "Due"), editable: false });
   }
 
-  formFields.push({ key: "title", label: "Title", editable: true });
+  formFields.push({ key: "title", label: t(locale, "ui.common.title", "Title"), editable: true });
 
   // Skip question/answer for IO cards
   const isIoCard = normalizedTypes.length === 1 && normalizedTypes[0] === "io";
@@ -786,8 +785,8 @@ export function createCardEditor(config: CardEditorConfig): CardEditorResult {
     }
   }
 
-  formFields.push({ key: "info", label: "Extra information", editable: true });
-  formFields.push({ key: "groups", label: "Groups", editable: true });
+  formFields.push({ key: "info", label: t(locale, "ui.common.extraInformation", "Extra information"), editable: true });
+  formFields.push({ key: "groups", label: t(locale, "ui.common.groups", "Groups"), editable: true });
 
   if (isSingleMcq || isSingleOq) {
     const answerIdx = formFields.findIndex((f) => f.key === "answer");
@@ -865,10 +864,12 @@ export function createCardEditor(config: CardEditorConfig): CardEditorResult {
       textarea.className = "textarea w-full learnkit-textarea-fixed";
       textarea.rows = 3;
       textarea.value = value;
-      if (field.key === "title") textarea.placeholder = PLACEHOLDER_TITLE;
-      if (field.key === "question") textarea.placeholder = isClozeOnly ? PLACEHOLDER_CLOZE : PLACEHOLDER_QUESTION;
-      if (field.key === "answer") textarea.placeholder = PLACEHOLDER_ANSWER;
-      if (field.key === "info") textarea.placeholder = PLACEHOLDER_INFO;
+      if (field.key === "title") textarea.placeholder = t(locale, "ui.browser.bulkEdit.placeholder.title", "Enter a descriptive title for this flashcard");
+      if (field.key === "question") textarea.placeholder = isClozeOnly
+        ? t(locale, "ui.browser.bulkEdit.placeholder.cloze", "Type your text and wrap parts to hide with {{c1::text}}. Use {{c2::text}} for separate deletions, or {{c1::text}} again to hide together.")
+        : t(locale, "ui.browser.bulkEdit.placeholder.question", "Enter the question you want to answer");
+      if (field.key === "answer") textarea.placeholder = t(locale, "ui.browser.bulkEdit.placeholder.answer", "Enter the answer to your question");
+      if (field.key === "info") textarea.placeholder = t(locale, "ui.browser.bulkEdit.placeholder.info", "Optional: Add extra context or explanation shown on the back of the card");
       input = textarea;
     } else {
       const txt = document.createElement("input");
@@ -1052,6 +1053,7 @@ function getFieldValue(card: CardRecord, key: ColKey): string {
 }
 
 export function createGroupPickerField(initialValue: string, cardsCount: number, plugin: LearnKitPlugin) {
+  const locale = plugin.settings?.general?.interfaceLanguage;
   const hiddenInput = document.createElement("input");
   hiddenInput.type = "hidden";
   hiddenInput.value = initialValue;
@@ -1068,7 +1070,7 @@ export function createGroupPickerField(initialValue: string, cardsCount: number,
     overwriteNotice = document.createElement("div");
     overwriteNotice.className = "text-xs text-muted-foreground";
     overwriteNotice.textContent =
-      "Typing here will overwrite this field for every selected card; leave it blank to keep existing values.";
+      t(locale, "ui.browser.bulkEdit.groups.overwriteHint", "Typing here will overwrite this field for every selected card; leave it blank to keep existing values.");
     overwriteNotice.classList.add("learnkit-is-hidden", "learnkit-is-hidden");
     container.appendChild(overwriteNotice);
   }
@@ -1101,7 +1103,7 @@ export function createGroupPickerField(initialValue: string, cardsCount: number,
   const search = document.createElement("input");
   search.type = "text";
   search.className = "bg-transparent text-sm flex-1 h-9 learnkit-search-naked";
-  search.placeholder = "Search or add group";
+  search.placeholder = t(locale, "ui.shared.groups.searchPlaceholder", "Search groups or add group");
   searchWrap.appendChild(search);
 
   const panel = document.createElement("div");
@@ -1120,7 +1122,7 @@ export function createGroupPickerField(initialValue: string, cardsCount: number,
     if (!selected.length) {
       const placeholder = document.createElement("span");
       placeholder.className = "badge inline-flex items-center gap-1 px-2 py-0.5 text-xs whitespace-nowrap group h-6 learnkit-badge-placeholder";
-      placeholder.textContent = "No groups";
+      placeholder.textContent = t(locale, "ui.shared.groups.empty", "No groups");
       tagBox.appendChild(placeholder);
       return;
     }
@@ -1406,7 +1408,7 @@ function createOqEditor(card: CardRecord) {
     const delBtn = document.createElement("button");
     delBtn.type = "button";
     delBtn.className = "inline-flex items-center justify-center p-0 learnkit-remove-btn-ghost learnkit-oq-del-btn";
-    delBtn.setAttribute("aria-label", "Remove step");
+    delBtn.setAttribute("aria-label", t(undefined, "ui.cardCreator.removeStep", "Remove step"));
     delBtn.setAttribute("data-tooltip-position", "top");
     const xIcon = document.createElement("span");
     xIcon.className = "inline-flex items-center justify-center [&_svg]:size-4";
@@ -1555,7 +1557,7 @@ function createMcqEditor(card: CardRecord) {
     checkbox.type = "checkbox";
     checkbox.checked = isCorrect;
     checkbox.className = "learnkit-mcq-correct-checkbox";
-    checkbox.setAttribute("aria-label", "Mark as correct answer");
+    checkbox.setAttribute("aria-label", t(undefined, "ui.modal.mcq.markCorrect", "Mark as correct answer"));
     checkbox.setAttribute("data-tooltip-position", "top");
     row.appendChild(checkbox);
 
@@ -1577,7 +1579,7 @@ function createMcqEditor(card: CardRecord) {
     const removeBtn = document.createElement("button");
     removeBtn.type = "button";
     removeBtn.className = "inline-flex items-center justify-center p-0 learnkit-remove-btn-ghost";
-    removeBtn.setAttribute("aria-label", "Remove option");
+    removeBtn.setAttribute("aria-label", t(undefined, "ui.modal.mcq.removeOption", "Remove option"));
     removeBtn.setAttribute("data-tooltip-position", "top");
     const xIcon = document.createElement("span");
     xIcon.className = "inline-flex items-center justify-center [&_svg]:size-4";

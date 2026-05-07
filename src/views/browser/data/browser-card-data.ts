@@ -21,13 +21,14 @@ import type { CardRecord, CardState } from "../../../platform/core/store";
 import { normalizeCardOptions } from "../../../platform/core/store";
 import { getGroupIndex, normaliseGroupPath } from "../../../engine/indexing/group-index";
 import { fmtGroups, coerceGroups } from "../../../engine/indexing/group-format";
+import { t } from "../../../platform/translations/translator";
 import {
   buildAnswerOrOptionsFor,
   buildQuestionFor,
   parseMcqOptionsFromCell,
   validateClozeText,
 } from "../../reviewer/fields";
-import { stageLabel } from "../../reviewer/labels";
+import { stageLabel, stageLabelTx } from "../../reviewer/labels";
 import {
   type TypeFilter,
   type StageFilter,
@@ -41,6 +42,7 @@ import {
   startOfTodayMs,
   endOfTodayMs,
   typeLabelBrowser,
+  typeLabelBrowserTx,
   parseGroupsInput,
 } from "../browser-helpers";
 
@@ -304,17 +306,20 @@ export function applyValueToCard(card: CardRecord, col: ColKey, value: string): 
 
 /** Read the display value for a given column from a card. */
 export function readCardField(card: CardRecord, col: ColKey, plugin: LearnKitPlugin): string {
+  const tx = (token: string, fallback: string) =>
+    t(plugin.settings?.general?.interfaceLanguage, token, fallback);
+
   if (col === "id") return String(card.id);
-  if (col === "type") return typeLabelBrowser(card.type, card);
+  if (col === "type") return typeLabelBrowserTx(tx, card.type, card);
   if (col === "stage") {
-    if (plugin.store.isQuarantined(card.id)) return "Quarantined";
+    if (plugin.store.isQuarantined(card.id)) return tx("ui.browser.row.quarantined", "Quarantined");
     const st = plugin.store.getState(card.id);
     const stage = st?.stage || "new";
-    return stageLabel(String(stage));
+    return stageLabelTx(tx, String(stage));
   }
   if (col === "due") {
     const st = plugin.store.getState(card.id);
-    if (plugin.store.isQuarantined(card.id)) return "Quarantined";
+    if (plugin.store.isQuarantined(card.id)) return tx("ui.browser.row.quarantined", "Quarantined");
     if (st && Number.isFinite(st.due)) {
       return fmtDue(st.due);
     }

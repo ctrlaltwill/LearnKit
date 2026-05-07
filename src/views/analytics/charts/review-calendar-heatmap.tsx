@@ -14,6 +14,7 @@ import { Platform } from "obsidian";
 import * as React from "react";
 import { useAnalyticsPopoverZIndex } from "../filter-styles";
 import { cssClassForProps } from "../../../platform/core/ui";
+import { t } from "../../../platform/translations/translator";
 
 const MS_DAY = 24 * 60 * 60 * 1000;
 
@@ -171,10 +172,12 @@ export function ReviewCalendarHeatmap(props: {
   timezone?: string;
   rangeDays?: number;
   filters?: Filters;
+  locale?: string;
 }) {
   const tz = props.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
   const formatter = React.useMemo(() => makeDatePartsFormatter(tz), [tz]);
   const todayIndex = React.useMemo(() => localDayIndex(Date.now(), formatter), [formatter]);
+  const tx = React.useMemo(() => (token: string, fallback: string, vars?: Record<string, string | number>) => t(props.locale, token, fallback, vars), [props.locale]);
   const [durationDays, setDurationDays] = React.useState(props.rangeDays ?? 365);
   const [open, setOpen] = React.useState(false);
   const [durationOpen, setDurationOpen] = React.useState(false);
@@ -364,9 +367,9 @@ export function ReviewCalendarHeatmap(props: {
       <div className={"flex items-start justify-between gap-2"}>
         <div className="">
           <div className={"flex items-center gap-1"}>
-            <div className={"font-semibold lk-home-section-title"}>Study heatmap</div>
+            <div className={"font-semibold lk-home-section-title"}>{tx("ui.analytics.heatmap.title", "Study heatmap")}</div>
           </div>
-          <div className={"text-xs text-muted-foreground"}>Reviews per day</div>
+          <div className={"text-xs text-muted-foreground"}>{tx("ui.analytics.heatmap.subtitle", "Reviews per day")}</div>
         </div>
         <div ref={dropdownWrapRef} className={"relative inline-flex"}>
           <button
@@ -392,7 +395,7 @@ export function ReviewCalendarHeatmap(props: {
             >
               <polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3" />
             </svg>
-            <span className="">Filter</span>
+            <span className="">{tx("ui.analytics.heatmap.filter", "Filter")}</span>
           </button>
 
           {open ? (
@@ -413,7 +416,7 @@ export function ReviewCalendarHeatmap(props: {
                   onClick={toggleDurationOpen}
                   onKeyDown={onDurationKey}
                 >
-                  <span className="">Duration</span>
+                  <span className="">{tx("ui.analytics.heatmap.duration", "Duration")}</span>
                   <ChevronIcon open={durationOpen} />
                 </div>
 
@@ -421,7 +424,7 @@ export function ReviewCalendarHeatmap(props: {
                   <div role="menu" aria-orientation="vertical" className={"flex flex-col"}>
                     {durationOptions.map((opt) => {
                       const selected = durationDays === opt;
-                      const label = opt === 0 ? "Year to date" : `${opt} days`;
+                      const label = opt === 0 ? tx("ui.analytics.heatmap.yearToDate", "Year to date") : tx("ui.analytics.heatmap.xDays", "{count} days", { count: opt });
                       return (
                         <div
                           key={opt}
@@ -455,7 +458,7 @@ export function ReviewCalendarHeatmap(props: {
                 <div className={"h-px bg-border my-1"} role="separator" />
 
                 <div className={"text-sm text-muted-foreground cursor-pointer px-2"} onClick={resetFilters}>
-                  Reset filters
+                  {tx("ui.analytics.heatmap.resetFilters", "Reset filters")}
                 </div>
               </div>
             </div>
@@ -524,16 +527,18 @@ export function ReviewCalendarHeatmap(props: {
             } as React.CSSProperties}
           >
             <div className={"text-sm font-medium text-background"}>{hovered.cell.dateLabel}</div>
-            <div className={"text-background"}>Reviews: {hovered.cell.count}</div>
             <div className={"text-background"}>
-              Time: {Math.max(1, Math.ceil(hovered.cell.totalMs / 60000))} min
+              {tx("ui.analytics.heatmap.tooltip.reviews", "{count} reviews", { count: hovered.cell.count })}
+            </div>
+            <div className={"text-background"}>
+              {tx("ui.analytics.heatmap.tooltip.time", "{count} min", { count: Math.max(1, Math.ceil(hovered.cell.totalMs / 60000)) })}
             </div>
           </div>
         ) : null}
       </div>
 
       <div className={"flex items-center gap-2 text-xs text-muted-foreground"}>
-        <span className="">Less</span>
+        <span className="">{tx("ui.analytics.heatmap.legend.less", "Less")}</span>
         <div className={"inline-flex items-center gap-1"}>
           {palette.slice(1).map((color, idx) => (
             <span
@@ -542,7 +547,7 @@ export function ReviewCalendarHeatmap(props: {
             />
           ))}
         </div>
-        <span className="">More</span>
+        <span className="">{tx("ui.analytics.heatmap.legend.more", "More")}</span>
       </div>
     </div>
   );

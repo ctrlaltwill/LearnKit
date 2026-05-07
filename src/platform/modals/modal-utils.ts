@@ -47,6 +47,7 @@ import {
 import type { CardRecord } from "../core/store";
 import type { CardRecordType } from "../types/card";
 import { setCssProps } from "../core/ui";
+import { t } from "../translations/translator";
 
 // ──────────────────────────────────────────────────────────────────────────────
 // DOM helpers
@@ -175,6 +176,35 @@ export function typeLabelBrowser(
   return ty;
 }
 
+/** Translated variant for use in UI contexts where a `tx` function is available. */
+export function typeLabelBrowserTx(
+  tx: (token: string, fallback: string) => string,
+  t: string,
+  card?: { q?: string | null; a?: string | null; extensionData?: Record<string, unknown> | null } | null,
+): string {
+  const ty = String(t ?? "").toLowerCase();
+  if (ty === "basic") {
+    if (card) {
+      const ext = card.extensionData ?? {};
+      const qVariants: unknown[] = Array.isArray(ext.qVariants) ? ext.qVariants : [];
+      const aVariants: unknown[] = Array.isArray(ext.aVariants) ? ext.aVariants : [];
+      if (qVariants.length > 0 || aVariants.length > 0) return tx("ui.common.basicCombo", "Basic (combo)");
+      const qText = String(card.q ?? "");
+      const aText = String(card.a ?? "");
+      if (qText.includes(" :: ") || aText.includes(" :: ")) return tx("ui.common.basicCombo", "Basic (combo)");
+    }
+    return tx("ui.common.basic", "Basic");
+  }
+  if (ty === "reversed" || ty === "reversed-child") return tx("ui.common.basicReversed", "Basic (reversed)");
+  if (ty === "cloze" || ty === "cloze-child") return tx("ui.common.cloze", "Cloze");
+  if (ty === "mcq") return tx("ui.common.multipleChoice", "Multiple choice");
+  if (ty === "io" || ty === "io-child") return tx("ui.common.imageOcclusion", "Image occlusion");
+  if (ty === "hq" || ty === "hq-child") return tx("ui.common.hotspot", "Hotspot");
+  if (ty === "oq") return tx("ui.common.orderedQuestion", "Ordered question");
+  if (ty === "combo-child") return tx("ui.common.combo", "Combo");
+  return ty;
+}
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Formatting helpers
 // ──────────────────────────────────────────────────────────────────────────────
@@ -219,6 +249,7 @@ export interface ModalCardEditorConfig {
   locationPath: string;
   locationTitle: string;
   plugin: LearnKitPlugin;
+  locale?: string;
   editableFieldHeights?: Partial<Record<"title" | "question" | "answer" | "info", { min: number; max: number }>>;
 }
 
@@ -236,7 +267,7 @@ export interface ModalCardEditorResult {
  * Returns the root element, input map, and helpers for groups/MCQ.
  */
 export function createModalCardEditor(config: ModalCardEditorConfig): ModalCardEditorResult {
-  const { type, locationPath, locationTitle, plugin, editableFieldHeights } = config;
+  const { type, locationPath, locationTitle, plugin, locale, editableFieldHeights } = config;
 
   // Build a minimal card record so the editor component can render
   const dummyCard: CardRecord = {
@@ -259,6 +290,7 @@ export function createModalCardEditor(config: ModalCardEditorConfig): ModalCardE
   const editor = createCardEditor({
     cards: [dummyCard],
     plugin,
+    locale,
     locationPath: locationPath || "",
     locationTitle: locationTitle || "",
     showReadOnlyFields: false,
@@ -462,7 +494,7 @@ export function createModalMcqSection() {
   label.textContent = "Answers and options";
   const mcqInfoIcon = document.createElement("span");
   mcqInfoIcon.className = "inline-flex items-center justify-center [&_svg]:size-3 text-muted-foreground learnkit-info-icon-elevated";
-  mcqInfoIcon.setAttribute("aria-label", "Check the box next to each correct answer. At least one correct and one incorrect option required.");
+  mcqInfoIcon.setAttribute("aria-label", t(undefined, "ui.modal.mcq.description", "Check the box next to each correct answer. At least one correct and one incorrect option required."));
   mcqInfoIcon.setAttribute("data-tooltip-position", "top");
   setIcon(mcqInfoIcon, "info");
   label.appendChild(mcqInfoIcon);
@@ -492,7 +524,7 @@ export function createModalMcqSection() {
     checkbox.type = "checkbox";
     checkbox.checked = isCorrect;
     checkbox.className = "learnkit-mcq-correct-checkbox";
-    checkbox.setAttribute("aria-label", "Mark as correct answer");
+    checkbox.setAttribute("aria-label", t(undefined, "ui.modal.mcq.markCorrect", "Mark as correct answer"));
     checkbox.setAttribute("data-tooltip-position", "top");
     row.appendChild(checkbox);
 
@@ -506,7 +538,7 @@ export function createModalMcqSection() {
     const removeBtn = document.createElement("button");
     removeBtn.type = "button";
     removeBtn.className = "inline-flex items-center justify-center h-9 w-9 p-0 learnkit-remove-btn-ghost";
-    removeBtn.setAttribute("aria-label", "Remove option");
+    removeBtn.setAttribute("aria-label", t(undefined, "ui.modal.mcq.removeOption", "Remove option"));
     removeBtn.setAttribute("data-tooltip-position", "top");
     const xIcon = document.createElement("span");
     xIcon.className = "inline-flex items-center justify-center [&_svg]:size-4";
@@ -606,6 +638,8 @@ export interface ThemedDropdownConfig {
   containerClassName?: string;
   /** Extra classes applied to the trigger button. */
   buttonClassName?: string;
+  /** Optional translated aria-label for the trigger button. Falls back to "Open menu". */
+  ariaLabel?: string;
 }
 
 /**
@@ -643,7 +677,7 @@ export function createThemedDropdown(
     buttonJustify === "between" ? "justify-between" : "",
     config?.buttonClassName ?? "",
   ].filter(Boolean).join(" ");
-  btn.setAttribute("aria-label", "Open menu");
+  btn.setAttribute("aria-label", config?.ariaLabel ?? "Open menu");
   btn.setAttribute("data-tooltip-position", "top");
   btn.setAttribute("aria-haspopup", "menu");
   btn.setAttribute("aria-expanded", "false");

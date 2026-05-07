@@ -15,6 +15,13 @@ import { requestUrl } from "obsidian";
 
 const FLAG_TOKEN_RE = /\{\{([a-z]{2}(?:-[a-z0-9]{2,3})?)\}\}/gi;
 const FLAG_CODE_RE = /^[a-z]{2}(?:-[a-z0-9]{2,3})?$/i;
+const SPECIAL_FLAG_CODES = new Set(["checkered"]);
+const SPECIAL_FLAG_URLS: Readonly<Record<string, string>> = {
+  checkered: "https://hatscripts.github.io/circle-flags/flags/other/checkered.svg",
+};
+const SPECIAL_FLAG_FALLBACK_URLS: Readonly<Record<string, string>> = {
+  checkered: "https://hatscripts.github.io/circle-flags/flags/other/chequered.svg",
+};
 const FLAG_CACHE_KEY = "sprout-circle-flag-cache-v1";
 const FLAG_CACHE_MAX_BYTES = 2_500_000;
 
@@ -39,6 +46,7 @@ export function escapeFlagHtml(text: string): string {
 
 function normalizeFlagCode(raw: string): string | null {
   const code = String(raw ?? "").trim().toLowerCase();
+  if (SPECIAL_FLAG_CODES.has(code)) return code;
   if (!FLAG_CODE_RE.test(code)) return null;
   return code;
 }
@@ -71,6 +79,8 @@ export function stripCircleFlagTokens(input: string): string {
 
 export function getCircleFlagUrl(code: string): string {
   const normalized = normalizeFlagCode(code) ?? "";
+  const special = SPECIAL_FLAG_URLS[normalized];
+  if (special) return special;
   if (normalized.includes("-")) {
     return `https://hatscripts.github.io/circle-flags/flags/language/${normalized}.svg`;
   }
@@ -79,6 +89,8 @@ export function getCircleFlagUrl(code: string): string {
 
 export function getCircleFlagFallbackUrl(code: string): string {
   const normalized = normalizeFlagCode(code) ?? "";
+  const special = SPECIAL_FLAG_FALLBACK_URLS[normalized];
+  if (special) return special;
   const region = normalized.includes("-") ? normalized.split("-").pop() ?? normalized : normalized;
   return `https://hatscripts.github.io/circle-flags/flags/${region}.svg`;
 }

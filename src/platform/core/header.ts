@@ -91,6 +91,24 @@ export class SproutHeader {
     return t(this.deps.plugin?.settings?.general?.interfaceLanguage, token, fallback, vars);
   }
 
+  private pageLabel(page: SproutHeaderPage): string {
+    return page === "home"
+      ? this.tx("ui.header.page.home", "Home")
+      : page === "cards"
+        ? this.tx("ui.header.page.flashcards", "Flashcards")
+        : page === "notes"
+          ? this.tx("ui.header.page.notes", "Notes")
+          : page === "exam"
+            ? this.tx("ui.header.page.tests", "Tests")
+            : page === "coach"
+              ? this.tx("ui.header.page.coach", "Coach")
+              : page === "analytics"
+                ? this.tx("ui.header.page.analytics", "Analytics")
+                : page === "library"
+                  ? this.tx("ui.header.page.library", "Library")
+                  : this.tx("ui.header.page.settings", "Settings");
+  }
+
   private installCenterBrandLogo(viewHeader: HTMLElement) {
     let brandHost =
       queryFirst<HTMLElement>(viewHeader, ":scope > .learnkit-header-center-brand") ??
@@ -641,22 +659,22 @@ export class SproutHeader {
       menu.appendChild(sep);
     };
 
-    mkNavItem("Home", "home", "house");
+    mkNavItem(this.tx("ui.header.page.home", "Home"), "home", "house");
     mkSep();
     mkSection(this.tx("ui.header.section.study", "Study"));
-    mkNavItem("Coach", "coach", "target");
-    mkNavItem("Flashcards", "cards", "star");
-    mkNavItem("Notes", "notes", "notebook-text");
-    mkNavItem("Tests", "exam", "clipboard-check");
+    mkNavItem(this.tx("ui.header.page.coach", "Coach"), "coach", "target");
+    mkNavItem(this.tx("ui.header.page.flashcards", "Flashcards"), "cards", "star");
+    mkNavItem(this.tx("ui.header.page.notes", "Notes"), "notes", "notebook-text");
+    mkNavItem(this.tx("ui.header.page.tests", "Tests"), "exam", "clipboard-check");
     mkSep();
     mkSection(this.tx("ui.header.section.tools", "Tools"));
-    mkNavItem("Analytics", "analytics", "chart-spline");
-    mkNavItem("Library", "library", "table-2");
+    mkNavItem(this.tx("ui.header.page.analytics", "Analytics"), "analytics", "chart-spline");
+    mkNavItem(this.tx("ui.header.page.library", "Library"), "library", "table-2");
     mkSep();
-    mkSection("Resources");
-    mkActionItem("Guide", () => this.openSettingsTab("guide"), "compass");
-    mkActionItem("Release Notes", () => this.openSettingsTab("about"), "package");
-    mkActionItem("Settings", () => this.openSettingsTab("settings"), "settings");
+    mkSection(this.tx("ui.header.section.resources", "Resources"));
+    mkActionItem(this.tx("ui.header.menu.guide", "Guide"), () => this.openSettingsTab("guide"), "compass");
+    mkActionItem(this.tx("ui.header.menu.releaseNotes", "Release notes"), () => this.openSettingsTab("about"), "package");
+    mkActionItem(this.tx("ui.header.page.settings", "Settings"), () => this.openSettingsTab("settings"), "settings");
 
     document.body.appendChild(sproutWrapper);
     this.topNavPopoverEl = root;
@@ -743,22 +761,7 @@ export class SproutHeader {
     if (!isMobile) {
       const trigText = document.createElement("span");
       trigText.className = "truncate";
-      trigText.textContent =
-        active === "home"
-          ? "Home"
-          : active === "cards"
-            ? "Flashcards"
-            : active === "notes"
-              ? "Notes"
-            : active === "exam"
-              ? "Tests"
-            : active === "coach"
-              ? "Coach"
-              : active === "analytics"
-                ? "Analytics"
-                : active === "library"
-                  ? "Library"
-                  : "Settings";
+      trigText.textContent = this.pageLabel(active);
       navTrigger.appendChild(trigText);
     }
 
@@ -1046,6 +1049,16 @@ export class SproutHeader {
 
     if (!actionsHost) return;
 
+    try {
+      this.widthResizeCleanup?.();
+    } catch (e) { log.swallow("installHeaderActionsButtonGroup: widthResizeCleanup", e); }
+    this.widthResizeCleanup = null;
+
+    try {
+      this.widthResizeObserver?.disconnect();
+    } catch (e) { log.swallow("installHeaderActionsButtonGroup: widthResizeObserver disconnect", e); }
+    this.widthResizeObserver = null;
+
     clearNode(actionsHost);
 
     actionsHost.classList.add("learnkit-view-actions", "learnkit-view-actions");
@@ -1144,12 +1157,14 @@ export class SproutHeader {
 
     const runCommand = (commandId: string, label: string) => {
       const ok = this.deps.app.commands?.executeCommandById?.(commandId);
-      if (!ok) new Notice(`${label} command is not available.`);
+      if (!ok) {
+        new Notice(this.tx("ui.notice.commandUnavailable", "{label} command is not available.", { label }));
+      }
     };
 
-    const ankiNoun = "Anki";
-    const importFromAnkiLabel = `Import from ${ankiNoun}`;
-    const exportToAnkiLabel = `Export to ${ankiNoun}`;
+    const ankiNoun = this.tx("ui.common.anki", "Anki");
+    const importFromAnkiLabel = this.tx("ui.header.menu.importFrom", "Import from {name}", { name: ankiNoun });
+    const exportToAnkiLabel = this.tx("ui.header.menu.exportTo", "Export to {name}", { name: ankiNoun });
 
     const openAnkiImport = () => runCommand("learnkit:import-anki", importFromAnkiLabel);
     const openAnkiExport = () => runCommand("learnkit:export-anki", exportToAnkiLabel);
@@ -1165,14 +1180,14 @@ export class SproutHeader {
       { label: exportToAnkiLabel, icon: "folder-up", onActivate: openAnkiExport },
       { label: importFromAnkiLabel, icon: "folder-down", onActivate: openAnkiImport },
       { type: "separator", label: "" },
-      { type: "section", label: "Support" },
-      { label: "Get Support", icon: "life-buoy", onActivate: openSupport },
-      { label: "GitHub Repository", icon: "github", onActivate: openGithubRepository },
-      { label: "Keyboard Shortcuts", icon: "keyboard", onActivate: () => {
+      { type: "section", label: this.tx("ui.header.section.support", "Support") },
+      { label: this.tx("ui.header.menu.getSupport", "Get support"), icon: "life-buoy", onActivate: openSupport },
+      { label: this.tx("ui.header.menu.githubRepository", "GitHub repository"), icon: "github", onActivate: openGithubRepository },
+      { label: this.tx("ui.header.menu.keyboardShortcuts", "Keyboard shortcuts"), icon: "keyboard", onActivate: () => {
         if (this.deps.plugin) new KeyboardShortcutsModal(this.deps.app, this.deps.plugin).open();
       } },
       { type: "separator", label: "" },
-      { label: "Close tab", icon: "x", onActivate: closeTab },
+      { label: this.tx("ui.header.menu.closeTab", "Close tab"), icon: "x", onActivate: closeTab },
     ];
 
     moreBtn.addEventListener("click", (ev) => {
@@ -1217,7 +1232,10 @@ export function createViewHeader(opts: {
       const p = opts.plugin as { _runSync?(): void; syncBank?(): void };
       if (typeof p._runSync === "function") void p._runSync();
       else if (typeof p.syncBank === "function") void p.syncBank();
-      else new Notice("Sync not available (no sync method found).");
+      else {
+        const lang = (opts.plugin as LearnKitPlugin | undefined)?.settings?.general?.interfaceLanguage;
+        new Notice(t(lang, "ui.notice.syncNotAvailable", "Sync not available (no sync method found)."));
+      }
     },
   });
 }

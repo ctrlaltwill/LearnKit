@@ -892,7 +892,7 @@ export class SproutAssistantPopup {
     // Trigger button
     const btn = document.createElement("button");
     btn.className = "learnkit-assistant-trigger";
-    const openCompanionLabel = "Open" + " " + "Learn" + "Kit" + " " + "Companion";
+    const openCompanionLabel = this._tx("ui.studyAssistant.chat.openCompanion", "Open LearnKit Companion");
     btn.setAttribute("aria-label", openCompanionLabel);
     btn.setAttribute("aria-tooltip", openCompanionLabel);
     btn.setAttribute("title", openCompanionLabel);
@@ -1307,6 +1307,47 @@ export class SproutAssistantPopup {
     return t(this.plugin.settings?.general?.interfaceLanguage, token, fallback, vars);
   }
 
+  private _normalizedInterfaceLanguageCode(): string {
+    const raw = String(this.plugin.settings?.general?.interfaceLanguage || "en").trim().toLowerCase();
+    return raw ? raw.replace(/_/g, "-") : "en";
+  }
+
+  private _assistantReplyLanguageName(localeCode: string): string {
+    const primary = String(localeCode || "en").split("-")[0];
+    switch (primary) {
+      case "zh":
+        return "Simplified Chinese";
+      case "ja":
+        return "Japanese";
+      case "ko":
+        return "Korean";
+      case "es":
+        return "Spanish";
+      case "fr":
+        return "French";
+      case "de":
+        return "German";
+      case "pt":
+        return "Portuguese";
+      case "it":
+        return "Italian";
+      case "ru":
+        return "Russian";
+      case "ar":
+        return "Arabic";
+      case "hi":
+        return "Hindi";
+      default:
+        return "English";
+    }
+  }
+
+  private _assistantReplyLanguageInstruction(): string {
+    const localeCode = this._normalizedInterfaceLanguageCode();
+    const languageName = this._assistantReplyLanguageName(localeCode);
+    return `Use ${languageName} (${localeCode}) for your response unless the user explicitly requests a different language.`;
+  }
+
   private _toggleNativeLeftSidebar(): void {
     const commandApi = this.plugin.app.commands;
     if (commandApi?.executeCommandById("app:toggle-left-sidebar")) return;
@@ -1600,6 +1641,17 @@ export class SproutAssistantPopup {
         suffix: count === 1 ? "" : "s",
       },
     );
+  }
+
+  private _suggestionTypeLabel(type: string): string {
+    if (type === "basic") return this._tx("ui.common.basic", "Basic");
+    if (type === "reversed") return this._tx("ui.common.basicReversed", "Basic (reversed)");
+    if (type === "cloze") return this._tx("ui.common.cloze", "Cloze");
+    if (type === "mcq") return this._tx("ui.common.multipleChoice", "Multiple choice");
+    if (type === "oq") return this._tx("ui.common.orderedQuestion", "Ordered question");
+    if (type === "io") return this._tx("ui.common.imageOcclusion", "Image occlusion");
+    if (type === "combo") return this._tx("ui.studyAssistant.generator.combo", "Combo");
+    return String(type || "");
   }
 
   private _suggestionStreamKey(suggestion: StudyAssistantSuggestion): string {
@@ -2923,7 +2975,7 @@ export class SproutAssistantPopup {
     const btn = audioBar.querySelector<HTMLElement>(".learnkit-assistant-reply-audio-btn");
     if (!btn) return;
     const isPlaying = !this._ttsPaused;
-    btn.setAttribute("aria-label", isPlaying ? "Pause reply audio" : "Play reply audio");
+    btn.setAttribute("aria-label", isPlaying ? this._tx("ui.studyAssistant.chat.pauseReplyAudio", "Pause reply audio") : this._tx("ui.studyAssistant.chat.playReplyAudio", "Play reply audio"));
     this._setReplyAudioButtonIcon(btn, isPlaying);
   }
 
@@ -3712,7 +3764,10 @@ export class SproutAssistantPopup {
           attachedFileDataUrls: allAttachmentUrls,
           includeImages,
           userMessage: draft,
-          customInstructions: settings.prompts.assistant,
+          customInstructions: [
+            String(settings.prompts.assistant || "").trim(),
+            this._assistantReplyLanguageInstruction(),
+          ].filter(Boolean).join("\n\n"),
           reviewDepth: depthOverride ?? this.reviewDepth,
           conversationId,
           conversationHistory: this.chatMessages,
@@ -4048,7 +4103,10 @@ export class SproutAssistantPopup {
           attachedFileDataUrls: allAttachmentUrls,
           includeImages,
           userMessage: draft,
-          customInstructions: settings.prompts.assistant,
+          customInstructions: [
+            String(settings.prompts.assistant || "").trim(),
+            this._assistantReplyLanguageInstruction(),
+          ].filter(Boolean).join("\n\n"),
           reviewDepth: depthOverride ?? this.reviewDepth,
           conversationId,
           conversationHistory: this.reviewMessages,
@@ -4405,6 +4463,7 @@ export class SproutAssistantPopup {
       const conversationId = getRemoteConversationForMode(this.remoteConversationsByMode, "generate")?.conversationId;
       const customInstructions = [
         String(settings.prompts.assistant || "").trim(),
+        this._assistantReplyLanguageInstruction(),
         threadContext,
         extraRequest
           ? this._tx(
@@ -4725,6 +4784,7 @@ export class SproutAssistantPopup {
       const conversationId = getRemoteConversationForMode(this.remoteConversationsByMode, "generate")?.conversationId;
       const customInstructions = [
         String(settings.prompts.assistant || "").trim(),
+        this._assistantReplyLanguageInstruction(),
         threadContext,
         extraRequest
           ? this._tx(
@@ -5606,7 +5666,7 @@ export class SproutAssistantPopup {
     const isMobileHeaderNav = document.body.classList.contains("is-mobile");
     const menuActionsLabel = isMobileHeaderNav
       ? this._tx("ui.common.navigationMenu", "Navigation menu")
-      : "Actions";
+      : this._tx("ui.studyAssistant.chat.actionsMenu", "Actions");
     menuBtn.type = "button";
     menuBtn.setAttribute("aria-label", menuActionsLabel);
     menuBtn.setAttribute("title", menuActionsLabel);
@@ -5956,7 +6016,7 @@ export class SproutAssistantPopup {
           cls: `learnkit-assistant-reply-audio${isActiveTts ? " is-active" : ""}${this._ttsPaused ? " is-paused" : ""}`,
         });
         const audioBtn = audioBar.createEl("button", { cls: "learnkit-assistant-reply-audio-btn learnkit-assistant-reply-audio-btn", type: "button" });
-        audioBtn.setAttribute("aria-label", isActiveTts && !this._ttsPaused ? "Pause reply audio" : "Play reply audio");
+        audioBtn.setAttribute("aria-label", isActiveTts && !this._ttsPaused ? this._tx("ui.studyAssistant.chat.pauseReplyAudio", "Pause reply audio") : this._tx("ui.studyAssistant.chat.playReplyAudio", "Play reply audio"));
         audioBtn.setAttribute("data-tooltip-position", "top");
         this._setReplyAudioButtonIcon(audioBtn, isActiveTts && !this._ttsPaused);
         audioBtn.addEventListener("click", (e) => {
@@ -5997,16 +6057,7 @@ export class SproutAssistantPopup {
           const key = `${i}-${idx}-${suggestion.type}`;
           const isBusy = this.insertingSuggestionKey === key;
           const disableInsert = this.isInsertingSuggestion || isBusy;
-          const typeLabelMap: Record<string, string> = {
-            basic: "Basic",
-            reversed: "Basic (Reversed)",
-            cloze: "Cloze",
-            mcq: "Multiple Choice",
-            oq: "Ordered Question",
-            io: "Image Occlusion",
-            combo: "Combo",
-          };
-          const typeLabel = typeLabelMap[suggestion.type] ?? String(suggestion.type || "");
+          const typeLabel = this._suggestionTypeLabel(suggestion.type);
 
           const item = list.createDiv({ cls: "learnkit-assistant-popup-generated-card learnkit-assistant-popup-generated-card" });
           const isNoteBased = suggestion.sourceOrigin !== "external";
@@ -6369,16 +6420,7 @@ export class SproutAssistantPopup {
             const key = `${i}-${idx}-${suggestion.type}`;
             const isBusy = this.insertingSuggestionKey === key;
             const disableInsert = this.isInsertingSuggestion || isBusy;
-            const typeLabelMap: Record<string, string> = {
-              basic: "Basic",
-              reversed: "Basic (Reversed)",
-              cloze: "Cloze",
-              mcq: "Multiple Choice",
-              oq: "Ordered Question",
-              io: "Image Occlusion",
-              combo: "Combo",
-            };
-            const typeLabel = typeLabelMap[suggestion.type] ?? String(suggestion.type || "");
+            const typeLabel = this._suggestionTypeLabel(suggestion.type);
 
             const item = list.createDiv({ cls: "learnkit-assistant-popup-generated-card learnkit-assistant-popup-generated-card" });
             const isNoteBased = suggestion.sourceOrigin !== "external";
@@ -6492,17 +6534,23 @@ class AttachmentPickerModal extends Modal {
     // ---- "Choose from computer" button ----
     const systemBtn = this.contentEl.createEl("button", {
       cls: "learnkit-attachment-picker-system-btn learnkit-attachment-picker-system-btn",
-      text: "Choose from local files",
+      text: this._tx("ui.studyAssistant.chat.attachPicker.chooseLocal", "Choose from local files"),
     });
     setIcon(systemBtn.createSpan({ cls: "learnkit-attachment-picker-system-icon learnkit-attachment-picker-system-icon" }), "hard-drive");
     systemBtn.addEventListener("click", () => this._pickSystemFile());
 
     // ---- Divider ----
-    this.contentEl.createEl("div", { cls: "learnkit-attachment-picker-divider learnkit-attachment-picker-divider", text: t(this._locale, "ui.assistant.orChooseFromVault", "Or choose from vault") });
+    this.contentEl.createEl("div", {
+      cls: "learnkit-attachment-picker-divider learnkit-attachment-picker-divider",
+      text: this._tx("ui.assistant.orChooseFromVault", "Or choose from vault"),
+    });
 
     const search = this.contentEl.createEl("input", {
       cls: "input w-full learnkit-attachment-picker-search learnkit-attachment-picker-search",
-      attr: { type: "text", placeholder: "Search vault files..." },
+      attr: {
+        type: "text",
+        placeholder: this._tx("ui.studyAssistant.chat.attachPicker.searchVaultPlaceholder", "Search vault files..."),
+      },
     });
 
     this._listEl = this.contentEl.createDiv({ cls: "learnkit-attachment-picker-list learnkit-attachment-picker-list" });
@@ -6521,6 +6569,10 @@ class AttachmentPickerModal extends Modal {
 
   onClose(): void {
     this.contentEl.empty();
+  }
+
+  private _tx(token: string, fallback: string, vars?: Record<string, string | number>): string {
+    return t(this._locale, token, fallback, vars);
   }
 
   private _pickSystemFile(): void {
@@ -6545,7 +6597,18 @@ class AttachmentPickerModal extends Modal {
         }
 
         if (rejectedCount > 0) {
-          new Notice(rejectedCount === 1 ? "LearnKit – 1 file was unsupported or too large" : `LearnKit – ${rejectedCount} files were unsupported or too large`);
+          new Notice(
+            rejectedCount === 1
+              ? this._tx(
+                "ui.studyAssistant.chat.attachPicker.unsupportedOne",
+                "LearnKit – 1 file was unsupported or too large",
+              )
+              : this._tx(
+                "ui.studyAssistant.chat.attachPicker.unsupportedMany",
+                "LearnKit – {count} files were unsupported or too large",
+                { count: rejectedCount },
+              ),
+          );
         }
         this.close();
       })();
@@ -6571,13 +6634,17 @@ class AttachmentPickerModal extends Modal {
     if (this._filteredFiles.length > max) {
       this._listEl.createDiv({
         cls: "learnkit-attachment-picker-overflow learnkit-attachment-picker-overflow",
-        text: `… and ${this._filteredFiles.length - max} more`,
+        text: this._tx(
+          "ui.studyAssistant.chat.attachPicker.moreCount",
+          "… and {count} more",
+          { count: this._filteredFiles.length - max },
+        ),
       });
     }
     if (!shown.length) {
       this._listEl.createDiv({
         cls: "learnkit-attachment-picker-empty learnkit-attachment-picker-empty",
-        text: "No matching files",
+        text: this._tx("ui.studyAssistant.chat.attachPicker.noMatch", "No matching files"),
       });
     }
   }

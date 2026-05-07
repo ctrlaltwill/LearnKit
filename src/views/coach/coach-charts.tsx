@@ -67,16 +67,31 @@ function scoreName(label: string): string {
   return label.replace("-", " ");
 }
 
-function HealthIndicatorRow(props: { title: string; score: number; label: string }) {
+function HealthIndicatorRow(props: {
+  title: string;
+  score: number;
+  label: string;
+  statusText: string;
+  tx: (token: string, fallback: string, vars?: Record<string, string | number>) => string;
+}) {
   const barColor = scoreColor(props.label);
   const clampedScore = Math.max(0, Math.min(100, props.score));
-  const tip = `${props.title}: ${props.score}% — ${scoreName(props.label)}`;
+  const tip = props.tx("ui.view.coach.health.rowTooltip", "{title}: {score}% - {status}", {
+    title: props.title,
+    score: props.score,
+    status: props.statusText,
+  });
   return (
-    <div className="learnkit-coach-health-bar-row" data-tooltip={tip} data-tooltip-position="top">
+    <div
+      className="learnkit-coach-health-bar-row"
+      data-tooltip={tip}
+      data-tooltip-position="top"
+      data-status={props.label}
+    >
       <div className="learnkit-coach-health-bar-meta">
         <div className="learnkit-coach-health-bar-title">{props.title}</div>
         <div className="learnkit-coach-health-bar-status" style={{ color: barColor }}>
-          {scoreName(props.label)}
+          {props.statusText}
         </div>
       </div>
       <div className="learnkit-coach-health-bar-track">
@@ -117,16 +132,21 @@ function InfoIcon(props: { text: string }) {
   );
 }
 
-function TodayLabel(props: { viewBox?: { x?: number; y?: number } }) {
+function TodayLabel(props: { viewBox?: { x?: number; y?: number }; text: string }) {
   const x = (props.viewBox?.x ?? 0) + 5;
   return (
     <text x={x} y={14} fill="var(--text-muted)" fontSize={11} fontWeight={500} textAnchor="start">
-      Today
+      {props.text}
     </text>
   );
 }
 
-function ReadinessTooltip(props: { active?: boolean; payload?: Array<{ dataKey?: string; value?: number }>; label?: string }) {
+function ReadinessTooltip(props: {
+  active?: boolean;
+  payload?: Array<{ dataKey?: string; value?: number }>;
+  label?: string;
+  tx: (token: string, fallback: string, vars?: Record<string, string | number>) => string;
+}) {
   const { active, payload, label } = props;
   if (!active || !payload?.length) return null;
   const actual = payload.find((p: { dataKey?: string }) => p.dataKey === "readiness");
@@ -135,43 +155,70 @@ function ReadinessTooltip(props: { active?: boolean; payload?: Array<{ dataKey?:
     <div className="learnkit-data-tooltip-surface">
       <div className="text-sm font-medium text-background">{label}</div>
       {actual?.value != null && (
-        <div className="text-background">Readiness: {Math.round(actual.value)}</div>
+        <div className="text-background">
+          {props.tx("ui.view.coach.readiness.label", "Readiness")}:{" "}
+          {Math.round(actual.value)}
+        </div>
       )}
       {proj?.value != null && (
-        <div className="text-background">Projected: {Math.round(proj.value)}</div>
+        <div className="text-background">
+          {props.tx("ui.view.coach.readiness.projected", "Projected")}:{" "}
+          {Math.round(proj.value)}
+        </div>
       )}
     </div>
   );
 }
 
 export type CoachHealthPanelProps = {
+  tx: (token: string, fallback: string, vars?: Record<string, string | number>) => string;
   flash: { score: number; label: string };
   note: { score: number; label: string };
   exam: { score: number; label: string };
 };
 
 export function CoachHealthPanel(props: CoachHealthPanelProps) {
+  const statusText = (label: string): string => props.tx(`ui.view.coach.health.status.${label}`, scoreName(label));
   return (
     <div className="card learnkit-coach-health-summary-card">
       <div className="learnkit-coach-progress-header">
         <div>
           <div className="learnkit-coach-health-heading-row">
-            <div className="learnkit-coach-health-title">Study Plan Health</div>
-            <InfoIcon text="Flashcard health blends FSRS retrievability for studied cards with time feasibility for unstudied cards. Note health uses the same model for reviewed vs unreviewed notes. Exam health is a weighted composite of both." />
+            <div className="learnkit-coach-health-title">{props.tx("ui.view.coach.health.title", "Study Plan Health")}</div>
+            <InfoIcon text={props.tx("ui.view.coach.health.info", "Flashcard health blends FSRS retrievability for studied cards with time feasibility for unstudied cards. Note health uses the same model for reviewed vs unreviewed notes. Exam health is a weighted composite of both.")} />
           </div>
-          <div className="learnkit-coach-step-copy">At-a-glance breakdown of your study health</div>
+          <div className="learnkit-coach-step-copy">{props.tx("ui.view.coach.health.subtitle", "At-a-glance breakdown of your study health")}</div>
         </div>
       </div>
       <div className="learnkit-coach-health-bars">
-        <HealthIndicatorRow title="Flashcards" score={props.flash.score} label={props.flash.label} />
-        <HealthIndicatorRow title="Notes" score={props.note.score} label={props.note.label} />
-        <HealthIndicatorRow title="Exam" score={props.exam.score} label={props.exam.label} />
+        <HealthIndicatorRow
+          title={props.tx("ui.common.flashcards", "Flashcards")}
+          score={props.flash.score}
+          label={props.flash.label}
+          statusText={statusText(props.flash.label)}
+          tx={props.tx}
+        />
+        <HealthIndicatorRow
+          title={props.tx("ui.common.notes", "Notes")}
+          score={props.note.score}
+          label={props.note.label}
+          statusText={statusText(props.note.label)}
+          tx={props.tx}
+        />
+        <HealthIndicatorRow
+          title={props.tx("ui.view.coach.health.exam", "Exam")}
+          score={props.exam.score}
+          label={props.exam.label}
+          statusText={statusText(props.exam.label)}
+          tx={props.tx}
+        />
       </div>
     </div>
   );
 }
 
 export type CoachReadinessPanelProps = {
+  tx: (token: string, fallback: string, vars?: Record<string, string | number>) => string;
   readiness: ExamReadinessPoint[];
   todayIndex: number;
   startLabel: string;
@@ -187,10 +234,10 @@ export function CoachReadinessPanel(props: CoachReadinessPanelProps) {
       <div className="learnkit-coach-progress-header">
         <div>
           <div className="flex items-center gap-1">
-            <div className="learnkit-coach-health-title">Exam Readiness</div>
-            <InfoIcon text="Blends card mastery (FSRS retrievability) with time feasibility for remaining material into a 0–100 score. The dashed line projects readiness assuming you follow your daily targets." />
+            <div className="learnkit-coach-health-title">{props.tx("ui.view.coach.readiness.title", "Exam Readiness")}</div>
+            <InfoIcon text={props.tx("ui.view.coach.readiness.info", "Blends card mastery (FSRS retrievability) with time feasibility for remaining material into a 0-100 score. The dashed line projects readiness assuming you follow your daily targets.")} />
           </div>
-          <div className="learnkit-coach-step-copy">Track how ready you are — from now until exam day</div>
+          <div className="learnkit-coach-step-copy">{props.tx("ui.view.coach.readiness.subtitle", "Track how ready you are - from now until exam day")}</div>
         </div>
       </div>
 
@@ -223,20 +270,20 @@ export function CoachReadinessPanel(props: CoachReadinessPanelProps) {
               width={30}
             />
 
-            <Tooltip content={<ReadinessTooltip />} />
+            <Tooltip content={<ReadinessTooltip tx={props.tx} />} />
 
             <ReferenceLine
               x={todayIndex}
               stroke="var(--text-muted)"
               strokeDasharray="4 3"
               strokeWidth={1}
-              label={<TodayLabel />}
+              label={<TodayLabel text={props.tx("ui.view.coach.readiness.today", "Today")} />}
             />
 
             <Area
               type="monotone"
               dataKey="readiness"
-              name="Readiness"
+              name={props.tx("ui.view.coach.readiness.label", "Readiness")}
               stroke="var(--chart-accent-3)"
               strokeWidth={2}
               fill="url(#coachReadinessGrad)"
@@ -247,7 +294,7 @@ export function CoachReadinessPanel(props: CoachReadinessPanelProps) {
             <Line
               type="monotone"
               dataKey="projected"
-              name="Projected"
+              name={props.tx("ui.view.coach.readiness.projected", "Projected")}
               stroke="var(--chart-accent-2)"
               strokeWidth={2}
               strokeDasharray="6 3"
@@ -262,15 +309,15 @@ export function CoachReadinessPanel(props: CoachReadinessPanelProps) {
       <div className="learnkit-coach-chart-legend">
         <div className="learnkit-coach-legend-item">
           <span className="learnkit-coach-legend-swatch" style={{ backgroundColor: "var(--chart-accent-3)" }} />
-          <span>Readiness</span>
+          <span>{props.tx("ui.view.coach.readiness.label", "Readiness")}</span>
         </div>
         <div className="learnkit-coach-legend-item">
           <span className="learnkit-coach-legend-line learnkit-coach-legend-dashed" style={{ borderColor: "var(--chart-accent-2)" }} />
-          <span>Projected</span>
+          <span>{props.tx("ui.view.coach.readiness.projected", "Projected")}</span>
         </div>
         <div className="learnkit-coach-legend-item">
           <span className="learnkit-coach-legend-line learnkit-coach-legend-dashed" style={{ borderColor: "var(--text-muted)" }} />
-          <span>Today</span>
+          <span>{props.tx("ui.view.coach.readiness.today", "Today")}</span>
         </div>
       </div>
     </div>

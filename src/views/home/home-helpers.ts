@@ -45,16 +45,19 @@ export function localDayIndex(ts: number, timeZone: string): number {
  * Format a timestamp as a human-readable relative string
  * (e.g. "Just now", "5m ago", "2h ago", "3d ago").
  */
-export function formatTimeAgo(ts: number): string {
-  if (!Number.isFinite(ts)) return "Unknown";
+export function formatTimeAgo(
+  ts: number,
+  tx: (token: string, fallback: string, vars?: Record<string, string | number>) => string,
+): string {
+  if (!Number.isFinite(ts)) return tx("ui.home.timeAgo.unknown", "Unknown");
   const diff = Date.now() - ts;
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "Just now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return tx("ui.home.timeAgo.justNow", "Just now");
+  if (mins < 60) return tx("ui.home.timeAgo.minutes", "{count}m ago", { count: mins });
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return tx("ui.home.timeAgo.hours", "{count}h ago", { count: hours });
   const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  return tx("ui.home.timeAgo.days", "{count}d ago", { count: days });
 }
 
 /**

@@ -11,6 +11,7 @@
  */
 
 import { setIcon } from "obsidian";
+import { t } from "../../platform/translations/translator";
 
 export type SearchPopoverOption = {
   id: string;
@@ -38,6 +39,9 @@ export type SearchPopoverListArgs = {
   emptyTextWhenQuery: string;
   emptyTextWhenIdle: string;
   typeFilters?: Array<{ type: "vault" | "folder" | "note" | "tag" | "property"; label: string }>;
+  filtersLabel?: string;
+  propertiesLabel?: string;
+  formatSearchPlaceholder?: (terms: string[]) => string;
 };
 
 function normalizeSearchValue(input: string): string {
@@ -135,6 +139,8 @@ export function mountSearchPopoverList(args: SearchPopoverListArgs): SearchPopov
   let activeIndex = -1;
   const typeFilterDefs = args.typeFilters ?? [];
   const visibleTypeFilterDefs = typeFilterDefs.filter((entry) => entry.type !== "property" && entry.type !== "vault");
+  const filtersLabel = String(args.filtersLabel || "Filters");
+  const propertiesLabel = String(args.propertiesLabel || "Properties");
   const enabledTypes = new Set(typeFilterDefs.map((entry) => entry.type));
   const enabledPropertyKeys = new Set<string>();
   let typeFilterOpen = false;
@@ -146,7 +152,7 @@ export function mountSearchPopoverList(args: SearchPopoverListArgs): SearchPopov
       cls: "learnkit-btn-toolbar learnkit-btn-toolbar learnkit-btn-filter learnkit-btn-filter h-7 px-3 text-sm inline-flex items-center gap-2 learnkit-scope-type-filter-btn learnkit-scope-type-filter-btn",
       attr: {
         type: "button",
-        "aria-label": "Filter scope item types",
+        "aria-label": t(undefined, "ui.search.filterScopeTypes", "Filter scope item types"),
         "aria-haspopup": "listbox",
         "aria-expanded": "false",
         "aria-controls": filterPopoverId,
@@ -165,7 +171,7 @@ export function mountSearchPopoverList(args: SearchPopoverListArgs): SearchPopov
   }
 
   const typeFilterBtnLabel = typeFilterBtn
-    ? typeFilterBtn.createSpan({ cls: "", text: "Filters" })
+    ? typeFilterBtn.createSpan({ cls: "", text: filtersLabel })
     : null;
   if (typeFilterBtn) {
     const typeFilterIcon = typeFilterBtn.createSpan({ cls: "inline-flex items-center justify-center" });
@@ -175,7 +181,7 @@ export function mountSearchPopoverList(args: SearchPopoverListArgs): SearchPopov
 
   const applyTypeFilterLabel = (): void => {
     if (!typeFilterBtn || !typeFilterBtnLabel) return;
-    typeFilterBtnLabel.setText("Filters");
+    typeFilterBtnLabel.setText(filtersLabel);
   };
 
   const renderTypeFilterList = (): void => {
@@ -209,7 +215,7 @@ export function mountSearchPopoverList(args: SearchPopoverListArgs): SearchPopov
       .sort((a, b) => a.display.localeCompare(b.display, undefined, { sensitivity: "base" }));
 
     if (visibleTypeFilterDefs.length) {
-      typeFilterList.createDiv({ cls: "learnkit-coach-scope-section-title learnkit-coach-scope-section-title", text: "Filters", attr: { role: "presentation" } });
+      typeFilterList.createDiv({ cls: "learnkit-coach-scope-section-title learnkit-coach-scope-section-title", text: filtersLabel, attr: { role: "presentation" } });
     }
 
     for (const entry of visibleTypeFilterDefs) {
@@ -240,7 +246,7 @@ export function mountSearchPopoverList(args: SearchPopoverListArgs): SearchPopov
       if (visibleTypeFilterDefs.length) {
         typeFilterList.createDiv({ cls: "learnkit-coach-scope-separator learnkit-coach-scope-separator", attr: { role: "separator" } });
       }
-      typeFilterList.createDiv({ cls: "learnkit-coach-scope-section-title learnkit-coach-scope-section-title", text: "Properties", attr: { role: "presentation" } });
+      typeFilterList.createDiv({ cls: "learnkit-coach-scope-section-title learnkit-coach-scope-section-title", text: propertiesLabel, attr: { role: "presentation" } });
       for (const group of propertyGroupList) {
         const selected = enabledPropertyKeys.has(group.key);
         const item = typeFilterList.createEl("button", {
@@ -294,7 +300,9 @@ export function mountSearchPopoverList(args: SearchPopoverListArgs): SearchPopov
     const scopedTypeTerms = allVisibleTypesEnabled ? [] : enabledTypeLabels;
     const terms = [...scopedTypeTerms, ...propertyNames];
 
-    args.searchInput.placeholder = buildScopeSearchPlaceholder(terms);
+    args.searchInput.placeholder = args.formatSearchPlaceholder
+      ? args.formatSearchPlaceholder(terms)
+      : buildScopeSearchPlaceholder(terms);
   };
 
   const setTypeFilterOpen = (open: boolean): void => {

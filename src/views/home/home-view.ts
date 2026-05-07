@@ -336,7 +336,7 @@ export class SproutHomeView extends ItemView {
       : greeting.fallback;
 
     {
-      subtitleRow.createSpan({ text: greetingPrefix + " " });
+      subtitleRow.createSpan({ text: greetingPrefix });
 
       const nameInput = document.createElement("input");
       nameInput.className = "lk-home-name-input min-w-[1ch] shrink-0 grow-0 basis-auto max-w-full border-0 p-0 m-0 shadow-none text-[0.95rem] font-normal leading-[1.3] text-muted-foreground bg-transparent";
@@ -1177,9 +1177,12 @@ export class SproutHomeView extends ItemView {
         name.textContent = formatDeckLabel(deck.label, 60);
         const right = row.createDiv({ cls: "flex items-center gap-2 shrink-0" });
         const due = getDueForScope(deck.scope);
+        const timeAgo = formatTimeAgo(deck.lastAt, tx);
+        const dueText = tx("ui.home.deck.dueCount", "{count} due", { count: due });
+        const bullet = tx("ui.home.timeAgo.bullet", " • ");
         right.createDiv({
           cls: "text-xs text-muted-foreground",
-          text: `${formatTimeAgo(deck.lastAt)} • ${due} due`,
+          text: `${timeAgo}${bullet}${dueText}`,
         });
       } else {
         const placeholder = recentList.createDiv({ 
@@ -1398,12 +1401,12 @@ export class SproutHomeView extends ItemView {
     const tipPrevBtn = tipFooter.createEl("button", {
       cls: "learnkit-btn-toolbar learnkit-btn-toolbar h-7 px-2 text-xs inline-flex items-center justify-center",
       text: "Prev",
-      attr: { type: "button", "aria-label": "Previous tip" },
+      attr: { type: "button", "aria-label": tx("ui.home.tips.previousTip", "Previous tip") },
     });
     const tipNextBtn = tipFooter.createEl("button", {
       cls: "learnkit-btn-toolbar learnkit-btn-toolbar h-7 px-2 text-xs inline-flex items-center justify-center",
       text: "Next",
-      attr: { type: "button", "aria-label": "Next tip" },
+      attr: { type: "button", "aria-label": tx("ui.home.tips.nextTip", "Next tip") },
     });
     const tipActionHost = tipFooter.createDiv({ cls: "ml-auto" });
 

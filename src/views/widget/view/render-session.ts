@@ -1019,6 +1019,7 @@ function renderScheduledFooter(view: WidgetViewLike, footer: HTMLElement, card: 
             rating,
             now: previewNow,
             scheduling: view.plugin.settings.scheduling,
+            locale: view.plugin.settings?.general?.interfaceLanguage,
           }) ?? undefined
         );
       };
@@ -1172,6 +1173,7 @@ function renderActionRow(view: WidgetViewLike, footer: HTMLElement, card: CardRe
   const canBurySuspend = view.session!.mode !== "practice" && !graded;
   const moreMenu = attachWidgetMoreMenu({
     trigger: moreBtn,
+    locale: view.plugin.settings?.general?.interfaceLanguage,
     canUndo: view.session!.mode !== "practice" && view.canUndo(),
     onUndo: () => void view.undoLastGrade(),
     canBurySuspend,

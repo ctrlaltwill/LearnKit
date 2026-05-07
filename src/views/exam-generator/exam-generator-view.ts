@@ -3656,7 +3656,7 @@ class ExamAttachmentPickerModal extends Modal {
 
       const closeBtn = headerEl.createEl("button", {
         cls: "learnkit-btn-toolbar learnkit-btn-toolbar learnkit-btn-filter learnkit-btn-filter h-7 px-3 text-sm inline-flex items-center gap-2 learnkit-scope-clear-btn learnkit-scope-clear-btn learnkit-attachment-picker-close-btn learnkit-attachment-picker-close-btn",
-        attr: { type: "button", "aria-label": "Close" },
+        attr: { type: "button", "aria-label": this._tx("ui.common.close", "Close") },
       });
       closeBtn.setAttr("data-tooltip-position", "top");
       const closeIconWrap = closeBtn.createSpan({ cls: "inline-flex items-center justify-center" });

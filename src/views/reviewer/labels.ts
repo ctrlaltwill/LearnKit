@@ -25,3 +25,16 @@ export function stageLabel(s: string): string {
   if (s === "suspended") return "Suspended";
   return s;
 }
+
+/** Translated variant for use in UI contexts where a `tx` function is available. */
+export function stageLabelTx(
+  tx: (token: string, fallback: string) => string,
+  s: string,
+): string {
+  if (s === "new") return tx("ui.common.stage.new", "New");
+  if (s === "learning") return tx("ui.common.stage.learning", "Learning");
+  if (s === "relearning") return tx("ui.common.stage.relearning", "Relearning");
+  if (s === "review") return tx("ui.common.stage.review", "Review");
+  if (s === "suspended") return tx("ui.common.stage.suspended", "Suspended");
+  return s;
+}

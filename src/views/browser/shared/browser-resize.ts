@@ -13,6 +13,7 @@
 
 import type { ColKey } from "../browser-helpers";
 import { setCssProps } from "../../../platform/core/ui";
+import { t } from "../../../platform/translations/translator";
 
 export interface ResizeContext {
   colWidths: Record<string, number>;
@@ -37,7 +38,7 @@ export function makeResizableTh(
 
   const handle = document.createElement("div");
   handle.className = "learnkit-col-resize learnkit-col-resize-handle";
-  handle.setAttribute("aria-label", "Drag to resize");
+  handle.setAttribute("aria-label", t(undefined, "ui.browser.resize.drag", "Drag to resize"));
   setCssProps(handle, "--learnkit-resize-zone", `${RESIZE_ZONE_PX}px`);
 
   th.appendChild(handle);

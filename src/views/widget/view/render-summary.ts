@@ -122,7 +122,12 @@ export function renderWidgetSummary(view: WidgetViewLike, root: HTMLElement): vo
   const dueLabel = queueCount > 0
     ? tx("ui.widget.summary.cardsDue", "{count} Cards Due", { count: queueCount })
     : tx("ui.widget.summary.noCardsDue", "No Cards Due");
-  const countsLine = el("div", "sprout-widget-counts-line", `${dueLabel}  •  ${counts.total} Cards Total`);
+  const flashcardsTotalLabel = tx(
+    "ui.widget.summary.flashcardsTotal",
+    "{count} flashcards total",
+    { count: counts.total },
+  );
+  const countsLine = el("div", "sprout-widget-counts-line", `${dueLabel}  •  ${flashcardsTotalLabel}`);
   teaser.appendChild(countsLine);
 
   if (queueCount > 0) {

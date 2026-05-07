@@ -13,6 +13,7 @@ import type { IORect, IOTextBox } from "./io-types";
 import { textBgCss } from "./io-image-ops";
 import { pointInPolygon } from "./image-geometry";
 import { setCssProps } from "../../platform/core/ui";
+import { t } from "../translations/translator";
 
 type DragMoveEvent = {
   dx: number;
@@ -250,7 +251,7 @@ export function renderOverlay(opts: RenderOverlayOptions): void {
     const deleteBtn = document.createElement("button");
     deleteBtn.type = "button";
     deleteBtn.className = "learnkit-assistant-popup-close learnkit-io-mask-delete";
-    deleteBtn.setAttribute("aria-label", "Delete mask");
+    deleteBtn.setAttribute("aria-label", t(undefined, "ui.io.maskRenderer.deleteMask", "Delete mask"));
     deleteBtn.setAttribute("data-tooltip-position", "top");
     deleteBtn.appendChild(createDeleteIcon());
 

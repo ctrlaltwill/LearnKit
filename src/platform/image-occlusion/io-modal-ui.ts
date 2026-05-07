@@ -18,6 +18,7 @@
 
 import { Platform, setIcon } from "obsidian";
 import { placePopover, setCssProps } from "../../platform/core/ui";
+import { t } from "../translations/translator";
 
 function isMobileLikePlatform(): boolean {
   if (Platform.isMobileApp || Platform.isIosApp || Platform.isAndroidApp) return true;
@@ -62,6 +63,8 @@ export interface ToolbarCallbacks {
 /** Build the IO-editor toolbar and return element references. */
 export function buildToolbar(parent: HTMLElement, cb: ToolbarCallbacks): ToolbarRefs {
   const findShortcut = getPlatformShortcut("F");
+  const undoTip = getPlatformShortcut("Z");
+  const redoShortcut = isMobileLikePlatform() ? null : (Platform.isMacOS ? "⌘⇧Z" : "Ctrl+Shift+Z");
 
   const toolbar = parent.createDiv();
   toolbar.removeAttribute("class");
@@ -119,17 +122,17 @@ export function buildToolbar(parent: HTMLElement, cb: ToolbarCallbacks): Toolbar
   fileInput.classList.add("learnkit-io-file-input", "learnkit-io-file-input");
   toolbar.appendChild(fileInput);
 
-  createIconBtn(toolbarGroup, "upload", "Insert from file", () => fileInput.click());
+  createIconBtn(toolbarGroup, "upload", t(undefined, "ui.io.toolbar.insertFromFile", "Insert from file"), () => fileInput.click());
 
   createSep();
 
   // Undo / Redo / Move / Crop / Rotate
-  const btnUndo = createIconBtn(toolbarGroup, "undo", "Undo (Ctrl+Z)", () => cb.onUndo());
-  const btnRedo = createIconBtn(toolbarGroup, "redo", "Redo (Ctrl+Shift+Z)", () => cb.onRedo());
-  const btnTransform = createIconBtn(toolbarGroup, "move", "Pan / Move", () => cb.onSetTool("transform"));
-  const btnCrop = createIconBtn(toolbarGroup, "crop", "Crop image", () => cb.onSetTool("crop"));
-  const btnRotateLeft = createIconBtn(toolbarGroup, "rotate-ccw", "Rotate 90° left", () => cb.onRotate("ccw"));
-  const btnRotateRight = createIconBtn(toolbarGroup, "rotate-cw", "Rotate 90° right", () => cb.onRotate("cw"));
+  const btnUndo = createIconBtn(toolbarGroup, "undo", undoTip ? `${t(undefined, "ui.io.toolbar.undo", "Undo")} (${undoTip})` : t(undefined, "ui.io.toolbar.undo", "Undo"), () => cb.onUndo());
+  const btnRedo = createIconBtn(toolbarGroup, "redo", redoShortcut ? `${t(undefined, "ui.io.toolbar.redo", "Redo")} (${redoShortcut})` : t(undefined, "ui.io.toolbar.redo", "Redo"), () => cb.onRedo());
+  const btnTransform = createIconBtn(toolbarGroup, "move", t(undefined, "ui.io.toolbar.pan", "Pan / Move"), () => cb.onSetTool("transform"));
+  const btnCrop = createIconBtn(toolbarGroup, "crop", t(undefined, "ui.io.toolbar.crop", "Crop image"), () => cb.onSetTool("crop"));
+  const btnRotateLeft = createIconBtn(toolbarGroup, "rotate-ccw", t(undefined, "ui.io.toolbar.rotateLeft", "Rotate 90° left"), () => cb.onRotate("ccw"));
+  const btnRotateRight = createIconBtn(toolbarGroup, "rotate-cw", t(undefined, "ui.io.toolbar.rotateRight", "Rotate 90° right"), () => cb.onRotate("cw"));
 
   createSep();
 
@@ -137,37 +140,37 @@ export function buildToolbar(parent: HTMLElement, cb: ToolbarCallbacks): Toolbar
   const btnRectTool = createIconBtn(
     toolbarGroup,
     "square",
-    "Add Rectangle Mask",
+    t(undefined, "ui.io.toolbar.addRectangle", "Add Rectangle Mask"),
     () => cb.onSetTool("occlusion-rect"),
   );
   const btnCircleTool = createIconBtn(
     toolbarGroup,
     "circle",
-    "Add Oval Mask",
+    t(undefined, "ui.io.toolbar.addOval", "Add Oval Mask"),
     () => cb.onSetTool("occlusion-circle"),
   );
   const btnCustomTool = createIconBtn(
     toolbarGroup,
     "pencil",
-    "Add Freeform Mask",
+    t(undefined, "ui.io.toolbar.addFreeform", "Add Freeform Mask"),
     () => cb.onSetTool("occlusion-freehand"),
   );
   const btnSmartMaskTool = createIconBtn(
     toolbarGroup,
     "lasso",
-    "Add Smart Mask",
+    t(undefined, "ui.io.toolbar.addSmartMask", "Add Smart Mask"),
     () => cb.onSetTool("occlusion-smart-lasso"),
   );
   const btnAutoMask = createIconBtn(
     toolbarGroup,
     "wand-sparkles",
-    findShortcut ? `Auto-Mask (${findShortcut})` : "Auto-Mask",
+    findShortcut ? `${t(undefined, "ui.io.toolbar.autoMask", "Auto-Mask")} (${findShortcut})` : t(undefined, "ui.io.toolbar.autoMask", "Auto-Mask"),
     () => cb.onAutoMask(),
   );
   const btnResetMasks = createIconBtn(
     toolbarGroup,
     "trash-2",
-    "Clear All Masks",
+    t(undefined, "ui.io.toolbar.clearAll", "Clear All Masks"),
     () => cb.onResetMasks(),
     { disabled: true },
   );
@@ -230,7 +233,7 @@ export function buildCanvasContainer(
     cls: "flex items-center justify-center text-muted-foreground text-sm",
   });
   placeholder.classList.add("learnkit-io-canvas-placeholder", "learnkit-io-canvas-placeholder");
-  placeholder.createSpan({ text: "Insert from file or paste an image" });
+  placeholder.createSpan({ text: t(undefined, "ui.io.canvas.placeholder", "Insert from file or paste an image") });
   if (pasteShortcut) {
     const kbdWrap = placeholder.createSpan({ cls: "inline-flex items-center gap-1 ml-1" });
     kbdWrap.createEl("kbd", { cls: "kbd", text: pasteShortcut });
@@ -283,19 +286,19 @@ export function buildFooter(parent: HTMLElement, cb: FooterCallbacks, defaultMod
 
   let selectedMode: "solo" | "all" = defaultMode;
   const options: { value: "solo" | "all"; label: string }[] = [
-    { value: "solo", label: "Hide group" },
-    { value: "all", label: "Hide all" },
+    { value: "solo", label: t(undefined, "ui.io.footer.mode.hideGroup", "Hide group") },
+    { value: "all", label: t(undefined, "ui.io.footer.mode.hideAll", "Hide all") },
   ];
 
   // Mode picker row
   const modeRow = footer.createDiv({ cls: "flex flex-col gap-1 items-start w-full" });
   modeRow.createEl("label", {
     cls: "text-sm font-medium inline-flex items-center gap-1",
-    text: "Mask behavior",
+    text: t(undefined, "ui.io.footer.mode.label", "Mask behavior"),
   });
   modeRow.createDiv({
     cls: "text-xs text-muted-foreground",
-    text: "Hide group hides only masks the by group when studying, other masks will not be present. Hide all hides every group when studying. Reveal settings are available in the plugin settings.",
+    text: t(undefined, "ui.io.footer.mode.description", "Hide group hides only masks the by group when studying, other masks will not be present. Hide all hides every group when studying. Reveal settings are available in the plugin settings."),
   });
 
   // Button-style dropdown (matches other modal dropdowns)
@@ -304,8 +307,8 @@ export function buildFooter(parent: HTMLElement, cb: FooterCallbacks, defaultMod
     cls: "learnkit-btn-toolbar learnkit-btn-toolbar h-7 px-2 text-sm inline-flex items-center gap-2 learnkit-io-mode-trigger learnkit-io-mode-trigger",
     attr: { type: "button", "aria-haspopup": "menu", "aria-expanded": "false" },
   });
-  const triggerLabel = trigger.createEl("span", { cls: "", text: options.find((o) => o.value === selectedMode)?.label ?? "Hide group" });
-  trigger.setAttribute("aria-label", triggerLabel.textContent || "Hide group");
+  const triggerLabel = trigger.createEl("span", { cls: "", text: options.find((o) => o.value === selectedMode)?.label ?? t(undefined, "ui.io.footer.mode.hideGroup", "Hide group") });
+  trigger.setAttribute("aria-label", triggerLabel.textContent || t(undefined, "ui.io.footer.mode.hideGroup", "Hide group"));
   const chevronWrap = trigger.createEl("span", { cls: "inline-flex items-center justify-center [&_svg]:size-3" });
   setIcon(chevronWrap, "chevron-down");
 
@@ -448,7 +451,7 @@ export function buildFooter(parent: HTMLElement, cb: FooterCallbacks, defaultMod
 
   const cancelBtn = buttonRow.createEl("button", { cls: "learnkit-btn-toolbar learnkit-btn-toolbar learnkit-btn-filter learnkit-btn-filter inline-flex items-center gap-2 h-9 px-3 text-sm" });
   cancelBtn.type = "button";
-  cancelBtn.createSpan({ text: "Cancel" });
+  cancelBtn.createSpan({ text: t(undefined, "ui.io.footer.cancel", "Cancel") });
   cancelBtn.onclick = () => {
     cleanup();
     cb.onCancel();
@@ -456,7 +459,7 @@ export function buildFooter(parent: HTMLElement, cb: FooterCallbacks, defaultMod
 
   const saveBtn = buttonRow.createEl("button", { cls: "learnkit-btn-toolbar learnkit-btn-toolbar learnkit-btn-accent learnkit-btn-accent learnkit-io-save-btn learnkit-io-save-btn h-9 inline-flex items-center gap-2" });
   saveBtn.type = "button";
-  saveBtn.createSpan({ text: "Save" });
+  saveBtn.createSpan({ text: t(undefined, "ui.io.footer.save", "Save") });
   saveBtn.onclick = () => {
     cleanup();
     cb.onSave(selectedMode);
@@ -474,16 +477,16 @@ export function buildImageLimitDialog(
   const dialog = parent.createEl("dialog", { cls: "dialog" });
   const dlgInner = dialog.createDiv({ cls: "flex flex-col gap-3" });
   const dlgHeader = dlgInner.createDiv({ cls: "" });
-  dlgHeader.createEl("h2", { cls: "text-lg font-semibold", text: "Image already loaded" });
+  dlgHeader.createEl("h2", { cls: "text-lg font-semibold", text: t(undefined, "ui.io.dialog.imageLoaded", "Image already loaded") });
   dlgHeader.createEl("p", {
     cls: "text-sm text-muted-foreground",
-    text: "Only one image per card. Remove the current image before adding another.",
+    text: t(undefined, "ui.io.dialog.oneImageLimit", "Only one image per card. Remove the current image before adding another."),
   });
   const dlgFooter = dlgInner.createDiv({ cls: "flex justify-end gap-2" });
   const dlgCancel = dlgFooter.createEl("button", {
     cls: "btn inline-flex items-center justify-center px-3 h-9 text-sm",
     attr: { type: "button" },
-    text: "Cancel",
+    text: t(undefined, "ui.io.footer.cancel", "Cancel"),
   });
   dlgCancel.classList.add("learnkit-io-dlg-cancel", "learnkit-io-dlg-cancel");
   dlgCancel.onclick = () => dialog.close();
@@ -491,7 +494,7 @@ export function buildImageLimitDialog(
   const dlgDelete = dlgFooter.createEl("button", {
     cls: "learnkit-btn-toolbar learnkit-btn-toolbar inline-flex items-center justify-center px-3 h-9 text-sm",
     attr: { type: "button" },
-    text: "Delete image",
+    text: t(undefined, "ui.io.dialog.deleteImage", "Delete image"),
   });
   dlgDelete.classList.add("learnkit-io-dlg-delete", "learnkit-io-dlg-delete");
   dlgDelete.onclick = () => onDelete();
@@ -506,7 +509,7 @@ export function buildHeader(parent: HTMLElement, title: string, onClose: () => v
   headerRow.createDiv({ text: title, cls: "text-lg font-semibold" });
   const headerClose = headerRow.createEl("button", {
     cls: "inline-flex items-center justify-center h-9 w-9 text-muted-foreground hover:text-foreground focus-visible:text-foreground",
-    attr: { type: "button", "aria-label": "Close" },
+    attr: { type: "button", "aria-label": t(undefined, "ui.io.modal.close", "Close") },
   });
   headerClose.classList.add("learnkit-io-close-btn", "learnkit-io-close-btn");
   const headerCloseIcon = headerClose.createEl("span", { cls: "inline-flex items-center justify-center [&_svg]:size-4" });

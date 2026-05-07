@@ -18,6 +18,7 @@ import type { ReviewResult } from "../../../platform/types/review";
 import { gradeFromPassFail, gradeFromRating, resetCardScheduling, type SchedulerSettings } from "../../../engine/scheduler/scheduler";
 import { useAnalyticsPopoverZIndex } from "../filter-styles";
 import { cssClassForProps } from "../../../platform/core/ui";
+import { t } from "../../../platform/translations/translator";
 
 function InfoIcon(props: { text: string }) {
   return (
@@ -266,7 +267,9 @@ export function ForgettingCurveChart(props: {
   scheduler?: SchedulerSettings | null;
   nowMs: number;
   enableAnimations?: boolean;
+  locale?: string;
 }) {
+  const tx = React.useMemo(() => (token: string, fallback: string, vars?: Record<string, string | number>) => t(props.locale, token, fallback, vars), [props.locale]);
   const [search, setSearch] = React.useState<SearchState>(() => createEmptySearch());
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
   const seededRef = React.useRef(false);
@@ -593,10 +596,10 @@ export function ForgettingCurveChart(props: {
       <div className="flex items-start justify-between gap-2">
         <div>
           <div className="flex items-center gap-1">
-            <div className="font-semibold lk-home-section-title">Forgetting curve</div>
-            <InfoIcon text="Estimated recall probability over time for the selected cards based on review history." />
+            <div className="font-semibold lk-home-section-title">{tx("ui.analytics.forgettingCurve.title", "Forgetting curve")}</div>
+            <InfoIcon text={tx("ui.analytics.forgettingCurve.info", "Estimated recall probability over time for the selected cards based on review history.")} />
           </div>
-          <div className="text-xs text-muted-foreground">Recall probability over time</div>
+          <div className="text-xs text-muted-foreground">{tx("ui.analytics.forgettingCurve.subtitle", "Recall probability over time")}</div>
         </div>
 
         <div ref={wrapRef} className="relative inline-flex">
@@ -621,7 +624,7 @@ export function ForgettingCurveChart(props: {
             >
               <polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3" />
             </svg>
-            <span>Filter</span>
+            <span>{tx("ui.analytics.forgettingCurve.filter", "Filter")}</span>
           </button>
 
           {open ? (
@@ -631,12 +634,12 @@ export function ForgettingCurveChart(props: {
               className="rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-0 flex flex-col learnkit-ana-popover learnkit-ana-popover-right learnkit-ana-popover-md"
             >
               <div className="p-1">
-                <div className="text-sm text-muted-foreground px-2 py-1">Search cards</div>
+                <div className="text-sm text-muted-foreground px-2 py-1">{tx("ui.analytics.forgettingCurve.searchCards", "Search cards")}</div>
                 <div className="px-2 pb-2">
                   <input
                     className="input w-full text-sm"
                     type="text"
-                    placeholder="Search by ID, title, question"
+                    placeholder={tx("ui.analytics.forgettingCurve.searchInputPlaceholder", "Search by ID, title, question")}
                     value={search.query}
                     onChange={(event) => {
                       setSearch({ query: event.currentTarget.value, error: null });
@@ -648,7 +651,7 @@ export function ForgettingCurveChart(props: {
 
                 {selectedResults.length ? (
                   <div className="px-2 pb-2">
-                    <div className="text-xs text-muted-foreground px-2 pb-1">Selected cards</div>
+                    <div className="text-xs text-muted-foreground px-2 pb-1">{tx("ui.analytics.forgettingCurve.selectedCards", "Selected cards")}</div>
                     <div className="flex flex-col">
                       {selectedResults.map((result) => (
                         <div
@@ -725,14 +728,14 @@ export function ForgettingCurveChart(props: {
                                     <span
                                       className="truncate learnkit-ana-truncate-row"
                                     >
-                                      {result.location || "Unknown location"}
+                                      {result.location || tx("ui.analytics.forgettingCurve.unknownLocation", "Unknown location")}
                                     </span>
                                     <span className="shrink-0">{result.label}</span>
                                   </div>
                                   <div
                                     className="truncate learnkit-ana-truncate"
                                   >
-                                    {result.preview || "No question text."}
+                                    {result.preview || tx("ui.analytics.forgettingCurve.noQuestionText", "No question text.")}
                                   </div>
                                 </div>
                               </div>
@@ -740,7 +743,7 @@ export function ForgettingCurveChart(props: {
                           })}
                         </div>
                       ) : (
-                        <div className="text-xs text-muted-foreground">No matches.</div>
+                        <div className="text-xs text-muted-foreground">{tx("ui.analytics.forgettingCurve.noMatches", "No matches.")}</div>
                       );
                     })()}
                   </div>
@@ -748,7 +751,7 @@ export function ForgettingCurveChart(props: {
 
                 <div className="h-px bg-border my-1" role="separator" />
                 <div className="text-sm text-muted-foreground cursor-pointer px-2" onClick={resetFilters}>
-                  Reset filters
+                  {tx("ui.analytics.forgettingCurve.resetFilters", "Reset filters")}
                 </div>
               </div>
             </div>
@@ -803,7 +806,7 @@ export function ForgettingCurveChart(props: {
         </div>
       ) : (
         <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
-          {selectedIds.length ? "Selected cards have not been studied yet." : "Search for cards to plot forgetting curves."}
+          {selectedIds.length ? tx("ui.analytics.forgettingCurve.notStudied", "Selected cards have not been studied yet.") : tx("ui.analytics.forgettingCurve.searchPlaceholder", "Search for cards to plot forgetting curves.")}
         </div>
       )}
 

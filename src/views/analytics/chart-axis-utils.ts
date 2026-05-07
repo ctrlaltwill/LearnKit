@@ -35,7 +35,8 @@ export function formatAxisLabel(
   dayIndex: number,
   todayIndex: number,
   labelFormatter: (dayIndex: number) => string,
+  todayLabel = "Today",
 ): string {
-  if (dayIndex === todayIndex) return "Today";
+  if (dayIndex === todayIndex) return todayLabel;
   return labelFormatter(dayIndex);
 }

@@ -309,7 +309,35 @@ export function typeLabelBrowser(
   if (tt === "oq") return "Ordered question";
   return tt || "—";
 }
-
+/** Translated variant for use in UI contexts where a `tx` function is available. */
+export function typeLabelBrowserTx(
+  tx: (token: string, fallback: string) => string,
+  t: string,
+  card?: { q?: string | null; a?: string | null; extensionData?: Record<string, unknown> | null } | null,
+): string {
+  const tt = String(t || "").toLowerCase();
+  if (tt === "basic") {
+    if (card) {
+      const ext = card.extensionData ?? {};
+      const qVariants: unknown[] = Array.isArray(ext.qVariants) ? ext.qVariants : [];
+      const aVariants: unknown[] = Array.isArray(ext.aVariants) ? ext.aVariants : [];
+      if (qVariants.length > 0 || aVariants.length > 0) return tx("ui.common.basicCombo", "Basic (combo)");
+      const qText = String(card.q ?? "");
+      const aText = String(card.a ?? "");
+      if (qText.includes(" :: ") || aText.includes(" :: ")) return tx("ui.common.basicCombo", "Basic (combo)");
+    }
+    return tx("ui.common.basic", "Basic");
+  }
+  if (tt === "reversed" || tt === "reversed-child") return tx("ui.common.basicReversed", "Basic (reversed)");
+  if (tt === "combo" || tt === "combo-child") return tx("ui.common.combo", "Combo");
+  if (tt === "mcq") return tx("ui.common.multipleChoice", "Multiple choice");
+  if (tt === "cloze" || tt === "cloze-child") return tx("ui.common.cloze", "Cloze");
+  if (tt === "io") return tx("ui.common.imageOcclusion", "Image occlusion");
+  if (tt === "io-child") return tx("ui.common.imageOcclusion", "Image occlusion");
+  if (tt === "hq" || tt === "hq-child") return tx("ui.common.hotspot", "Hotspot");
+  if (tt === "oq") return tx("ui.common.orderedQuestion", "Ordered question");
+  return tt || "—";
+}
 /** Escape HTML special characters. */
 export function escapeHtml(s: string): string {
   return String(s ?? "")

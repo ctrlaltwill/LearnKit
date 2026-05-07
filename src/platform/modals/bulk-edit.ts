@@ -22,11 +22,12 @@ import {
   escapePipes,
   parseMcqOptionsFromCell,
 } from "../../views/reviewer/fields";
-import { stageLabel } from "../../views/reviewer/labels";
+import { stageLabel, stageLabelTx } from "../../views/reviewer/labels";
 import { createGroupPickerField as createGroupPickerFieldImpl } from "../card-editor/card-editor";
 
 import {
   typeLabelBrowser,
+  typeLabelBrowserTx,
   fmtDue,
   fmtLocation,
   parseGroupsInput,
@@ -62,6 +63,10 @@ function formatGroupsForInput(groups: string[]): string {
   return groupsToInput(groups);
 }
 
+function isLegacyComboType(type: unknown): boolean {
+  return String(type ?? "").toLowerCase() === "combo";
+}
+
 type EditableField = "title" | "question" | "answer" | "info" | "groups";
 
 function fieldMinHeightPx(field: "title" | "question" | "answer" | "info"): number {
@@ -82,7 +87,7 @@ function getSharedEditableFieldValue(cards: CardRecord[], field: EditableField):
   const values = cardsForField.map((card) => {
     if (field === "title") return String(card.title || "");
     if (field === "question") {
-      if (card.type === "basic" || card.type === "reversed" || card.type === "combo") {
+      if (card.type === "basic" || card.type === "reversed" || isLegacyComboType(card.type)) {
         const ext = (!card.extensionData || (typeof card.extensionData === "object" && !Array.isArray(card.extensionData)))
           ? (card.extensionData ?? {})
           : {};
@@ -98,7 +103,7 @@ function getSharedEditableFieldValue(cards: CardRecord[], field: EditableField):
       if (card.type === "cloze") return String(card.clozeText || "");
     }
     if (field === "answer") {
-      if (card.type === "basic" || card.type === "reversed" || card.type === "combo") {
+      if (card.type === "basic" || card.type === "reversed" || isLegacyComboType(card.type)) {
         const ext = (!card.extensionData || (typeof card.extensionData === "object" && !Array.isArray(card.extensionData)))
           ? (card.extensionData ?? {})
           : {};
@@ -150,7 +155,7 @@ export class BulkEditCardModal extends Modal {
     if (!cards.length) { this.close(); return; }
 
     // ── Modal chrome ──────────────────────────────────────────────────────
-    setModalTitle(this, "Edit flashcard");
+    setModalTitle(this, this._tx("ui.reviewer.editFlashcard", "Edit flashcard"));
 
     // Apply all CSS classes and z-index BEFORE scoping to workspace.
     // scopeModalToWorkspace forces a repaint, which only works if the
@@ -644,7 +649,7 @@ export class BulkEditCardModal extends Modal {
   const card0 = cards[0];
   const state0 = plugin.store.getState(card0.id);
 
-  topGrid.appendChild(createReadonlyField("ID", card0.id));
+  topGrid.appendChild(createReadonlyField(this._tx("ui.browser.bulkEdit.field.id", "Card ID"), card0.id));
 
   // For basic/reversed cards, allow toggling between the two types
   const isBasicOrReversed = card0.type === "basic" || card0.type === "reversed";
@@ -656,13 +661,13 @@ export class BulkEditCardModal extends Modal {
 
     const typeLabelEl = document.createElement("label");
     typeLabelEl.className = "text-sm font-medium";
-    typeLabelEl.textContent = "Type";
+    typeLabelEl.textContent = this._tx("ui.common.type", "Type");
     typeWrapper.appendChild(typeLabelEl);
 
     const typeDropdown = createThemedDropdown(
       [
-        { value: "basic", label: "Basic" },
-        { value: "reversed", label: "Basic (Reversed)" },
+        { value: "basic", label: typeLabelBrowserTx((tkn, fb) => this._tx(tkn, fb), "basic") },
+        { value: "reversed", label: typeLabelBrowserTx((tkn, fb) => this._tx(tkn, fb), "reversed") },
       ],
       card0.type,
       undefined,
@@ -671,29 +676,30 @@ export class BulkEditCardModal extends Modal {
         buttonSize: "sm",
         buttonJustify: "start",
         buttonClassName: "cursor-pointer learnkit-card-meta-type-btn",
+        ariaLabel: this._tx("ui.header.openMenu", "Open menu"),
       },
     );
     typeDropdown.onChange((value) => { selectedType = value; });
     typeWrapper.appendChild(typeDropdown.element);
     topGrid.appendChild(typeWrapper);
   } else {
-    topGrid.appendChild(createReadonlyField("Type", typeLabelBrowser(card0.type, card0)));
+    topGrid.appendChild(createReadonlyField(this._tx("ui.common.type", "Type"), typeLabelBrowserTx((tkn, fb) => this._tx(tkn, fb), card0.type, card0)));
   }
 
-  topGrid.appendChild(createReadonlyField("Stage", stageLabel(String(state0?.stage || "new"))));
+  topGrid.appendChild(createReadonlyField(this._tx("ui.common.stage", "Stage"), stageLabelTx((tkn, fb) => this._tx(tkn, fb), String(state0?.stage || "new"))));
   topGrid.appendChild(
-    createReadonlyField("Due", state0 && Number.isFinite(state0.due) ? fmtDue(state0.due) : "—"),
+    createReadonlyField(this._tx("ui.common.due", "Due"), state0 && Number.isFinite(state0.due) ? fmtDue(state0.due) : "—"),
   );
 
   form.appendChild(topGrid);
 
   // ── Editable fields ───────────────────────────────────────────────────────
-  form.appendChild(createEditableTextareaField("Title", "title"));
-  form.appendChild(createEditableTextareaField("Question", "question"));
+  form.appendChild(createEditableTextareaField(this._tx("ui.common.title", "Title"), "title"));
+  form.appendChild(createEditableTextareaField(this._tx("ui.common.question", "Question"), "question"));
 
   // Answer field (only for non-cloze, skip for MCQ/OQ which have their own editors)
   if (hasNonCloze && !isSingleMcq && !isSingleOq) {
-    form.appendChild(createEditableTextareaField("Answer", "answer"));
+    form.appendChild(createEditableTextareaField(this._tx("ui.common.answer", "Answer"), "answer"));
   }
 
   // ── MCQ-specific editor ─────────────────────────────────────────────────
@@ -710,7 +716,7 @@ export class BulkEditCardModal extends Modal {
 
     const mcqLabel = document.createElement("label");
     mcqLabel.className = "text-sm font-medium inline-flex items-center gap-1";
-    mcqLabel.textContent = "Answers and options";
+    mcqLabel.textContent = this._tx("ui.browser.bulkEdit.mcq.answersAndOptions", "Answers and options");
     const mcqInfoIcon = document.createElement("span");
     mcqInfoIcon.className = "inline-flex items-center justify-center [&_svg]:size-3 text-muted-foreground learnkit-info-icon-elevated";
     mcqInfoIcon.setAttribute("aria-label", MCQ_TOOLTIP);
@@ -747,7 +753,7 @@ export class BulkEditCardModal extends Modal {
       const input = document.createElement("textarea");
       input.className = "textarea flex-1 text-sm learnkit-input-fixed learnkit-textarea-fixed";
       input.rows = 1;
-      input.placeholder = "Enter an answer option";
+      input.placeholder = this._tx("ui.browser.bulkEdit.mcq.optionPlaceholder", "Enter an answer option");
       input.value = value;
       input.addEventListener("keydown", (ev: KeyboardEvent) => {
         if (ev.key === "Enter" && !ev.shiftKey && !ev.ctrlKey && !ev.metaKey && !ev.altKey) {
@@ -762,7 +768,7 @@ export class BulkEditCardModal extends Modal {
       const removeBtn = document.createElement("button");
       removeBtn.type = "button";
       removeBtn.className = "inline-flex items-center justify-center h-9 w-9 p-0 learnkit-remove-btn-ghost";
-      removeBtn.setAttribute("aria-label", this._tx("ui.cardEditor.mcq.removeOption", "Remove option"));
+      removeBtn.setAttribute("aria-label", this._tx("ui.browser.bulkEdit.mcq.removeOption", "Remove option"));
       removeBtn.setAttribute("data-tooltip-position", "top");
       const xIcon = document.createElement("span");
       xIcon.className = "inline-flex items-center justify-center [&_svg]:size-4";
@@ -800,7 +806,7 @@ export class BulkEditCardModal extends Modal {
     const addInput = document.createElement("textarea");
     addInput.className = "textarea flex-1 text-sm learnkit-input-fixed learnkit-textarea-fixed";
     addInput.rows = 1;
-    addInput.placeholder = "Add another option (press enter)";
+    addInput.placeholder = this._tx("ui.browser.bulkEdit.mcq.addOptionPlaceholder", "Add another option (press enter)");
     addInput.addEventListener("keydown", (ev: KeyboardEvent) => {
       if (ev.key === "Enter") {
         ev.preventDefault();
@@ -839,7 +845,7 @@ export class BulkEditCardModal extends Modal {
 
     const oqLabel = document.createElement("label");
     oqLabel.className = "text-sm font-medium inline-flex items-center gap-1";
-    oqLabel.textContent = "Steps (correct order)";
+    oqLabel.textContent = this._tx("ui.reviewer.cardEditor.field.stepsCorrectOrder", "Steps (correct order)");
     oqLabel.appendChild(Object.assign(document.createElement("span"), { className: "text-destructive", textContent: "*" }));
     const oqInfoIcon = document.createElement("span");
     oqInfoIcon.className = "inline-flex items-center justify-center [&_svg]:size-3 text-muted-foreground learnkit-info-icon-elevated";
@@ -851,7 +857,7 @@ export class BulkEditCardModal extends Modal {
 
     const oqHint = document.createElement("div");
     oqHint.className = "text-xs text-muted-foreground";
-    oqHint.textContent = "Enter the steps in their correct order. Drag the grip handles to reorder. Steps are shuffled during review.";
+    oqHint.textContent = this._tx("ui.reviewer.cardEditor.oq.dragHint", "Drag the grip handles to reorder steps. Steps are shuffled during review.");
     oqSection.appendChild(oqHint);
 
     oqListContainer = document.createElement("div");
@@ -900,7 +906,7 @@ export class BulkEditCardModal extends Modal {
       const input = document.createElement("textarea");
       input.className = "textarea flex-1 text-sm learnkit-oq-step-input";
       input.rows = 1;
-      input.placeholder = `Step ${idx + 1}`;
+      input.placeholder = this._tx("ui.reviewer.cardEditor.field.stepN", "Step {index}", { index: idx + 1 });
       input.value = value;
       setCssProps(input, {
         "min-height": "36px",
@@ -921,7 +927,7 @@ export class BulkEditCardModal extends Modal {
       const delBtn = document.createElement("button");
       delBtn.type = "button";
       delBtn.className = "inline-flex items-center justify-center p-0 learnkit-remove-btn-ghost learnkit-oq-del-btn";
-      delBtn.setAttribute("aria-label", this._tx("ui.cardEditor.oq.removeStep", "Remove step"));
+      delBtn.setAttribute("aria-label", this._tx("ui.cardCreator.removeStep", "Remove step"));
       delBtn.setAttribute("data-tooltip-position", "top");
       const xIcon = document.createElement("span");
       xIcon.className = "inline-flex items-center justify-center [&_svg]:size-4";
@@ -982,14 +988,14 @@ export class BulkEditCardModal extends Modal {
     const addOqInput = document.createElement("textarea");
     addOqInput.className = "textarea flex-1 text-sm learnkit-input-fixed learnkit-textarea-fixed";
     addOqInput.rows = 1;
-    addOqInput.placeholder = "Add another step (press enter)";
+    addOqInput.placeholder = this._tx("ui.browser.bulkEdit.oq.addStepPlaceholder", "Add another step (press enter)");
     addOqInput.addEventListener("keydown", (ev: KeyboardEvent) => {
       if (ev.key === "Enter") {
         ev.preventDefault();
         ev.stopPropagation();
         const val = addOqInput.value.trim();
         if (!val) return;
-        if (oqStepRows.length >= 20) { new Notice("Maximum 20 steps."); return; }
+        if (oqStepRows.length >= 20) { new Notice(this._tx("ui.common.maxSteps20", "Maximum 20 steps.")); return; }
         addOqStepRow(val);
         renumberOq();
         addOqInput.value = "";
@@ -1012,7 +1018,7 @@ export class BulkEditCardModal extends Modal {
   }
 
   // Extra information
-  form.appendChild(createEditableTextareaField("Extra information", "info"));
+  form.appendChild(createEditableTextareaField(this._tx("ui.common.extraInformation", "Extra information"), "info"));
 
   // ── Groups field (Basecoat tag picker) ────────────────────────────────────
   const groupsWrapper = document.createElement("div");
@@ -1020,7 +1026,7 @@ export class BulkEditCardModal extends Modal {
 
   const groupsLabel = document.createElement("label");
   groupsLabel.className = "text-sm font-medium";
-  groupsLabel.textContent = "Groups";
+  groupsLabel.textContent = this._tx("ui.common.groups", "Groups");
   groupsWrapper.appendChild(groupsLabel);
 
   const createGroupPickerField = createGroupPickerFieldImpl as GroupPickerFieldFactory;
@@ -1032,7 +1038,7 @@ export class BulkEditCardModal extends Modal {
   form.appendChild(groupsWrapper);
 
   // Location (read-only)
-  form.appendChild(createReadonlyField("Location", fmtLocation(card0.sourceNotePath), "sprout-location-input"));
+  form.appendChild(createReadonlyField(this._tx("ui.common.location", "Location"), fmtLocation(card0.sourceNotePath), "sprout-location-input"));
 
   contentEl.appendChild(form);
 
@@ -1044,7 +1050,7 @@ export class BulkEditCardModal extends Modal {
   cancel.type = "button";
   cancel.className = "learnkit-btn-toolbar learnkit-btn-filter inline-flex items-center gap-2 h-9 px-3 text-sm";
   const cancelText = document.createElement("span");
-  cancelText.textContent = "Cancel";
+  cancelText.textContent = this._tx("ui.common.cancel", "Cancel");
   cancel.appendChild(cancelText);
 
   const save = document.createElement("button");
@@ -1054,7 +1060,7 @@ export class BulkEditCardModal extends Modal {
   saveIcon.className = "inline-flex items-center justify-center [&_svg]:size-4";
   setIcon(saveIcon, "check");
   const saveText = document.createElement("span");
-  saveText.textContent = "Save";
+  saveText.textContent = this._tx("ui.common.save", "Save");
   save.appendChild(saveIcon);
   save.appendChild(saveText);
 
@@ -1158,7 +1164,7 @@ export class BulkEditCardModal extends Modal {
                 : {};
               (updated as Record<string, unknown>).extensionData = { ...ext, qVariants };
             }
-          } else if (updated.type === "combo") {
+          } else if (isLegacyComboType(updated.type)) {
             // Migrate combo → basic
             updated.type = "basic";
             updated.q = updates.question;
@@ -1189,7 +1195,7 @@ export class BulkEditCardModal extends Modal {
                 : {};
               (updated as Record<string, unknown>).extensionData = { ...ext, aVariants };
             }
-          } else if (updated.type === "combo") {
+          } else if (isLegacyComboType(updated.type)) {
             // Migrate combo → basic
             updated.type = "basic";
             updated.a = updates.answer;

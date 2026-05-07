@@ -163,6 +163,42 @@
   flex: 1 1 auto;
 }
 
+.learnkit .learnkit-note-review-content::before,
+.learnkit .learnkit-note-review-content::after {
+  content: "";
+  position: sticky;
+  left: 5px;
+  right: 5px;
+  z-index: 3;
+  display: block;
+  height: 40px;
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.learnkit .learnkit-note-review-content::before {
+  top: 0;
+  margin-bottom: -40px;
+  background: linear-gradient(
+    to bottom,
+    var(--background) 0,
+    var(--background) 10px,
+    transparent 40px
+  );
+}
+
+.learnkit .learnkit-note-review-content::after {
+  bottom: 0;
+  margin-top: -40px;
+  background: linear-gradient(
+    to top,
+    var(--background) 0,
+    var(--background) 10px,
+    transparent 40px
+  );
+}
+
 .learnkit .learnkit-note-review-content:has(.learnkit-note-review-empty) {
   position: relative;
   display: flex;

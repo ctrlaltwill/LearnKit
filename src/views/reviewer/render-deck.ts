@@ -445,19 +445,40 @@ export function renderDeckMode(args: Args) {
   const headRow = document.createElement("tr");
   headRow.className = "";
 
-  const headers: Array<{ label: string; align?: "left" | "center"; tooltip?: string }> = [
-    { label: "Deck", align: "left", tooltip: tx("ui.reviewer.deck.header.deck.tooltip", "Folder or note containing cards") },
-    { label: "Due", align: "center", tooltip: tx("ui.reviewer.deck.header.due.tooltip", "Review cards ready to study now") },
-    { label: "New", align: "center", tooltip: tx("ui.reviewer.deck.header.new.tooltip", "Cards you haven't studied yet") },
-    { label: "Learn", align: "center", tooltip: tx("ui.reviewer.deck.header.learn.tooltip", "Learning and relearning cards ready now") },
-    { label: "Total", align: "center", tooltip: tx("ui.reviewer.deck.header.total.tooltip", "All cards in this deck") },
+  const headers: Array<{ label: string; align?: "left" | "center"; tooltip?: string; key?: string }> = [
+    {
+      key: "deck",
+      label: tx("ui.reviewer.deck.header.deck", "Deck"),
+      align: "left",
+      tooltip: tx("ui.reviewer.deck.header.deck.tooltip", "Folder or note containing cards"),
+    },
+    {
+      label: tx("ui.common.due", "Due"),
+      align: "center",
+      tooltip: tx("ui.reviewer.deck.header.due.tooltip", "Review cards ready to study now"),
+    },
+    {
+      label: tx("ui.reviewer.deck.header.new", "New"),
+      align: "center",
+      tooltip: tx("ui.reviewer.deck.header.new.tooltip", "Cards you haven't studied yet"),
+    },
+    {
+      label: tx("ui.reviewer.deck.header.learn", "Learn"),
+      align: "center",
+      tooltip: tx("ui.reviewer.deck.header.learn.tooltip", "Learning and relearning cards ready now"),
+    },
+    {
+      label: tx("ui.reviewer.deck.header.total", "Total"),
+      align: "center",
+      tooltip: tx("ui.reviewer.deck.header.total.tooltip", "All cards in this deck"),
+    },
   ];
 
   for (const h of headers) {
     const th = document.createElement("th");
     th.className = `${h.align === "center" ? "text-center" : "text-left"} text-muted-foreground`;
 
-    if (h.label === "Deck") {
+    if (h.key === "deck") {
       const flex = document.createElement("div");
       flex.className = "flex items-center gap-2 min-w-0";
 

@@ -112,7 +112,7 @@ export class AnkiImportModal extends Modal {
 
     const pickBtn = fileRow.createEl("button", {
       cls: "learnkit-btn-toolbar learnkit-btn-toolbar inline-flex items-center gap-2 h-9 px-3 text-sm",
-      attr: { type: "button", "aria-label": "Choose an Anki .apkg file from your computer" },
+      attr: { type: "button", "aria-label": this.tx("ui.anki.import.aria.chooseApkg", "Choose an Anki .apkg file from your computer") },
     });
     const pickIcon = pickBtn.createEl("span", { cls: "inline-flex items-center justify-center [&_svg]:size-4" });
     setIcon(pickIcon, "file-up");

@@ -19,12 +19,13 @@ import type LearnKitPlugin from "../../main";
 import type { SproutSettings } from "../../platform/types/settings";
 import { log } from "../../platform/core/logger";
 import { placePopover, setCssProps } from "../../platform/core/ui";
-import { DEFAULT_SETTINGS, VIEW_TYPE_WIDGET } from "../../platform/core/constants";
+import { DEFAULT_SETTINGS, VIEW_TYPE_SETTINGS, VIEW_TYPE_WIDGET } from "../../platform/core/constants";
 import { DELIMITER_OPTIONS, setDelimiter, type DelimiterChar } from "../../platform/core/delimiter";
 import { syncReadingViewStyles } from "../reading/reading-view";
 import {
   getInterfaceLocaleLabel,
   getSupportedInterfaceLocales,
+  resolveInterfaceLocalePreference,
   resolveInterfaceLocale,
 } from "../../platform/translations/locale-registry";
 import { getCircleFlagFallbackUrl, getCircleFlagUrl } from "../../platform/flags/flag-tokens";
@@ -84,6 +85,10 @@ import {
 } from "../shared/scope-metadata";
 import { copyAllDbsToVaultSyncFolder } from "../../platform/core/sqlite-store";
 
+type SettingsRerenderOptions = {
+  refreshChrome?: boolean;
+};
+
 // ────────────────────────────────────────────
 // LearnKitSettingsTab
 // ────────────────────────────────────────────
@@ -111,7 +116,7 @@ export class LearnKitSettingsTab extends PluginSettingTab {
    * (presets, toggles, resets) re-render only the active sub-tab while
    * preserving scroll position and skipping AOS animations.
    */
-  onRequestRerender?: () => void;
+  onRequestRerender?: (options?: SettingsRerenderOptions) => void;
 
   private _getSettingsScrollContainer(): HTMLElement | null {
     const local = this.containerEl;
@@ -147,12 +152,12 @@ export class LearnKitSettingsTab extends PluginSettingTab {
    * available (workspace view), otherwise falls back to the built-in
    * `display()` which re-renders the entire native settings modal.
    */
-  private _softRerender() {
+  private _softRerender(options?: SettingsRerenderOptions) {
     const scrollContainer = this._getSettingsScrollContainer();
     const previousTop = scrollContainer?.scrollTop ?? 0;
 
     if (this.onRequestRerender) {
-      this.onRequestRerender();
+      this.onRequestRerender(options);
     } else {
       this.display();
     }
@@ -884,7 +889,8 @@ export class LearnKitSettingsTab extends PluginSettingTab {
       description: locale.nativeLabel,
       flagCode: locale.flagCode,
     }));
-    const currentLocale = resolveInterfaceLocale(this.plugin.settings?.general?.interfaceLanguage);
+    const localePreference = resolveInterfaceLocalePreference(this.plugin.settings?.general?.interfaceLanguage);
+    const currentLocale = resolveInterfaceLocale(localePreference);
 
     this._addSearchablePopover(wrapper, {
       name: t(currentLocale, "settings.general.interfaceLanguage.name", "Language"),
@@ -894,15 +900,28 @@ export class LearnKitSettingsTab extends PluginSettingTab {
         "Set the language used across the interface.",
       ),
       options: localeOptions,
-      value: currentLocale,
+      value: localePreference,
       onChange: (value: string) => {
         void (async () => {
-          const next = resolveInterfaceLocale(value);
+          const next = resolveInterfaceLocalePreference(value);
           if (!this.plugin.settings.general) this.plugin.settings.general = {} as typeof this.plugin.settings.general;
           this.plugin.settings.general.interfaceLanguage = next;
           await this.plugin.saveAll();
           const selectedLabel = getInterfaceLocaleLabel(next);
           this.queueSettingsNotice("general.interfaceLanguage", this._noticeLines.interfaceLanguage(selectedLabel));
+          // Refresh all open views.
+          this.plugin.refreshAllViews();
+          // Then force any open Settings workspace leaves to fully re-render so
+          // header nav, title strip, and content switch locale immediately.
+          const settingsLeaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_SETTINGS);
+          if (settingsLeaves.length > 0) {
+            for (const leaf of settingsLeaves) {
+              const view = leaf.view as { render?: () => void };
+              view.render?.();
+            }
+          } else {
+            this._softRerender({ refreshChrome: true });
+          }
         })();
       },
     });
@@ -2776,22 +2795,24 @@ export class LearnKitSettingsTab extends PluginSettingTab {
         }
 
         const metadata = collectVaultTagAndPropertyPairs(this.app, files);
+        const vaultName = this.app.vault.getName();
         const baseOptions: SearchPopoverOption[] = [
           {
             type: "vault",
             id: "vault::",
-            label: `Vault: ${this.app.vault.getName()} (${files.length})`,
+            label: this._tx("ui.settings.scopeSearch.option.vault", "Vault: {name} ({count})", { name: vaultName, count: files.length }),
             selected: false,
-            searchTexts: [this.app.vault.getName(), "vault", "all notes", "all content"],
+            searchTexts: [vaultName, "vault", "all notes", "all content"],
           },
           ...Array.from(folderSet)
             .sort((a, b) => a.localeCompare(b))
             .map((folder) => {
               const folderName = folder.split("/").filter(Boolean).pop() ?? folder;
+              const folderFileCount = files.filter((file) => file.path.startsWith(`${folder}/`)).length;
               return {
                 type: "folder" as const,
                 id: `folder::${folder}`,
-                label: `Folder: ${folderName} (${files.filter((file) => file.path.startsWith(`${folder}/`)).length})`,
+                label: this._tx("ui.settings.scopeSearch.option.folder", "Folder: {name} ({count})", { name: folderName, count: folderFileCount }),
                 selected: false,
                 searchTexts: [folderName, folder],
               };
@@ -2801,21 +2822,21 @@ export class LearnKitSettingsTab extends PluginSettingTab {
             .map((file: TFile) => ({
               type: "note" as const,
               id: `note::${file.path}`,
-              label: `Note: ${file.basename}`,
+              label: this._tx("ui.settings.scopeSearch.option.note", "Note: {name}", { name: file.basename }),
               selected: false,
               searchTexts: [file.basename, file.path],
             })),
           ...metadata.tags.map((tag) => ({
             type: "tag" as const,
             id: `tag::${tag.token}`,
-            label: `Tag: ${tag.display} (${tag.count})`,
+            label: this._tx("ui.settings.scopeSearch.option.tag", "Tag: {display} ({count})", { display: tag.display, count: tag.count }),
             selected: false,
             searchTexts: [`#${tag.token}`, `tag:${tag.token}`, tag.display],
           })),
           ...metadata.properties.map((pair) => ({
             type: "property" as const,
             id: `prop::${encodePropertyPair({ key: pair.key, value: pair.value })}`,
-            label: `${pair.displayKey}: ${pair.displayValue} (${pair.count})`,
+            label: this._tx("ui.settings.scopeSearch.option.property", "{key}: {value} ({count})", { key: pair.displayKey, value: pair.displayValue, count: pair.count }),
             selected: false,
             propertyKey: pair.displayKey,
             propertyValue: pair.displayValue,
@@ -2996,7 +3017,7 @@ export class LearnKitSettingsTab extends PluginSettingTab {
             if (noteCfg.avoidFolderNotes !== false && isFolderNote(file)) return false;
             return true;
           }).length;
-          summaryEl.setText(`${included} ${included === 1 ? "note" : "notes"} included for note review`);
+          summaryEl.setText(this._tx("ui.settings.noteReview.filter.summary.included", "{count} {count, plural, one {note} other {notes}} included for note review", { count: included }));
         };
 
         const getMatchedNoteCount = (ids: string[], includeFolderNotes: boolean): number => {
@@ -3121,14 +3142,15 @@ export class LearnKitSettingsTab extends PluginSettingTab {
               renderIncludedNotesSummary();
               void persistScopeQuery();
             },
-            emptyTextWhenQuery: "No matching scope items.",
-            emptyTextWhenIdle: "Type to search scope items.",
+            emptyTextWhenQuery: this._tx("ui.settings.scopeSearch.noMatch", "No matching scope items."),
+            emptyTextWhenIdle: this._tx("ui.settings.scopeSearch.searchHint", "Type to search scope items."),
             typeFilters: [
-              { type: "folder", label: "Folders" },
-              { type: "note", label: "Notes" },
-              { type: "tag", label: "Tags" },
-              { type: "property", label: "Properties" },
+              { type: "folder", label: this._tx("ui.settings.scopeSearch.filter.folders", "Folders") },
+              { type: "note", label: this._tx("ui.settings.scopeSearch.filter.notes", "Notes") },
+              { type: "tag", label: this._tx("ui.settings.scopeSearch.filter.tags", "Tags") },
+              { type: "property", label: this._tx("ui.settings.scopeSearch.filter.properties", "Properties") },
             ],
+            filtersLabel: this._tx("ui.common.filters", "Filters"),
           });
 
           const render = (): void => {
@@ -5237,22 +5259,24 @@ export class LearnKitSettingsTab extends PluginSettingTab {
         }
 
         const metadata = collectVaultTagAndPropertyPairs(this.app, files);
+        const vaultName = this.app.vault.getName();
         const baseOptions: SearchPopoverOption[] = [
           {
             type: "vault",
             id: "vault::",
-            label: `Vault: ${this.app.vault.getName()} (${files.length})`,
+            label: this._tx("ui.settings.scopeSearch.option.vault", "Vault: {name} ({count})", { name: vaultName, count: files.length }),
             selected: false,
-            searchTexts: [this.app.vault.getName(), "vault", "all notes", "all content"],
+            searchTexts: [vaultName, "vault", "all notes", "all content"],
           },
           ...Array.from(folderSet)
             .sort((a, b) => a.localeCompare(b))
             .map((folder) => {
               const folderName = folder.split("/").filter(Boolean).pop() ?? folder;
+              const folderFileCount = files.filter((file) => file.path.startsWith(`${folder}/`)).length;
               return {
                 type: "folder" as const,
                 id: `folder::${folder}`,
-                label: `Folder: ${folderName} (${files.filter((file) => file.path.startsWith(`${folder}/`)).length})`,
+                label: this._tx("ui.settings.scopeSearch.option.folder", "Folder: {name} ({count})", { name: folderName, count: folderFileCount }),
                 selected: false,
                 searchTexts: [folderName, folder],
               };
@@ -5262,21 +5286,21 @@ export class LearnKitSettingsTab extends PluginSettingTab {
             .map((file: TFile) => ({
               type: "note" as const,
               id: `note::${file.path}`,
-              label: `Note: ${file.basename}`,
+              label: this._tx("ui.settings.scopeSearch.option.note", "Note: {name}", { name: file.basename }),
               selected: false,
               searchTexts: [file.basename, file.path],
             })),
           ...metadata.tags.map((tag) => ({
             type: "tag" as const,
             id: `tag::${tag.token}`,
-            label: `Tag: ${tag.display} (${tag.count})`,
+            label: this._tx("ui.settings.scopeSearch.option.tag", "Tag: {display} ({count})", { display: tag.display, count: tag.count }),
             selected: false,
             searchTexts: [`#${tag.token}`, `tag:${tag.token}`, tag.display],
           })),
           ...metadata.properties.map((pair) => ({
             type: "property" as const,
             id: `prop::${encodePropertyPair({ key: pair.key, value: pair.value })}`,
-            label: `${pair.displayKey}: ${pair.displayValue} (${pair.count})`,
+            label: this._tx("ui.settings.scopeSearch.option.property", "{key}: {value} ({count})", { key: pair.displayKey, value: pair.displayValue, count: pair.count }),
             selected: false,
             propertyKey: pair.displayKey,
             propertyValue: pair.displayValue,
@@ -5569,14 +5593,15 @@ export class LearnKitSettingsTab extends PluginSettingTab {
               renderSyncedNotesSummary();
               void persistScopeQuery();
             },
-            emptyTextWhenQuery: "No matching scope items.",
-            emptyTextWhenIdle: "Type to search scope items.",
+            emptyTextWhenQuery: this._tx("ui.settings.scopeSearch.noMatch", "No matching scope items."),
+            emptyTextWhenIdle: this._tx("ui.settings.scopeSearch.searchHint", "Type to search scope items."),
             typeFilters: [
-              { type: "folder", label: "Folders" },
-              { type: "note", label: "Notes" },
-              { type: "tag", label: "Tags" },
-              { type: "property", label: "Properties" },
+              { type: "folder", label: this._tx("ui.settings.scopeSearch.filter.folders", "Folders") },
+              { type: "note", label: this._tx("ui.settings.scopeSearch.filter.notes", "Notes") },
+              { type: "tag", label: this._tx("ui.settings.scopeSearch.filter.tags", "Tags") },
+              { type: "property", label: this._tx("ui.settings.scopeSearch.filter.properties", "Properties") },
             ],
+            filtersLabel: this._tx("ui.common.filters", "Filters"),
           });
 
           const render = (): void => {

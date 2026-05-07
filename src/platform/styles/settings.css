@@ -2388,8 +2388,9 @@ color: var(--color-base-100);
 .learnkit-ss-item-label {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 2px;
   white-space: nowrap;
+  margin: 3px 0;
 }
 
 .learnkit-ss-item-text {
@@ -2519,7 +2520,7 @@ input.learnkit-ss-search-input {
   border: .5px solid #0000;
   outline: none;
   align-items: center;
-  gap: 8px;
+  gap: 2px;
   margin: 2px 0;
   max-height: 32px;
   padding: 8px;

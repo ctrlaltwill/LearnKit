@@ -708,10 +708,11 @@ export class SproutAnalyticsView extends ItemView {
     const timeBadge = buildTrendBadge(formatTrend(avgTimePerDayMinutes, prevAvgTimePerDayMinutes, prevActiveDaysTime));
     const dailyTimeValue = (() => {
       const minutes = Math.max(0, Math.ceil(avgTimePerDayMinutes));
-      if (minutes < 60) return `${minutes} min`;
+      if (minutes < 60) return tx("ui.analytics.card.minutesSuffix", "{count} min", { count: minutes });
       const hours = minutes / 60;
       const roundedHours = hours >= 10 ? Math.round(hours) : Math.round(hours * 10) / 10;
-      return `${roundedHours} ${roundedHours === 1 ? "hour" : "hours"}`;
+      const count = roundedHours === 1 ? 1 : roundedHours;
+      return tx("ui.analytics.card.hoursSuffix", "{count} hour{suffix}", { count, suffix: roundedHours === 1 ? "" : "s" });
     })();
     makeCard(
       tx("ui.analytics.card.dailyTime", "Daily time"),
@@ -1140,6 +1141,7 @@ export class SproutAnalyticsView extends ItemView {
               timezone,
               rangeDays: 365,
               filters: {},
+              locale: this.plugin.settings?.general?.interfaceLanguage,
             }),
           ),
         );
@@ -1156,7 +1158,7 @@ export class SproutAnalyticsView extends ItemView {
       this._stagePieRoot = mountChartRoot(stagePieHost, tx("ui.analytics.chart.cardStageDistribution", "Card Stage Distribution"), (rootNode) => {
         rootNode.render(
           React.createElement(ChartErrorBoundary, { chartName: tx("ui.analytics.chart.cardStageDistribution", "Card Stage Distribution") },
-            React.createElement(StagePieCard, { cards, states, enableAnimations: animationsEnabled }),
+            React.createElement(StagePieCard, { cards, states, enableAnimations: animationsEnabled, locale: this.plugin.settings?.general?.interfaceLanguage }),
           ),
         );
       });
@@ -1189,6 +1191,7 @@ export class SproutAnalyticsView extends ItemView {
               timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
               horizonDays: 30,
               enableAnimations: animationsEnabled,
+              locale: this.plugin.settings?.general?.interfaceLanguage,
             }),
           ),
         );
@@ -1206,6 +1209,7 @@ export class SproutAnalyticsView extends ItemView {
               timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
               days: 30,
               enableAnimations: animationsEnabled,
+              locale: this.plugin.settings?.general?.interfaceLanguage,
             }),
           ),
         );
@@ -1222,6 +1226,7 @@ export class SproutAnalyticsView extends ItemView {
               timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
               days: 30,
               enableAnimations: animationsEnabled,
+              locale: this.plugin.settings?.general?.interfaceLanguage,
             }),
           ),
         );
@@ -1242,6 +1247,7 @@ export class SproutAnalyticsView extends ItemView {
               cards: cards.map(c => ({ ...c, groups: c.groups ?? undefined })),
               states,
               enableAnimations: animationsEnabled,
+              locale: this.plugin.settings?.general?.interfaceLanguage,
             }),
           ),
         );
@@ -1260,6 +1266,7 @@ export class SproutAnalyticsView extends ItemView {
               scheduler: this.plugin.settings?.scheduling,
               nowMs: now,
               enableAnimations: animationsEnabled,
+              locale: this.plugin.settings?.general?.interfaceLanguage,
             }),
           ),
         );
@@ -1281,6 +1288,7 @@ export class SproutAnalyticsView extends ItemView {
               events: events.filter((ev) => ev && ev.kind === "exam-attempt") as Array<Record<string, unknown>>,
               dbAttempts: this._examAttemptsHydrated ? this._examAttemptsCache : [],
               timezone,
+              locale: this.plugin.settings?.general?.interfaceLanguage,
             }),
           ),
         );
@@ -1302,6 +1310,7 @@ export class SproutAnalyticsView extends ItemView {
               events: events.filter((ev) => ev && ev.kind === "note-review") as Array<Record<string, unknown>>,
               includePracticeDefault: this.plugin.settings?.study?.analyticsIncludePracticeNoteReview !== false,
               timezone,
+              locale: this.plugin.settings?.general?.interfaceLanguage,
             }),
           ),
         );

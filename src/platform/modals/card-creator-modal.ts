@@ -221,11 +221,11 @@ export class CardCreatorModal extends Modal {
     let cardEditor: ModalCardEditorResult | null = null;
     let currentType: CardType = this.forcedType || "basic";
     const typeLabelFor = (type: CardType) => {
-      if (type === "reversed") return "Basic (Reversed)";
-      if (type === "cloze") return "Cloze";
-      if (type === "mcq") return "Multiple choice";
-      if (type === "oq") return "Ordered Question";
-      return "Basic";
+      if (type === "reversed") return this.tx("ui.common.basicReversed", "Basic (Reversed)");
+      if (type === "cloze") return this.tx("ui.common.cloze", "Cloze");
+      if (type === "mcq") return this.tx("ui.common.multipleChoice", "Multiple choice");
+      if (type === "oq") return this.tx("ui.common.orderedQuestion", "Ordered Question");
+      return this.tx("ui.common.basic", "Basic");
     };
     const isTypeMenuOption = (type: CardType) => type === "basic" || type === "reversed" || type === "cloze" || type === "mcq" || type === "oq";
     let updateTypeMenuLabel: () => void = () => {};
@@ -284,11 +284,11 @@ export class CardCreatorModal extends Modal {
 
     let typeMenuOpen = false;
     const typeOptions: Array<{ value: CardType; label: string }> = [
-      { value: "basic", label: this.tx("ui.cardCreator.type.basic", "Basic") },
-      { value: "reversed", label: "Basic (Reversed)" },
-      { value: "cloze", label: this.tx("ui.cardCreator.type.cloze", "Cloze") },
-      { value: "mcq", label: this.tx("ui.cardCreator.type.multipleChoiceTitle", "Multiple Choice") },
-      { value: "oq", label: "Ordered Question" },
+      { value: "basic", label: this.tx("ui.common.basic", "Basic") },
+      { value: "reversed", label: this.tx("ui.common.basicReversed", "Basic (Reversed)") },
+      { value: "cloze", label: this.tx("ui.common.cloze", "Cloze") },
+      { value: "mcq", label: this.tx("ui.common.multipleChoice", "Multiple choice") },
+      { value: "oq", label: this.tx("ui.common.orderedQuestion", "Ordered Question") },
     ];
 
     updateTypeMenuLabel = () => {
@@ -411,6 +411,7 @@ export class CardCreatorModal extends Modal {
           locationPath: path,
           locationTitle: path ? `Target: ${path}` : "Target: (no active note)",
           plugin: this.plugin,
+          locale: this.plugin.settings?.general?.interfaceLanguage,
           editableFieldHeights: {
             title: { min: 50, max: 150 },
             question: { min: 50, max: 150 },
@@ -497,7 +498,7 @@ export class CardCreatorModal extends Modal {
     const ioPasteZone = ioWrap.createDiv({ cls: "flex flex-col gap-3" });
 
     const ioPastePrompt = ioPasteZone.createDiv({
-      text: "Paste an image (Ctrl+V) or drag & drop an image file",
+      text: this.tx("ui.cardCreator.io.pastePrompt", "Paste an image (Ctrl+V) or drag & drop an image file"),
       cls: "text-sm text-muted-foreground p-3 rounded-lg border border-dashed border-muted-foreground text-center",
     });
 
@@ -635,7 +636,7 @@ export class CardCreatorModal extends Modal {
 
     const cancelBtn = footer.createEl("button", {
       cls: "learnkit-btn-toolbar learnkit-btn-toolbar learnkit-btn-filter learnkit-btn-filter inline-flex items-center gap-2 h-9 px-3 text-sm",
-      attr: { "aria-label": "Cancel" },
+      attr: { "aria-label": this.tx("ui.cardCreator.aria.cancel", "Cancel") },
     });
     cancelBtn.type = "button";
     cancelBtn.setAttr("data-tooltip-position", "top");
@@ -644,7 +645,7 @@ export class CardCreatorModal extends Modal {
 
     const addBtn = footer.createEl("button", {
       cls: "learnkit-btn-toolbar learnkit-btn-toolbar learnkit-btn-accent learnkit-btn-accent learnkit-card-creator-add-btn learnkit-card-creator-add-btn h-9 inline-flex items-center gap-2",
-      attr: { "aria-label": "Add card to the active note" },
+      attr: { "aria-label": this.tx("ui.cardCreator.aria.addCard", "Add card to the active note") },
     });
     addBtn.type = "button";
     addBtn.setAttr("data-tooltip-position", "top");

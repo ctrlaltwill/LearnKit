@@ -10,7 +10,7 @@
 
 import { DEFAULT_SETTINGS, type SproutSettings } from "../../../platform/core/constants";
 import { clamp, cleanPositiveNumberArray, clonePlain } from "../../../platform/core/utils";
-import { resolveInterfaceLocale } from "../../../platform/translations/locale-registry";
+import { resolveInterfaceLocalePreference } from "../../../platform/translations/locale-registry";
 
 function normaliseHexColorOrEmpty(value: unknown): string {
   const raw = (typeof value === "string" ? value : "").trim();
@@ -50,7 +50,7 @@ export function normaliseSettingsInPlace(s: SproutSettings): void {
   s.scheduling ??= {} as SproutSettings["scheduling"];
   s.general ??= {} as SproutSettings["general"];
   s.general.enableReadingStyles ??= DEFAULT_SETTINGS.general.enableReadingStyles;
-  s.general.interfaceLanguage = resolveInterfaceLocale(
+  s.general.interfaceLanguage = resolveInterfaceLocalePreference(
     s.general.interfaceLanguage ?? DEFAULT_SETTINGS.general.interfaceLanguage,
   );
   if (s.general.prettifyCards === "off") s.general.enableReadingStyles = false;

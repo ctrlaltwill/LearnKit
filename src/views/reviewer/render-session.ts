@@ -628,12 +628,42 @@ function makeHeaderMenu(opts: {
 
   // Open Note button
   if (window.sproutOpenCurrentCardNote) {
-    addItem("Open in Note", "O", window.sproutOpenCurrentCardNote, false, "Open flashcard in parent note");
+    addItem(
+      tx("ui.reviewer.more.openInNote", "Open in Note"),
+      "O",
+      window.sproutOpenCurrentCardNote,
+      false,
+      tx("ui.reviewer.more.aria.openInNote", "Open flashcard in parent note"),
+    );
   }
-  addItem("Bury", "B", opts.onBury, !opts.canBurySuspend, "Bury flashcard");
-  addItem("Suspend", "S", opts.onSuspend, !opts.canBurySuspend, "Suspend flashcard");
-  addItem("Undo last grade", "U", opts.onUndo, !opts.canUndo, "Undo previous review and grading");
-  addItem("Exit to Decks", "Q", opts.onExit, false, "Exit back to deck selector");
+  addItem(
+    tx("ui.reviewer.more.bury", "Bury"),
+    "B",
+    opts.onBury,
+    !opts.canBurySuspend,
+    tx("ui.reviewer.more.aria.bury", "Bury flashcard"),
+  );
+  addItem(
+    tx("ui.reviewer.more.suspend", "Suspend"),
+    "S",
+    opts.onSuspend,
+    !opts.canBurySuspend,
+    tx("ui.reviewer.more.aria.suspend", "Suspend flashcard"),
+  );
+  addItem(
+    tx("ui.reviewer.more.undoLastGrade", "Undo last grade"),
+    "U",
+    opts.onUndo,
+    !opts.canUndo,
+    tx("ui.reviewer.more.aria.undo", "Undo previous review and grading"),
+  );
+  addItem(
+    tx("ui.reviewer.more.exitToDecks", "Exit to Decks"),
+    "Q",
+    opts.onExit,
+    false,
+    tx("ui.reviewer.more.aria.exitToDecks", "Exit back to deck selector"),
+  );
   if (opts.canSkip) addItem("Skip card", "K", opts.onSkip);
 
   let cleanup: (() => void) | null = null;
@@ -731,16 +761,16 @@ function makeHeaderMenu(opts: {
 /** Renders MCQ card content (single-answer and multi-answer). */
 function renderMcqContent(ctx: CardRenderCtx): void {
   const { section, labelRow, renderMdBlock, setupLinkHandlers, args, card, graded, sourcePath } = ctx;
-  section.appendChild(labelRow("Question", args.ttsReplayMcqQuestion, "mcq-question"));
+  section.appendChild(labelRow(t(args.interfaceLanguage, "ui.common.question", "Question"), args.ttsReplayMcqQuestion, "mcq-question"));
   section.appendChild(renderMdBlock("learnkit-q", convertInlineDisplayMath(card.stem || "")));
   const reveal = !!graded || !!args.showAnswer;
   const multiAnswer = isMultiAnswerMcq(card);
   const correctSet = new Set(getCorrectIndices(card));
 
   if (multiAnswer && !reveal) {
-    section.appendChild(labelRow("Options (select all correct answers)", args.ttsReplayMcqOptions, "mcq-options"));
+    section.appendChild(labelRow(t(args.interfaceLanguage, "ui.widget.mcq.selectAllCorrect", "Options (select all correct answers)"), args.ttsReplayMcqOptions, "mcq-options"));
   } else {
-    section.appendChild(labelRow(reveal ? "Answer" : "Options", reveal ? args.ttsReplayMcqAnswer : args.ttsReplayMcqOptions, reveal ? "mcq-answer" : "mcq-options"));
+    section.appendChild(labelRow(reveal ? t(args.interfaceLanguage, "ui.common.answer", "Answer") : t(args.interfaceLanguage, "ui.common.options", "Options"), reveal ? args.ttsReplayMcqAnswer : args.ttsReplayMcqOptions, reveal ? "mcq-answer" : "mcq-options"));
   }
 
   // Only show MCQ options, not info, as answer options
@@ -918,7 +948,7 @@ function renderMcqContent(ctx: CardRenderCtx): void {
 function renderOqContent(ctx: CardRenderCtx): void {
   const { section, labelRow, renderMdBlock, setupLinkHandlers, args, card, graded, sourcePath } = ctx;
   // ── Ordering Question ──────────────────────────────────────────────
-  section.appendChild(labelRow("Question", args.ttsReplayOqQuestion, "oq-question"));
+  section.appendChild(labelRow(t(args.interfaceLanguage, "ui.common.question", "Question"), args.ttsReplayOqQuestion, "oq-question"));
   section.appendChild(renderMdBlock("learnkit-q", convertInlineDisplayMath(card.q || "")));
 
   const steps = Array.isArray(card.oqSteps) ? card.oqSteps : [];
@@ -928,7 +958,7 @@ function renderOqContent(ctx: CardRenderCtx): void {
 
   if (!reveal) {
     // ── Front: drag-to-reorder interface ──
-    section.appendChild(labelRow("Order the steps", args.ttsReplayOqSteps, "oq-steps"));
+    section.appendChild(labelRow(t(args.interfaceLanguage, "ui.reviewer.label.orderSteps", "Order the steps"), args.ttsReplayOqSteps, "oq-steps"));
 
     const shuffled = getOqShuffledOrder(args.session, card, !!args.randomizeOqOrder);
     const currentOrder = shuffled.slice();
@@ -1047,7 +1077,7 @@ function renderOqContent(ctx: CardRenderCtx): void {
 
   } else {
     // ── Back: show user order with correctness highlighting ──
-    section.appendChild(labelRow("Your Order", args.ttsReplayOqAnswer, "oq-answer"));
+    section.appendChild(labelRow(t(args.interfaceLanguage, "ui.reviewer.label.yourOrder", "Your Order"), args.ttsReplayOqAnswer, "oq-answer"));
 
     const answerList = document.createElement("div");
     answerList.className = "flex flex-col gap-2 learnkit-oq-answer-list";
@@ -1190,8 +1220,10 @@ export function renderSessionMode(args: Args) {
       d1.textContent = tx("ui.reviewer.session.practiceSessionComplete", "Practice session complete");
       const d2 = document.createElement("div");
       d2.className = "text-sm text-center learnkit-session-practice-prompt-subtext";
-      d2.textContent =
-        "This was a practice session. Scheduling was not changed. You cannot bury or suspend cards in this mode.";
+      d2.textContent = tx(
+        "ui.reviewer.session.practiceCompleteDescription",
+        "This was a practice session. Scheduling was not changed. You cannot bury or suspend cards in this mode.",
+      );
       section.appendChild(d1);
       section.appendChild(d2);
     } else {
@@ -1204,8 +1236,10 @@ export function renderSessionMode(args: Args) {
       if (hasCardsInScope) {
         const d2 = document.createElement("div");
         d2.className = "text-sm text-center learnkit-session-practice-prompt-subtext";
-        d2.textContent =
-          "Practice session reviews all cards in this deck, including ones that are not due. It does not affect scheduling. You cannot bury or suspend cards while in this mode";
+        d2.textContent = tx(
+          "ui.reviewer.session.practiceModeDescription",
+          "Practice session reviews all cards in this deck, including ones that are not due. It does not affect scheduling. You cannot bury or suspend cards while in this mode",
+        );
         section.appendChild(d2);
       }
     }
@@ -1380,11 +1414,11 @@ export function renderSessionMode(args: Args) {
     const replayFront = (card.type === "basic" || card.type === "combo-child") ? args.ttsReplayFront : undefined;
     const replayBack = (card.type === "basic" || card.type === "combo-child") ? args.ttsReplayBack : undefined;
 
-    section.appendChild(labelRow("Question", replayFront));
+    section.appendChild(labelRow(t(args.interfaceLanguage, "ui.common.question", "Question"), replayFront));
     section.appendChild(renderMdBlock("learnkit-q", convertInlineDisplayMath(frontContent)));
 
     if (args.showAnswer || graded) {
-      section.appendChild(labelRow("Answer", replayBack));
+      section.appendChild(labelRow(t(args.interfaceLanguage, "ui.common.answer", "Answer"), replayBack));
       section.appendChild(renderMdBlock("learnkit-a", convertInlineDisplayMath(backContent)));
     }
   } else if (card.type === "cloze" || card.type === "cloze-child") {
@@ -1392,7 +1426,7 @@ export function renderSessionMode(args: Args) {
     const reveal = args.showAnswer || !!graded;
     const targetIndex = card.type === "cloze-child" ? Number(card.clozeIndex) : null;
 
-    section.appendChild(labelRow(reveal ? "Answer" : "Question", reveal ? args.ttsReplayBack : args.ttsReplayFront));
+    section.appendChild(labelRow(reveal ? t(args.interfaceLanguage, "ui.common.answer", "Answer") : t(args.interfaceLanguage, "ui.common.question", "Question"), reveal ? args.ttsReplayBack : args.ttsReplayFront));
     const clozContainer = document.createElement("div");
     clozContainer.className = "learnkit-cloze whitespace-pre-wrap break-words learnkit-md-block";
     if (text.includes("$") || text.includes("\\(") || text.includes("\\[") || text.includes("[[")) {
@@ -1427,7 +1461,7 @@ export function renderSessionMode(args: Args) {
     const hotspotPromptLabel = hotspotIndividualMode ? getHotspotPromptLabelFromCard(card) : "";
 
     if (hotspotCard && !reveal) {
-      section.appendChild(labelRow("Hotspot Question"));
+      section.appendChild(labelRow(t(args.interfaceLanguage, "ui.reviewer.label.hotspotQuestion", "Hotspot Question")));
       if (hotspotPromptLabel) {
         const hotspotPrompt = document.createElement("p");
         hotspotPrompt.setAttribute("dir", "auto");
@@ -1436,7 +1470,7 @@ export function renderSessionMode(args: Args) {
         section.appendChild(hotspotPrompt);
       }
     } else if (hotspotCard && reveal) {
-      section.appendChild(labelRow("Hotspot Answer"));
+      section.appendChild(labelRow(t(args.interfaceLanguage, "ui.reviewer.label.hotspotAnswer", "Hotspot Answer")));
       if (hotspotPromptLabel) {
         const hotspotAnswer = document.createElement("p");
         hotspotAnswer.setAttribute("dir", "auto");
@@ -1466,7 +1500,7 @@ export function renderSessionMode(args: Args) {
   const shouldShowInfo =
     ((card.type === "basic" || card.type === "reversed" || card.type === "reversed-child" || card.type === "combo-child") && isBack && !!infoText) || ((args.showInfo || graded) && !!infoText);
   if (shouldShowInfo) {
-    section.appendChild(labelRow("Extra information"));
+    section.appendChild(labelRow(t(args.interfaceLanguage, "ui.common.extraInformation", "Extra information")));
     section.appendChild(renderMdBlock("learnkit-info", infoText));
   }
 
@@ -1501,7 +1535,7 @@ export function renderSessionMode(args: Args) {
       kbd: "E",
     });
   if (isPhoneMobile) {
-    editBtn.setAttribute("aria-label", "Edit flashcard");
+    editBtn.setAttribute("aria-label", t(undefined, "ui.reviewer.editFlashcard", "Edit flashcard"));
     const iconWrap = document.createElement("span");
     iconWrap.className = "inline-flex items-center justify-center";
     setIcon(iconWrap, "pencil");
@@ -1540,7 +1574,7 @@ export function renderSessionMode(args: Args) {
   ) {
     mainRow.appendChild(
       makeTextButton({
-        label: "Reveal",
+        label: t(args.interfaceLanguage, "ui.widget.revealAnswer", "Reveal Answer"),
         title: "Reveal answer",
         className: "learnkit-btn-toolbar",
         onClick: () => {
@@ -1572,6 +1606,7 @@ export function renderSessionMode(args: Args) {
             rating,
             now: previewNow,
             scheduling: args.schedulingSettings,
+            locale: args.interfaceLanguage,
           }) ?? undefined
         );
       };
@@ -1586,7 +1621,7 @@ export function renderSessionMode(args: Args) {
       // Practice mode: single Continue button
       if (practiceMode) {
         const continueBtn = makeTextButton({
-          label: "Continue",
+          label: t(args.interfaceLanguage, "ui.reviewer.action.continue", "Continue"),
           className: "learnkit-btn-toolbar",
           onClick: goNext,
           kbd: isPhoneMobile ? undefined : "↵",
@@ -1601,9 +1636,9 @@ export function renderSessionMode(args: Args) {
         hasMainRowContent = true;
 
         const againBtn = makeTextButton({
-          label: "Again",
+          label: t(args.interfaceLanguage, "ui.widget.grade.again", "Again"),
           subtitle: getSubtitle("again"),
-          title: "Not recalled easily (1)",
+          title: t(args.interfaceLanguage, "ui.widget.grade.againTooltip", "Not recalled easily (1)"),
           className: "btn-destructive",
           onClick: () => gradeAndContinue("again"),
           kbd: "1",
@@ -1613,9 +1648,9 @@ export function renderSessionMode(args: Args) {
 
         if (four) {
           const hardBtn = makeTextButton({
-            label: "Hard",
+            label: t(args.interfaceLanguage, "ui.widget.grade.hard", "Hard"),
             subtitle: getSubtitle("hard"),
-            title: "Recalled with difficulty (2)",
+            title: t(args.interfaceLanguage, "ui.widget.grade.hardTooltip", "Recalled with difficulty (2)"),
             className: "btn",
             onClick: () => gradeAndContinue("hard"),
             kbd: "2",
@@ -1624,9 +1659,9 @@ export function renderSessionMode(args: Args) {
           group.appendChild(hardBtn);
 
           const goodBtn = makeTextButton({
-            label: "Good",
+            label: t(args.interfaceLanguage, "ui.widget.grade.good", "Good"),
             subtitle: getSubtitle("good"),
-            title: "Recalled with effort (3)",
+            title: t(args.interfaceLanguage, "ui.widget.grade.goodTooltipFour", "Recalled with effort (3)"),
             className: "btn",
             onClick: () => gradeAndContinue("good"),
             kbd: "3",
@@ -1635,9 +1670,9 @@ export function renderSessionMode(args: Args) {
           group.appendChild(goodBtn);
 
           const easyBtn = makeTextButton({
-            label: "Easy",
+            label: t(args.interfaceLanguage, "ui.widget.grade.easy", "Easy"),
             subtitle: getSubtitle("easy"),
-            title: "Recalled easily (4)",
+            title: t(args.interfaceLanguage, "ui.widget.grade.easyTooltip", "Recalled easily (4)"),
             className: "btn",
             onClick: () => gradeAndContinue("easy"),
             kbd: "4",
@@ -1646,9 +1681,9 @@ export function renderSessionMode(args: Args) {
           group.appendChild(easyBtn);
         } else {
           const goodBtn = makeTextButton({
-            label: "Good",
+            label: t(args.interfaceLanguage, "ui.widget.grade.good", "Good"),
             subtitle: getSubtitle("good"),
-            title: "Recalled easily (2)",
+            title: t(args.interfaceLanguage, "ui.widget.grade.goodTooltipTwo", "Recalled easily (2)"),
             className: "btn",
             onClick: () => gradeAndContinue("good"),
             kbd: "2",
@@ -1705,7 +1740,7 @@ export function renderSessionMode(args: Args) {
       if (isHotspotDragRevealReady(card, args)) {
         mainRow.appendChild(
           makeTextButton({
-            label: "Reveal",
+            label: t(args.interfaceLanguage, "ui.widget.revealAnswer", "Reveal Answer"),
             className: "learnkit-btn-toolbar",
             onClick: () => {
               args.setShowAnswer(true);
@@ -1727,7 +1762,7 @@ export function renderSessionMode(args: Args) {
   } else {
     mainRow.appendChild(
       makeTextButton({
-        label: "Next",
+        label: t(args.interfaceLanguage, "ui.common.next", "Next"),
         className: "learnkit-btn-toolbar",
         onClick: () => void args.nextCard(true),
         kbd: "↵",

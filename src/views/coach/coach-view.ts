@@ -24,6 +24,7 @@ import { cascadeAOSOnLoad, initAOS, resetAOS } from "../../platform/core/aos-loa
 import { CoachHealthPanel, CoachReadinessPanel, type ExamReadinessPoint } from "./coach-charts";
 import { mountSearchPopoverList, type SearchPopoverOption } from "../shared/search-popover-list";
 import { t } from "../../platform/translations/translator";
+import { resolveInterfaceLocale } from "../../platform/translations/locale-registry";
 import {
   rowToSavedScopePreset,
   scopeIdKeyFromIds,
@@ -111,10 +112,10 @@ function fromScopeId(scopeId: string, lookup: Map<string, Scope>): Scope | null 
   return lookup.get(scopeId) ?? null;
 }
 
-function titleCaseIntensity(intensity: CoachIntensity): string {
-  if (intensity === "balanced") return "Balanced";
-  if (intensity === "aggressive") return "Aggressive";
-  return "Relaxed";
+function intensityLabelToken(intensity: CoachIntensity): { token: string; fallback: string } {
+  if (intensity === "balanced") return { token: "ui.view.coach.wizard.schedule.balanced", fallback: "Balanced" };
+  if (intensity === "aggressive") return { token: "ui.view.coach.wizard.schedule.aggressive", fallback: "Aggressive" };
+  return { token: "ui.view.coach.wizard.schedule.relaxed", fallback: "Relaxed" };
 }
 
 function formatDateForInput(ts: number): string {
@@ -125,8 +126,16 @@ function formatDateForInput(ts: number): string {
   return `${y}-${m}-${day}`;
 }
 
-function formatShortDate(ts: number): string {
-  return new Date(ts).toLocaleDateString(undefined, {
+function interfaceLocaleToIntl(locale: unknown): string {
+  const resolved = resolveInterfaceLocale(locale);
+  if (resolved === "en-gb") return "en-GB";
+  if (resolved === "en-us") return "en-US";
+  if (resolved === "zh-cn") return "zh-CN";
+  return resolved;
+}
+
+function formatShortDate(ts: number, locale: unknown): string {
+  return new Date(ts).toLocaleDateString(interfaceLocaleToIntl(locale), {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -155,10 +164,16 @@ function formatFolderChipLabel(path: string): string {
   return parts[parts.length - 1] || normalized;
 }
 
-function switcherStatusBadge(status: CoachPlanRow["status"]): { label: string; toneClass: "is-strong" | "is-mid" | "is-weak" } {
-  if (status === "behind") return { label: "Behind", toneClass: "is-weak" };
-  if (status === "at-risk") return { label: "Needs Attention", toneClass: "is-mid" };
-  return { label: "On Track", toneClass: "is-strong" };
+function switcherStatusBadge(status: CoachPlanRow["status"]): {
+  token: string;
+  fallback: string;
+  toneClass: "is-strong" | "is-mid" | "is-weak";
+} {
+  if (status === "behind") return { token: "ui.view.coach.status.behind", fallback: "Behind", toneClass: "is-weak" };
+  if (status === "at-risk") {
+    return { token: "ui.view.coach.status.needsAttention", fallback: "Needs Attention", toneClass: "is-mid" };
+  }
+  return { token: "ui.view.coach.status.onTrack", fallback: "On Track", toneClass: "is-strong" };
 }
 
 export class SproutCoachView extends ItemView {
@@ -208,6 +223,11 @@ export class SproutCoachView extends ItemView {
 
   private _tx(token: string, fallback: string, vars?: Record<string, string | number>): string {
     return t(this.plugin.settings?.general?.interfaceLanguage, token, fallback, vars);
+  }
+
+  private _pluralSuffix(count: number): string {
+    const locale = resolveInterfaceLocale(this.plugin.settings?.general?.interfaceLanguage);
+    return locale.startsWith("en-") && count !== 1 ? "s" : "";
   }
 
   async onOpen(): Promise<void> {
@@ -797,14 +817,14 @@ export class SproutCoachView extends ItemView {
   private _renderWizard(shell: HTMLElement, options: ScopeOption[], hasExistingPlans: boolean): void {
     const card = shell.createDiv({ cls: "card learnkit-coach-wizard-card learnkit-coach-wizard-card" });
     const isEditingContent = !!this._wizardEditingPlanId;
-    const coachLabel = "Coach";
-    const backToCoachLabel = `Back to ${coachLabel}`;
+    const coachLabel = this._tx("ui.view.coach.title", "Coach");
+    const backToCoachLabel = this._tx("ui.view.coach.wizard.backToCoach", "Back to {coach}", { coach: coachLabel });
     if (isEditingContent && this._wizardStep !== 0) this._wizardStep = 0;
 
     if (hasExistingPlans && !isEditingContent) {
       const exitBtn = card.createEl("button", { cls: "learnkit-btn-toolbar learnkit-btn-toolbar h-9 flex items-center gap-2 equal-height-btn learnkit-btn-exit-sm learnkit-btn-exit-sm learnkit-btn-top-right learnkit-btn-top-right" });
       exitBtn.type = "button";
-      exitBtn.ariaLabel = "Exit plan creator";
+      exitBtn.ariaLabel = this._tx("ui.view.coach.wizard.exitPlanCreator", "Exit plan creator");
       const exitIcon = exitBtn.createSpan({ cls: "inline-flex items-center justify-center learnkit-btn-icon learnkit-btn-icon" });
       setIcon(exitIcon, "x");
       exitBtn.addEventListener("click", () => {
@@ -837,7 +857,13 @@ export class SproutCoachView extends ItemView {
 
     this._wizardCardEl = card;
     this._wizardStepperEl = stepper;
-    const stepLabels = isEditingContent ? ["Edit scope"] : ["Topics", "Schedule", "Review"];
+    const stepLabels = isEditingContent
+      ? [this._tx("ui.view.coach.wizard.step.editScope", "Edit scope")]
+      : [
+        this._tx("ui.view.coach.wizard.step.topics", "Topics"),
+        this._tx("ui.view.coach.wizard.step.schedule", "Schedule"),
+        this._tx("ui.view.coach.wizard.step.review", "Review"),
+      ];
     stepLabels.forEach((label, idx) => {
       const step = stepper.createDiv({ cls: "learnkit-coach-step-item learnkit-coach-step-item" });
       const dot = step.createDiv({ cls: "learnkit-coach-step-dot learnkit-coach-step-dot" });
@@ -1393,6 +1419,17 @@ export class SproutCoachView extends ItemView {
         { type: "tag", label: this._tx("ui.view.coach.wizard.scope.filters.tags", "Tags") },
         { type: "property", label: this._tx("ui.view.coach.wizard.scope.filters.properties", "Properties") },
       ],
+      filtersLabel: this._tx("ui.common.filters", "Filters"),
+      propertiesLabel: this._tx("ui.common.properties", "Properties"),
+      formatSearchPlaceholder: (terms) => {
+        const scopedTerms = terms.filter((term) => String(term || "").trim().length > 0);
+        if (!scopedTerms.length || scopedTerms.length >= 3) {
+          return this._tx("ui.view.coach.wizard.scope.searchShort", "Search...");
+        }
+        return this._tx("ui.view.coach.wizard.scope.searchFor", "Search for {terms}", {
+          terms: scopedTerms.join(this._tx("ui.view.coach.wizard.scope.searchJoin", " and ")),
+        });
+      },
     });
 
     renderSelected();
@@ -1525,8 +1562,15 @@ export class SproutCoachView extends ItemView {
       row.createSpan({ cls: "learnkit-coach-review-detail-value learnkit-coach-review-detail-value", text: value });
     };
     if (this._planName) addDetail(this._tx("ui.view.coach.wizard.review.planName", "Plan Name"), this._planName);
-    addDetail(this._tx("ui.view.coach.wizard.review.date", "Date"), formatShortDate(examDateUtc));
-    addDetail(this._tx("ui.view.coach.wizard.review.intensity", "Intensity"), titleCaseIntensity(this._intensity));
+    addDetail(
+      this._tx("ui.view.coach.wizard.review.date", "Date"),
+      formatShortDate(examDateUtc, this.plugin.settings?.general?.interfaceLanguage),
+    );
+    const intensityLabel = intensityLabelToken(this._intensity);
+    addDetail(
+      this._tx("ui.view.coach.wizard.review.intensity", "Intensity"),
+      this._tx(intensityLabel.token, intensityLabel.fallback),
+    );
     addDetail(
       this._tx("ui.view.coach.wizard.review.workload", "Workload"),
       this._tx("ui.view.coach.wizard.review.workloadValue", "{flash} flashcards + {notes} notes per day", { flash: dailyFlash, notes: dailyNote }),
@@ -1631,7 +1675,11 @@ export class SproutCoachView extends ItemView {
     const todayIndex = Math.max(0, Math.round((todayUtc - startUtc) / MS_DAY));
     const dailyTarget = Math.max(1, plan.daily_flashcard_target + plan.daily_note_target);
 
-    const fmt = (ms: number) => new Date(ms).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    const fmt = (ms: number) =>
+      new Date(ms).toLocaleDateString(interfaceLocaleToIntl(this.plugin.settings?.general?.interfaceLanguage), {
+        month: "short",
+        day: "numeric",
+      });
     const startLabel = fmt(startUtc);
     const endLabel = fmt(endUtc);
 
@@ -1751,6 +1799,7 @@ export class SproutCoachView extends ItemView {
     this._chartsRoot = createRoot(host);
     this._chartsRoot.render(
       React.createElement(CoachHealthPanel, {
+        tx: this._tx.bind(this),
         flash: { score: health.flash.score, label: health.flash.label },
         note: { score: health.note.score, label: health.note.label },
         exam: { score: health.exam.score, label: health.exam.label },
@@ -1775,6 +1824,7 @@ export class SproutCoachView extends ItemView {
     this._readinessRoot = createRoot(host);
     this._readinessRoot.render(
       React.createElement(CoachReadinessPanel, {
+        tx: this._tx.bind(this),
         readiness,
         todayIndex,
         startLabel,
@@ -1809,7 +1859,7 @@ export class SproutCoachView extends ItemView {
     const latestProgressApproxMs = latestProgressDayUtc > 0 ? latestProgressDayUtc + (12 * 60 * 60 * 1000) : 0;
     const latestSessionMs = Math.max(latestCardReviewAt, latestProgressApproxMs);
     const lastSessionLabel = latestSessionMs > 0
-      ? this._tx("ui.view.coach.plan.lastSession", "Last session: {value}", { value: formatTimeAgo(latestSessionMs) })
+      ? this._tx("ui.view.coach.plan.lastSession", "Last session: {value}", { value: formatTimeAgo(latestSessionMs, this._tx.bind(this)) })
       : this._tx("ui.view.coach.plan.lastSessionNotStarted", "Last session: Not started");
     headerLeft.createDiv({ cls: "learnkit-coach-step-copy learnkit-coach-step-copy", text: lastSessionLabel });
 
@@ -1836,8 +1886,22 @@ export class SproutCoachView extends ItemView {
     const remainingFlash = Math.max(0, dailyFlashTarget - progress.flashcard);
     const remainingNotes = Math.max(0, dailyNoteTarget - progress.note);
     const remainingParts: string[] = [];
-    if (remainingFlash > 0) remainingParts.push(`${remainingFlash} flashcard${remainingFlash === 1 ? "" : "s"}`);
-    if (remainingNotes > 0) remainingParts.push(`${remainingNotes} note${remainingNotes === 1 ? "" : "s"}`);
+    if (remainingFlash > 0) {
+      remainingParts.push(
+        this._tx("ui.view.coach.plan.remainingFlashcards", "{count} flashcard{suffix}", {
+          count: remainingFlash,
+          suffix: this._pluralSuffix(remainingFlash),
+        }),
+      );
+    }
+    if (remainingNotes > 0) {
+      remainingParts.push(
+        this._tx("ui.view.coach.plan.remainingNotes", "{count} note{suffix}", {
+          count: remainingNotes,
+          suffix: this._pluralSuffix(remainingNotes),
+        }),
+      );
+    }
     const remainingLine = targetSection.createDiv({ cls: "learnkit-coach-remaining-line learnkit-coach-remaining-line" });
     if (remainingParts.length) {
       remainingLine.createSpan({
@@ -1964,9 +2028,17 @@ export class SproutCoachView extends ItemView {
     const switcherGrid = switcherCard.createDiv({ cls: "learnkit-coach-switcher-grid learnkit-coach-switcher-grid" });
     const selectorCards: HTMLButtonElement[] = [];
     const firstEmptySlot = shownPlans.length < maxPlans ? shownPlans.length : -1;
-    const slotPlanLabels = ["Plan One", "Plan Two", "Plan Three", "Plan Four"];
+    const slotPlanLabels = [
+      this._tx("ui.view.coach.switcher.slot.one", "Plan One"),
+      this._tx("ui.view.coach.switcher.slot.two", "Plan Two"),
+      this._tx("ui.view.coach.switcher.slot.three", "Plan Three"),
+      this._tx("ui.view.coach.switcher.slot.four", "Plan Four"),
+    ];
 
-    const slotLabelFor = (idx: number): string => slotPlanLabels[idx] ?? `Plan ${idx + 1}`;
+    const slotLabelFor = (idx: number): string => {
+      const fallback = this._tx("ui.view.coach.switcher.slot.generic", "Plan {index}", { index: idx + 1 });
+      return slotPlanLabels[idx] ?? fallback;
+    };
 
     const createSlotIndicator = (host: HTMLElement, idx: number, active: boolean, labelText?: string): HTMLElement => {
       const indicator = host.createDiv({ cls: "learnkit-coach-switcher-slot-indicator learnkit-coach-switcher-slot-indicator" });
@@ -2005,7 +2077,7 @@ export class SproutCoachView extends ItemView {
         const id = planScopeId(plan);
         const scopeMeta = formatScopePlanTitle(plan.plan_name || plan.scope_name || "Plan");
         const days = daysLeftToExam(plan.exam_date_utc, now);
-        const examDate = formatShortDate(plan.exam_date_utc);
+        const examDate = formatShortDate(plan.exam_date_utc, this.plugin.settings?.general?.interfaceLanguage);
         const statusBadge = switcherStatusBadge(plan.status);
         slot.classList.add("is-filled");
 
@@ -2044,11 +2116,14 @@ export class SproutCoachView extends ItemView {
 
         planCard.createDiv({
           cls: "learnkit-coach-switcher-plan-date learnkit-coach-switcher-plan-date",
-          text: this._tx("ui.view.coach.switcher.daysRemaining", "{days} day{suffix} remaining", { days, suffix: days === 1 ? "" : "s" }),
+          text: this._tx("ui.view.coach.switcher.daysRemaining", "{days} day{suffix} remaining", {
+            days,
+            suffix: this._pluralSuffix(days),
+          }),
         });
         planCard.createDiv({
           cls: `learnkit-coach-switcher-plan-overview ${statusBadge.toneClass}`,
-          text: statusBadge.label,
+          text: this._tx(statusBadge.token, statusBadge.fallback),
         });
 
         planCard.addEventListener("click", () => {

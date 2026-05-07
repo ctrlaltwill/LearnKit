@@ -335,7 +335,7 @@ export class ImageOcclusionEditorModal extends Modal {
       cls: "btn-icon-ghost",
       attr: {
         type: "button",
-        "aria-label": "What does the group field do?",
+        "aria-label": t(undefined, "ui.io.maskRenderer.groupFieldInfo", "What does the group field do?"),
         title:
           "Group sets which rectangles are hidden together.\nSelect a rectangle, then edit this field to change its group.",
       },
@@ -347,7 +347,7 @@ export class ImageOcclusionEditorModal extends Modal {
 
     this.btnDelete = toolbar.createEl("button", {
       cls: "btn-icon-ghost",
-      attr: { type: "button", "aria-label": "Delete selected occlusion" },
+      attr: { type: "button", "aria-label": t(undefined, "ui.io.maskRenderer.deleteOcclusion", "Delete selected occlusion") },
     });
     {
       const ico = this.btnDelete.createSpan({ cls: "learnkit-io-ico learnkit-io-ico" });
@@ -385,7 +385,7 @@ export class ImageOcclusionEditorModal extends Modal {
 
     this.btnZoomIn = canvasControls.createEl("button", {
       cls: "btn-icon-outline",
-      attr: { type: "button", "aria-label": "Zoom in" },
+      attr: { type: "button", "aria-label": t(undefined, "ui.io.maskRenderer.zoomIn", "Zoom in") },
     });
     {
       const ico = this.btnZoomIn.createSpan({ cls: "learnkit-io-ico learnkit-io-ico" });
@@ -395,7 +395,7 @@ export class ImageOcclusionEditorModal extends Modal {
 
     this.btnZoomOut = canvasControls.createEl("button", {
       cls: "btn-icon-outline",
-      attr: { type: "button", "aria-label": "Zoom out" },
+      attr: { type: "button", "aria-label": t(undefined, "ui.io.maskRenderer.zoomOut", "Zoom out") },
     });
     {
       const ico = this.btnZoomOut.createSpan({ cls: "learnkit-io-ico learnkit-io-ico" });
@@ -405,7 +405,7 @@ export class ImageOcclusionEditorModal extends Modal {
 
     this.btnFit = canvasControls.createEl("button", {
       cls: "btn-icon-outline",
-      attr: { type: "button", "aria-label": "Fit" },
+      attr: { type: "button", "aria-label": t(undefined, "ui.io.maskRenderer.fit", "Fit") },
     });
     {
       const ico = this.btnFit.createSpan({ cls: "learnkit-io-ico learnkit-io-ico" });

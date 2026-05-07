@@ -536,7 +536,7 @@ export class AnkiExportModal extends Modal {
 
     const cancelBtn = footer.createEl("button", {
       cls: "learnkit-btn-toolbar learnkit-btn-toolbar inline-flex items-center gap-2 h-9 px-3 text-sm",
-      attr: { type: "button", "aria-label": "Cancel export" },
+      attr: { type: "button", "aria-label": this.tx("ui.anki.export.aria.cancelExport", "Cancel export") },
     });
     const cancelIcon = cancelBtn.createEl("span", { cls: "inline-flex items-center justify-center [&_svg]:size-4" });
     setIcon(cancelIcon, "x");
@@ -545,7 +545,7 @@ export class AnkiExportModal extends Modal {
 
     const exportBtn = footer.createEl("button", {
       cls: "learnkit-btn-toolbar learnkit-btn-toolbar inline-flex items-center gap-2 h-9 px-3 text-sm",
-      attr: { type: "button", "aria-label": "Export cards to .apkg file" },
+      attr: { type: "button", "aria-label": this.tx("ui.anki.export.aria.exportApkg", "Export cards to .apkg file") },
     });
     const exportIcon = exportBtn.createEl("span", { cls: "inline-flex items-center justify-center [&_svg]:size-4" });
     setIcon(exportIcon, "download");
@@ -622,7 +622,7 @@ export class AnkiExportModal extends Modal {
 
     const downloadBtn = footer.createEl("button", {
       cls: "learnkit-btn-toolbar learnkit-btn-toolbar inline-flex items-center gap-2 h-9 px-3 text-sm",
-      attr: { type: "button", "aria-label": "Download .apkg file to your computer" },
+      attr: { type: "button", "aria-label": this.tx("ui.anki.export.aria.downloadApkg", "Download .apkg file to your computer") },
     });
     const dlIcon = downloadBtn.createEl("span", { cls: "inline-flex items-center justify-center [&_svg]:size-4" });
     setIcon(dlIcon, "download");
@@ -643,7 +643,7 @@ export class AnkiExportModal extends Modal {
 
     const saveBtn = footer.createEl("button", {
       cls: "learnkit-btn-toolbar learnkit-btn-toolbar inline-flex items-center gap-2 h-9 px-3 text-sm",
-      attr: { type: "button", "aria-label": "Save .apkg file into your vault" },
+      attr: { type: "button", "aria-label": this.tx("ui.anki.export.aria.saveApkg", "Save .apkg file into your vault") },
     });
     const saveIcon = saveBtn.createEl("span", { cls: "inline-flex items-center justify-center [&_svg]:size-4" });
     setIcon(saveIcon, "save");
@@ -669,7 +669,7 @@ export class AnkiExportModal extends Modal {
 
     const doneBtn = footer.createEl("button", {
       cls: "learnkit-btn-toolbar learnkit-btn-toolbar inline-flex items-center gap-2 h-9 px-3 text-sm",
-      attr: { type: "button", "aria-label": "Close this dialog" },
+      attr: { type: "button", "aria-label": this.tx("ui.anki.export.aria.closeDialog", "Close this dialog") },
     });
     const doneIcon = doneBtn.createEl("span", { cls: "inline-flex items-center justify-center [&_svg]:size-4" });
     setIcon(doneIcon, "check");

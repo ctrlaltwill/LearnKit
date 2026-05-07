@@ -213,7 +213,7 @@ export class GatekeeperModal extends Modal {
     if (this.allowBypass) {
       const bypassBtn = headerEl.createEl("button", {
         cls: "learnkit-btn-toolbar learnkit-btn-toolbar learnkit-btn-filter learnkit-btn-filter h-7 px-3 text-sm inline-flex items-center gap-2 learnkit-gatekeeper-bypass-btn learnkit-gatekeeper-bypass-btn",
-        attr: { type: "button", "aria-label": "Bypass this round" },
+        attr: { type: "button", "aria-label": t(this.plugin.settings?.general?.interfaceLanguage, "ui.gatekeeper.action.bypass", "Bypass this round") },
       });
       bypassBtn.setAttr("data-tooltip-position", "top");
       const iconWrap = bypassBtn.createSpan({ cls: "inline-flex items-center justify-center [&_svg]:size-4" });
@@ -295,6 +295,7 @@ export class GatekeeperModal extends Modal {
           rating,
           now: previewNow,
           scheduling: this.plugin.settings.scheduling,
+          locale: this.plugin.settings?.general?.interfaceLanguage,
         }) ?? undefined
       );
     };
@@ -588,7 +589,9 @@ export class GatekeeperModal extends Modal {
       cls: "btn-icon learnkit-tts-replay-btn",
       type: "button",
     });
-    btn.setAttribute("aria-label", answerSide ? "Read answer aloud" : "Read question aloud");
+    btn.setAttribute("aria-label", answerSide
+      ? t(this.plugin.settings?.general?.interfaceLanguage, "ui.gatekeeper.tts.readAnswerAloud", "Read answer aloud")
+      : t(this.plugin.settings?.general?.interfaceLanguage, "ui.gatekeeper.tts.readQuestionAloud", "Read question aloud"));
     btn.setAttribute("data-tooltip-position", "top");
     btn.addEventListener("click", (ev) => {
       ev.preventDefault();

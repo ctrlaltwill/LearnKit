@@ -13,6 +13,7 @@
 import { setIcon } from "obsidian";
 import { log } from "../../../platform/core/logger";
 import { placePopover } from "../../../platform/core/ui";
+import { t } from "../../../platform/translations/translator";
 
 /* ------------------------------------------------------------------ */
 /*  Hover colour helper                                                */
@@ -149,6 +150,7 @@ export function applyWidgetActionButtonStyles(btn: HTMLButtonElement) {
  */
 export function attachWidgetMoreMenu(opts: {
   trigger: HTMLButtonElement;
+  locale?: unknown;
   canUndo: boolean;
   onUndo: () => void;
   canBurySuspend: boolean;
@@ -157,6 +159,7 @@ export function attachWidgetMoreMenu(opts: {
   openStudy?: () => void;
   openNote?: () => void;
 }): { toggle: () => void; close: () => void; isOpen: () => boolean } {
+  const tx = (token: string, fallback: string) => t(opts.locale, token, fallback);
   const id = `learnkit-widget-menu-${Math.random().toString(36).slice(2, 8)}`;
   const trigger = opts.trigger;
   trigger.id = `${id}-trigger`;
@@ -234,14 +237,44 @@ export function attachWidgetMoreMenu(opts: {
   };
 
   if (typeof opts.openNote === "function") {
-    addItem("Open in Note", "O", opts.openNote, false, "Open flashcard in parent note");
+    addItem(
+      tx("ui.widget.moreMenu.openInNote", "Open in Note"),
+      "O",
+      opts.openNote,
+      false,
+      tx("ui.widget.moreMenu.aria.openInNote", "Open flashcard in parent note"),
+    );
   }
-  addItem("Bury", "B", opts.onBury, !opts.canBurySuspend, "Bury flashcard");
-  addItem("Suspend", "S", opts.onSuspend, !opts.canBurySuspend, "Suspend flashcard");
+  addItem(
+    tx("ui.widget.moreMenu.bury", "Bury"),
+    "B",
+    opts.onBury,
+    !opts.canBurySuspend,
+    tx("ui.widget.moreMenu.aria.bury", "Bury flashcard"),
+  );
+  addItem(
+    tx("ui.widget.moreMenu.suspend", "Suspend"),
+    "S",
+    opts.onSuspend,
+    !opts.canBurySuspend,
+    tx("ui.widget.moreMenu.aria.suspend", "Suspend flashcard"),
+  );
   if (typeof opts.openStudy === "function") {
-    addItem("Transfer to Study", "T", opts.openStudy, false);
+    addItem(
+      tx("ui.widget.moreMenu.transferToStudy", "Transfer to Study"),
+      "T",
+      opts.openStudy,
+      false,
+      tx("ui.widget.moreMenu.aria.transferToStudy", "Transfer to Study"),
+    );
   }
-  addItem("Undo last grade", "U", opts.onUndo, !opts.canUndo, "Undo previous review and grading");
+  addItem(
+    tx("ui.widget.moreMenu.undoLastGrade", "Undo last grade"),
+    "U",
+    opts.onUndo,
+    !opts.canUndo,
+    tx("ui.widget.moreMenu.aria.undoLastGrade", "Undo previous review and grading"),
+  );
 
   let cleanup: (() => void) | null = null;
 

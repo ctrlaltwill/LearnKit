@@ -11,6 +11,7 @@ import { ComposedChart, Line, ResponsiveContainer, Scatter, Tooltip, XAxis, YAxi
 import { createXAxisTicks, formatAxisLabel } from "../chart-axis-utils";
 import { useAnalyticsPopoverZIndex } from "../filter-styles";
 import { MS_DAY } from "../../../platform/core/constants";
+import { t } from "../../../platform/translations/translator";
 
 type AnalyticsExamAttemptEventLike = {
   kind?: string;
@@ -206,6 +207,7 @@ function TestsTooltipContent(props: {
   payload?: Array<{ dataKey?: string | number; payload?: unknown }>;
   label?: number | string;
   averagesByDay: Map<number, DailyAveragePoint>;
+  locale?: string;
 }) {
   if (!props.active) return null;
 
@@ -221,9 +223,9 @@ function TestsTooltipContent(props: {
 
   return (
     <div className="learnkit-data-tooltip-surface">
-      <div className="text-background">Date: {dailyDatum.date}</div>
-      <div className="text-background">Tests completed: {dailyDatum.attempts}</div>
-      <div className="text-background">Average result: {dailyDatum.averageScore.toFixed(1)}%</div>
+      <div className="text-background">{t(props.locale, "ui.analytics.tests.tooltipDate", "Date: {date}", { date: dailyDatum.date })}</div>
+      <div className="text-background">{t(props.locale, "ui.analytics.tests.tooltipAttempts", "Tests completed: {count}", { count: dailyDatum.attempts })}</div>
+      <div className="text-background">{t(props.locale, "ui.analytics.tests.tooltipAvg", "Average result: {score}%", { score: dailyDatum.averageScore.toFixed(1) })}</div>
     </div>
   );
 }
@@ -289,6 +291,7 @@ export function TestsAnalyticsCard(props: {
   events: AnalyticsExamAttemptEventLike[];
   dbAttempts: SavedExamAttemptRecordLike[];
   timezone?: string;
+  locale?: string;
 }) {
   const tz = props.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
   const formatter = React.useMemo(() => makeDatePartsFormatter(tz), [tz]);
@@ -373,10 +376,10 @@ export function TestsAnalyticsCard(props: {
       <div className="flex items-start justify-between gap-2">
         <div>
           <div className="flex items-center gap-1">
-            <div className="font-semibold lk-home-section-title">Tests performance</div>
-            <InfoIcon text="Individual test scores with daily average over time." />
+            <div className="font-semibold lk-home-section-title">{t(props.locale, "ui.analytics.tests.title", "Tests performance")}</div>
+            <InfoIcon text={t(props.locale, "ui.analytics.tests.info", "Individual test scores with daily average over time.")} />
           </div>
-          <div className="text-xs text-muted-foreground">Score distribution over time</div>
+          <div className="text-xs text-muted-foreground">{t(props.locale, "ui.analytics.tests.subtitle", "Score distribution over time")}</div>
         </div>
         <div ref={wrapRef} className="relative inline-flex">
           <button
@@ -385,21 +388,21 @@ export function TestsAnalyticsCard(props: {
             className="learnkit-btn-toolbar learnkit-btn-filter h-7 px-2 text-sm inline-flex items-center gap-2"
             aria-haspopup="listbox"
             aria-expanded={open ? "true" : "false"}
-            aria-label="Filter"
+            aria-label={t(props.locale, "ui.analytics.filter", "Filter")}
             data-tooltip-position="top"
             onClick={() => setOpen((v) => !v)}
           >
             <svg className="svg-icon lucide-filter text-foreground" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3" />
             </svg>
-            <span>Filter</span>
+            <span>{t(props.locale, "ui.analytics.filter", "Filter")}</span>
           </button>
           {open ? (
             <div
               ref={popoverRef}
               className="rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-0 flex flex-col learnkit-ana-popover learnkit-ana-popover-sm"
               role="listbox"
-              aria-label="Tests filters"
+              aria-label={t(props.locale, "ui.analytics.filterLabel.tests", "Tests filters")}
             >
               <div className="p-1">
                 <div
@@ -407,12 +410,12 @@ export function TestsAnalyticsCard(props: {
                   role="button"
                   tabIndex={0}
                   aria-expanded={durationOpen ? "true" : "false"}
-                  aria-label="Duration"
+                  aria-label={t(props.locale, "ui.analytics.duration", "Duration")}
                   data-tooltip-position="top"
                   onClick={toggleDurationOpen}
                   onKeyDown={onDurationKey}
                 >
-                  <span>Duration</span>
+                  <span>{t(props.locale, "ui.analytics.duration", "Duration")}</span>
                   <ChevronIcon open={durationOpen} />
                 </div>
                 {durationOpen ? (
@@ -444,7 +447,7 @@ export function TestsAnalyticsCard(props: {
                   </div>
                 ) : null}
                 <div className="h-px bg-border my-1" role="separator" />
-                <div className="text-sm text-muted-foreground cursor-pointer px-2" onClick={resetFilters}>Reset filters</div>
+                <div className="text-sm text-muted-foreground cursor-pointer px-2" onClick={resetFilters}>{t(props.locale, "ui.analytics.chart.resetFilters", "Reset filters")}</div>
               </div>
             </div>
           ) : null}
@@ -452,7 +455,7 @@ export function TestsAnalyticsCard(props: {
       </div>
 
       {scatterData.length === 0 ? (
-        <div className="text-sm text-muted-foreground">No test attempts yet.</div>
+        <div className="text-sm text-muted-foreground">{t(props.locale, "ui.analytics.tests.noAttempts", "No test attempts yet.")}</div>
       ) : (
         <>
           <div className="w-full flex-1 learnkit-analytics-chart">
@@ -471,6 +474,7 @@ export function TestsAnalyticsCard(props: {
                   content={(
                     <TestsTooltipContent
                       averagesByDay={averagesByDay}
+                      locale={props.locale}
                     />
                   )}
                   isAnimationActive={false}

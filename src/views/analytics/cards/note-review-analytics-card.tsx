@@ -11,6 +11,7 @@ import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recha
 import { createXAxisTicks, formatAxisLabel } from "../chart-axis-utils";
 import { useAnalyticsPopoverZIndex } from "../filter-styles";
 import { MS_DAY } from "../../../platform/core/constants";
+import { t } from "../../../platform/translations/translator";
 
 type NoteReviewEventLike = {
   kind?: string;
@@ -88,15 +89,15 @@ function ChevronIcon(props: { open: boolean }) {
   );
 }
 
-function TooltipContent(props: { active?: boolean; payload?: Array<{ payload?: unknown }> }) {
+function TooltipContent(props: { active?: boolean; payload?: Array<{ payload?: unknown }>; locale?: string }) {
   if (!props.active || !props.payload || !props.payload.length) return null;
   const datum = props.payload[0]?.payload as DayRow | undefined;
   if (!datum) return null;
   return (
     <div className="learnkit-data-tooltip-surface">
       <div className="text-sm font-medium text-background">{datum.date}</div>
-      <div className="text-background">Scheduled: {datum.scheduled}</div>
-      <div className="text-background">Reviewed: {datum.reviewed}</div>
+      <div className="text-background">{t(props.locale, "ui.analytics.noteReview.tooltipScheduled", "Scheduled: {count}", { count: datum.scheduled })}</div>
+      <div className="text-background">{t(props.locale, "ui.analytics.noteReview.tooltipReviewed", "Reviewed: {count}", { count: datum.reviewed })}</div>
     </div>
   );
 }
@@ -159,6 +160,7 @@ export function NoteReviewAnalyticsCard(props: {
   events: NoteReviewEventLike[];
   includePracticeDefault: boolean;
   timezone?: string;
+  locale?: string;
 }) {
   const tz = props.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
   const formatter = React.useMemo(() => makeDatePartsFormatter(tz), [tz]);
@@ -241,10 +243,10 @@ export function NoteReviewAnalyticsCard(props: {
       <div className="flex items-start justify-between gap-2">
         <div>
           <div className="flex items-center gap-1">
-            <div className="font-semibold lk-home-section-title">Note review activity</div>
-            <InfoIcon text="Reviewed progress vs scheduled reviews over time." />
+            <div className="font-semibold lk-home-section-title">{t(props.locale, "ui.analytics.noteReview.title", "Note review activity")}</div>
+            <InfoIcon text={t(props.locale, "ui.analytics.noteReview.info", "Reviewed progress vs scheduled reviews over time.")} />
           </div>
-          <div className="text-xs text-muted-foreground">Daily review progress</div>
+          <div className="text-xs text-muted-foreground">{t(props.locale, "ui.analytics.noteReview.subtitle", "Daily review progress")}</div>
         </div>
         <div ref={wrapRef} className="relative inline-flex">
           <button
@@ -253,21 +255,21 @@ export function NoteReviewAnalyticsCard(props: {
             className="learnkit-btn-toolbar learnkit-btn-filter h-7 px-2 text-sm inline-flex items-center gap-2"
             aria-haspopup="listbox"
             aria-expanded={open ? "true" : "false"}
-            aria-label="Filter"
+            aria-label={t(props.locale, "ui.analytics.filter", "Filter")}
             data-tooltip-position="top"
             onClick={() => setOpen((v) => !v)}
           >
             <svg className="svg-icon lucide-filter text-foreground" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3" />
             </svg>
-            <span>Filter</span>
+            <span>{t(props.locale, "ui.analytics.filter", "Filter")}</span>
           </button>
           {open ? (
             <div
               ref={popoverRef}
               className="rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-0 flex flex-col learnkit-ana-popover learnkit-ana-popover-sm"
               role="listbox"
-              aria-label="Note review filters"
+              aria-label={t(props.locale, "ui.analytics.filterLabel.noteReview", "Note review filters")}
             >
               <div className="p-1">
                 <div
@@ -275,12 +277,12 @@ export function NoteReviewAnalyticsCard(props: {
                   role="button"
                   tabIndex={0}
                   aria-expanded={durationOpen ? "true" : "false"}
-                  aria-label="Duration"
+                  aria-label={t(props.locale, "ui.analytics.duration", "Duration")}
                   data-tooltip-position="top"
                   onClick={toggleDurationOpen}
                   onKeyDown={onDurationKey}
                 >
-                  <span>Duration</span>
+                  <span>{t(props.locale, "ui.analytics.duration", "Duration")}</span>
                   <ChevronIcon open={durationOpen} />
                 </div>
                 {durationOpen ? (
@@ -314,7 +316,7 @@ export function NoteReviewAnalyticsCard(props: {
                 <div className="h-px bg-border my-1" role="separator" />
                 <label className="px-2 py-1.5 inline-flex items-center gap-2 text-sm cursor-pointer">
                   <input type="checkbox" checked={includePractice} onChange={(event) => setIncludePractice(event.currentTarget.checked)} />
-                  <span>Include practice</span>
+                  <span>{t(props.locale, "ui.analytics.noteReview.includePractice", "Include practice")}</span>
                 </label>
               </div>
             </div>
@@ -323,7 +325,7 @@ export function NoteReviewAnalyticsCard(props: {
       </div>
 
       {data.length === 0 ? (
-        <div className="text-sm text-muted-foreground">No note review analytics events yet.</div>
+        <div className="text-sm text-muted-foreground">{t(props.locale, "ui.analytics.noteReview.noEvents", "No note review analytics events yet.")}</div>
       ) : (
         <>
           <div className="w-full flex-1 learnkit-analytics-chart">
@@ -344,15 +346,15 @@ export function NoteReviewAnalyticsCard(props: {
                   width={30}
                   allowDecimals={false}
                 />
-                <Tooltip content={<TooltipContent />} cursor={{ fill: "var(--background-modifier-hover)", opacity: 0.5 }} />
-                <Bar dataKey="reviewed" stackId="a" name="Reviewed" fill="var(--chart-accent-2)" radius={[0, 0, 0, 0]} />
-                <Bar dataKey="scheduledRemaining" stackId="a" name="Scheduled" fill="var(--chart-accent-4)" radius={[3, 3, 0, 0]} />
+                <Tooltip content={<TooltipContent locale={props.locale} />} cursor={{ fill: "var(--background-modifier-hover)", opacity: 0.5 }} />
+                <Bar dataKey="reviewed" stackId="a" name={t(props.locale, "ui.analytics.noteReview.legendReviewed", "Reviewed")} fill="var(--chart-accent-2)" radius={[0, 0, 0, 0]} />
+                <Bar dataKey="scheduledRemaining" stackId="a" name={t(props.locale, "ui.analytics.noteReview.legendScheduled", "Scheduled")} fill="var(--chart-accent-4)" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
           <div className="flex flex-wrap gap-3 text-xs text-muted-foreground learnkit-ana-chart-legend">
-            <div className="inline-flex items-center gap-2"><span className="inline-block learnkit-ana-legend-dot learnkit-ana-legend-dot-square" style={{ ["--learnkit-legend-color" as string]: "var(--chart-accent-2)" }} />Reviewed</div>
-            <div className="inline-flex items-center gap-2"><span className="inline-block learnkit-ana-legend-dot learnkit-ana-legend-dot-square" style={{ ["--learnkit-legend-color" as string]: "var(--chart-accent-4)" }} />Scheduled</div>
+            <div className="inline-flex items-center gap-2"><span className="inline-block learnkit-ana-legend-dot learnkit-ana-legend-dot-square" style={{ ["--learnkit-legend-color" as string]: "var(--chart-accent-2)" }} />{t(props.locale, "ui.analytics.noteReview.legendReviewed", "Reviewed")}</div>
+            <div className="inline-flex items-center gap-2"><span className="inline-block learnkit-ana-legend-dot learnkit-ana-legend-dot-square" style={{ ["--learnkit-legend-color" as string]: "var(--chart-accent-4)" }} />{t(props.locale, "ui.analytics.noteReview.legendScheduled", "Scheduled")}</div>
           </div>
         </>
       )}

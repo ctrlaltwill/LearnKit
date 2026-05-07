@@ -9,6 +9,7 @@
 import * as React from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useAnalyticsPopoverZIndex } from "../filter-styles";
+import { t } from "../../../platform/translations/translator";
 
 type CardLike = {
   id: string;
@@ -293,17 +294,17 @@ export function TopicMasteryCard(props: {
             className="learnkit-btn-toolbar learnkit-btn-filter h-7 px-2 text-sm inline-flex items-center gap-2"
             aria-haspopup="listbox"
             aria-expanded={open ? "true" : "false"}
-            aria-label="Filter"
+            aria-label={t(undefined, "ui.analytics.filter", "Filter")}
             data-tooltip-position="top"
             onClick={() => setOpen((v) => !v)}
           >
             <svg className="svg-icon lucide-filter text-foreground" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3" />
             </svg>
-            <span>Filter</span>
+            <span>{t(undefined, "ui.analytics.filter", "Filter")}</span>
           </button>
           {open ? (
-            <div ref={popoverRef} className="learnkit-ana-popover learnkit-ana-popover-right learnkit-ana-popover-sm rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1" role="listbox" aria-label="Topic mastery filters">
+            <div ref={popoverRef} className="learnkit-ana-popover learnkit-ana-popover-right learnkit-ana-popover-sm rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1" role="listbox" aria-label={t(undefined, "ui.analytics.filterLabel.topicMastery", "Topic mastery filters")}>
               <div className="flex flex-col gap-1">
                 <div className="px-2 py-1 text-xs text-muted-foreground">Suggested focus topics</div>
                 <div className="px-2 pb-2">

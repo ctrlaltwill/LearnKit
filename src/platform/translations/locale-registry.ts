@@ -5,8 +5,10 @@
  * @exports
  *  - InterfaceLocaleDefinition
  *  - DEFAULT_INTERFACE_LOCALE
+ *  - FOLLOW_OBSIDIAN_INTERFACE_LOCALE
  *  - getSupportedInterfaceLocales
  *  - normaliseInterfaceLocale
+ *  - resolveInterfaceLocalePreference
  *  - resolveInterfaceLocale
  *  - getInterfaceLocaleLabel
  */
@@ -20,8 +22,21 @@ export type InterfaceLocaleDefinition = {
 };
 
 export const DEFAULT_INTERFACE_LOCALE = "en-gb";
+export const FOLLOW_OBSIDIAN_INTERFACE_LOCALE = "obsidian";
+const OBSIDIAN_UNSUPPORTED_FALLBACK_LOCALE = "en-us";
+const FOLLOW_LABEL_PREFIX = "Follow";
+const FOLLOW_LABEL_TARGET = "Obsidian";
+const FOLLOW_LABEL_SUFFIX = "(Auto)";
+const FOLLOW_LABEL = `${FOLLOW_LABEL_PREFIX} ${FOLLOW_LABEL_TARGET} ${FOLLOW_LABEL_SUFFIX}`;
 
 const INTERFACE_LOCALE_REGISTRY: ReadonlyArray<InterfaceLocaleDefinition> = [
+  {
+    code: FOLLOW_OBSIDIAN_INTERFACE_LOCALE,
+    label: FOLLOW_LABEL,
+    nativeLabel: "Use Obsidian language (fallback: English (US))",
+    flagCode: "checkered",
+    status: "stable",
+  },
   {
     code: "en-gb",
     label: "English (UK)",
@@ -46,6 +61,11 @@ const INTERFACE_LOCALE_REGISTRY: ReadonlyArray<InterfaceLocaleDefinition> = [
 ];
 
 const INTERFACE_LOCALE_SET = new Set(INTERFACE_LOCALE_REGISTRY.map((locale) => locale.code));
+const MANUAL_INTERFACE_LOCALE_SET = new Set(
+  INTERFACE_LOCALE_REGISTRY
+    .map((locale) => locale.code)
+    .filter((code) => code !== FOLLOW_OBSIDIAN_INTERFACE_LOCALE),
+);
 
 export function getSupportedInterfaceLocales(): InterfaceLocaleDefinition[] {
   return INTERFACE_LOCALE_REGISTRY.map((locale) => ({ ...locale }));
@@ -57,15 +77,58 @@ export function normaliseInterfaceLocale(value: unknown): string {
   return "";
 }
 
-export function resolveInterfaceLocale(value: unknown): string {
+function toSupportedManualLocale(value: unknown, fallback: string): string {
+  const candidate = normaliseInterfaceLocale(value).replace(/_/g, "-");
+
+  if (candidate === "zh" || candidate.startsWith("zh-")) return "zh-cn";
+  if (candidate === "en-gb" || candidate.startsWith("en-gb")) return "en-gb";
+  if (candidate === "en-us" || candidate.startsWith("en-us")) return "en-us";
+  if (candidate === "en") return DEFAULT_INTERFACE_LOCALE;
+
+  return MANUAL_INTERFACE_LOCALE_SET.has(candidate) ? candidate : fallback;
+}
+
+function readObsidianLocalePreference(): string {
+  const root = globalThis as unknown as {
+    app?: { vault?: { getConfig?: (key: string) => unknown }; i18n?: { locale?: unknown } };
+    window?: { app?: { vault?: { getConfig?: (key: string) => unknown }; i18n?: { locale?: unknown } } };
+  };
+
+  const app = root.app ?? root.window?.app;
+  const fromConfig = app?.vault?.getConfig?.("locale");
+  const fromI18n = app?.i18n?.locale;
+  const fromDoc = typeof document !== "undefined" ? document.documentElement?.lang : "";
+  const fromNavigator = typeof navigator !== "undefined" ? navigator.language : "";
+
+  return (
+    normaliseInterfaceLocale(fromConfig) ||
+    normaliseInterfaceLocale(fromI18n) ||
+    normaliseInterfaceLocale(fromDoc) ||
+    normaliseInterfaceLocale(fromNavigator)
+  );
+}
+
+export function resolveInterfaceLocalePreference(value: unknown): string {
   const candidate = normaliseInterfaceLocale(value);
-  if (candidate === "en") return "en-gb";
-  if (candidate === "zh") return "zh-cn";
-  return INTERFACE_LOCALE_SET.has(candidate) ? candidate : DEFAULT_INTERFACE_LOCALE;
+  if (candidate === FOLLOW_OBSIDIAN_INTERFACE_LOCALE || candidate === "auto" || candidate === "follow-obsidian") {
+    return FOLLOW_OBSIDIAN_INTERFACE_LOCALE;
+  }
+  return toSupportedManualLocale(candidate, DEFAULT_INTERFACE_LOCALE);
+}
+
+export function resolveInterfaceLocale(value: unknown): string {
+  const preference = resolveInterfaceLocalePreference(value);
+  if (preference === FOLLOW_OBSIDIAN_INTERFACE_LOCALE) {
+    return toSupportedManualLocale(readObsidianLocalePreference(), OBSIDIAN_UNSUPPORTED_FALLBACK_LOCALE);
+  }
+  return toSupportedManualLocale(preference, DEFAULT_INTERFACE_LOCALE);
 }
 
 export function getInterfaceLocaleLabel(code: string): string {
   const candidate = normaliseInterfaceLocale(code);
+  if (candidate === "auto" || candidate === "follow-obsidian") {
+    return getInterfaceLocaleLabel(FOLLOW_OBSIDIAN_INTERFACE_LOCALE);
+  }
   const hit = INTERFACE_LOCALE_REGISTRY.find((locale) => locale.code === candidate);
-  return (hit?.label ?? candidate) || DEFAULT_INTERFACE_LOCALE;
+  return (hit?.label ?? candidate) || "English (US)";
 }

@@ -94,6 +94,7 @@
   "ui.browser.filter.type.cloze": "ui.common.cloze",
   "ui.cardCreator.type.cloze": "ui.common.cloze",
   "ui.main.menu.cloze": "ui.common.cloze",
+  "ui.main.menu.hotspot": "ui.common.hotspot",
   "ui.reviewer.cardEditor.field.cloze": "ui.common.cloze",
   "ui.settings.reading.livePreview.cardType.cloze": "ui.common.cloze",
   "ui.settings.sections.cloze": "ui.common.cloze",

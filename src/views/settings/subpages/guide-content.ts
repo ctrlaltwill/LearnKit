@@ -15,7 +15,19 @@ import { type App, requestUrl } from "obsidian";
 import type { GuideCategory, GuidePage } from "./types";
 import { t } from "../../../platform/translations/translator";
 
-const tx = (token: string, fallback: string) => t("en", token, fallback);
+interface RawCategorySection {
+  titleToken?: string;
+  titleFallback?: string;
+  pageKeys: string[];
+}
+
+interface RawCategory {
+  key: string;
+  labelToken: string;
+  labelFallback: string;
+  icon: string;
+  sections: RawCategorySection[];
+}
 
 const GUIDE_DEMO_RELATIVE_PREFIX_RE = /^\.\.\/\.\.\/\.\.\/branding\/(?:Demo|demo)\/(.+)$/i;
 const GUIDE_DEMO_RAW_BASE = "https://raw.githubusercontent.com/ctrlaltwill/LearnKit/main/site/branding/Demo/";
@@ -129,91 +141,145 @@ const PREFERRED_GUIDE_FILES = [
 ];
 
 export const GUIDE_CATEGORIES: GuideCategory[] = [
-  { key: "home", label: tx("ui.guide.categories.home", "Home"), icon: "house", sections: [{ pageKeys: ["What-LearnKit-Is"] }] },
+  {
+    key: "home",
+    label: "",
+    icon: "house",
+    sections: [{ pageKeys: ["What-LearnKit-Is"] }],
+    _labelToken: "ui.guide.categories.home",
+    _labelFallback: "Home",
+  },
   {
     key: "companion",
-    label: tx("ui.guide.categories.companion", "Companion"),
+    label: "",
     icon: "sparkles",
     sections: [{ pageKeys: ["Companion-Configuration", "Companion-Features", "Companion-Model-Compatibility", "Companion-Setting-Up", "Companion-Usage", "Guide-for-Free-Usage"] }],
+    _labelToken: "ui.guide.categories.companion",
+    _labelFallback: "Companion",
   },
   {
     key: "cards",
-    label: tx("ui.guide.categories.cards", "Flashcards"),
+    label: "",
     icon: "square-stack",
     sections: [
       { pageKeys: ["Creating-Flashcards", "Decks-&-Organisation", "Editing-Flashcards", "Flashcard-Formatting", "Flashcards"] },
       {
-        title: tx("ui.guide.sections.cardTypes", "Flashcard Types"),
         pageKeys: ["Basic-&-Reversed-Flashcards", "Cloze-Flashcards", "Image-Occlusion", "Hotspot-Cards", "Multiple-Choice-Questions", "Ordered-Questions"],
+        _titleToken: "ui.guide.sections.cardTypes",
+        _titleFallback: "Flashcard Types",
       },
-      { title: tx("ui.guide.sections.flags", "Flags"), pageKeys: ["Flag-Codes", "Flags"] },
+      {
+        pageKeys: ["Flag-Codes", "Flags"],
+        _titleToken: "ui.guide.sections.flags",
+        _titleFallback: "Flags",
+      },
     ],
+    _labelToken: "ui.guide.categories.cards",
+    _labelFallback: "Flashcards",
   },
   {
     key: "getting-started",
-    label: tx("ui.guide.categories.gettingStarted", "Getting Started"),
+    label: "",
     icon: "rocket",
     sections: [{ pageKeys: ["First-Review-in-5-Minutes", "Getting-Started", "Import-From-Anki", "Installation", "Syncing"] }],
+    _labelToken: "ui.guide.categories.gettingStarted",
+    _labelFallback: "Getting Started",
   },
   {
     key: "maintenance",
-    label: tx("ui.guide.categories.maintenance", "Maintenance"),
+    label: "",
     icon: "database",
     sections: [{ pageKeys: ["Backups"] }],
+    _labelToken: "ui.guide.categories.maintenance",
+    _labelFallback: "Maintenance",
   },
   {
     key: "policies",
-    label: tx("ui.guide.categories.policies", "Policies"),
+    label: "",
     icon: "shield-check",
     sections: [{ pageKeys: ["AI-Usage-Policy"] }],
+    _labelToken: "ui.guide.categories.policies",
+    _labelFallback: "Policies",
   },
   {
     key: "reading-audio",
-    label: tx("ui.guide.categories.readingAudio", "Reading & Audio"),
+    label: "",
     icon: "book-open",
     sections: [
-      { title: tx("ui.guide.sections.audio", "Audio"), pageKeys: ["Language-Settings", "Text-to-Speech"] },
-      { title: tx("ui.guide.sections.readingView", "Reading View"), pageKeys: ["Custom-Reading-Styles", "Reading-View", "Reading-View-Styles"] },
+      {
+        pageKeys: ["Language-Settings", "Text-to-Speech"],
+        _titleToken: "ui.guide.sections.audio",
+        _titleFallback: "Audio",
+      },
+      {
+        pageKeys: ["Custom-Reading-Styles", "Reading-View", "Reading-View-Styles"],
+        _titleToken: "ui.guide.sections.readingView",
+        _titleFallback: "Reading View",
+      },
     ],
+    _labelToken: "ui.guide.categories.readingAudio",
+    _labelFallback: "Reading & Audio",
   },
   {
     key: "reference",
-    label: tx("ui.guide.categories.reference", "Reference"),
+    label: "",
     icon: "library",
     sections: [{ pageKeys: ["Support-LearnKit"] }],
+    _labelToken: "ui.guide.categories.reference",
+    _labelFallback: "Reference",
   },
   {
     key: "settings",
-    label: tx("ui.guide.categories.settings", "Settings"),
+    label: "",
     icon: "settings",
     sections: [{ pageKeys: ["Custom-Delimiters", "Gatekeeper", "Keyboard-Shortcuts", "Reminders", "Settings", "Settings-Explained"] }],
+    _labelToken: "ui.guide.categories.settings",
+    _labelFallback: "Settings",
   },
   {
     key: "study-review",
-    label: tx("ui.guide.categories.studyReview", "Study & Review"),
+    label: "",
     icon: "star",
     sections: [
       {
-        title: tx("ui.guide.sections.headerNavigation", "Header Navigation"),
         pageKeys: ["Coach", "Flashcards", "Notes", "Tests"],
+        _titleToken: "ui.guide.sections.headerNavigation",
+        _titleFallback: "Header Navigation",
       },
       {
-        title: tx("ui.guide.sections.reviewFlow", "Review Flow"),
         pageKeys: ["Burying-Flashcards", "Grading", "Scheduling", "Study-Sessions", "Suspending-Flashcards"],
+        _titleToken: "ui.guide.sections.reviewFlow",
+        _titleFallback: "Review Flow",
       },
-      { title: tx("ui.guide.sections.scope", "Scope"), pageKeys: ["Widget"] },
+      {
+        pageKeys: ["Widget"],
+        _titleToken: "ui.guide.sections.scope",
+        _titleFallback: "Scope",
+      },
     ],
+    _labelToken: "ui.guide.categories.studyReview",
+    _labelFallback: "Study & Review",
   },
   {
     key: "tools",
-    label: tx("ui.guide.categories.tools", "Tools"),
+    label: "",
     icon: "table-2",
     sections: [
-      { title: tx("ui.guide.sections.analytics", "Analytics"), pageKeys: ["Analytics", "Charts"] },
-      { title: tx("ui.guide.sections.library", "Library"), pageKeys: ["Flashcard-Library"] },
+      {
+        pageKeys: ["Analytics", "Charts"],
+        _titleToken: "ui.guide.sections.analytics",
+        _titleFallback: "Analytics",
+      },
+      {
+        pageKeys: ["Flashcard-Library"],
+        _titleToken: "ui.guide.sections.library",
+        _titleFallback: "Library",
+      },
     ],
+    _labelToken: "ui.guide.categories.tools",
+    _labelFallback: "Tools",
   },
-];
+] as GuideCategory[];
 
 const GUIDE_LABEL_MAP: Record<string, string> = {
   "Companion-Configuration": "Configuration",
@@ -424,7 +490,23 @@ export async function loadGuidePages(app: App, pluginDir?: string): Promise<Guid
   return pages;
 }
 
-export function getGuideCategories(): GuideCategory[] {
+/**
+ * Resolve all category and section labels in GUIDE_CATEGORIES for the given locale.
+ * If no locale is provided, defaults to "en".
+ * Categories with empty label will have their labels resolved from _labelToken/_labelFallback.
+ */
+export function getGuideCategories(locale?: string): GuideCategory[] {
+  const loc = locale ?? "en";
+  for (const cat of GUIDE_CATEGORIES) {
+    if (cat._labelToken) {
+      cat.label = t(loc, cat._labelToken, cat._labelFallback ?? cat.label);
+    }
+    for (const section of cat.sections) {
+      if (section._titleToken) {
+        section.title = t(loc, section._titleToken, section._titleFallback ?? "");
+      }
+    }
+  }
   return GUIDE_CATEGORIES;
 }
 

@@ -76,49 +76,63 @@ import { getTtsCacheDirPath } from "../integrations/tts/tts-cache";
 export function WithLifecycleMethods<T extends Constructor<LearnKitPluginBase>>(Base: T) {
   return class WithLifecycleMethods extends Base {
     _registerCommands(): void {
-      this._addCommand("sync-flashcards-current-note", "Sync flashcards from current note", async () => this._runSyncCurrentNote());
-      this._addCommand("sync-flashcards", "Sync all flashcards from the vault", async () => this._runSync());
-      this._addCommand("open", "Open home", async () => this.openHomeTab());
-      this._addCommand("open-widget", "Open flashcard study widget", async () => this.openWidgetSafe());
+      const tx = (token: string, fallback: string) => this._tx(token, fallback);
+
+      this._addCommand(
+        "sync-flashcards-current-note",
+        tx("ui.command.open.syncCurrentNote", "Sync flashcards from current note"),
+        async () => this._runSyncCurrentNote(),
+      );
+      this._addCommand(
+        "sync-flashcards",
+        tx("ui.command.open.syncAll", "Sync all flashcards from the vault"),
+        async () => this._runSync(),
+      );
+      this._addCommand("open", tx("ui.command.open.home", "Open home"), async () => this.openHomeTab());
+      this._addCommand(
+        "open-widget",
+        tx("ui.command.open.studyWidget", "Open flashcard study widget"),
+        async () => this.openWidgetSafe(),
+      );
       this.addCommand({
         id: "open-assistant-widget",
-        name: "Open study companion widget",
+        name: tx("ui.command.open.assistantWidget", "Open study companion widget"),
         checkCallback: (checking: boolean) => {
           if (!this.settings?.studyAssistant?.enabled) return false;
           if (!checking) void this.openAssistantWidgetSafe();
           return true;
         },
       });
-      this._addCommand("open-analytics", "Open analytics", async () => this.openAnalyticsTab());
-      this._addCommand("open-settings", "Open plugin settings", () => this.openPluginSettingsInObsidian());
-      this._addCommand("open-guide", "Open guide", async () => this.openSettingsTab(false, "guide"));
-      this._addCommand("edit-flashcards", "Edit flashcards", async () => this.openBrowserTab());
-      this._addCommand("new-study-session", "New study session", async () => this.openReviewerTab());
-      this._addCommand("open-note-review", "Open note review", async () => this.openNoteReviewTab());
-      this._addCommand("open-exam-generator", "Open Tests", async () => this.openExamGeneratorTab());
-      this._addCommand("open-coach", "Open Coach", async () => this.openCoachTab());
+      this._addCommand("open-analytics", tx("ui.command.open.analytics", "Open analytics"), async () => this.openAnalyticsTab());
+      this._addCommand("open-settings", tx("ui.command.open.pluginSettings", "Open plugin settings"), () => this.openPluginSettingsInObsidian());
+      this._addCommand("open-guide", tx("ui.command.open.guide", "Open guide"), async () => this.openSettingsTab(false, "guide"));
+      this._addCommand("edit-flashcards", tx("ui.command.open.editFlashcards", "Edit flashcards"), async () => this.openBrowserTab());
+      this._addCommand("new-study-session", tx("ui.command.open.newStudySession", "New study session"), async () => this.openReviewerTab());
+      this._addCommand("open-note-review", tx("ui.command.open.noteReview", "Open note review"), async () => this.openNoteReviewTab());
+      this._addCommand("open-exam-generator", tx("ui.command.open.tests", "Open Tests"), async () => this.openExamGeneratorTab());
+      this._addCommand("open-coach", tx("ui.command.open.coach", "Open Coach"), async () => this.openCoachTab());
 
       const flashcardCommands: Array<{ id: string; name: string; type: FlashcardType }> = [
-        { id: "add-basic-flashcard", name: "Add basic flashcard to note", type: "basic" },
-        { id: "add-basic-reversed-flashcard", name: "Add basic (reversed) flashcard to note", type: "reversed" },
-        { id: "add-cloze-flashcard", name: "Add cloze flashcard to note", type: "cloze" },
-        { id: "add-basic-flashcard", name: "Add basic flashcard to note", type: "basic" },
-        { id: "add-multiple-choice-flashcard", name: "Add multiple choice flashcard to note", type: "mcq" },
-        { id: "add-ordered-question-flashcard", name: "Add ordered question flashcard to note", type: "oq" },
-        { id: "add-hotspot-flashcard", name: "Add hotspot flashcard to note", type: "hq" },
-        { id: "add-image-occlusion-flashcard", name: "Add image occlusion flashcard to note", type: "io" },
+        { id: "add-basic-flashcard", name: tx("ui.command.open.addBasicToNote", "Add basic flashcard to note"), type: "basic" },
+        { id: "add-basic-reversed-flashcard", name: tx("ui.command.open.addBasicReversedToNote", "Add basic (reversed) flashcard to note"), type: "reversed" },
+        { id: "add-cloze-flashcard", name: tx("ui.command.open.addClozeToNote", "Add cloze flashcard to note"), type: "cloze" },
+        { id: "add-basic-flashcard", name: tx("ui.command.open.addBasicToNote", "Add basic flashcard to note"), type: "basic" },
+        { id: "add-multiple-choice-flashcard", name: tx("ui.command.open.addMultipleChoiceToNote", "Add multiple choice flashcard to note"), type: "mcq" },
+        { id: "add-ordered-question-flashcard", name: tx("ui.command.open.addOrderedQuestionToNote", "Add ordered question flashcard to note"), type: "oq" },
+        { id: "add-hotspot-flashcard", name: tx("ui.command.open.addHotspotToNote", "Add hotspot flashcard to note"), type: "hq" },
+        { id: "add-image-occlusion-flashcard", name: tx("ui.command.open.addImageOcclusionToNote", "Add image occlusion flashcard to note"), type: "io" },
       ];
 
       for (const command of flashcardCommands) {
         this._addCommand(command.id, command.name, () => this.openAddFlashcardModal(command.type));
       }
 
-      this._addCommand("import-anki", "Import from Anki (.apkg)", async () => {
+      this._addCommand("import-anki", tx("ui.command.open.importAnki", "Import from Anki (.apkg)"), async () => {
         const { AnkiImportModal } = await import("../modals/anki-import-modal");
         new AnkiImportModal(this).open();
       });
 
-      this._addCommand("export-anki", "Export to Anki (.apkg)", async () => {
+      this._addCommand("export-anki", tx("ui.command.open.exportAnki", "Export to Anki (.apkg)"), async () => {
         const { AnkiExportModal } = await import("../modals/anki-export-modal");
         new AnkiExportModal(this).open();
       });

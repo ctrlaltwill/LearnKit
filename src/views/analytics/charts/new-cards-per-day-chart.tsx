@@ -13,6 +13,7 @@ import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recha
 import { createXAxisTicks, formatAxisLabel } from "../chart-axis-utils";
 import { endTruncateClass, useAnalyticsPopoverZIndex } from "../filter-styles";
 import { MS_DAY } from "../../../platform/core/constants";
+import { t } from "../../../platform/translations/translator";
 
 function InfoIcon(props: { text: string }) {
   return (
@@ -234,9 +235,11 @@ export function NewCardsPerDayChart(props: {
   timezone?: string;
   days?: number;
   enableAnimations?: boolean;
+  locale?: string;
 }) {
   const tz = props.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
   const formatter = React.useMemo(() => makeDatePartsFormatter(tz), [tz]);
+  const tx = React.useMemo(() => (token: string, fallback: string, vars?: Record<string, string | number>) => t(props.locale, token, fallback, vars), [props.locale]);
   const [durationDays, setDurationDays] = React.useState(props.days ?? 30);
   const [open, setOpen] = React.useState(false);
   const [selectedType, setSelectedType] = React.useState<string>("all");
@@ -434,10 +437,10 @@ export function NewCardsPerDayChart(props: {
       <div className="flex items-start justify-between gap-2">
         <div>
           <div className="flex items-center gap-1">
-            <div className="font-semibold lk-home-section-title">New cards added</div>
-            <InfoIcon text="Daily count of newly created cards in your vault." />
+            <div className="font-semibold lk-home-section-title">{tx("ui.analytics.newCards.title", "New cards added")}</div>
+            <InfoIcon text={tx("ui.analytics.newCards.info", "Number of new cards created each day over the selected window.")} />
           </div>
-          <div className="text-xs text-muted-foreground">Daily totals</div>
+          <div className="text-xs text-muted-foreground">{tx("ui.analytics.newCards.subtitle", "Cards created per day")}</div>
         </div>
 
         <div ref={wrapRef} className="relative inline-flex">
@@ -463,7 +466,7 @@ export function NewCardsPerDayChart(props: {
             >
               <polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3" />
             </svg>
-            <span>Filter</span>
+            <span>{tx("ui.analytics.chart.filter", "Filter")}</span>
           </button>
 
           {open ? (
@@ -482,7 +485,7 @@ export function NewCardsPerDayChart(props: {
                   onClick={toggleDurationOpen}
                   onKeyDown={onDurationKey}
                 >
-                  <span>Duration</span>
+                  <span>{tx("ui.analytics.chart.duration", "Duration")}</span>
                   <ChevronIcon open={durationOpen} />
                 </div>
 
@@ -511,7 +514,7 @@ export function NewCardsPerDayChart(props: {
                               aria-hidden="true"
                             />
                           </div>
-                          <span>{`${opt} days`}</span>
+                          <span>{tx("ui.analytics.chart.days", "{opt} days", { opt })}</span>
                         </div>
                       );
                     })}
@@ -528,7 +531,7 @@ export function NewCardsPerDayChart(props: {
                   onClick={toggleCardTypeOpen}
                   onKeyDown={onCardTypeKey}
                 >
-                  <span>Card type</span>
+                  <span>{tx("ui.analytics.chart.cardType", "Card type")}</span>
                   <ChevronIcon open={cardTypeOpen} />
                 </div>
 
@@ -541,7 +544,7 @@ export function NewCardsPerDayChart(props: {
                     className="flex flex-col"
                   >
                     {availableTypes.map((type) => {
-                      const label = TYPE_LABELS[type] ?? type;
+                      const label = tx(`ui.analytics.chart.type.${type}`, TYPE_LABELS[type] ?? type);
                       const selected = selectedType === type;
                       const count = typeCounts.get(type) ?? 0;
                       return (
@@ -571,11 +574,11 @@ export function NewCardsPerDayChart(props: {
 
                 <div className="h-px bg-border my-1" role="separator" />
 
-                <div className="text-sm text-muted-foreground px-2 py-1">Decks</div>
+                <div className="text-sm text-muted-foreground px-2 py-1">{tx("ui.analytics.chart.decks", "Decks")}</div>
                 <div className="px-2 pb-2">
                   <input
                     type="text"
-                    placeholder="Search decks"
+                    placeholder={tx("ui.analytics.chart.searchDecks", "Search decks")}
                     className="input w-full text-sm learnkit-filter-search-input"
                     value={deckQuery}
                     onChange={(event) => {
@@ -609,7 +612,7 @@ export function NewCardsPerDayChart(props: {
                           </div>
                         ))
                       ) : (
-                        <div className="px-2 py-1 text-sm text-muted-foreground">No decks found.</div>
+                        <div className="px-2 py-1 text-sm text-muted-foreground">{tx("ui.analytics.chart.noDecksFound", "No decks found.")}</div>
                       )}
                     </div>
                   </div>
@@ -617,11 +620,11 @@ export function NewCardsPerDayChart(props: {
 
                 <div className="h-px bg-border my-1" role="separator" />
 
-                <div className="text-sm text-muted-foreground px-2 py-1">Groups</div>
+                <div className="text-sm text-muted-foreground px-2 py-1">{tx("ui.analytics.chart.groups", "Groups")}</div>
                 <div className="px-2 pb-2">
                   <input
                     type="text"
-                    placeholder="Search groups"
+                    placeholder={tx("ui.analytics.chart.searchGroups", "Search groups")}
                     className="input w-full text-sm learnkit-filter-search-input"
                     value={groupQuery}
                     onChange={(event) => {
@@ -655,7 +658,7 @@ export function NewCardsPerDayChart(props: {
                           </div>
                         ))
                       ) : (
-                        <div className="px-2 py-1 text-sm text-muted-foreground">No groups found.</div>
+                        <div className="px-2 py-1 text-sm text-muted-foreground">{tx("ui.analytics.chart.noGroupsFound", "No groups found.")}</div>
                       )}
                     </div>
                   </div>
@@ -664,7 +667,7 @@ export function NewCardsPerDayChart(props: {
                 <div className="h-px bg-border my-1" role="separator" />
 
                 <div className="text-sm text-muted-foreground cursor-pointer px-2" onClick={resetFilters}>
-                  Reset filters
+                  {tx("ui.analytics.chart.resetFilters", "Reset filters")}
                 </div>
               </div>
             </div>

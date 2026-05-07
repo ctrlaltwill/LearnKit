@@ -1410,7 +1410,9 @@ export class SproutNoteReviewView extends ItemView {
       const topBar = panel.createDiv({ cls: "learnkit-note-review-topbar learnkit-note-review-topbar" });
       topBar.createDiv({
         cls: "learnkit-note-review-topbar-title learnkit-note-review-topbar-title",
-        text: isMobile ? effectiveCurrent.basename : `Note: ${effectiveCurrent.basename}`,
+        text: isMobile
+          ? effectiveCurrent.basename
+          : t(lang, "ui.noteReview.note.withPrefix", "Note: {name}", { name: effectiveCurrent.basename }),
       });
       const topBarActions = topBar.createDiv({ cls: "learnkit-note-review-topbar-actions learnkit-note-review-topbar-actions" });
 

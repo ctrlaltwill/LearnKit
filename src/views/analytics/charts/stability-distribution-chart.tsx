@@ -14,6 +14,7 @@ import * as React from "react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { endTruncateClass, useAnalyticsPopoverZIndex } from "../filter-styles";
 import type { CardState } from "../../../platform/types/scheduler";
+import { t } from "../../../platform/translations/translator";
 
 function InfoIcon(props: { text: string }) {
   return (
@@ -77,6 +78,7 @@ type StabilityDistributionChartProps = {
   cards: Array<{ id: string; type?: string; sourceNotePath?: string; groups?: string[]; clozeChildren?: number[] | null }>;
   states: Record<string, CardState>;
   enableAnimations?: boolean;
+  locale?: string;
 };
 
 type StabilityBucket = {
@@ -223,6 +225,7 @@ const typeLabels: Record<string, string> = {
 };
 
 export function StabilityDistributionChart(props: StabilityDistributionChartProps) {
+  const tx = React.useMemo(() => (token: string, fallback: string, vars?: Record<string, string | number>) => t(props.locale, token, fallback, vars), [props.locale]);
   const renderStabilityLabel = React.useCallback((labelProps: unknown) => {
     const viewBox = (labelProps as { viewBox?: Record<string, unknown> } | null)?.viewBox ?? {};
     const x = typeof viewBox.x === "number" ? viewBox.x : 0;
@@ -402,10 +405,10 @@ export function StabilityDistributionChart(props: StabilityDistributionChartProp
       <div className={"flex items-start justify-between gap-2"}>
         <div>
           <div className={"flex items-center gap-1"}>
-            <div className={"font-semibold lk-home-section-title"}>Stability distribution</div>
-            <InfoIcon text="Distribution of cards by stability (expected retention interval). Lower values mean faster forgetting." />
+            <div className={"font-semibold lk-home-section-title"}>{tx("ui.analytics.stability.title", "Stability distribution")}</div>
+            <InfoIcon text={tx("ui.analytics.stability.info", "Distribution of cards by stability (expected retention interval). Lower values mean faster forgetting.")} />
           </div>
-          <div className={"text-xs text-muted-foreground"}>Cards by stability (days)</div>
+          <div className={"text-xs text-muted-foreground"}>{tx("ui.analytics.stability.subtitle", "Cards by stability (days)")}</div>
         </div>
 
         <div ref={wrapRef} className={"relative inline-flex"}>
@@ -431,7 +434,7 @@ export function StabilityDistributionChart(props: StabilityDistributionChartProp
             >
               <polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3" />
             </svg>
-            <span>Filter</span>
+            <span>{tx("ui.analytics.chart.filter", "Filter")}</span>
           </button>
 
           {open ? (
@@ -448,7 +451,7 @@ export function StabilityDistributionChart(props: StabilityDistributionChartProp
                   }
                   onClick={() => setCardTypesOpen((prev) => !prev)}
                 >
-                  <span>Card Types</span>
+                  <span>{tx("ui.analytics.chart.cardTypes", "Card Types")}</span>
                   <ChevronIcon open={cardTypesOpen} />
                 </div>
 
@@ -468,7 +471,7 @@ export function StabilityDistributionChart(props: StabilityDistributionChartProp
                           <span className={"size-3 rounded-full border border-muted-foreground/40 flex items-center justify-center"}>
                             {selectedType === type ? <span className={"size-1.5 rounded-full bg-foreground"} /> : null}
                           </span>
-                          <span>{typeLabels[type] || type}</span>
+                          <span>{tx(`ui.analytics.chart.type.${type}`, typeLabels[type] || type)}</span>
                         </div>
                       ))}
                     </div>
@@ -477,11 +480,11 @@ export function StabilityDistributionChart(props: StabilityDistributionChartProp
 
                 <div className={"h-px bg-border my-1"} role="separator" />
 
-                <div className={"text-sm text-muted-foreground px-2 py-1"}>Decks</div>
+                <div className={"text-sm text-muted-foreground px-2 py-1"}>{tx("ui.analytics.chart.decks", "Decks")}</div>
                 <div className={"px-2 pb-2"}>
                   <input
                     type="text"
-                    placeholder="Search decks"
+                    placeholder={tx("ui.analytics.chart.searchDecks", "Search decks")}
                     className={"input w-full text-sm learnkit-filter-search-input"}
                     value={deckQuery}
                     onChange={(event) => {
@@ -515,7 +518,7 @@ export function StabilityDistributionChart(props: StabilityDistributionChartProp
                           </div>
                         ))
                       ) : (
-                        <div className={"px-2 py-1 text-sm text-muted-foreground"}>No decks found.</div>
+                        <div className={"px-2 py-1 text-sm text-muted-foreground"}>{tx("ui.analytics.chart.noDecksFound", "No decks found.")}</div>
                       )}
                     </div>
                   </div>
@@ -523,11 +526,11 @@ export function StabilityDistributionChart(props: StabilityDistributionChartProp
 
                 <div className={"h-px bg-border my-1"} role="separator" />
 
-                <div className={"text-sm text-muted-foreground px-2 py-1"}>Groups</div>
+                <div className={"text-sm text-muted-foreground px-2 py-1"}>{tx("ui.analytics.chart.groups", "Groups")}</div>
                 <div className={"px-2 pb-2"}>
                   <input
                     type="text"
-                    placeholder="Search groups"
+                    placeholder={tx("ui.analytics.chart.searchGroups", "Search groups")}
                     className={"input w-full text-sm learnkit-filter-search-input"}
                     value={tagQuery}
                     onChange={(event) => {
@@ -563,7 +566,7 @@ export function StabilityDistributionChart(props: StabilityDistributionChartProp
                           </div>
                         ))
                       ) : (
-                        <div className={"px-2 py-1 text-sm text-muted-foreground"}>No groups found.</div>
+                        <div className={"px-2 py-1 text-sm text-muted-foreground"}>{tx("ui.analytics.chart.noGroupsFound", "No groups found.")}</div>
                       )}
                     </div>
                   </div>
@@ -572,7 +575,7 @@ export function StabilityDistributionChart(props: StabilityDistributionChartProp
                 <div className={"h-px bg-border my-1"} role="separator" />
 
                 <div className={"text-sm text-muted-foreground cursor-pointer px-2"} onClick={resetFilters}>
-                  Reset filters
+                  {tx("ui.analytics.chart.resetFilters", "Reset filters")}
                 </div>
               </div>
             </div>

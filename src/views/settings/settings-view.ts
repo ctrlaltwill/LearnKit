@@ -264,6 +264,13 @@ export class LearnKitSettingsView extends ItemView {
     }
   }
 
+  private _refreshLocalizedChrome() {
+    this.setTitle(this._settingsTitleText());
+    this._refreshTitleStrip();
+    this._header?.install("settings");
+    this._applyWidthMode();
+  }
+
   // ── Settings tab adapter ────────────────────────────────────
 
   /**
@@ -274,7 +281,13 @@ export class LearnKitSettingsView extends ItemView {
   private _getAdapter(): LearnKitSettingsTab {
     if (!this._settingsTabAdapter) {
       this._settingsTabAdapter = new LearnKitSettingsTab(this.app, this.plugin);
-      this._settingsTabAdapter.onRequestRerender = () => this._renderActiveTabContent();
+      this._settingsTabAdapter.onRequestRerender = (options) => {
+        if (options?.refreshChrome) {
+          this.render();
+          return;
+        }
+        this._renderActiveTabContent();
+      };
     }
     return this._settingsTabAdapter;
   }
@@ -708,7 +721,7 @@ export class LearnKitSettingsView extends ItemView {
   }
 
   private _getGuideCategories(): GuideCategory[] {
-    return getGuideCategories();
+    return getGuideCategories(this.plugin.settings?.general?.interfaceLanguage);
   }
 
   private _orderGuidePagesByNavigation(pages: GuidePage[]): GuidePage[] {
@@ -1857,6 +1870,8 @@ export class LearnKitSettingsView extends ItemView {
 
     const sectionMap: Record<string, string[]> = {
       general: [
+        t(locale, "ui.settings.sections.userDetails", "User Details"),
+        t(locale, "ui.settings.sections.language", "Language"),
         "User details",
         "Language",
         "General",
@@ -1876,11 +1891,17 @@ export class LearnKitSettingsView extends ItemView {
         "Custom style CSS",
       ],
       cards: [
+        t(locale, "ui.settings.sections.basicCards", "Basic cards"),
+        t(locale, "ui.settings.sections.cloze", "Cloze"),
+        t(locale, "ui.settings.sections.imageOcclusion", "Image occlusion"),
         "Basic cards",
         "Cloze",
         "Image occlusion",
         t(locale, "ui.settings.sections.hotspot", "Hotspot"),
         "Hotspot",
+        t(locale, "ui.settings.sections.multipleChoice", "Multiple choice"),
+        t(locale, "ui.settings.sections.orderedQuestions", "Ordered questions"),
+        t(locale, "ui.settings.sections.syncing", "Syncing"),
         "Multiple choice",
         "Ordered questions",
         "Syncing",
@@ -1905,6 +1926,15 @@ export class LearnKitSettingsView extends ItemView {
         "Note review scheduling",
       ],
       assistant: [
+        t(locale, "ui.settings.subTabs.assistantPane", "Companion"),
+        t(locale, "ui.settings.studyAssistant.sections.enableSprig", "Enable Companion"),
+        t(locale, "ui.settings.studyAssistant.sections.provider", "AI Provider"),
+        t(locale, "ui.settings.studyAssistant.sections.contextFiles", "Context sources"),
+        t(locale, "ui.settings.studyAssistant.sections.companionContextFiles", "Companion sources"),
+        t(locale, "ui.settings.studyAssistant.sections.testsContextFiles", "Test sources"),
+        t(locale, "ui.settings.studyAssistant.sections.flashcardGeneration", "Flashcard generation"),
+        t(locale, "ui.settings.studyAssistant.sections.generatorTypes", "Flashcard types to generate"),
+        t(locale, "ui.settings.studyAssistant.sections.generatorOutput", "Optional flashcard fields"),
         "Companion",
         "Study companion",
         "Info",
@@ -1919,8 +1949,26 @@ export class LearnKitSettingsView extends ItemView {
         "Optional flashcard fields",
         "Generated fields",
       ],
-      audio: ["Text to speech", "Flag-aware routing", "Voice and accent", "Voice tuning"],
+      audio: [
+        t(locale, "ui.settings.sections.textToSpeech", "Text to speech"),
+        t(locale, "ui.settings.sections.audioOptions", "Audio options"),
+        t(locale, "ui.settings.sections.flagAwareRouting", "Flag-aware routing"),
+        t(locale, "ui.settings.sections.voiceAndAccent", "Voice and accent"),
+        t(locale, "ui.settings.sections.voiceTuning", "Voice tuning"),
+        t(locale, "ui.settings.sections.ttsProvider", "External TTS"),
+        "Text to speech",
+        "Audio options",
+        "Flag-aware routing",
+        "Voice and accent",
+        "Voice tuning",
+        "External TTS",
+      ],
       reminders: [
+        t(locale, "ui.settings.sections.launchReminders", "Launch reminders"),
+        t(locale, "ui.settings.sections.routineReminders", "Routine reminders"),
+        t(locale, "ui.settings.sections.gatekeeperPopups", "Gatekeeper popups"),
+        t(locale, "ui.settings.sections.gatekeeperBehaviour", "Gatekeeper behaviour"),
+        t(locale, "ui.settings.sections.gatekeeperBypass", "Gatekeeper bypass"),
         "Launch reminders",
         "Routine reminders",
         "Gatekeeper popups",
@@ -1928,13 +1976,20 @@ export class LearnKitSettingsView extends ItemView {
         "Gatekeeper bypass",
       ],
       data: [
+        t(locale, "ui.settings.sections.attachmentStorage", "Attachment storage"),
+        t(locale, "ui.settings.sections.dataBackup", "Data backup"),
         "Attachment storage",
         t(locale, "ui.settings.sections.vaultSync", "Obsidian Sync database storage"),
         "Obsidian Sync database storage",
         "Obsidian sync database storage",
         "Data backup",
       ],
-      reset: ["Reset", "Danger zone"],
+      reset: [
+        t(locale, "ui.settings.sections.reset", "Reset"),
+        t(locale, "ui.settings.sections.dangerZone", "Danger zone"),
+        "Reset",
+        "Danger zone",
+      ],
     };
 
     const includeSections = (sectionMap[subTabId] ?? sectionMap.general).map((name) => normalizeHeading(name));

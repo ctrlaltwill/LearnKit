@@ -15,6 +15,7 @@ import * as React from "react";
 import { Label, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { startTruncateClass, useAnalyticsPopoverZIndex } from "../filter-styles";
 import { cssClassForProps } from "../../../platform/core/ui";
+import { t } from "../../../platform/translations/translator";
 
 type PieDatum = { name: string; value: number };
 
@@ -131,7 +132,9 @@ function PieCard(props: {
   centerValue?: string;
   centerLabel?: string;
   infoText?: string;
+  locale?: string;
 }) {
+  const tx = React.useMemo(() => (token: string, fallback: string, vars?: Record<string, string | number>) => t(props.locale, token, fallback, vars), [props.locale]);
   const total = props.data.reduce((sum, item) => sum + item.value, 0);
   const highlightLabel = props.highlightLabel?.toLowerCase();
 
@@ -160,7 +163,7 @@ function PieCard(props: {
       <div className="w-full flex-1 learnkit-ana-pie-wrap">
         {total <= 0 ? (
           <div className="text-sm text-muted-foreground learnkit-ana-empty-center">
-            No cards selected.
+            {tx("ui.analytics.pie.noCardsSelected", "No cards selected.")}
           </div>
         ) : null}
 
@@ -228,7 +231,9 @@ export function StagePieCard(props: {
   cards: Array<{ id: string; type?: string; sourceNotePath?: string; groups?: string[] | null; clozeChildren?: number[] | null }>;
   states: Record<string, { stage?: string }>;
   enableAnimations?: boolean;
+  locale?: string;
 }) {
+  const tx = React.useMemo(() => (token: string, fallback: string, vars?: Record<string, string | number>) => t(props.locale, token, fallback, vars), [props.locale]);
   const [selectedType, setSelectedType] = React.useState<string | null>(null);
   const [tagQuery, setTagQuery] = React.useState("");
   const [selectedGroups, setSelectedGroups] = React.useState<string[]>([]);
@@ -426,7 +431,7 @@ export function StagePieCard(props: {
         >
           <polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3" />
         </svg>
-        <span>Filter</span>
+        <span>{tx("ui.analytics.pie.filter", "Filter")}</span>
       </button>
 
       {open ? (
@@ -445,7 +450,7 @@ export function StagePieCard(props: {
               onClick={toggleCardTypesOpen}
               onKeyDown={onCardTypesKey}
             >
-              <span>Card type</span>
+              <span>{tx("ui.analytics.pie.cardType", "Card type")}</span>
               <ChevronIcon open={cardTypesOpen} />
             </div>
 
@@ -487,11 +492,11 @@ export function StagePieCard(props: {
             ) : null}
 
             <div className="h-px bg-border my-1" role="separator" />
-            <div className="text-sm text-muted-foreground px-2 py-1">Decks</div>
+            <div className="text-sm text-muted-foreground px-2 py-1">{tx("ui.analytics.pie.decks", "Decks")}</div>
             <div className="px-2 pb-2">
               <input
                 type="text"
-                placeholder="Search decks"
+                placeholder={tx("ui.analytics.pie.searchDecks", "Search decks")}
                 className="input w-full text-sm learnkit-filter-search-input"
                 value={deckQuery}
                 onChange={(event) => {
@@ -523,18 +528,18 @@ export function StagePieCard(props: {
                       </div>
                     ))
                   ) : (
-                    <div className="px-2 py-1 text-sm text-muted-foreground">No decks found.</div>
+                    <div className="px-2 py-1 text-sm text-muted-foreground">{tx("ui.analytics.chart.noDecksFound", "No decks found.")}</div>
                   )}
                 </div>
               </div>
             ) : null}
 
             <div className="h-px bg-border my-1" role="separator" />
-            <div className="text-sm text-muted-foreground px-2 py-1">Groups</div>
+            <div className="text-sm text-muted-foreground px-2 py-1">{tx("ui.analytics.chart.groups", "Groups")}</div>
             <div className="px-2 pb-2">
               <input
                 type="text"
-                placeholder="Search groups"
+                placeholder={tx("ui.analytics.chart.searchGroups", "Search groups")}
                 className="input w-full text-sm learnkit-filter-search-input"
                 value={tagQuery}
                 onChange={(event) => {
@@ -566,7 +571,7 @@ export function StagePieCard(props: {
                       </div>
                     ))
                   ) : (
-                    <div className="px-2 py-1 text-sm text-muted-foreground">No groups found.</div>
+                    <div className="px-2 py-1 text-sm text-muted-foreground">{tx("ui.analytics.chart.noGroupsFound", "No groups found.")}</div>
                   )}
                 </div>
               </div>
@@ -574,7 +579,7 @@ export function StagePieCard(props: {
 
             <div className="h-px bg-border my-1" role="separator" />
             <div className="text-sm text-muted-foreground cursor-pointer px-2" onClick={resetFilters}>
-              Reset filters
+              {tx("ui.analytics.chart.resetFilters", "Reset filters")}
             </div>
           </div>
         </div>
@@ -588,19 +593,20 @@ export function StagePieCard(props: {
 
   return (
     <PieCard
-      title="Cards by stage"
-      subtitle="All decks"
-      infoText="Breakdown of your cards by learning stage using current scheduler state."
+      title={tx("ui.analytics.pie.title", "Cards by stage")}
+      subtitle={tx("ui.analytics.pie.subtitle", "All decks")}
+      infoText={tx("ui.analytics.pie.info", "Breakdown of your cards by learning stage using current scheduler state.")}
       data={data}
       headerSlot={headerSlot}
       highlightLabel="New"
       centerValue={totalCards.toLocaleString()}
-      centerLabel="Flashcards"
+      centerLabel={tx("ui.analytics.pie.centerLabel", "Flashcards")}
+      locale={props.locale}
     />
   );
 }
 
-export function AnswerButtonsPieCard(props: { events: Record<string, unknown>[]; nowMs: number }) {
+export function AnswerButtonsPieCard(props: { events: Record<string, unknown>[]; nowMs: number; locale?: string }) {
   const [open, setOpen] = React.useState(false);
   const [selectedType, setSelectedType] = React.useState<string>("all");
   const [deckQuery, setDeckQuery] = React.useState("");
@@ -610,6 +616,9 @@ export function AnswerButtonsPieCard(props: { events: Record<string, unknown>[];
   const wrapRef = React.useRef<HTMLDivElement | null>(null);
   const popoverRef = React.useRef<HTMLDivElement | null>(null);
   useAnalyticsPopoverZIndex(open, wrapRef);
+
+  const tx = (token: string, fallback: string, vars?: Record<string, string | number>) =>
+    t(props.locale, token, fallback, vars);
 
   const availableTypes = React.useMemo(() => ["all", "basic", "reversed-child", "cloze-child", "io-child", "mcq"], []);
 
@@ -791,7 +800,7 @@ export function AnswerButtonsPieCard(props: { events: Record<string, unknown>[];
         >
           <polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3" />
         </svg>
-        <span>Filter</span>
+        <span>{tx("ui.analytics.chart.filter", "Filter")}</span>
       </button>
 
       {open ? (
@@ -803,16 +812,16 @@ export function AnswerButtonsPieCard(props: { events: Record<string, unknown>[];
           className="learnkit dropdown-menu w-72 rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-0 flex flex-col learnkit-ana-popover learnkit-ana-popover-left"
         >
           <div className="p-1">
-            <div className="text-sm text-muted-foreground px-2 py-1">Card type</div>
+            <div className="text-sm text-muted-foreground px-2 py-1">{tx("ui.analytics.chart.cardType", "Card type")}</div>
             <div
               role="menu"
               id="learnkit-answer-filter-listbox"
               aria-orientation="vertical"
-              data-tooltip="Answer filter"
+              data-tooltip={tx("ui.analytics.pie.answerFilterTooltip", "Answer filter")}
               className="flex flex-col"
             >
               {availableTypes.map((type) => {
-                const label = typeLabels[type] ?? type;
+                const label = tx(`ui.analytics.chart.type.${type}`, typeLabels[type] ?? type);
                 const selected = selectedType === type;
                 const count = typeCounts.get(type) ?? 0;
                 return (
@@ -840,11 +849,11 @@ export function AnswerButtonsPieCard(props: { events: Record<string, unknown>[];
             </div>
 
             <div className="h-px bg-border my-1" role="separator" />
-            <div className="text-sm text-muted-foreground px-2 py-1">Decks</div>
+            <div className="text-sm text-muted-foreground px-2 py-1">{tx("ui.analytics.chart.decks", "Decks")}</div>
             <div className="px-2 pb-2">
               <input
                 type="text"
-                placeholder="Search decks"
+                placeholder={tx("ui.analytics.chart.searchDecks", "Search decks")}
                 className="input w-full text-sm learnkit-filter-search-input"
                 value={deckQuery}
                 onChange={(event) => {
@@ -882,18 +891,18 @@ export function AnswerButtonsPieCard(props: { events: Record<string, unknown>[];
                       </div>
                     ))
                   ) : (
-                    <div className="px-2 py-1 text-sm text-muted-foreground">No decks found.</div>
+                    <div className="px-2 py-1 text-sm text-muted-foreground">{tx("ui.analytics.chart.noDecksFound", "No decks found.")}</div>
                   )}
                 </div>
               </div>
             ) : null}
 
             <div className="h-px bg-border my-1" role="separator" />
-            <div className="text-sm text-muted-foreground px-2 py-1">Groups</div>
+            <div className="text-sm text-muted-foreground px-2 py-1">{tx("ui.analytics.chart.groups", "Groups")}</div>
             <div className="px-2 pb-2">
               <input
                 type="text"
-                placeholder="Search groups"
+                placeholder={tx("ui.analytics.chart.searchGroups", "Search groups")}
                 className="input w-full text-sm learnkit-filter-search-input"
                 value={groupQuery}
                 onChange={(event) => {
@@ -931,7 +940,7 @@ export function AnswerButtonsPieCard(props: { events: Record<string, unknown>[];
                       </div>
                     ))
                   ) : (
-                    <div className="px-2 py-1 text-sm text-muted-foreground">No groups found.</div>
+                    <div className="px-2 py-1 text-sm text-muted-foreground">{tx("ui.analytics.chart.noGroupsFound", "No groups found.")}</div>
                   )}
                 </div>
               </div>
@@ -948,7 +957,7 @@ export function AnswerButtonsPieCard(props: { events: Record<string, unknown>[];
                 setGroupQuery("");
               }}
             >
-              Reset filters
+              {tx("ui.analytics.chart.resetFilters", "Reset filters")}
             </div>
           </div>
         </div>
@@ -958,14 +967,15 @@ export function AnswerButtonsPieCard(props: { events: Record<string, unknown>[];
 
   return (
     <PieCard
-      title="Answer buttons"
-      subtitle="Last 30 days"
-      infoText="Summary of review outcomes (Again/Hard/Good/Easy) over the recent window."
+      title={tx("ui.analytics.answerButtons.title", "Answer buttons")}
+      subtitle={tx("ui.analytics.answerButtons.subtitle", "Last 30 days")}
+      infoText={tx("ui.analytics.answerButtons.info", "Summary of review outcomes (Again/Hard/Good/Easy) over the recent window.")}
       data={data}
       highlightLabel="Again"
       headerSlot={headerSlot}
       centerValue={totalAnswered.toLocaleString()}
-      centerLabel="Flashcards answered"
+      centerLabel={tx("ui.analytics.answerButtons.centerLabel", "Flashcards answered")}
+      locale={props.locale}
     />
   );
 }

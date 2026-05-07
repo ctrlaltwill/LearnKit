@@ -2874,10 +2874,10 @@ function buildFlashcardContentHTML(card: LearnKitCard, options: { includeSpeaker
 
   const actionsFor = (side: 'front' | 'back') => {
     const speaker = options.includeSpeakerButton && allowSpeakerForCardType
-      ? `<button class="learnkit-flashcard-action-btn learnkit-flashcard-speak-btn" type="button" data-learnkit-tts-side="${side}" aria-label="Read aloud" data-tooltip-position="top"></button>`
+      ? `<button class="learnkit-flashcard-action-btn learnkit-flashcard-speak-btn" type="button" data-learnkit-tts-side="${side}" aria-label="${t(undefined, "ui.reading.flashcard.readAloud", "Read aloud")}" data-tooltip-position="top"></button>`
       : '';
     const edit = options.includeEditButton
-      ? `<button class="learnkit-flashcard-action-btn learnkit-card-edit-btn" type="button" aria-label="Edit card" data-tooltip-position="top"></button>`
+      ? `<button class="learnkit-flashcard-action-btn learnkit-card-edit-btn" type="button" aria-label="${t(undefined, "ui.reading.flashcard.editCard", "Edit card")}" data-tooltip-position="top"></button>`
       : '';
     if (!edit && !speaker) return '';
     return `<div class="learnkit-flashcard-actions">${edit}${speaker}</div>`;
@@ -2975,7 +2975,7 @@ function buildGroupsSectionHTML(groups: string[]): string {
     <div class="learnkit-card-section learnkit-section-groups">
       <div class="learnkit-section-label">
         <span>Groups</span>
-        <button class="learnkit-toggle-btn learnkit-toggle-btn-compact" data-target=".${contentId}" aria-expanded="false" aria-label="Toggle Groups" data-tooltip-position="top">
+        <button class="learnkit-toggle-btn learnkit-toggle-btn-compact" data-target=".${contentId}" aria-expanded="false" aria-label="` + t(undefined, "ui.reading.groups.toggle", "Toggle Groups") + `" data-tooltip-position="top">
           <svg class="learnkit-toggle-chevron learnkit-toggle-chevron-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>
         </button>
       </div>
@@ -3029,13 +3029,13 @@ function setupGuidebookCarousel(el: HTMLElement) {
   const prevBtn = document.createElement('button');
   prevBtn.className = 'learnkit-guidebook-nav learnkit-guidebook-nav-prev';
   prevBtn.type = 'button';
-  prevBtn.setAttribute('aria-label', 'Previous section');
+  prevBtn.setAttribute('aria-label', t(undefined, "ui.reading.guidebook.previousSection", "Previous section"));
   prevBtn.textContent = '‹';
 
   const nextBtn = document.createElement('button');
   nextBtn.className = 'learnkit-guidebook-nav learnkit-guidebook-nav-next';
   nextBtn.type = 'button';
-  nextBtn.setAttribute('aria-label', 'Next section');
+  nextBtn.setAttribute('aria-label', t(undefined, "ui.reading.guidebook.nextSection", "Next section"));
   nextBtn.textContent = '›';
 
   const dots = document.createElement('div');
@@ -3044,7 +3044,7 @@ function setupGuidebookCarousel(el: HTMLElement) {
     const dot = document.createElement('button');
     dot.className = 'learnkit-guidebook-dot';
     dot.type = 'button';
-    dot.setAttribute('aria-label', `Go to section ${i + 1}`);
+    dot.setAttribute('aria-label', t(undefined, "ui.reading.guidebook.goToSection", "Go to section {index}", { index: String(i + 1) }));
     dots.appendChild(dot);
     return dot;
   });
@@ -3253,7 +3253,7 @@ function enhanceCardElement(
       ? ``
       : macroPreset === 'markdown'
         ? ``
-        : `<div class="learnkit-card-header learnkit-reading-card-header"><div class="learnkit-card-title learnkit-reading-card-title">${processMarkdownFeatures(card.title || '')}</div><span class="learnkit-card-edit-btn" role="button" aria-label="Edit card" data-tooltip-position="top" tabindex="0"></span></div>`;
+        : `<div class="learnkit-card-header learnkit-reading-card-header"><div class="learnkit-card-title learnkit-reading-card-title">${processMarkdownFeatures(card.title || '')}</div><span class="learnkit-card-edit-btn" role="button" aria-label="` + t(undefined, "ui.reading.flashcard.editCard", "Edit card") + `" data-tooltip-position="top" tabindex="0"></span></div>`;
 
     const innerHTML = `
       ${headerHTML}

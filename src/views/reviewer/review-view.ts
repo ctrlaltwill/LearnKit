@@ -424,7 +424,7 @@ export class SproutReviewerView extends ItemView {
 
   private _reviewerTitleText(): string {
     if (this._returnToCoach || this._isCoachSession) {
-      return "Coach";
+      return this.tx("ui.view.coach.title", "Coach");
     }
     if (this.mode === "deck") {
       return t(this.plugin.settings?.general?.interfaceLanguage, "ui.reviewer.deck.title", "Flashcards");
@@ -434,7 +434,7 @@ export class SproutReviewerView extends ItemView {
 
   private _reviewerSubtitleText(): string {
     if (this._returnToCoach || this._isCoachSession) {
-      return "Build and manage focused study plans.";
+      return this.tx("ui.view.coach.subtitle", "Build and manage focused study plans.");
     }
     if (this.mode === "deck") {
       return this.tx("ui.reviewer.deck.subtitle.chooseDeck", "Choose a deck to start studying");

@@ -521,10 +521,15 @@ body.is-phone .small-card {
   gap: 0;
 }
 
-/* Allow floating popovers to escape card bounds in Coach and Tests setup flows. */
-.learnkit .learnkit-view-content:has(.learnkit-coach-shell),
+/* Allow floating popovers to escape card bounds in Tests setup flow. */
 .learnkit .learnkit-view-content:has(.learnkit-exam-generator-content-shell) {
   overflow: visible;
+}
+
+/* Coach view needs vertical scroll for tall dashboards, while still allowing horizontal popover overflow. */
+.learnkit .learnkit-view-content:has(.learnkit-coach-shell) {
+  overflow-x: visible;
+  overflow-y: auto;
 }
 
 .learnkit .learnkit-coach-switcher-card {
@@ -1969,22 +1974,22 @@ body.is-mobile .learnkit .learnkit-coach-scope-actions-grid {
   transition: background-color 160ms ease, border-color 160ms ease;
 }
 
-.learnkit .learnkit-coach-health-bar-row[data-tooltip*="behind"] {
+.learnkit .learnkit-coach-health-bar-row[data-status="behind"] {
   background: color-mix(in srgb, var(--learnkit-health-danger) 9%, transparent);
   border-color: color-mix(in srgb, var(--learnkit-health-danger) 90%, transparent);
 }
 
-.learnkit .learnkit-coach-health-bar-row[data-tooltip*="at risk"] {
+.learnkit .learnkit-coach-health-bar-row[data-status="at-risk"] {
   background: color-mix(in srgb, var(--learnkit-health-caution) 11%, transparent);
   border-color: color-mix(in srgb, var(--learnkit-health-caution) 90%, transparent);
 }
 
-.learnkit .learnkit-coach-health-bar-row[data-tooltip*="on track"] {
+.learnkit .learnkit-coach-health-bar-row[data-status="on-track"] {
   background: color-mix(in srgb, var(--learnkit-health-safe) 10%, transparent);
   border-color: color-mix(in srgb, var(--learnkit-health-safe) 90%, transparent);
 }
 
-.learnkit .learnkit-coach-health-bar-row[data-tooltip*="ready"] {
+.learnkit .learnkit-coach-health-bar-row[data-status="ready"] {
   background: color-mix(in srgb, var(--learnkit-health-safe) 10%, transparent);
   border-color: color-mix(in srgb, var(--learnkit-health-safe) 90%, transparent);
 }

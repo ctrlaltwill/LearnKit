@@ -537,7 +537,9 @@ export class SproutCardBrowserView extends ItemView {
     icon.classList.add("scale-[0.85]");
     this._suspendButton.appendChild(icon);
     const text = document.createElement("span");
-    text.textContent = mode === "unsuspend" ? "Unsuspend" : "Suspend";
+    text.textContent = mode === "unsuspend"
+      ? this._tx("ui.browser.action.unsuspend.label", "Unsuspend")
+      : this._tx("ui.browser.action.suspend.label", "Suspend");
     this._suspendButton.appendChild(text);
   }
 

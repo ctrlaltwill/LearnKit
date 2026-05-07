@@ -20,28 +20,40 @@ function formatDaysWithHalfStep(days: number): string {
   return `${asText}d`;
 }
 
+function isZhLocale(locale: unknown): boolean {
+  const code = String(locale ?? "").trim().toLowerCase();
+  return code.startsWith("zh");
+}
+
+function formatDaysWithHalfStepZh(days: number): string {
+  const roundedHalf = Math.max(0.5, Math.round(days * 2) / 2);
+  const asText = Number.isInteger(roundedHalf) ? String(roundedHalf) : roundedHalf.toFixed(1);
+  return `${asText}天`;
+}
+
 /**
  * Formats a review interval using compact units similar to Anki's grade hints.
  */
-export function formatCompactInterval(ms: number): string {
-  if (!Number.isFinite(ms) || ms <= 0) return "<1m";
+export function formatCompactInterval(ms: number, locale?: string): string {
+  const zh = isZhLocale(locale);
+  if (!Number.isFinite(ms) || ms <= 0) return zh ? "<1分" : "<1m";
 
   if (ms < MS_HOUR) {
     const minutes = Math.max(1, Math.round(ms / MS_MINUTE));
-    return `${minutes}m`;
+    return zh ? `${minutes}分` : `${minutes}m`;
   }
 
   if (ms < MS_DAY) {
     const hours = Math.max(1, Math.round(ms / MS_HOUR));
-    return `${hours}h`;
+    return zh ? `${hours}时` : `${hours}h`;
   }
 
   const days = ms / MS_DAY;
-  if (days < 10) return formatDaysWithHalfStep(days);
-  if (days < 365) return `${Math.max(1, Math.round(days))}d`;
+  if (days < 10) return zh ? formatDaysWithHalfStepZh(days) : formatDaysWithHalfStep(days);
+  if (days < 365) return zh ? `${Math.max(1, Math.round(days))}天` : `${Math.max(1, Math.round(days))}d`;
 
   const years = Math.max(1, Math.round(days / 365));
-  return `${years}y`;
+  return zh ? `${years}年` : `${years}y`;
 }
 
 export function getRatingIntervalPreview(args: {
@@ -49,12 +61,13 @@ export function getRatingIntervalPreview(args: {
   rating: ReviewRating;
   now: number;
   scheduling: SchedulerSettings;
+  locale?: string;
 }): string | null {
   try {
     const graded = gradeFromRating(args.state, args.rating, args.now, {
       scheduling: args.scheduling,
     });
-    return formatCompactInterval(graded.nextDue - args.now);
+    return formatCompactInterval(graded.nextDue - args.now, args.locale);
   } catch {
     return null;
   }
