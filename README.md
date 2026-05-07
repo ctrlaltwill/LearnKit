@@ -42,9 +42,9 @@ LearnKit is easiest to understand once you use it. Install it, create a flashcar
 
 ### Guides & Support
 
-💡 Need help? Open the built-in LearnKit guide inside Obsidian or **[open the guide online →](https://ctrlaltwill.github.io/LearnKit/)**
+💡 Need help in-app? Open the built-in LearnKit guide inside Obsidian. 
 
-💬 Have questions or ideas? Ask via **[LearnKit Discussions →](https://github.com/ctrlaltwill/LearnKit/discussions)**
+💬 Have questions or ideas? Ask in **[LearnKit Discussions →](https://github.com/ctrlaltwill/LearnKit/discussions)**
 
 🌐 Want to contribute or help translate LearnKit? See the **[Contributing Guide →](CONTRIBUTING.md)**
 
