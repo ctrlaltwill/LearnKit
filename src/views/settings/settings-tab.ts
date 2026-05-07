@@ -100,7 +100,7 @@ export class LearnKitSettingsTab extends PluginSettingTab {
   private _openRouterModelsCache: OpenRouterModel[] | null = null;
   private _openRouterModelsLoading = false;
   private _openRouterModelsError: string | null = null;
-  private static readonly TRANSLATIONS_GUIDE_URL = "https://github.com/ctrlaltwill/Sprout/blob/main/CONTRIBUTING.md#translation-policy";
+  private static readonly TRANSLATIONS_GUIDE_URL = "https://github.com/ctrlaltwill/LearnKit/blob/main/CONTRIBUTING.md#translation-contributions";
   private readonly _noticeLines: SettingsNoticeLines;
 
   private _tx(token: string, fallback: string, vars?: Record<string, string | number>) {

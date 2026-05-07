@@ -37,7 +37,7 @@ describe("locale registry", () => {
   it("falls back to en-us when Obsidian locale is unsupported", () => {
     vi.stubGlobal("app", {
       vault: {
-        getConfig: (key: string) => (key === "locale" ? "fr-fr" : ""),
+        getConfig: (key: string) => (key === "locale" ? "de" : ""),
       },
     });
 

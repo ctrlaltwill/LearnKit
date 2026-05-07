@@ -37,6 +37,26 @@ If the result looks like a product bug rather than a simple compatibility note, 
 
 ## Translation contributions
 
+We welcome translation contributions! Whether you want to add a brand-new language or improve an existing one, PRs are the best way to contribute.
+
+### Available locales
+
+| Code | Language | Status |
+|------|----------|--------|
+| `en-gb` | English (UK) | ✅ Stable — baseline |
+| `en-us` | English (US) | ✅ Stable — override only |
+| `zh-cn` | Chinese (Simplified) | ✅ Community — complete |
+| `fr` | French | 🚧 Community — needs translation |
+| `ja` | Japanese | 🚧 Community — needs translation |
+| `es` | Spanish | 🚧 Community — needs translation |
+| `hi` | Hindi | 🚧 Community — needs translation |
+
+**Ways to contribute:**
+
+- **Add a new language** — copy `en-base.json`, translate the values, and open a PR
+- **Improve an existing translation** — edit the locale JSON file and open a PR with just the changed keys
+- **Fix a mistranslation** — open an issue or PR with the corrected text
+
 ### How translation works
 
 UI strings are wrapped with `t(locale, "token.key", "English fallback")`. At build time, JSON locale files from `src/platform/translations/locales/` are bundled into the plugin. If a token is missing from a locale file the English fallback is used automatically, so partial translations work fine.
@@ -44,7 +64,8 @@ UI strings are wrapped with `t(locale, "token.key", "English fallback")`. At bui
 ### Locale file structure
 
 - **`en-base.json`** — the canonical English source containing every translatable key. This is the file you copy when starting a new translation.
-- **`en-gb.json`** / **`en-us.json`** — small override files that only contain keys that differ from the base (e.g. colour → color). New locales follow the same pattern: a full translation file is loaded on top of the base.
+- **`en-gb.json`** / **`en-us.json`** — small override files that only contain keys that differ from the base (e.g. colour → color). They merge on top of `en-base.json` at runtime.
+- **Full locale files** (`zh-cn.json`, `fr.json`, `ja.json`, `es.json`, `hi.json`) — standalone translation files that contain every key. They are loaded directly without merging over the English base.
 - **`ui.common.*`** keys are reusable microcopy tokens for high-frequency labels (Answer, Question, Next, Reset, etc.). Translate these once; they are shared across the UI.
 
 ## Contributor workflow
