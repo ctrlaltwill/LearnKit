@@ -20,7 +20,12 @@ import type { SproutSettings } from "../../platform/types/settings";
 import { log } from "../../platform/core/logger";
 import { placePopover, setCssProps } from "../../platform/core/ui";
 import { DEFAULT_SETTINGS, VIEW_TYPE_SETTINGS, VIEW_TYPE_WIDGET } from "../../platform/core/constants";
-import { DELIMITER_OPTIONS, setDelimiter, type DelimiterChar } from "../../platform/core/delimiter";
+import {
+  DELIMITER_OPTIONS,
+  DELIMITER_OPTION_TOKENS,
+  setDelimiter,
+  type DelimiterChar,
+} from "../../platform/core/delimiter";
 import { syncReadingViewStyles } from "../reading/reading-view";
 import {
   getInterfaceLocaleLabel,
@@ -674,7 +679,7 @@ export class LearnKitSettingsTab extends PluginSettingTab {
     // full settings UI.
     if (!this.onRequestRerender) {
       const wrapper = containerEl.createDiv({ cls: "learnkit-settings-wrapper learnkit-settings-wrapper learnkit-settings learnkit-settings" });
-      new Setting(wrapper).setName(this._tx("ui.settings.sections.learnkit", "Learn" + "Kit")).setHeading();
+      new Setting(wrapper).setName(this._tx("ui.settings.sections.learnkit", "LearnKit")).setHeading();
       const desc = wrapper.createDiv({ cls: "setting-item" });
       const info = desc.createDiv({ cls: "setting-item-info" });
       info.createDiv({
@@ -1367,7 +1372,13 @@ export class LearnKitSettingsTab extends PluginSettingTab {
                 : "Custom";
 
         new Setting(ttsExternalContainer)
-          .setName(this._tx("ui.settings.audio.ttsApiKey.name", `${providerLabel} API key`))
+          .setName(
+            this._tx(
+              "ui.settings.audio.ttsApiKey.name",
+              "{provider} API key",
+              { provider: providerLabel },
+            ),
+          )
           .setDesc(this._tx("ui.settings.audio.ttsApiKey.desc", "API key for the selected TTS provider. Stored locally in a dedicated file, never synced."))
           .addText((t) => {
             t.inputEl.type = "password";
@@ -1588,7 +1599,9 @@ export class LearnKitSettingsTab extends PluginSettingTab {
               const removed = await clearTtsCache(tts.vaultAdapter, tts.ttsCacheDirPath);
               if (removed >= 0) {
                 new Notice(
-                  this._tx("ui.settings.audio.ttsClearCache.done", `Cleared ${removed} cached audio file(s).`),
+                  this._tx("ui.settings.audio.ttsClearCache.done", "Cleared {count} cached audio file(s).", {
+                    count: removed,
+                  }),
                 );
               } else {
                 new Notice(this._tx("ui.settings.audio.ttsClearCache.error", "Failed to clear cache."));
@@ -5026,7 +5039,7 @@ export class LearnKitSettingsTab extends PluginSettingTab {
       .setDesc(
         this._tx(
           "ui.settings.storage.vaultSync.enabled.desc",
-          "Copy scheduling databases to a vault folder so " + "Obsidian" + " Sync can transfer them between devices.",
+          "Copy scheduling databases to a vault folder so Obsidian Sync can transfer them between devices.",
         ),
       )
       .addToggle((t) => {
@@ -5216,7 +5229,7 @@ export class LearnKitSettingsTab extends PluginSettingTab {
       })
       .then((s) => {
         this._addSimpleSelect(s.controlEl, {
-          options: Object.entries(DELIMITER_OPTIONS).map(([value, label]) => ({ value, label })),
+          options: DELIMITER_OPTIONS.map((value) => ({ value, label: this._delimiterOptionLabel(value) })),
           separatorAfterIndex: 0,
           value: this.plugin.settings.indexing.delimiter ?? "|",
           onChange: (v) => {
@@ -5228,7 +5241,7 @@ export class LearnKitSettingsTab extends PluginSettingTab {
               await this.plugin.saveAll();
 
               if (prev !== next) {
-                this.queueSettingsNotice("indexing.delimiter", this._noticeLines.cardDelimiter(DELIMITER_OPTIONS[next]));
+                this.queueSettingsNotice("indexing.delimiter", this._noticeLines.cardDelimiter(this._delimiterOptionLabel(next)));
               }
             })();
           },
@@ -5636,6 +5649,18 @@ export class LearnKitSettingsTab extends PluginSettingTab {
         renderSyncedNotesSummary(false);
       });
 
+  }
+
+  private _delimiterOptionLabel(value: DelimiterChar): string {
+    const token = DELIMITER_OPTION_TOKENS[value];
+    const fallback = value === "|"
+      ? "Pipe"
+      : value === "@"
+        ? "At sign"
+        : value === "~"
+          ? "Tilde"
+          : "Semicolon";
+    return `${value}  ${this._tx(token, fallback)}`;
   }
 
   private renderResetSection(wrapper: HTMLElement): void {

@@ -13,7 +13,8 @@
  *
  * @exports
  *   - DelimiterChar              — union type of allowed delimiter characters
- *   - DELIMITER_OPTIONS          — human-readable labels for the settings dropdown
+ *   - DELIMITER_OPTIONS          — allowed delimiter values used by settings UIs
+ *   - DELIMITER_OPTION_TOKENS    — i18n token keys for delimiter option labels
  *   - getDelimiter               — returns the currently active delimiter character
  *   - setDelimiter               — sets the active delimiter (called from settings load)
  *   - escapeDelimiterRe          — regex-safe escaped version of the active delimiter
@@ -37,12 +38,15 @@
 
 export type DelimiterChar = "|" | "@" | "~" | ";";
 
-/** Labels shown in the settings dropdown. */
-export const DELIMITER_OPTIONS: Record<DelimiterChar, string> = {
-  "|": "|  Pipe",
-  "@": "@  At sign",
-  "~": "~  Tilde",
-  ";": ";  Semicolon",
+/** Supported delimiter values for settings dropdowns and validators. */
+export const DELIMITER_OPTIONS: DelimiterChar[] = ["|", "@", "~", ";"];
+
+/** i18n token keys used to label each delimiter option in settings UIs. */
+export const DELIMITER_OPTION_TOKENS: Record<DelimiterChar, string> = {
+  "|": "ui.settings.sync.delimiterOptions.pipe",
+  "@": "ui.settings.sync.delimiterOptions.atSign",
+  "~": "ui.settings.sync.delimiterOptions.tilde",
+  ";": "ui.settings.sync.delimiterOptions.semicolon",
 };
 
 // ── Active delimiter state ───────────────────────────────────────────

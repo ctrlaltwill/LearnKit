@@ -216,7 +216,7 @@ export class CardCreatorModal extends Modal {
     typeSel.createEl("option", { text: this.tx("ui.cardCreator.type.reversed", "Basic (Reversed)"), value: "reversed" });
     typeSel.createEl("option", { text: this.tx("ui.cardCreator.type.cloze", "Cloze"), value: "cloze" });
     typeSel.createEl("option", { text: this.tx("ui.cardCreator.type.multipleChoice", "Multiple choice"), value: "mcq" });
-    typeSel.createEl("option", { text: "Ordered question", value: "oq" });
+    typeSel.createEl("option", { text: this.tx("ui.common.orderedQuestion", "Ordered question"), value: "oq" });
 
     let cardEditor: ModalCardEditorResult | null = null;
     let currentType: CardType = this.forcedType || "basic";
