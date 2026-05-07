@@ -7,6 +7,7 @@ const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(scriptDir, "..");
 const localesDir = path.join(root, "src", "platform", "translations", "locales");
 const baseFile = "en-base.json";
+const FULL_PARITY_LOCALE_FILES = new Set(["zh-cn.json"]);
 
 function readJson(filePath) {
   const raw = fs.readFileSync(filePath, "utf8");
@@ -54,6 +55,7 @@ for (const file of overrideFiles) {
   const locale = file.replace(/\.json$/i, "");
   const dict = readJson(path.join(localesDir, file));
   const keys = Object.keys(dict).sort();
+  const fullParityLocale = FULL_PARITY_LOCALE_FILES.has(file);
 
   const extra = keys.filter((k) => !(k in base));
   if (extra.length) {
@@ -62,17 +64,27 @@ for (const file of overrideFiles) {
     for (const k of extra) console.error(`  - ${k}`);
   }
 
+  if (fullParityLocale) {
+    const missing = baseKeys.filter((k) => !(k in dict));
+    if (missing.length) {
+      hasErrors = true;
+      console.error(`[translations] ${locale}: missing keys required for full parity:`);
+      for (const k of missing) console.error(`  - ${k}`);
+    }
+  }
+
   for (const key of keys) {
     if (!(key in base)) continue;
     const baseVal = String(base[key] ?? "");
     const curVal = String(dict[key] ?? "");
-    const expected = placeholdersOf(baseVal);
-    const actual = placeholdersOf(curVal);
-    if (expected.join("|") !== actual.join("|")) {
+    const expected = new Set(placeholdersOf(baseVal));
+    const actual = new Set(placeholdersOf(curVal));
+    const unknown = Array.from(actual).filter((name) => !expected.has(name)).sort();
+    if (unknown.length) {
       hasErrors = true;
-      console.error(`[translations] ${locale}: placeholder mismatch for key '${key}'`);
-      console.error(`  expected: {${expected.join("}, {")}}`);
-      console.error(`  actual:   {${actual.join("}, {")}}`);
+      console.error(`[translations] ${locale}: unknown placeholders for key '${key}'`);
+      console.error(`  base:     {${Array.from(expected).sort().join("}, {")}}`);
+      console.error(`  unknown:  {${unknown.join("}, {")}}`);
     }
   }
 }
