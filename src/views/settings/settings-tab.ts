@@ -6132,13 +6132,30 @@ export class LearnKitSettingsTab extends PluginSettingTab {
       sections.clear();
 
       const selected = args.options.find((opt) => opt.value === current);
-      const orderedOptions = selected
-        ? [selected, ...args.options.filter((opt) => opt.value !== selected.value)]
-        : args.options;
+      const followObsidianOpt = args.options.find((opt) => opt.value === "obsidian");
+
+      // Build ordered list: selected → divider → Follow Obsidian (if not selected) → rest alphabetically
+      const restOptions = args.options
+        .filter((opt) => opt !== selected && opt !== followObsidianOpt)
+        .sort((a, b) => a.label.localeCompare(b.label));
+
+      const orderedOptions: typeof args.options = [];
+      if (selected) orderedOptions.push(selected);
+      if (followObsidianOpt && followObsidianOpt !== selected) orderedOptions.push(followObsidianOpt);
+      orderedOptions.push(...restOptions);
+
+      const insertDividerAfterSelected = selected != null && orderedOptions.length > 1;
+      let dividerInserted = false;
 
       let previousSection = "";
 
       for (const opt of orderedOptions) {
+        // Insert divider after the selected item
+        if (insertDividerAfterSelected && !dividerInserted && orderedOptions.indexOf(opt) === 1) {
+          const dividerEl = listbox.createDiv({ cls: "learnkit-ss-separator learnkit-ss-separator" });
+          dividerEl.setAttribute("role", "separator");
+          dividerInserted = true;
+        }
         const sectionKey = String(opt.section || "").trim();
         if (sectionKey && sectionKey !== previousSection) {
           const separatorEl = listbox.children.length

@@ -14,6 +14,7 @@ import { Platform } from "obsidian";
 import * as React from "react";
 import { useAnalyticsPopoverZIndex } from "../filter-styles";
 import { cssClassForProps } from "../../../platform/core/ui";
+import { interfaceLocaleToIntlLocale } from "../../../platform/translations/locale-registry";
 import { t } from "../../../platform/translations/translator";
 
 const MS_DAY = 24 * 60 * 60 * 1000;
@@ -129,9 +130,9 @@ function localDayIndex(ts: number, formatter: Intl.DateTimeFormat) {
   return Math.floor(utc / MS_DAY);
 }
 
-function formatDateTitle(dayIndex: number, timeZone: string) {
+function formatDateTitle(dayIndex: number, timeZone: string, locale: string) {
   const date = new Date(dayIndex * MS_DAY);
-  return date.toLocaleDateString(undefined, {
+  return date.toLocaleDateString(locale, {
     timeZone,
     weekday: "short",
     year: "numeric",
@@ -176,6 +177,7 @@ export function ReviewCalendarHeatmap(props: {
 }) {
   const tz = props.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
   const formatter = React.useMemo(() => makeDatePartsFormatter(tz), [tz]);
+  const intlLocale = React.useMemo(() => interfaceLocaleToIntlLocale(props.locale), [props.locale]);
   const todayIndex = React.useMemo(() => localDayIndex(Date.now(), formatter), [formatter]);
   const tx = React.useMemo(() => (token: string, fallback: string, vars?: Record<string, string | number>) => t(props.locale, token, fallback, vars), [props.locale]);
   const [durationDays, setDurationDays] = React.useState(props.rangeDays ?? 365);
@@ -264,7 +266,7 @@ export function ReviewCalendarHeatmap(props: {
           count: entry.count,
           totalMs: entry.totalMs,
           isPadding: false,
-          dateLabel: formatDateTitle(dayIndex, tz),
+          dateLabel: formatDateTitle(dayIndex, tz, intlLocale),
         });
       }
       return out;
@@ -291,7 +293,7 @@ export function ReviewCalendarHeatmap(props: {
           count: entry.count,
           totalMs: entry.totalMs,
           isPadding: false,
-          dateLabel: formatDateTitle(dayIndex, tz),
+          dateLabel: formatDateTitle(dayIndex, tz, intlLocale),
         };
       }
       // Fill any empty cells as padding
@@ -326,12 +328,12 @@ export function ReviewCalendarHeatmap(props: {
           count: entry.count,
           totalMs: entry.totalMs,
           isPadding,
-          dateLabel: formatDateTitle(dayIndex, tz),
+          dateLabel: formatDateTitle(dayIndex, tz, intlLocale),
         });
       }
       return out;
     }
-  }, [filteredEvents, formatter, rangeStartIndex, todayIndex, tz, durationDays]);
+  }, [filteredEvents, formatter, rangeStartIndex, todayIndex, tz, durationDays, intlLocale]);
 
   const quantiles = React.useMemo(() => {
     const values = cells

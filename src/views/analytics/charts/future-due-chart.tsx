@@ -15,6 +15,7 @@ import { Area, Bar, ComposedChart, ResponsiveContainer, Tooltip, XAxis, YAxis } 
 import { createXAxisTicks, formatAxisLabel } from "../chart-axis-utils";
 import { endTruncateClass, useAnalyticsPopoverZIndex } from "../filter-styles";
 import { cssClassForProps } from "../../../platform/core/ui";
+import { interfaceLocaleToIntlLocale } from "../../../platform/translations/locale-registry";
 import { t } from "../../../platform/translations/translator";
 
 function InfoIcon(props: { text: string }) {
@@ -192,14 +193,14 @@ function localDayIndex(ts: number, formatter: Intl.DateTimeFormat) {
   return Math.floor(utc / MS_DAY);
 }
 
-function formatDayLabel(dayIndex: number, timeZone: string) {
+function formatDayLabel(dayIndex: number, timeZone: string, locale: string) {
   const date = new Date(dayIndex * MS_DAY);
-  return date.toLocaleDateString(undefined, { timeZone, month: "short", day: "numeric" });
+  return date.toLocaleDateString(locale, { timeZone, month: "short", day: "numeric" });
 }
 
-function formatDayTitle(dayIndex: number, timeZone: string) {
+function formatDayTitle(dayIndex: number, timeZone: string, locale: string) {
   const date = new Date(dayIndex * MS_DAY);
-  return date.toLocaleDateString(undefined, { timeZone, weekday: "short", month: "short", day: "numeric" });
+  return date.toLocaleDateString(locale, { timeZone, weekday: "short", month: "short", day: "numeric" });
 }
 
 function smoothSeries(values: number[], window: number) {
@@ -223,15 +224,21 @@ function TooltipContent(props: { active?: boolean; payload?: Array<{ payload?: u
   if (!datum) return null;
   const total = datum.new + datum.learning + datum.relearning + datum.review;
   const tx = (token: string, fallback: string, vars?: Record<string, string | number>) => t(props.locale, token, fallback, vars);
+  const dueLabel = tx("ui.common.due", "Due");
+  const newLabel = tx("ui.common.stage.new", "New");
+  const learningLabel = tx("ui.common.stage.learning", "Learning");
+  const relearningLabel = tx("ui.common.stage.relearning", "Relearning");
+  const reviewLabel = tx("ui.common.stage.review", "Review");
+  const backlogLabel = tx("ui.analytics.forecast.backlog", "Backlog");
   return (
     <div className="learnkit-data-tooltip-surface">
       <div className="text-sm font-medium text-background">{datum.date}</div>
-      <div className="text-background">{tx("ui.analytics.forecast.tooltipDue", "Due: {count}", { count: total })}</div>
-      <div className="text-background">{tx("ui.analytics.forecast.tooltipNew", "New: {count}", { count: datum.new })}</div>
-      <div className="text-background">{tx("ui.analytics.forecast.tooltipLearning", "Learning: {count}", { count: datum.learning })}</div>
-      <div className="text-background">{tx("ui.analytics.forecast.tooltipRelearning", "Relearning: {count}", { count: datum.relearning })}</div>
-      <div className="text-background">{tx("ui.analytics.forecast.tooltipReview", "Review: {count}", { count: datum.review })}</div>
-      <div className="text-background">{tx("ui.analytics.forecast.tooltipBacklog", "Backlog: {count}", { count: datum.backlog })}</div>
+      <div className="text-background">{`${dueLabel}: ${total}`}</div>
+      <div className="text-background">{`${newLabel}: ${datum.new}`}</div>
+      <div className="text-background">{`${learningLabel}: ${datum.learning}`}</div>
+      <div className="text-background">{`${relearningLabel}: ${datum.relearning}`}</div>
+      <div className="text-background">{`${reviewLabel}: ${datum.review}`}</div>
+      <div className="text-background">{`${backlogLabel}: ${datum.backlog}`}</div>
     </div>
   );
 }
@@ -259,6 +266,7 @@ export function FutureDueChart(props: {
 }) {
   const tz = props.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
   const formatter = React.useMemo(() => makeDatePartsFormatter(tz), [tz]);
+  const intlLocale = React.useMemo(() => interfaceLocaleToIntlLocale(props.locale), [props.locale]);
   const tx = React.useMemo(() => (token: string, fallback: string, vars?: Record<string, string | number>) => t(props.locale, token, fallback, vars), [props.locale]);
   const [durationDays, setDurationDays] = React.useState(props.horizonDays ?? 30);
   const [deckQuery, setDeckQuery] = React.useState("");
@@ -428,8 +436,8 @@ export function FutureDueChart(props: {
       }
       backlogValues[i] = i >= todayOffset ? backlog : 0;
       rows.push({
-        label: formatDayLabel(dayIndex, tz),
-        date: formatDayTitle(dayIndex, tz),
+        label: formatDayLabel(dayIndex, tz, intlLocale),
+        date: formatDayTitle(dayIndex, tz, intlLocale),
         due: dueCounts[i] ?? 0,
         backlog: backlogValues[i] ?? 0,
         backlogSmooth: 0,
@@ -445,10 +453,16 @@ export function FutureDueChart(props: {
       rows[i].backlogSmooth = smoothed[i] ?? 0;
     }
     return rows;
-  }, [props.cards, startIndex, endIndex, todayIndex, formatter, tz, selectedDecks, selectedGroups, selectedType]);
+  }, [props.cards, startIndex, endIndex, todayIndex, formatter, tz, selectedDecks, selectedGroups, selectedType, intlLocale]);
 
   const xTicks = React.useMemo(() => createXAxisTicks(startIndex, endIndex, todayIndex), [startIndex, endIndex, todayIndex]);
-  const xTickFormatter = (value: number) => formatAxisLabel(value, todayIndex, (dayIndex) => formatDayLabel(dayIndex, tz));
+  const xTickFormatter = (value: number) =>
+    formatAxisLabel(
+      value,
+      todayIndex,
+      (dayIndex) => formatDayLabel(dayIndex, tz, intlLocale),
+      tx("ui.view.coach.readiness.today", "Today"),
+    );
   const yMax = React.useMemo(() => {
     const maxValue = data.reduce((max, row) => Math.max(max, row.new + row.learning + row.relearning + row.review), 0);
     return roundUpToNearest10(maxValue);
@@ -500,7 +514,7 @@ export function FutureDueChart(props: {
             <div className="font-semibold lk-home-section-title">{tx("ui.analytics.forecast.title", "Study forecast")}</div>
             <InfoIcon text={tx("ui.analytics.forecast.info", "Projected due load by day. Backlog line includes all overdue cards.")} />
           </div>
-          <div className="text-xs text-muted-foreground">{tx("ui.analytics.forecast.avgDaily", "Avg daily: {avgDaily}", { avgDaily })}</div>
+          <div className="text-xs text-muted-foreground">{tx("ui.analytics.forecast.subtitle", "Avg daily: {avg}", { avg: avgDaily })}</div>
         </div>
         <div ref={wrapRef} className="relative inline-flex">
           <button
@@ -526,7 +540,7 @@ export function FutureDueChart(props: {
             >
               <polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3" />
             </svg>
-            <span>{tx("ui.analytics.forecast.filter", "Filter")}</span>
+            <span>{tx("ui.analytics.filter", "Filter")}</span>
           </button>
           {open ? (
             <div
@@ -544,7 +558,7 @@ export function FutureDueChart(props: {
                   onClick={toggleDurationOpen}
                   onKeyDown={onDurationKey}
                 >
-                  <span>{tx("ui.analytics.forecast.duration", "Duration")}</span>
+                  <span>{tx("ui.analytics.duration", "Duration")}</span>
                   <ChevronIcon open={durationOpen} />
                 </div>
                 {durationOpen ? (
@@ -572,7 +586,7 @@ export function FutureDueChart(props: {
                               aria-hidden="true"
                             />
                           </div>
-                          <span>{tx("ui.analytics.forecast.days", "{count} days", { count: opt })}</span>
+                          <span>{tx("ui.analytics.chart.days", "{opt} days", { opt })}</span>
                         </div>
                       );
                     })}
@@ -587,7 +601,7 @@ export function FutureDueChart(props: {
                   onClick={toggleCardTypeOpen}
                   onKeyDown={onCardTypeKey}
                 >
-                  <span>{tx("ui.analytics.forecast.cardType", "Card type")}</span>
+                  <span>{tx("ui.analytics.chart.cardType", "Card type")}</span>
                   <ChevronIcon open={cardTypeOpen} />
                 </div>
                 {cardTypeOpen ? (
@@ -627,11 +641,11 @@ export function FutureDueChart(props: {
                   </div>
                 ) : null}
                 <div className="h-px bg-border my-1" role="separator" />
-                <div className="text-sm text-muted-foreground px-2 py-1">{tx("ui.analytics.forecast.decks", "Decks")}</div>
+                <div className="text-sm text-muted-foreground px-2 py-1">{tx("ui.analytics.chart.decks", "Decks")}</div>
                 <div className="px-2 pb-2">
                   <input
                     type="text"
-                    placeholder={tx("ui.analytics.forecast.searchDecks", "Search decks")}
+                    placeholder={tx("ui.analytics.chart.searchDecks", "Search decks")}
                     className="input w-full text-sm learnkit-filter-search-input"
                     value={deckQuery}
                     onChange={(event) => {
@@ -662,17 +676,17 @@ export function FutureDueChart(props: {
                           </div>
                         ))
                       ) : (
-                        <div className="px-2 py-1 text-sm text-muted-foreground">{tx("ui.analytics.forecast.noDecksFound", "No decks found.")}</div>
+                        <div className="px-2 py-1 text-sm text-muted-foreground">{tx("ui.analytics.chart.noDecksFound", "No decks found.")}</div>
                       )}
                     </div>
                   </div>
                 ) : null}
                 <div className="h-px bg-border my-1" role="separator" />
-                <div className="text-sm text-muted-foreground px-2 py-1">{tx("ui.analytics.forecast.groups", "Groups")}</div>
+                <div className="text-sm text-muted-foreground px-2 py-1">{tx("ui.analytics.chart.groups", "Groups")}</div>
                 <div className="px-2 pb-2">
                   <input
                     type="text"
-                    placeholder={tx("ui.analytics.forecast.searchGroups", "Search groups")}
+                    placeholder={tx("ui.analytics.chart.searchGroups", "Search groups")}
                     className="input w-full text-sm learnkit-filter-search-input"
                     value={groupQuery}
                     onChange={(event) => {
@@ -703,14 +717,14 @@ export function FutureDueChart(props: {
                           </div>
                         ))
                       ) : (
-                        <div className="px-2 py-1 text-sm text-muted-foreground">{tx("ui.analytics.forecast.noGroupsFound", "No groups found.")}</div>
+                        <div className="px-2 py-1 text-sm text-muted-foreground">{tx("ui.analytics.chart.noGroupsFound", "No groups found.")}</div>
                       )}
                     </div>
                   </div>
                 ) : null}
                 <div className="h-px bg-border my-1" role="separator" />
                 <div className="text-sm text-muted-foreground cursor-pointer px-2" onClick={resetFilters}>
-                  {tx("ui.analytics.forecast.resetFilters", "Reset filters")}
+                  {tx("ui.analytics.chart.resetFilters", "Reset filters")}
                 </div>
               </div>
             </div>
@@ -769,31 +783,31 @@ export function FutureDueChart(props: {
           <span
             className={`inline-block learnkit-ana-legend-dot learnkit-ana-legend-dot-square ${cssClassForProps({ "--learnkit-legend-color": "var(--chart-accent-1)" })}`}
           />
-          <span className="">{tx("ui.analytics.forecast.legendNew", "New")}</span>
+          <span className="">{tx("ui.common.stage.new", "New")}</span>
         </div>
         <div className="inline-flex items-center gap-2">
           <span
             className={`inline-block learnkit-ana-legend-dot learnkit-ana-legend-dot-square ${cssClassForProps({ "--learnkit-legend-color": "var(--chart-accent-2)" })}`}
           />
-          <span className="">{tx("ui.analytics.forecast.legendLearning", "Learning")}</span>
+          <span className="">{tx("ui.common.stage.learning", "Learning")}</span>
         </div>
         <div className="inline-flex items-center gap-2">
           <span
             className={`inline-block learnkit-ana-legend-dot learnkit-ana-legend-dot-square ${cssClassForProps({ "--learnkit-legend-color": "var(--chart-accent-3)" })}`}
           />
-          <span className="">{tx("ui.analytics.forecast.legendRelearning", "Relearning")}</span>
+          <span className="">{tx("ui.common.stage.relearning", "Relearning")}</span>
         </div>
         <div className="inline-flex items-center gap-2">
           <span
             className={`inline-block learnkit-ana-legend-dot learnkit-ana-legend-dot-square ${cssClassForProps({ "--learnkit-legend-color": "var(--chart-accent-4)" })}`}
           />
-          <span className="">{tx("ui.analytics.forecast.legendReview", "Review")}</span>
+          <span className="">{tx("ui.common.stage.review", "Review")}</span>
         </div>
         <div className="inline-flex items-center gap-2">
           <span
             className={`inline-block learnkit-ana-legend-line ${cssClassForProps({ "--learnkit-legend-color": "var(--chart-accent-3)" })}`}
           />
-          <span className="">{tx("ui.analytics.forecast.legendBacklog", "Backlog")}</span>
+          <span className="">{tx("ui.analytics.forecast.backlog", "Backlog")}</span>
         </div>
       </div>
     </div>

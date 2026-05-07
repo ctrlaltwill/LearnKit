@@ -366,7 +366,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     // ── Extra information field ──────────────────────────────────────────────
     const infoField = body.createDiv({ cls: "flex flex-col gap-1" });
     const infoLabel = infoField.createEl("label", { cls: "text-sm font-medium" });
-    infoLabel.textContent = "Extra information";
+    infoLabel.textContent = this._tx("ui.common.extraInformation", "Extra information");
     const infoInput = infoField.createEl("textarea", { cls: "textarea w-full learnkit-io-info-input learnkit-io-info-input" });
     infoInput.rows = 1;
     setCssProps(infoInput, "min-height", "60px");
@@ -383,7 +383,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     // ── Groups field ────────────────────────────────────────────────────────
     const groupsField = body.createDiv({ cls: "flex flex-col gap-1" });
     const groupsLabel = groupsField.createEl("label", { cls: "text-sm font-medium" });
-    groupsLabel.textContent = "Groups";
+    groupsLabel.textContent = this._tx("ui.common.groups", "Groups");
     const initialGroups = editing
       ? (this.plugin.store?.data?.cards || {})[String(this.editParentId)]?.groups
       : null;

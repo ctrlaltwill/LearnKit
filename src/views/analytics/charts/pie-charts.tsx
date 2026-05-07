@@ -74,14 +74,20 @@ function normalizeEventType(raw: string) {
   return t;
 }
 
-function PieTooltip(props: { active?: boolean; payload?: Array<{ name?: string; value?: number }> }) {
+function PieTooltip(props: { active?: boolean; payload?: Array<{ name?: string; value?: number }>; locale?: string }) {
+  const tx = React.useMemo(
+    () => (token: string, fallback: string, vars?: Record<string, string | number>) => t(props.locale, token, fallback, vars),
+    [props.locale],
+  );
   if (!props.active || !props.payload || !props.payload.length) return null;
   const item = props.payload[0] as { name?: string; value?: number } | undefined;
   if (!item) return null;
   return (
     <div className="learnkit-data-tooltip-surface">
       <div className="text-sm font-medium text-background">{item.name}</div>
-      <div className="text-background">Count: {item.value ?? 0}</div>
+      <div className="text-background">
+        {tx("ui.analytics.chart.count", "Count")}: {item.value ?? 0}
+      </div>
     </div>
   );
 }
@@ -171,7 +177,7 @@ function PieCard(props: {
           <div className="learnkit-analytics-chart">
             <ResponsiveContainer width="100%" height={200}>
             <PieChart>
-              <Tooltip content={<PieTooltip />} />
+              <Tooltip content={<PieTooltip locale={props.locale} />} />
               <Pie
                 data={dataWithColors}
                 dataKey="value"
@@ -367,7 +373,17 @@ export function StagePieCard(props: {
     return counts;
   }, [filteredCards, props.states]);
 
-  const data = React.useMemo(() => buildData(Object.entries(stageCounts)), [stageCounts]);
+  const data = React.useMemo(
+    () =>
+      buildData([
+        [tx("ui.common.stage.review", "Review"), stageCounts.Review],
+        [tx("ui.common.stage.new", "New"), stageCounts.New],
+        [tx("ui.common.stage.learning", "Learning"), stageCounts.Learning],
+        [tx("ui.common.stage.relearning", "Relearning"), stageCounts.Relearning],
+        [tx("ui.common.stage.suspended", "Suspended"), stageCounts.Suspended],
+      ]),
+    [stageCounts, tx],
+  );
 
   const toggleType = (type: string) => {
     setSelectedType(type);
@@ -431,7 +447,7 @@ export function StagePieCard(props: {
         >
           <polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3" />
         </svg>
-        <span>{tx("ui.analytics.pie.filter", "Filter")}</span>
+        <span>{tx("ui.analytics.chart.filter", "Filter")}</span>
       </button>
 
       {open ? (
@@ -450,7 +466,7 @@ export function StagePieCard(props: {
               onClick={toggleCardTypesOpen}
               onKeyDown={onCardTypesKey}
             >
-              <span>{tx("ui.analytics.pie.cardType", "Card type")}</span>
+              <span>{tx("ui.analytics.chart.cardType", "Card type")}</span>
               <ChevronIcon open={cardTypesOpen} />
             </div>
 
@@ -459,11 +475,11 @@ export function StagePieCard(props: {
                 role="menu"
                 id="learnkit-stage-filter-listbox"
                 aria-orientation="vertical"
-                data-tooltip="Stage filter"
+                data-tooltip={tx("ui.analytics.pie.stageFilterTooltip", "Stage filter")}
                 className="flex flex-col"
               >
                 {availableTypes.map((type) => {
-                  const label = typeLabels[type] ?? type;
+                  const label = tx(`ui.analytics.chart.type.${type}`, typeLabels[type] ?? type);
                   const selected = selectedType === type;
                   const count = typeCounts.get(type) ?? 0;
                   return (
@@ -492,11 +508,11 @@ export function StagePieCard(props: {
             ) : null}
 
             <div className="h-px bg-border my-1" role="separator" />
-            <div className="text-sm text-muted-foreground px-2 py-1">{tx("ui.analytics.pie.decks", "Decks")}</div>
+            <div className="text-sm text-muted-foreground px-2 py-1">{tx("ui.analytics.chart.decks", "Decks")}</div>
             <div className="px-2 pb-2">
               <input
                 type="text"
-                placeholder={tx("ui.analytics.pie.searchDecks", "Search decks")}
+                placeholder={tx("ui.analytics.chart.searchDecks", "Search decks")}
                 className="input w-full text-sm learnkit-filter-search-input"
                 value={deckQuery}
                 onChange={(event) => {
@@ -593,14 +609,14 @@ export function StagePieCard(props: {
 
   return (
     <PieCard
-      title={tx("ui.analytics.pie.title", "Cards by stage")}
-      subtitle={tx("ui.analytics.pie.subtitle", "All decks")}
-      infoText={tx("ui.analytics.pie.info", "Breakdown of your cards by learning stage using current scheduler state.")}
+      title={tx("ui.analytics.pie.cardsByStage", "Cards by stage")}
+      subtitle={tx("ui.analytics.pie.cardsByStageSubtitle", "All decks")}
+      infoText={tx("ui.analytics.pie.cardsByStage.info", "Breakdown of your cards by learning stage using current scheduler state.")}
       data={data}
       headerSlot={headerSlot}
-      highlightLabel="New"
+      highlightLabel={tx("ui.common.stage.new", "New")}
       centerValue={totalCards.toLocaleString()}
-      centerLabel={tx("ui.analytics.pie.centerLabel", "Flashcards")}
+      centerLabel={tx("ui.analytics.pie.cardsByStageCenterLabel", "Flashcards")}
       locale={props.locale}
     />
   );

@@ -87,7 +87,11 @@ type StabilityBucket = {
   stabilityScaled: number; // exponentially scaled stability for better distribution
 };
 
-function formatStabilityLabel(value: number, data: StabilityBucket[]) {
+function formatStabilityLabel(
+  value: number,
+  data: StabilityBucket[],
+  tx: (token: string, fallback: string, vars?: Record<string, string | number>) => string,
+) {
   const point = data.find((d) => Math.abs(d.stabilityScaled - Number(value)) < 0.1);
   if (!point) return `${value}`;
 
@@ -96,21 +100,22 @@ function formatStabilityLabel(value: number, data: StabilityBucket[]) {
     const hours = Math.round(stability * 24);
     if (hours < 1) {
       const minutes = Math.round(stability * 24 * 60);
-      return `${minutes} minutes`;
+      return tx("ui.analytics.stability.unit.minutes", "{count} minutes", { count: minutes });
     }
-    return `${hours} hours`;
+    return tx("ui.analytics.stability.unit.hours", "{count} hours", { count: hours });
   }
-  return `${Math.round(stability)} days`;
+  return tx("ui.analytics.stability.unit.days", "{count} days", { count: Math.round(stability) });
 }
 
-function StabilityTooltip(props: { active?: boolean; payload?: Array<{ payload?: unknown }>; label?: number }) {
+function StabilityTooltip(props: { active?: boolean; payload?: Array<{ payload?: unknown }>; label?: number; locale?: string }) {
   if (!props.active || !props.payload || !props.payload.length) return null;
   const datum = props.payload[0]?.payload as StabilityBucket | undefined;
   if (!datum) return null;
+  const tx = (token: string, fallback: string, vars?: Record<string, string | number>) => t(props.locale, token, fallback, vars);
   return (
     <div className="learnkit-data-tooltip-surface">
-      <div className="text-sm font-medium text-background">{formatStabilityLabel(Number(props.label ?? 0), [datum])}</div>
-      <div className="text-background">Cards: {datum.count}</div>
+      <div className="text-sm font-medium text-background">{formatStabilityLabel(Number(props.label ?? 0), [datum], tx)}</div>
+      <div className="text-background">{tx("ui.analytics.stability.tooltipCards", "Cards: {count}", { count: datum.count })}</div>
     </div>
   );
 }
@@ -236,11 +241,11 @@ export function StabilityDistributionChart(props: StabilityDistributionChartProp
     const cy = y + height + 16;
     return (
       <text x={cx} y={cy} textAnchor="middle" fill="var(--text-muted)">
-        <tspan fontSize={11}>Stability</tspan>
-        <title>Stability is the expected retention interval (days, exponential scale)</title>
+        <tspan fontSize={11}>{tx("ui.analytics.stability.axisLabel", "Stability")}</tspan>
+        <title>{tx("ui.analytics.stability.axisTooltip", "Stability is the expected retention interval (days, exponential scale)")}</title>
       </text>
     );
-  }, []);
+  }, [tx]);
 
   const [selectedType, setSelectedType] = React.useState<string | null>(null);
   const [tagQuery, setTagQuery] = React.useState("");
@@ -629,7 +634,7 @@ export function StabilityDistributionChart(props: StabilityDistributionChartProp
               ticks={yAxisConfig.ticks}
             />
 
-            <Tooltip content={<StabilityTooltip />} />
+            <Tooltip content={<StabilityTooltip locale={props.locale} />} />
 
             <Area
               type="monotone"

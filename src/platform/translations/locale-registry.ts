@@ -5,11 +5,13 @@
  * @exports
  *  - InterfaceLocaleDefinition
  *  - DEFAULT_INTERFACE_LOCALE
+ *  - DEFAULT_INTERFACE_LOCALE_PREFERENCE
  *  - FOLLOW_OBSIDIAN_INTERFACE_LOCALE
  *  - getSupportedInterfaceLocales
  *  - normaliseInterfaceLocale
  *  - resolveInterfaceLocalePreference
  *  - resolveInterfaceLocale
+ *  - interfaceLocaleToIntlLocale
  *  - getInterfaceLocaleLabel
  */
 
@@ -23,17 +25,15 @@ export type InterfaceLocaleDefinition = {
 
 export const DEFAULT_INTERFACE_LOCALE = "en-gb";
 export const FOLLOW_OBSIDIAN_INTERFACE_LOCALE = "obsidian";
+export const DEFAULT_INTERFACE_LOCALE_PREFERENCE = FOLLOW_OBSIDIAN_INTERFACE_LOCALE;
 const OBSIDIAN_UNSUPPORTED_FALLBACK_LOCALE = "en-us";
-const FOLLOW_LABEL_PREFIX = "Follow";
-const FOLLOW_LABEL_TARGET = "Obsidian";
-const FOLLOW_LABEL_SUFFIX = "(Auto)";
-const FOLLOW_LABEL = `${FOLLOW_LABEL_PREFIX} ${FOLLOW_LABEL_TARGET} ${FOLLOW_LABEL_SUFFIX}`;
+const FOLLOW_LABEL = "Match Obsidian";
 
 const INTERFACE_LOCALE_REGISTRY: ReadonlyArray<InterfaceLocaleDefinition> = [
   {
     code: FOLLOW_OBSIDIAN_INTERFACE_LOCALE,
     label: FOLLOW_LABEL,
-    nativeLabel: "Use Obsidian language (fallback: English (US))",
+    nativeLabel: "Match Obsidian",
     flagCode: "checkered",
     status: "stable",
   },
@@ -60,7 +60,6 @@ const INTERFACE_LOCALE_REGISTRY: ReadonlyArray<InterfaceLocaleDefinition> = [
   },
 ];
 
-const INTERFACE_LOCALE_SET = new Set(INTERFACE_LOCALE_REGISTRY.map((locale) => locale.code));
 const MANUAL_INTERFACE_LOCALE_SET = new Set(
   INTERFACE_LOCALE_REGISTRY
     .map((locale) => locale.code)
@@ -122,6 +121,14 @@ export function resolveInterfaceLocale(value: unknown): string {
     return toSupportedManualLocale(readObsidianLocalePreference(), OBSIDIAN_UNSUPPORTED_FALLBACK_LOCALE);
   }
   return toSupportedManualLocale(preference, DEFAULT_INTERFACE_LOCALE);
+}
+
+export function interfaceLocaleToIntlLocale(value: unknown): string {
+  const resolved = resolveInterfaceLocale(value);
+  if (resolved === "en-gb") return "en-GB";
+  if (resolved === "en-us") return "en-US";
+  if (resolved === "zh-cn") return "zh-CN";
+  return "en-US";
 }
 
 export function getInterfaceLocaleLabel(code: string): string {

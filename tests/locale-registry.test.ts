@@ -15,7 +15,7 @@ describe("locale registry", () => {
     const locales = getSupportedInterfaceLocales();
     const follow = locales.find((l) => l.code === FOLLOW_OBSIDIAN_INTERFACE_LOCALE);
     expect(!!follow).toBe(true);
-    expect(follow?.label).toContain("(Auto)");
+    expect(follow?.label).toContain("Obsidian");
     expect(follow?.flagCode).toBe("checkered");
   });
 

@@ -18,6 +18,7 @@ import type { ReviewResult } from "../../../platform/types/review";
 import { gradeFromPassFail, gradeFromRating, resetCardScheduling, type SchedulerSettings } from "../../../engine/scheduler/scheduler";
 import { useAnalyticsPopoverZIndex } from "../filter-styles";
 import { cssClassForProps } from "../../../platform/core/ui";
+import { interfaceLocaleToIntlLocale } from "../../../platform/translations/locale-registry";
 import { t } from "../../../platform/translations/translator";
 
 function InfoIcon(props: { text: string }) {
@@ -232,10 +233,16 @@ function buildStabilityTimeline(
   return timeline;
 }
 
-function CardCurveTooltip(props: { active?: boolean; payload?: Array<{ value?: number; name?: string; dataKey?: string; color?: string }>; label?: number; baseStart: number }) {
+function CardCurveTooltip(props: {
+  active?: boolean;
+  payload?: Array<{ value?: number; name?: string; dataKey?: string; color?: string }>;
+  label?: number;
+  baseStart: number;
+  locale?: string;
+}) {
   if (!props.active || !props.payload?.length) return null;
   const dayIndex = typeof props.label === "number" ? props.label : 0;
-  const date = new Date(props.baseStart + dayIndex * MS_DAY).toLocaleDateString(undefined, {
+  const date = new Date(props.baseStart + dayIndex * MS_DAY).toLocaleDateString(props.locale, {
     weekday: "short",
     month: "short",
     day: "numeric",
@@ -270,6 +277,7 @@ export function ForgettingCurveChart(props: {
   locale?: string;
 }) {
   const tx = React.useMemo(() => (token: string, fallback: string, vars?: Record<string, string | number>) => t(props.locale, token, fallback, vars), [props.locale]);
+  const intlLocale = React.useMemo(() => interfaceLocaleToIntlLocale(props.locale), [props.locale]);
   const [search, setSearch] = React.useState<SearchState>(() => createEmptySearch());
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
   const seededRef = React.useRef(false);
@@ -449,12 +457,12 @@ export function ForgettingCurveChart(props: {
       const timeline = buildStabilityTimeline(id, pastReviews, schedulerCfg);
 
       if (!card) {
-        issueList.push({ id, reason: "Card not found" });
+        issueList.push({ id, reason: tx("ui.analytics.forgettingCurve.issue.cardNotFound", "Card not found") });
         return;
       }
 
       if (!timeline.length) {
-        issueList.push({ id, reason: "Not studied yet" });
+        issueList.push({ id, reason: tx("ui.analytics.forgettingCurve.issue.notStudiedYet", "Not studied yet") });
         return;
       }
 
@@ -468,7 +476,7 @@ export function ForgettingCurveChart(props: {
 
       const stability = timeline[timeline.length - 1]?.stability ?? 0;
       if (!Number.isFinite(stability) || stability <= 0) {
-        issueList.push({ id, reason: "Not studied yet" });
+        issueList.push({ id, reason: tx("ui.analytics.forgettingCurve.issue.notStudiedYet", "Not studied yet") });
         return;
       }
 
@@ -492,7 +500,7 @@ export function ForgettingCurveChart(props: {
 
     const base = Number.isFinite(minFirstReview) && minFirstReview > 0 ? minFirstReview : props.nowMs;
     return { curves: curveList, issues: issueList, baseStart: base };
-  }, [selectedIds, cardById, reviewLog, schedulerCfg, props.nowMs, params.w]);
+  }, [selectedIds, cardById, reviewLog, schedulerCfg, props.nowMs, params.w, tx]);
 
   const elapsedDays = React.useMemo(
     () => Math.max(14, Math.ceil((props.nowMs - baseStart) / MS_DAY)),
@@ -535,7 +543,7 @@ export function ForgettingCurveChart(props: {
 
   const tickFormatter = (value: number) => {
     const ts = baseStart + Number(value) * MS_DAY;
-    return new Date(ts).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    return new Date(ts).toLocaleDateString(intlLocale, { month: "short", day: "numeric" });
   };
   const yTickFormatter = (value: number) => `${Math.round(Number(value) * 100)}%`;
 
@@ -780,13 +788,13 @@ export function ForgettingCurveChart(props: {
                 axisLine={{ stroke: "var(--border)" }}
                 tickLine={{ stroke: "var(--border)" }}
               />
-              <Tooltip content={<CardCurveTooltip baseStart={baseStart} />} />
+              <Tooltip content={<CardCurveTooltip baseStart={baseStart} locale={intlLocale} />} />
               {todayDay / maxDays > 0.1 && (
                 <ReferenceLine
                   x={todayDay}
                   stroke="var(--border)"
                   strokeDasharray="4 4"
-                  label={{ value: "Today", position: "top", fill: "var(--text-muted)", fontSize: 11 }}
+                  label={{ value: tx("ui.view.coach.readiness.today", "Today"), position: "top", fill: "var(--text-muted)", fontSize: 11 }}
                 />
               )}
               {curves.map((curve) => (

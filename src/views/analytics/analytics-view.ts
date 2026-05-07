@@ -35,6 +35,7 @@ import { ForgettingCurveChart } from "./charts/forgetting-curve-chart";
 import { ChartErrorBoundary } from "./error-boundary";
 import { TestsAnalyticsCard } from "./cards/tests-analytics-card";
 import { NoteReviewAnalyticsCard } from "./cards/note-review-analytics-card";
+import { interfaceLocaleToIntlLocale } from "../../platform/translations/locale-registry";
 import { t } from "../../platform/translations/translator";
 import { ExamTestsSqlite, type SavedExamAttemptRecord } from "../../platform/core/exam-tests-sqlite";
 import { NoteReviewSqlite } from "../../platform/core/note-review-sqlite";
@@ -1391,6 +1392,7 @@ export class SproutAnalyticsView extends ItemView {
 
     const allRows: RowDatum[] = [];
     const maxDays = 365;
+    const intlLocale = interfaceLocaleToIntlLocale(this.plugin.settings?.general?.interfaceLanguage);
 
     for (let i = 0; i < maxDays; i += 1) {
       const idx = todayIndex - i;
@@ -1407,7 +1409,7 @@ export class SproutAnalyticsView extends ItemView {
 
       if (due <= 0 && reviews <= 0 && passed <= 0 && failed <= 0) continue;
 
-      const dateStr = new Date(idx * MS_DAY).toLocaleDateString(undefined, {
+      const dateStr = new Date(idx * MS_DAY).toLocaleDateString(intlLocale, {
         timeZone: timezone,
         weekday: "short",
         month: "short",

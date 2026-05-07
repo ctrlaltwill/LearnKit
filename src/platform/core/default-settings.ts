@@ -14,12 +14,13 @@
 // Re-export both names so existing Sprout imports keep working during Phase 1.
 export type { LearnKitSettings, SproutSettings } from "../types/settings";
 import type { LearnKitSettings } from "../types/settings";
+import { DEFAULT_INTERFACE_LOCALE_PREFERENCE } from "../translations/locale-registry";
 
 /** Factory-default values for every plugin setting. */
 export const DEFAULT_SETTINGS: LearnKitSettings = {
 
   general: {
-    interfaceLanguage: "en-gb",
+    interfaceLanguage: DEFAULT_INTERFACE_LOCALE_PREFERENCE,
     userName: "",
     showGreeting: true,
     hasOpenedHome: false,

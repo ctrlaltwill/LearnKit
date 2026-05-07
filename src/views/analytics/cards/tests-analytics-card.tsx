@@ -11,6 +11,7 @@ import { ComposedChart, Line, ResponsiveContainer, Scatter, Tooltip, XAxis, YAxi
 import { createXAxisTicks, formatAxisLabel } from "../chart-axis-utils";
 import { useAnalyticsPopoverZIndex } from "../filter-styles";
 import { MS_DAY } from "../../../platform/core/constants";
+import { interfaceLocaleToIntlLocale } from "../../../platform/translations/locale-registry";
 import { t } from "../../../platform/translations/translator";
 
 type AnalyticsExamAttemptEventLike = {
@@ -81,14 +82,14 @@ function localDayIndex(ts: number, formatter: Intl.DateTimeFormat): number {
   return Math.floor(Date.UTC(year, month - 1, day) / MS_DAY);
 }
 
-function formatDayLabel(dayIdx: number, timeZone: string): string {
+function formatDayLabel(dayIdx: number, timeZone: string, locale: string): string {
   const date = new Date(dayIdx * MS_DAY);
-  return date.toLocaleDateString(undefined, { timeZone, month: "short", day: "numeric" });
+  return date.toLocaleDateString(locale, { timeZone, month: "short", day: "numeric" });
 }
 
-function formatDayTitle(dayIdx: number, timeZone: string): string {
+function formatDayTitle(dayIdx: number, timeZone: string, locale: string): string {
   const date = new Date(dayIdx * MS_DAY);
-  return date.toLocaleDateString(undefined, { timeZone, weekday: "short", month: "short", day: "numeric" });
+  return date.toLocaleDateString(locale, { timeZone, weekday: "short", month: "short", day: "numeric" });
 }
 
 function InfoIcon(props: { text: string }) {
@@ -235,6 +236,7 @@ function buildScatterData(
   durationDays: number,
   formatter: Intl.DateTimeFormat,
   tz: string,
+  locale: string,
   todayIdx: number,
 ): ScatterPoint[] {
   const startIdx = todayIdx - (durationDays - 1);
@@ -246,7 +248,7 @@ function buildScatterData(
     out.push({
       dayIndex: idx,
       score: row.score,
-      date: formatDayTitle(idx, tz),
+      date: formatDayTitle(idx, tz, locale),
       autoSubmitted: row.autoSubmitted,
     });
   }
@@ -258,6 +260,7 @@ function buildDailyAverageSeries(
   durationDays: number,
   formatter: Intl.DateTimeFormat,
   tz: string,
+  locale: string,
   todayIdx: number,
 ): DailyAveragePoint[] {
   const startIdx = todayIdx - (durationDays - 1);
@@ -281,7 +284,7 @@ function buildDailyAverageSeries(
       dayIndex: idx,
       averageScore: attempts > 0 ? bucket!.total / attempts : null,
       attempts,
-      date: formatDayTitle(idx, tz),
+      date: formatDayTitle(idx, tz, locale),
     });
   }
   return out;
@@ -295,6 +298,7 @@ export function TestsAnalyticsCard(props: {
 }) {
   const tz = props.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
   const formatter = React.useMemo(() => makeDatePartsFormatter(tz), [tz]);
+  const intlLocale = React.useMemo(() => interfaceLocaleToIntlLocale(props.locale), [props.locale]);
   const [durationDays, setDurationDays] = React.useState(30);
   const [open, setOpen] = React.useState(false);
   const [durationOpen, setDurationOpen] = React.useState(false);
@@ -342,12 +346,12 @@ export function TestsAnalyticsCard(props: {
 
   const allRows = React.useMemo(() => toRows(props.events, props.dbAttempts), [props.events, props.dbAttempts]);
   const scatterData = React.useMemo(
-    () => buildScatterData(allRows, durationDays, formatter, tz, todayIdx),
-    [allRows, durationDays, formatter, tz, todayIdx],
+    () => buildScatterData(allRows, durationDays, formatter, tz, intlLocale, todayIdx),
+    [allRows, durationDays, formatter, tz, intlLocale, todayIdx],
   );
   const dailyAverageSeries = React.useMemo(
-    () => buildDailyAverageSeries(allRows, durationDays, formatter, tz, todayIdx),
-    [allRows, durationDays, formatter, tz, todayIdx],
+    () => buildDailyAverageSeries(allRows, durationDays, formatter, tz, intlLocale, todayIdx),
+    [allRows, durationDays, formatter, tz, intlLocale, todayIdx],
   );
   const averagesByDay = React.useMemo(() => {
     const grouped = new Map<number, DailyAveragePoint>();
@@ -363,7 +367,12 @@ export function TestsAnalyticsCard(props: {
   }, [startIdx, durationDays, todayIdx]);
 
   const xTickFormatter = (value: number) =>
-    formatAxisLabel(value, todayIdx, (idx) => formatDayLabel(idx, tz));
+    formatAxisLabel(
+      value,
+      todayIdx,
+      (idx) => formatDayLabel(idx, tz, intlLocale),
+      t(props.locale, "ui.view.coach.readiness.today", "Today"),
+    );
 
   const durationOptions = React.useMemo(() => [7, 30, 90], []);
   const resetFilters = React.useCallback(() => {

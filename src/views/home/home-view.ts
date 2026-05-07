@@ -1203,6 +1203,7 @@ export class SproutHomeView extends ItemView {
         timezone,
         rangeDays: 0,
         filters: {},
+        locale: this.plugin.settings?.general?.interfaceLanguage,
       }),
     );
 

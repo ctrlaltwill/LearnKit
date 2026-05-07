@@ -13,6 +13,7 @@ import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recha
 import { createXAxisTicks, formatAxisLabel } from "../chart-axis-utils";
 import { endTruncateClass, useAnalyticsPopoverZIndex } from "../filter-styles";
 import { MS_DAY } from "../../../platform/core/constants";
+import { interfaceLocaleToIntlLocale } from "../../../platform/translations/locale-registry";
 import { t } from "../../../platform/translations/translator";
 
 function InfoIcon(props: { text: string }) {
@@ -152,14 +153,14 @@ function localDayIndex(ts: number, formatter: Intl.DateTimeFormat) {
   return Math.floor(utc / MS_DAY);
 }
 
-function formatDayLabel(dayIndex: number, timeZone: string) {
+function formatDayLabel(dayIndex: number, timeZone: string, locale: string) {
   const date = new Date(dayIndex * MS_DAY);
-  return date.toLocaleDateString(undefined, { timeZone, month: "short", day: "numeric" });
+  return date.toLocaleDateString(locale, { timeZone, month: "short", day: "numeric" });
 }
 
-function formatDayTitle(dayIndex: number, timeZone: string) {
+function formatDayTitle(dayIndex: number, timeZone: string, locale: string) {
   const date = new Date(dayIndex * MS_DAY);
-  return date.toLocaleDateString(undefined, { timeZone, weekday: "short", month: "short", day: "numeric" });
+  return date.toLocaleDateString(locale, { timeZone, weekday: "short", month: "short", day: "numeric" });
 }
 
 function normalizeMatchText(raw: string) {
@@ -206,14 +207,15 @@ function rankFilterMatches(items: string[], query: string, limit = 5) {
     .slice(0, limit);
 }
 
-function TooltipContent(props: { active?: boolean; payload?: Array<{ payload?: unknown }> }) {
+function TooltipContent(props: { active?: boolean; payload?: Array<{ payload?: unknown }>; locale?: string }) {
   if (!props.active || !props.payload || !props.payload.length) return null;
   const datum = props.payload[0]?.payload as Datum | undefined;
   if (!datum) return null;
+  const tx = (token: string, fallback: string, vars?: Record<string, string | number>) => t(props.locale, token, fallback, vars);
   return (
     <div className="learnkit-data-tooltip-surface">
       <div className="text-sm font-medium text-background">{datum.date}</div>
-      <div className="text-background">Created: {datum.created}</div>
+      <div className="text-background">{tx("ui.analytics.newCards.tooltipCreated", "Created: {count}", { count: datum.created })}</div>
     </div>
   );
 }
@@ -239,6 +241,7 @@ export function NewCardsPerDayChart(props: {
 }) {
   const tz = props.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
   const formatter = React.useMemo(() => makeDatePartsFormatter(tz), [tz]);
+  const intlLocale = React.useMemo(() => interfaceLocaleToIntlLocale(props.locale), [props.locale]);
   const tx = React.useMemo(() => (token: string, fallback: string, vars?: Record<string, string | number>) => t(props.locale, token, fallback, vars), [props.locale]);
   const [durationDays, setDurationDays] = React.useState(props.days ?? 30);
   const [open, setOpen] = React.useState(false);
@@ -377,8 +380,8 @@ export function NewCardsPerDayChart(props: {
     for (let i = 0; i < durationDays; i += 1) {
       const dayIndex = startIndex + i;
       const base = {
-        label: formatDayLabel(dayIndex, tz),
-        date: formatDayTitle(dayIndex, tz),
+        label: formatDayLabel(dayIndex, tz, intlLocale),
+        date: formatDayTitle(dayIndex, tz, intlLocale),
         created: 0,
       };
       const datum: AxisDatum = { ...base, dayIndex };
@@ -416,14 +419,19 @@ export function NewCardsPerDayChart(props: {
     }
 
     return rows;
-  }, [props.cards, formatter, tz, durationDays, startIndex, todayIndex, selectedType, selectedDecks, selectedGroups]);
+  }, [props.cards, formatter, tz, durationDays, startIndex, todayIndex, selectedType, selectedDecks, selectedGroups, intlLocale]);
 
   const durationOptions = React.useMemo(() => [7, 30, 90], []);
 
   const xTicks = React.useMemo(() => createXAxisTicks(startIndex, todayIndex, todayIndex), [startIndex, todayIndex]);
 
   const xTickFormatter = (value: number) =>
-    formatAxisLabel(value, todayIndex, (dayIndex) => formatDayLabel(dayIndex, tz));
+    formatAxisLabel(
+      value,
+      todayIndex,
+      (dayIndex) => formatDayLabel(dayIndex, tz, intlLocale),
+      tx("ui.view.coach.readiness.today", "Today"),
+    );
 
   const yMax = React.useMemo(() => {
     const maxValue = data.reduce((max, row) => Math.max(max, row.created), 0);
@@ -695,7 +703,7 @@ export function NewCardsPerDayChart(props: {
               ticks={yTicks}
               domain={[0, yMax]}
             />
-            <Tooltip content={<TooltipContent />} />
+            <Tooltip content={<TooltipContent locale={props.locale} />} />
             <Bar dataKey="created" fill={BAR_COLOR} radius={[0, 0, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>

@@ -11,6 +11,7 @@ import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recha
 import { createXAxisTicks, formatAxisLabel } from "../chart-axis-utils";
 import { useAnalyticsPopoverZIndex } from "../filter-styles";
 import { MS_DAY } from "../../../platform/core/constants";
+import { interfaceLocaleToIntlLocale } from "../../../platform/translations/locale-registry";
 import { t } from "../../../platform/translations/translator";
 
 type NoteReviewEventLike = {
@@ -47,14 +48,14 @@ function localDayIndex(ts: number, formatter: Intl.DateTimeFormat): number {
   return Math.floor(Date.UTC(year, month - 1, day) / MS_DAY);
 }
 
-function formatDayLabel(dayIdx: number, timeZone: string): string {
+function formatDayLabel(dayIdx: number, timeZone: string, locale: string): string {
   const date = new Date(dayIdx * MS_DAY);
-  return date.toLocaleDateString(undefined, { timeZone, month: "short", day: "numeric" });
+  return date.toLocaleDateString(locale, { timeZone, month: "short", day: "numeric" });
 }
 
-function formatDayTitle(dayIdx: number, timeZone: string): string {
+function formatDayTitle(dayIdx: number, timeZone: string, locale: string): string {
   const date = new Date(dayIdx * MS_DAY);
-  return date.toLocaleDateString(undefined, { timeZone, weekday: "short", month: "short", day: "numeric" });
+  return date.toLocaleDateString(locale, { timeZone, weekday: "short", month: "short", day: "numeric" });
 }
 
 function InfoIcon(props: { text: string }) {
@@ -120,6 +121,7 @@ function summarize(
   includePractice: boolean,
   formatter: Intl.DateTimeFormat,
   tz: string,
+  locale: string,
   todayIdx: number,
 ): DayRow[] {
   const startIdx = todayIdx - (durationDays - 1);
@@ -129,8 +131,8 @@ function summarize(
     const idx = startIdx + i;
     map.set(idx, {
       dayIndex: idx,
-      label: formatDayLabel(idx, tz),
-      date: formatDayTitle(idx, tz),
+      label: formatDayLabel(idx, tz, locale),
+      date: formatDayTitle(idx, tz, locale),
       scheduled: 0,
       reviewed: 0,
       scheduledRemaining: 0,
@@ -164,6 +166,7 @@ export function NoteReviewAnalyticsCard(props: {
 }) {
   const tz = props.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
   const formatter = React.useMemo(() => makeDatePartsFormatter(tz), [tz]);
+  const intlLocale = React.useMemo(() => interfaceLocaleToIntlLocale(props.locale), [props.locale]);
   const [durationDays, setDurationDays] = React.useState(30);
   const [includePractice, setIncludePractice] = React.useState<boolean>(props.includePracticeDefault);
   const [open, setOpen] = React.useState(false);
@@ -215,8 +218,8 @@ export function NoteReviewAnalyticsCard(props: {
   }, [open]);
 
   const data = React.useMemo(
-    () => summarize(props.events, durationDays, includePractice, formatter, tz, todayIdx),
-    [props.events, durationDays, includePractice, formatter, tz, todayIdx],
+    () => summarize(props.events, durationDays, includePractice, formatter, tz, intlLocale, todayIdx),
+    [props.events, durationDays, includePractice, formatter, tz, intlLocale, todayIdx],
   );
 
   const xTicks = React.useMemo(() => {
@@ -225,7 +228,12 @@ export function NoteReviewAnalyticsCard(props: {
   }, [startIdx, durationDays, todayIdx]);
 
   const xTickFormatter = (value: number) =>
-    formatAxisLabel(value, todayIdx, (idx) => formatDayLabel(idx, tz));
+    formatAxisLabel(
+      value,
+      todayIdx,
+      (idx) => formatDayLabel(idx, tz, intlLocale),
+      t(props.locale, "ui.view.coach.readiness.today", "Today"),
+    );
 
   const yMax = React.useMemo(() => {
     const maxValue = data.reduce(

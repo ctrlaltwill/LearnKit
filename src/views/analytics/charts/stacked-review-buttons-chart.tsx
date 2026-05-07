@@ -15,6 +15,7 @@ import { createXAxisTicks, formatAxisLabel } from "../chart-axis-utils";
 import { endTruncateClass, useAnalyticsPopoverZIndex } from "../filter-styles";
 import { MS_DAY } from "../../../platform/core/constants";
 import { cssClassForProps } from "../../../platform/core/ui";
+import { interfaceLocaleToIntlLocale } from "../../../platform/translations/locale-registry";
 import { t } from "../../../platform/translations/translator";
 
 function InfoIcon(props: { text: string }) {
@@ -268,27 +269,28 @@ function localDayIndex(ts: number, formatter: Intl.DateTimeFormat) {
   return Math.floor(utc / MS_DAY);
 }
 
-function formatDayLabel(dayIndex: number, timeZone: string) {
+function formatDayLabel(dayIndex: number, timeZone: string, locale: string) {
   const date = new Date(dayIndex * MS_DAY);
-  return date.toLocaleDateString(undefined, { timeZone, month: "short", day: "numeric" });
+  return date.toLocaleDateString(locale, { timeZone, month: "short", day: "numeric" });
 }
 
-function formatDayTitle(dayIndex: number, timeZone: string) {
+function formatDayTitle(dayIndex: number, timeZone: string, locale: string) {
   const date = new Date(dayIndex * MS_DAY);
-  return date.toLocaleDateString(undefined, { timeZone, weekday: "short", month: "short", day: "numeric" });
+  return date.toLocaleDateString(locale, { timeZone, weekday: "short", month: "short", day: "numeric" });
 }
 
-function TooltipContent(props: { active?: boolean; payload?: Array<{ payload?: unknown }> }) {
+function TooltipContent(props: { active?: boolean; payload?: Array<{ payload?: unknown }>; locale?: string }) {
   if (!props.active || !props.payload || !props.payload.length) return null;
   const datum = props.payload[0]?.payload as Datum | undefined;
   if (!datum) return null;
+  const tx = (token: string, fallback: string) => t(props.locale, token, fallback);
   return (
     <div className="learnkit-data-tooltip-surface">
       <div className="text-sm font-medium text-background">{datum.date}</div>
-      <div className="text-background">Again: {datum.again}</div>
-      <div className="text-background">Hard: {datum.hard}</div>
-      <div className="text-background">Good: {datum.good}</div>
-      <div className="text-background">Easy: {datum.easy}</div>
+      <div className="text-background">{`${tx("ui.widget.grade.again", "Again")}: ${datum.again}`}</div>
+      <div className="text-background">{`${tx("ui.widget.grade.hard", "Hard")}: ${datum.hard}`}</div>
+      <div className="text-background">{`${tx("ui.widget.grade.good", "Good")}: ${datum.good}`}</div>
+      <div className="text-background">{`${tx("ui.widget.grade.easy", "Easy")}: ${datum.easy}`}</div>
     </div>
   );
 }
@@ -315,6 +317,7 @@ export function StackedReviewButtonsChart(props: {
 }) {
   const tz = props.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
   const formatter = React.useMemo(() => makeDatePartsFormatter(tz), [tz]);
+  const intlLocale = React.useMemo(() => interfaceLocaleToIntlLocale(props.locale), [props.locale]);
   const tx = React.useMemo(() => (token: string, fallback: string, vars?: Record<string, string | number>) => t(props.locale, token, fallback, vars), [props.locale]);
   const [durationDays, setDurationDays] = React.useState(props.days ?? 30);
   const [open, setOpen] = React.useState(false);
@@ -435,8 +438,8 @@ export function StackedReviewButtonsChart(props: {
     for (let i = 0; i < durationDays; i += 1) {
       const dayIndex = startIndex + i;
       const base: AxisDatum = {
-        label: formatDayLabel(dayIndex, tz),
-        date: formatDayTitle(dayIndex, tz),
+        label: formatDayLabel(dayIndex, tz, intlLocale),
+        date: formatDayTitle(dayIndex, tz, intlLocale),
         again: 0,
         hard: 0,
         good: 0,
@@ -485,6 +488,7 @@ export function StackedReviewButtonsChart(props: {
     selectedDecks,
     selectedGroups,
     cardById,
+    intlLocale,
   ]);
 
   const durationOptions = React.useMemo(() => [7, 30, 90], []);
@@ -495,7 +499,12 @@ export function StackedReviewButtonsChart(props: {
   }, [startIndex, durationDays, todayIndex]);
 
   const xTickFormatter = (value: number) =>
-    formatAxisLabel(value, todayIndex, (dayIndex) => formatDayLabel(dayIndex, tz));
+    formatAxisLabel(
+      value,
+      todayIndex,
+      (dayIndex) => formatDayLabel(dayIndex, tz, intlLocale),
+      tx("ui.view.coach.readiness.today", "Today"),
+    );
 
   const yMax = React.useMemo(() => {
     const maxValue = data.reduce((max, row) => Math.max(max, row.again + row.hard + row.good + row.easy), 0);
@@ -753,7 +762,7 @@ export function StackedReviewButtonsChart(props: {
               ticks={yTicks}
               domain={[0, yMax]}
             />
-            <Tooltip content={<TooltipContent />} />
+            <Tooltip content={<TooltipContent locale={props.locale} />} />
             <Bar
               dataKey="again"
               stackId="a"
@@ -791,25 +800,25 @@ export function StackedReviewButtonsChart(props: {
           <span
             className={`inline-block learnkit-ana-legend-dot learnkit-ana-legend-dot-square ${cssClassForProps({ "--learnkit-legend-color": COLORS.again })}`}
           />
-          <span className="">Again</span>
+          <span className="">{tx("ui.widget.grade.again", "Again")}</span>
         </div>
         <div className="inline-flex items-center gap-2">
           <span
             className={`inline-block learnkit-ana-legend-dot learnkit-ana-legend-dot-square ${cssClassForProps({ "--learnkit-legend-color": COLORS.hard })}`}
           />
-          <span className="">Hard</span>
+          <span className="">{tx("ui.widget.grade.hard", "Hard")}</span>
         </div>
         <div className="inline-flex items-center gap-2">
           <span
             className={`inline-block learnkit-ana-legend-dot learnkit-ana-legend-dot-square ${cssClassForProps({ "--learnkit-legend-color": COLORS.good })}`}
           />
-          <span className="">Good</span>
+          <span className="">{tx("ui.widget.grade.good", "Good")}</span>
         </div>
         <div className="inline-flex items-center gap-2">
           <span
             className={`inline-block learnkit-ana-legend-dot learnkit-ana-legend-dot-square ${cssClassForProps({ "--learnkit-legend-color": COLORS.easy })}`}
           />
-          <span className="">Easy</span>
+          <span className="">{tx("ui.widget.grade.easy", "Easy")}</span>
         </div>
       </div>
     </div>
