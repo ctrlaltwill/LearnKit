@@ -338,6 +338,13 @@ export class LearnKitSettingsTab extends PluginSettingTab {
       /** Renders the backup table rows. */
       const renderTable = (rows: Array<{ stats: DataJsonBackupStats; ok: boolean; integrity: BackupIntegrityState }>) => {
         tableWrap.empty();
+        for (const stalePopover of Array.from(document.querySelectorAll(".learnkit-backup-pager-popover-host"))) {
+          try {
+            stalePopover.remove();
+          } catch (e: unknown) {
+            log.swallow("remove stale backup pager popover", e);
+          }
+        }
 
         const filtered = rows.filter((r) => r.stats?.name !== "data.json");
         if (!filtered.length) {
@@ -377,7 +384,28 @@ export class LearnKitSettingsTab extends PluginSettingTab {
         currentTr.createEl("td", { cls: "learnkit-backup-cell learnkit-backup-cell", text: this._tx("ui.settings.backups.table.now", "Now") });
         currentTr.createEl("td", { cls: "learnkit-backup-cell learnkit-backup-cell", text: summaryLabel(current) });
         currentTr.createEl("td", { cls: "learnkit-backup-cell learnkit-backup-cell", text: this._tx("ui.settings.backups.table.na", "—") });
-        currentTr.createEl("td", { cls: "learnkit-backup-cell learnkit-backup-cell", text: this._tx("ui.settings.backups.table.na", "—") });
+        const currentActionsTd = currentTr.createEl("td", {
+          cls: "learnkit-backup-cell learnkit-backup-cell learnkit-backup-actions learnkit-backup-actions",
+        });
+        const currentRestore = currentActionsTd.createEl("button", {
+          cls: "learnkit-settings-icon-btn learnkit-settings-icon-btn",
+        });
+        currentRestore.setAttribute(
+          "aria-label",
+          this._tx("ui.settings.backups.actions.restore.currentUnavailable", "Restore is unavailable for current data."),
+        );
+        currentRestore.setAttribute("disabled", "true");
+        setIcon(currentRestore, "archive-restore");
+
+        const currentDelete = currentActionsTd.createEl("button", {
+          cls: "learnkit-settings-icon-btn learnkit-settings-icon-btn learnkit-settings-icon-btn--danger learnkit-settings-icon-btn--danger",
+        });
+        currentDelete.setAttribute(
+          "aria-label",
+          this._tx("ui.settings.backups.actions.delete.currentUnavailable", "Delete is unavailable for current data."),
+        );
+        currentDelete.setAttribute("disabled", "true");
+        setIcon(currentDelete, "trash-2");
 
         /* ── backup rows ── */
         for (const r of pageRows) {
@@ -436,9 +464,11 @@ export class LearnKitSettingsTab extends PluginSettingTab {
         }
 
         const pager = tableWrap.createDiv({ cls: "setting-item-control" });
-        pager.classList.add("learnkit-backup-actions", "learnkit-backup-actions");
+        pager.classList.add("learnkit-backup-actions", "learnkit-backup-pager");
 
-        const summary = pager.createEl("span", { cls: "learnkit-settings-text-muted learnkit-settings-text-muted" });
+        const summary = pager.createEl("span", {
+          cls: "learnkit-settings-text-muted learnkit-backup-pager-summary",
+        });
         summary.textContent = this._tx("ui.settings.backups.pager.showingRange", "Showing {start}-{end} of {total} backups", {
           start: startRow + 1,
           end: endRow,
@@ -448,21 +478,191 @@ export class LearnKitSettingsTab extends PluginSettingTab {
         const rowsLabel = pager.createEl("span", { cls: "learnkit-settings-text-muted learnkit-settings-text-muted" });
         rowsLabel.textContent = this._tx("ui.settings.backups.pager.rowsPerPage", "Rows per page");
 
-        const rowsSelect = pager.createEl("select", { cls: "dropdown" });
-        for (const size of backupRowsPerPageOptions) {
-          const opt = rowsSelect.createEl("option", { text: String(size) });
-          opt.value = String(size);
-          if (size === backupRowsPerPage) opt.selected = true;
-        }
-        rowsSelect.onchange = () => {
-          const next = Number(rowsSelect.value);
-          if (!Number.isFinite(next) || next <= 0) return;
-          backupRowsPerPage = next;
-          backupPageIndex = 0;
-          renderTable(rows);
+        const rowsWrap = pager.createDiv({ cls: "learnkit learnkit-backup-pager-rows-wrap" });
+        const rowsBtn = rowsWrap.createEl("button", {
+          cls: "learnkit-btn-toolbar learnkit-btn-filter learnkit-backup-pager-rows inline-flex h-7 min-w-11 items-center justify-between gap-2 px-3 text-sm",
+        });
+        rowsBtn.setAttribute("aria-haspopup", "menu");
+        rowsBtn.setAttribute("aria-expanded", "false");
+        rowsBtn.setAttribute("aria-label", this._tx("ui.settings.backups.pager.rowsPerPage", "Rows per page"));
+        rowsBtn.setAttribute("data-tooltip-position", "top");
+
+        const rowsBtnText = document.createElement("span");
+        rowsBtnText.className = "truncate";
+        rowsBtnText.textContent = String(backupRowsPerPage);
+        rowsBtn.appendChild(rowsBtnText);
+
+        const rowsChevron = document.createElement("span");
+        rowsChevron.className = "inline-flex items-center justify-center [&_svg]:size-4 transition-transform duration-150 ease-out";
+        rowsChevron.setAttribute("aria-hidden", "true");
+        setIcon(rowsChevron, "chevron-down");
+        rowsBtn.appendChild(rowsChevron);
+
+        const rowsPopoverHost = document.createElement("div");
+        rowsPopoverHost.className = "learnkit learnkit-backup-pager-popover-host";
+
+        const rowsPopover = document.createElement("div");
+        rowsPopover.className = "learnkit-popover-overlay learnkit-dd-popover";
+        rowsPopover.setAttribute("aria-hidden", "true");
+        rowsPopoverHost.appendChild(rowsPopover);
+
+        const rowsPanel = document.createElement("div");
+        rowsPanel.className = "rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 learnkit-pointer-auto learnkit-dd-panel";
+        rowsPopover.appendChild(rowsPanel);
+
+        const rowsMenu = document.createElement("div");
+        rowsMenu.setAttribute("role", "menu");
+        rowsMenu.className = "flex flex-col";
+        rowsPanel.appendChild(rowsMenu);
+
+        const pageSizeOptions = [...backupRowsPerPageOptions].sort((a, b) => b - a);
+        let rowsOpen = false;
+        let detachRowsHandlers: (() => void) | null = null;
+
+        const closeRowsMenu = () => {
+          rowsBtn.setAttribute("aria-expanded", "false");
+          rowsChevron.classList.remove("rotate-180");
+          rowsPopover.setAttribute("aria-hidden", "true");
+          rowsPopover.classList.remove("is-open");
+
+          try {
+            detachRowsHandlers?.();
+          } catch (e: unknown) {
+            log.swallow("cleanup backup pager rows menu", e);
+          }
+          detachRowsHandlers = null;
+
+          if (rowsPopoverHost.parentNode === document.body) {
+            document.body.removeChild(rowsPopoverHost);
+          }
+          rowsOpen = false;
         };
 
-        const btnPrev = pager.createEl("button", { text: this._tx("ui.settings.backups.pager.prev", "Prev"), cls: "learnkit-settings-icon-btn learnkit-settings-icon-btn" });
+        const openRowsMenu = () => {
+          while (rowsMenu.firstChild) rowsMenu.removeChild(rowsMenu.firstChild);
+
+          for (const opt of pageSizeOptions) {
+            const item = document.createElement("div");
+            item.setAttribute("role", "menuitemradio");
+            item.setAttribute("aria-checked", opt === backupRowsPerPage ? "true" : "false");
+            item.tabIndex = 0;
+            item.className = "group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer select-none outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground";
+
+            const dotWrap = document.createElement("div");
+            dotWrap.className = "size-4 flex items-center justify-center";
+            item.appendChild(dotWrap);
+
+            const dot = document.createElement("div");
+            dot.className = "size-2 rounded-full bg-foreground invisible group-aria-checked:visible";
+            dot.setAttribute("aria-hidden", "true");
+            dotWrap.appendChild(dot);
+
+            const txt = document.createElement("span");
+            txt.textContent = String(opt);
+            item.appendChild(txt);
+
+            const activate = () => {
+              backupRowsPerPage = opt;
+              backupPageIndex = 0;
+              rowsBtnText.textContent = String(opt);
+              closeRowsMenu();
+              renderTable(rows);
+            };
+
+            item.addEventListener("click", (ev) => {
+              ev.preventDefault();
+              ev.stopPropagation();
+              activate();
+            });
+
+            item.addEventListener("keydown", (ev: KeyboardEvent) => {
+              if (ev.key === "Enter" || ev.key === " ") {
+                ev.preventDefault();
+                ev.stopPropagation();
+                activate();
+              }
+              if (ev.key === "Escape") {
+                ev.preventDefault();
+                ev.stopPropagation();
+                closeRowsMenu();
+                rowsBtn.focus();
+              }
+            });
+
+            rowsMenu.appendChild(item);
+          }
+
+          rowsBtn.setAttribute("aria-expanded", "true");
+          rowsChevron.classList.add("rotate-180");
+          rowsPopover.setAttribute("aria-hidden", "false");
+          rowsPopover.classList.add("is-open");
+
+          if (!rowsPopoverHost.parentElement) document.body.appendChild(rowsPopoverHost);
+
+          requestAnimationFrame(() => {
+            placePopover({
+              trigger: rowsBtn,
+              panel: rowsPanel,
+              popoverEl: rowsPopover,
+              width: 96,
+              dropUp: true,
+            });
+          });
+
+          const onDocPointerDown = (ev: PointerEvent) => {
+            const t = ev.target as Node | null;
+            if (!t) return;
+            if (rowsWrap.contains(t) || rowsPopover.contains(t)) return;
+            closeRowsMenu();
+          };
+
+          const onDocKeydown = (ev: KeyboardEvent) => {
+            if (ev.key !== "Escape") return;
+            ev.preventDefault();
+            ev.stopPropagation();
+            closeRowsMenu();
+            rowsBtn.focus();
+          };
+
+          const onRelayout = () => {
+            placePopover({
+              trigger: rowsBtn,
+              panel: rowsPanel,
+              popoverEl: rowsPopover,
+              width: 96,
+              dropUp: true,
+            });
+          };
+
+          document.addEventListener("pointerdown", onDocPointerDown, true);
+          document.addEventListener("keydown", onDocKeydown, true);
+          window.addEventListener("resize", onRelayout);
+          document.addEventListener("scroll", onRelayout, true);
+
+          detachRowsHandlers = () => {
+            document.removeEventListener("pointerdown", onDocPointerDown, true);
+            document.removeEventListener("keydown", onDocKeydown, true);
+            window.removeEventListener("resize", onRelayout);
+            document.removeEventListener("scroll", onRelayout, true);
+          };
+
+          rowsOpen = true;
+        };
+
+        rowsBtn.onclick = (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          if (rowsOpen) {
+            closeRowsMenu();
+          } else {
+            openRowsMenu();
+          }
+        };
+
+        const btnPrev = pager.createEl("button", {
+          text: this._tx("ui.settings.backups.pager.prev", "Prev"),
+          cls: "learnkit-settings-icon-btn learnkit-backup-pager-btn",
+        });
         btnPrev.setAttribute("aria-label", this._tx("ui.settings.backups.pager.prevTooltip", "Previous backup page"));
         btnPrev.setAttribute("data-tooltip-position", "top");
         if (backupPageIndex <= 0) btnPrev.setAttribute("disabled", "true");
@@ -472,13 +672,18 @@ export class LearnKitSettingsTab extends PluginSettingTab {
           renderTable(rows);
         };
 
-        const pageLabel = pager.createEl("span", { cls: "learnkit-settings-text-muted learnkit-settings-text-muted" });
+        const pageLabel = pager.createEl("span", {
+          cls: "learnkit-settings-text-muted learnkit-backup-pager-page-label",
+        });
         pageLabel.textContent = this._tx("ui.settings.backups.pager.pageXofY", "Page {page} / {total}", {
           page: backupPageIndex + 1,
           total: totalPages,
         });
 
-        const btnNext = pager.createEl("button", { text: this._tx("ui.settings.backups.pager.next", "Next"), cls: "learnkit-settings-icon-btn learnkit-settings-icon-btn" });
+        const btnNext = pager.createEl("button", {
+          text: this._tx("ui.settings.backups.pager.next", "Next"),
+          cls: "learnkit-settings-icon-btn learnkit-backup-pager-btn",
+        });
         btnNext.setAttribute("aria-label", this._tx("ui.settings.backups.pager.nextTooltip", "Next backup page"));
         btnNext.setAttribute("data-tooltip-position", "top");
         if (backupPageIndex >= totalPages - 1) btnNext.setAttribute("disabled", "true");
