@@ -1092,7 +1092,7 @@ export function createGroupPickerField(initialValue: string, cardsCount: number,
   list.className = "flex flex-col max-h-60 overflow-auto p-1 learnkit-group-picker-results";
 
   const searchWrap = document.createElement("div");
-  searchWrap.className = "flex items-center gap-1 border-b border-border pl-1 pr-0 w-full min-h-[44px]";
+  searchWrap.className = "flex items-center gap-1 pl-1 pr-0 w-full min-h-[44px]";
 
   const searchIcon = document.createElement("span");
   searchIcon.className = "inline-flex items-center justify-center [&_svg]:size-3 text-muted-foreground learnkit-search-icon";
@@ -1106,9 +1106,14 @@ export function createGroupPickerField(initialValue: string, cardsCount: number,
   search.placeholder = t(locale, "ui.shared.groups.searchPlaceholder", "Search groups or add group");
   searchWrap.appendChild(search);
 
+  const divider = document.createElement("div");
+  divider.className = "h-px bg-border w-full learnkit-group-picker-divider";
+  divider.setAttribute("role", "separator");
+
   const panel = document.createElement("div");
-  panel.className = "rounded-md border border-border bg-popover text-popover-foreground p-0 flex flex-col learnkit-pointer-auto";
+  panel.className = "rounded-md border border-border bg-popover text-popover-foreground shadow-lg py-1 px-1.5 flex flex-col learnkit-pointer-auto learnkit-header-menu-panel";
   panel.appendChild(searchWrap);
+  panel.appendChild(divider);
   panel.appendChild(list);
 
   const popover = document.createElement("div");
@@ -1182,6 +1187,13 @@ export function createGroupPickerField(initialValue: string, cardsCount: number,
     const rawDisplay = formatGroupDisplay(rawTitle);
     const q = raw.toLowerCase();
     const options = allOptions.filter((t) => formatGroupDisplay(t).toLowerCase().includes(q));
+    const selectedOptions = options
+      .filter((opt) => selected.includes(opt))
+      .sort((a, b) => formatGroupDisplay(a).localeCompare(formatGroupDisplay(b)));
+    const unselectedOptions = options
+      .filter((opt) => !selected.includes(opt))
+      .sort((a, b) => formatGroupDisplay(a).localeCompare(formatGroupDisplay(b)));
+    const orderedOptions = [...selectedOptions, ...unselectedOptions];
     const exact =
       raw && allOptions.some((t) => formatGroupDisplay(t).toLowerCase() === rawDisplay.toLowerCase());
 
@@ -1196,6 +1208,8 @@ export function createGroupPickerField(initialValue: string, cardsCount: number,
       const text = document.createElement("span");
       text.textContent = label;
       row.appendChild(text);
+
+      row.style.order = isAdd ? "-2" : (selected.includes(value) ? "-1" : "0");
 
       if (selected.includes(value) && !isAdd) {
         const check = document.createElement("span");
@@ -1251,7 +1265,7 @@ export function createGroupPickerField(initialValue: string, cardsCount: number,
       return;
     }
 
-    for (const opt of options) addRow(formatGroupDisplay(opt), opt);
+    for (const opt of orderedOptions) addRow(formatGroupDisplay(opt), opt);
   };
 
   const commitSearch = () => {

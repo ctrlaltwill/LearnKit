@@ -709,13 +709,13 @@ mjx-container[jax="CHTML"][display="true"] {
 /* IO Card */
 .learnkit-pretty-card.learnkit-macro-classic.accent .learnkit-section-io .learnkit-section-content {
   padding: 18px;
-  border: 1px dashed rgba(0,0,0,0.06);
+  border: 0.5px dashed rgba(0,0,0,0.06);
   border-radius: var(--radius-md);
   text-align: center;
 }
 .learnkit-pretty-card.learnkit-macro-classic.theme .learnkit-section-io .learnkit-section-content {
   padding: 18px;
-  border: 1px dashed var(--alt-accent-color);
+  border: 0.5px dashed var(--alt-accent-color);
   border-radius: var(--radius-md);
   text-align: center;
 }
@@ -1020,7 +1020,7 @@ mjx-container[jax="CHTML"][display="true"] {
   font-size: var(--learnkit-font-2xs);
   color: var(--text-muted);
   background: var(--background-modifier-error-hover, rgba(255, 0, 0, 0.05));
-  border: 1px dashed var(--text-error, #e34040);
+  border: 0.5px dashed var(--text-error, #e34040);
   border-radius: var(--radius-md);
   font-style: italic;
 }

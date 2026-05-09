@@ -24,6 +24,17 @@ function shouldSkipAutoTooltip(el: HTMLElement): boolean {
   return !!el.closest(".learnkit-mcq-options, .learnkit-oq-step-list, .learnkit-oq-answer-list");
 }
 
+function isLabeledAnalyticsFilterButton(el: HTMLElement): boolean {
+  if (!el.classList.contains("learnkit-btn-filter")) return false;
+  if (!el.closest(".learnkit-analytics-root")) return false;
+  const text = normalizeTooltipText(el.textContent ?? "");
+  return text.length > 0;
+}
+
+function shouldPreserveExplicitTooltipPosition(el: HTMLElement): boolean {
+  return el.hasAttribute("data-learnkit-tooltip-explicit");
+}
+
 function ensureTooltip(el: TooltipTarget): void {
   if (shouldSkipAutoTooltip(el)) {
     if (el.hasAttribute("title")) el.removeAttribute("title");
@@ -34,6 +45,12 @@ function ensureTooltip(el: TooltipTarget): void {
   if (el.hasAttribute("title")) el.removeAttribute("title");
 
   if (el.hasAttribute("aria-label")) {
+    if (isLabeledAnalyticsFilterButton(el)) {
+      if (!shouldPreserveExplicitTooltipPosition(el) && el.hasAttribute("data-tooltip-position")) {
+        el.removeAttribute("data-tooltip-position");
+      }
+      return;
+    }
     if (!el.hasAttribute("data-tooltip-position")) el.setAttribute("data-tooltip-position", "top");
     return;
   }
@@ -46,6 +63,12 @@ function ensureTooltip(el: TooltipTarget): void {
   if (!tooltip) return;
 
   el.setAttribute("aria-label", tooltip);
+  if (isLabeledAnalyticsFilterButton(el)) {
+    if (!shouldPreserveExplicitTooltipPosition(el) && el.hasAttribute("data-tooltip-position")) {
+      el.removeAttribute("data-tooltip-position");
+    }
+    return;
+  }
   if (!el.hasAttribute("data-tooltip-position")) el.setAttribute("data-tooltip-position", "top");
 }
 

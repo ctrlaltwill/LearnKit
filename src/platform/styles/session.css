@@ -1558,7 +1558,7 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
   .learnkit-session-study-dock-grade-group > .learnkit-btn-again {
   color: var(--text-error, #b42318);
   background: color-mix(in srgb, var(--text-error, #b42318) 14%, var(--background-primary));
-  border: 1px solid color-mix(in srgb, var(--text-error, #b42318) 40%, transparent) !important;
+  border: 0.5px solid color-mix(in srgb, var(--text-error, #b42318) 40%, transparent) !important;
 }
 
 .learnkit :is(.lk-session-card > footer.learnkit-session-study-dock, .learnkit-gatekeeper-footer)
@@ -1571,7 +1571,7 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
   .learnkit-session-study-dock-grade-group > .learnkit-btn-good {
   color: var(--text-success, #16a34a);
   background: color-mix(in srgb, var(--text-success, #16a34a) 14%, var(--background-primary));
-  border: 1px solid color-mix(in srgb, var(--text-success, #16a34a) 40%, transparent) !important;
+  border: 0.5px solid color-mix(in srgb, var(--text-success, #16a34a) 40%, transparent) !important;
 }
 
 .learnkit :is(.lk-session-card > footer.learnkit-session-study-dock, .learnkit-gatekeeper-footer)

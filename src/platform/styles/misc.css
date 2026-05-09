@@ -368,7 +368,7 @@
   background: #333;
   cursor: grab;
   border-radius: 6px;
-  border: 1px solid #111;
+  border: 0.5px solid #111;
   padding: 4px 8px;
   font-size: 0.67rem;
   min-height: 0px !important;
@@ -411,7 +411,7 @@
   padding: 4px 8px;
   border-radius: 6px;
   color: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(51, 51, 51, 0.48);
+  border: 0.5px solid rgba(51, 51, 51, 0.48);
   background: rgba(51, 51, 51, 0.48);
   backdrop-filter: blur(2px);
   font-size: 0.67rem;
@@ -476,7 +476,7 @@
   min-height: 0px !important;
   color: #fff;
   background: #333;
-  border: 1px solid #111;
+  border: 0.5px solid #111;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.24);
   white-space: nowrap;
   overflow: hidden;
@@ -486,7 +486,7 @@
 .learnkit .learnkit-hq-attempt-label.is-correct,
 .learnkit-hq-attempt-label.is-correct {
   color: #fff;
-  border: 1px solid #16a34a;
+  border: 0.5px solid #16a34a;
   background: rgb(34, 197, 94);
   box-shadow: none;
 }
@@ -494,7 +494,7 @@
 .learnkit .learnkit-hq-attempt-label.is-incorrect,
 .learnkit-hq-attempt-label.is-incorrect {
   color: #fff;
-  border: 1px solid #dc2626;
+  border: 0.5px solid #dc2626;
   background: rgb(239, 68, 68);
   box-shadow: none;
 }
@@ -502,7 +502,7 @@
 .learnkit .learnkit-hq-attempt-label.is-pending,
 .learnkit-hq-attempt-label.is-pending {
   color: #fff;
-  border: 1px solid #111;
+  border: 0.5px solid #111;
   background: #333;
   pointer-events: auto;
   cursor: grab;
@@ -547,20 +547,20 @@
   overflow: hidden;
   text-overflow: ellipsis;
   color: #fff;
-  border: 1px solid #111;
+  border: 0.5px solid #111;
   background: #333;
   box-shadow: none;
 }
 
 .learnkit .learnkit-hq-attempt-pair-item.is-correct,
 .learnkit-hq-attempt-pair-item.is-correct {
-  border: 1px solid #16a34a;
+  border: 0.5px solid #16a34a;
   background: rgb(34, 197, 94);
 }
 
 .learnkit .learnkit-hq-attempt-pair-item.is-incorrect,
 .learnkit-hq-attempt-pair-item.is-incorrect {
-  border: 1px solid #dc2626;
+  border: 0.5px solid #dc2626;
   background: rgb(239, 68, 68);
 }
 
@@ -635,7 +635,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   color: #fff;
-  border: 1px solid #111;
+  border: 0.5px solid #111;
   background: #333;
 }
 
@@ -661,13 +661,13 @@
 
 .learnkit .learnkit-hq-attempt-inline-label.is-correct,
 .learnkit-hq-attempt-inline-label.is-correct {
-  border: 1px solid #16a34a;
+  border: 0.5px solid #16a34a;
   background: rgb(34, 197, 94);
 }
 
 .learnkit .learnkit-hq-attempt-inline-label.is-incorrect,
 .learnkit-hq-attempt-inline-label.is-incorrect {
-  border: 1px solid #dc2626;
+  border: 0.5px solid #dc2626;
   background: rgb(239, 68, 68);
 }
 
@@ -679,7 +679,7 @@
   height: 20px;
   transform: translate(-50%, -50%);
   border-radius: 999px;
-  border: 1px solid rgba(239, 68, 68, 0.95);
+  border: 0.5px solid rgba(239, 68, 68, 0.95);
   background: rgba(254, 242, 242, 0.98);
   color: #991b1b;
   font-size: 12px;

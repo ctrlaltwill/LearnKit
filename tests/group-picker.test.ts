@@ -30,4 +30,34 @@ describe("group picker badges", () => {
 
     field.element.remove();
   });
+
+  it("shows selected groups first in alphabetical order", () => {
+    const plugin = {
+      store: {
+        getAllCards: () => [
+          { groups: ["Cardiology", "Pain Medicine"] },
+          { groups: ["Anaesthesia", "Opioids"] },
+          { groups: ["Emergency Medicine"] },
+        ],
+      },
+    } as any;
+
+    const field = createGroupPickerField("Pain Medicine, Opioids", 1, plugin);
+    document.body.appendChild(field.element);
+
+    field.element.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+    const labels = Array.from(field.element.querySelectorAll('.learnkit-group-picker-results [role="menuitem"] > span:first-child'))
+      .map((el) => el.textContent);
+
+    expect(labels).toEqual([
+      "Opioids",
+      "Pain Medicine",
+      "Anaesthesia",
+      "Cardiology",
+      "Emergency Medicine",
+    ]);
+
+    field.element.remove();
+  });
 });

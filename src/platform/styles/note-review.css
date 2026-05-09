@@ -469,7 +469,7 @@
   justify-content: center;
   gap: 8px;
   border-radius: calc(var(--radius-md) + 2px);
-  border: 1px solid var(--learnkit-border-color) !important;
+  border: 0.5px solid var(--learnkit-border-color) !important;
   background: var(--background-secondary) !important;
   color: var(--text-normal) !important;
   font-size: var(--learnkit-font-xs);
@@ -520,7 +520,7 @@
 
   background: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-bg-mix), var(--background)) !important;
   color: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-fg-mix), var(--foreground)) !important;
-  border: 1px solid color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-border-mix), transparent) !important;
+  border: 0.5px solid color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-border-mix), transparent) !important;
 }
 
 .learnkit .learnkit-note-review-dock-buttons > :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy):hover:not(:disabled),
@@ -611,7 +611,7 @@
   font-size: var(--learnkit-font-sm);
   text-align: left;
   border-radius: var(--radius-s, var(--radius-md));
-  border: 1px solid transparent !important;
+  border: 0.5px solid transparent !important;
   background: transparent !important;
   padding: 6px 8px;
   margin: 1px 0 !important;
@@ -626,7 +626,7 @@
 .learnkit .learnkit-note-review-more-item[aria-current="true"],
 .learnkit .learnkit-note-review-more-item[aria-selected="true"] {
   background-color: var(--color-base-40) !important;
-  border: 1px solid color-mix(in srgb, var(--color-base-70) 25%, transparent 75%) !important;
+  border: 0.5px solid color-mix(in srgb, var(--color-base-70) 25%, transparent 75%) !important;
   color: var(--color-base-100, var(--text-normal)) !important;
 }
 

@@ -2917,7 +2917,7 @@
 .learnkit-edit-proposal-replacement.markdown-rendered :is(th, td),
 .learnkit-edit-block-new.markdown-rendered :is(th, td) {
   padding: 0.35em 0.5em;
-  border: 1px solid var(--background-modifier-border);
+  border: 0.5px solid var(--background-modifier-border);
 }
 
 .learnkit-edit-proposal-source-fragment {

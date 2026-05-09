@@ -32,6 +32,10 @@
   background-color: var(--color-base-00) !important;
 }
 
+.learnkit .lk-browser-controls-card:hover {
+  background-color: var(--color-base-05) !important;
+}
+
 .learnkit .lk-browser-table-card {
   padding: 0;
   overflow: hidden;
@@ -72,7 +76,7 @@
   --lk-browser-header-bg: var(--color-base-20);
   --lk-browser-border-soft: var(--color-base-15);
   --lk-browser-border-strong: var(--color-base-25);
-  --lk-browser-row-hover: var(--color-base-00);
+  --lk-browser-row-hover: var(--color-base-10);
   --lk-browser-row-hover-border: var(--color-base-35);
 }
 
@@ -179,6 +183,17 @@
   outline: 0.5px solid color-mix(in oklab, var(--theme-accent) 50%, var(--color-base-35));
   outline-offset: -1px;
   background: color-mix(in oklab, var(--theme-accent) 8%, var(--color-base-00));
+}
+
+.learnkit [data-lk-browser-density="compact"] textarea.lk-browser-textarea,
+.learnkit [data-lk-browser-density="compact"] textarea.lk-browser-textarea--editable,
+.learnkit [data-lk-browser-density="compact"] textarea.lk-browser-flag-textarea,
+.learnkit [data-lk-browser-density="compact"] .lk-browser-flag-overlay {
+  background: var(--lk-browser-editor-bg, var(--color-base-10)) !important;
+}
+
+.learnkit [data-lk-browser-density="compact"] .lk-browser-tag-box {
+  background: var(--lk-browser-editor-bg, var(--color-base-10)) !important;
 }
 
 .learnkit [data-lk-browser-density="compact"] .lk-browser-textarea,
@@ -378,6 +393,7 @@
 .learnkit textarea.lk-browser-textarea--editable,
 .learnkit textarea.lk-browser-flag-textarea {
   font-size: 0.8rem;
+  background: var(--lk-browser-editor-bg, var(--color-base-10)) !important;
 }
 
 /* Comfortable textarea styling: keep clear field boundaries and readable text. */
@@ -386,7 +402,7 @@
 .learnkit [data-lk-browser-density="comfortable"] textarea.lk-browser-flag-textarea {
   border: 0.5px solid var(--theme-accent) !important;
   border-radius: var(--radius-md) !important;
-  font-size: 0.75rem !important;
+  font-size: 0.74rem !important;
 }
 
 /* Contenteditable cells with image support */
@@ -469,11 +485,21 @@
   text-overflow: ellipsis;
   border: var(--learnkit-border-width) solid var(--learnkit-border-color);
   border-radius: var(--radius-md);
-  background: var(--background-modifier-form-field);
-  color: var(--text-normal);
+  background: var(--lk-browser-editor-bg, var(--color-base-10));
+  color: var(--text-muted);
   cursor: text;
   z-index: 1;
   font-size: 0.9rem;
+}
+
+.learnkit .lk-browser-view .table tbody tr:not(:hover):not(:has(input[type="checkbox"][data-card-id]:checked)) td .lk-browser-flag-overlay {
+  color: var(--text-muted);
+}
+
+.learnkit .lk-browser-view .table tbody tr:hover td .lk-browser-flag-overlay,
+.learnkit .lk-browser-view .table tbody tr:has(input[type="checkbox"][data-card-id]:checked) td .lk-browser-flag-overlay,
+.learnkit .lk-browser-view .table tbody td.lk-browser-cell:focus-within .lk-browser-flag-overlay {
+  color: var(--text-normal);
 }
 
 .learnkit .lk-browser-flag-overlay--multiline {
@@ -650,10 +676,9 @@
   box-sizing: border-box;
   display: flex;
   flex-wrap: wrap;
-  column-gap: 6px;
-  row-gap: 2px;
+  gap: 6px;
   align-content: flex-start;
-  background: var(--background-modifier-form-field);
+  background: var(--lk-browser-editor-bg, var(--color-base-10));
   border: var(--learnkit-border-width) solid var(--learnkit-border-color);
   box-shadow: none;
 }
@@ -748,6 +773,7 @@
   box-sizing: border-box;
   border-collapse: separate;
   border-spacing: 0;
+  margin-top: 0 !important;
 }
 
 .learnkit .lk-browser-select-col {
@@ -767,6 +793,7 @@
   vertical-align: middle;
   width: 42px;
   text-align: center;
+  cursor: pointer;
 }
 
 .learnkit .lk-browser-select-th:has(.lk-browser-select-all) {
@@ -780,6 +807,14 @@
   margin-left: auto;
   margin-right: auto;
   accent-color: var(--theme-accent);
+  transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease;
+}
+
+.learnkit .lk-browser-select-th:is(:hover, :focus-within) .lk-browser-select-all,
+.learnkit .lk-browser-select-all:is(:hover, :focus-visible) {
+  transform: scale(1.06);
+  filter: brightness(1.08);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-accent) 20%, transparent 80%);
 }
 
 .learnkit .lk-browser-th {
@@ -875,12 +910,30 @@
   top: 0;
   right: 0;
   bottom: 0;
-  min-height: 40px;
+  min-height: 0;
   align-items: center;
   display: flex;
   justify-content: space-between;
   height: 100%;
   pointer-events: none;
+}
+
+.learnkit .lk-browser-th-label {
+  line-height: 1.2;
+}
+
+/* Subtle hover cue on sortable header cells. */
+.learnkit .lk-browser-header-cell:hover {
+  background-color: color-mix(in srgb, var(--color-base-10) 55%, transparent 45%);
+}
+
+.learnkit .lk-browser-header-cell:is(:hover, :focus, :focus-visible) .lk-browser-th-label {
+  color: var(--text-normal) !important;
+}
+
+.learnkit .lk-browser-header-cell:is(:hover, :focus, :focus-visible) .lk-browser-th-icon {
+  opacity: 0.9 !important;
+  color: var(--text-normal);
 }
 
 .learnkit .lk-browser-th-label {
@@ -936,12 +989,12 @@
 /* Selected browser rows (via row checkbox) */
 .learnkit .lk-browser-view .table tbody tr:has(input[type="checkbox"][data-card-id]:checked),
 .learnkit .lk-browser-view .table tbody tr:has(input[type="checkbox"][data-card-id]:checked) td {
-  background: var(--theme-base-05);
+  background: var(--color-base-15);
 }
 
 .learnkit .lk-browser-view .table tbody tr:has(input[type="checkbox"][data-card-id]:checked):hover,
 .learnkit .lk-browser-view .table tbody tr:has(input[type="checkbox"][data-card-id]:checked):hover td {
-  background: var(--theme-base-05);
+  background: var(--color-base-15);
 }
 
 .learnkit .lk-browser-view .table tbody tr:hover,
@@ -1036,6 +1089,9 @@ font-size: var(--learnkit-font-xs);
 }
 
 .learnkit .lk-browser-view .table tbody td {
+  --lk-browser-cell-bg: var(--color-base-05);
+  --lk-browser-editor-bg-active: var(--color-base-10);
+  --lk-browser-editor-bg: color-mix(in srgb, var(--lk-browser-editor-bg-active) 72%, var(--lk-browser-cell-bg) 28%);
   background-color: var(--color-base-05);
   border-bottom: 0.5px solid var(--color-base-35);
 }
@@ -1056,6 +1112,28 @@ font-size: var(--learnkit-font-xs);
 
 .learnkit .lk-browser-view .table tbody tr:nth-child(even) {
   background-color: var(--color-base-00);
+}
+
+/* Cells define their own background, so row hover must also color td explicitly. */
+.learnkit .lk-browser-view .table tbody tr:hover td {
+  --lk-browser-cell-bg: var(--lk-browser-row-hover);
+  --lk-browser-editor-bg-active: var(--color-base-15);
+  --lk-browser-editor-bg: var(--lk-browser-editor-bg-active);
+  background-color: var(--lk-browser-row-hover);
+}
+
+/* Keep selected rows visually locked when hovered. */
+.learnkit .lk-browser-view .table tbody tr:has(input[type="checkbox"][data-card-id]:checked) td,
+.learnkit .lk-browser-view .table tbody tr:has(input[type="checkbox"][data-card-id]:checked):hover td {
+  --lk-browser-cell-bg: var(--lk-browser-row-hover);
+  --lk-browser-editor-bg-active: var(--color-base-15);
+  --lk-browser-editor-bg: var(--lk-browser-editor-bg-active);
+  background-color: var(--lk-browser-row-hover);
+  color: var(--text-normal);
+}
+
+.learnkit .lk-browser-view .table tbody td.lk-browser-cell:focus-within {
+  --lk-browser-editor-bg: var(--lk-browser-editor-bg-active);
 }
 
 .learnkit .lk-browser-view .table tbody tr:hover td {
@@ -1375,6 +1453,33 @@ body.is-phone .learnkit .lk-browser-title-strip > .learnkit-inline-sentence > .l
   border-radius: var(--radius-md) !important;
 }
 
+/* Browser controls: transparent base with subtle border, then stronger state borders. */
+.learnkit .lk-browser-controls-row :is(
+  .learnkit-btn-toolbar,
+  .lk-browser-action-btn
+) {
+  background: transparent !important;
+  border: 0.5px solid transparent !important;
+  box-shadow: none !important;
+}
+
+.learnkit .lk-browser-controls-row :is(
+  .learnkit-btn-toolbar,
+  .lk-browser-action-btn
+):is(:hover, :focus, :focus-visible, :active),
+.learnkit .lk-browser-controls-row .lk-browser-filter .learnkit-btn-toolbar[aria-expanded="true"] {
+  background: var(--color-base-10) !important;
+  border-color: var(--color-base-35) !important;
+}
+
+.learnkit .lk-browser-controls-row :is(
+  .learnkit-btn-toolbar,
+  .lk-browser-action-btn
+):disabled {
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
 /* ---- Browser bottom bar ---- */
 
 .learnkit .lk-browser-bottom-bar {
@@ -1411,7 +1516,7 @@ body.is-phone .learnkit .lk-browser-title-strip > .learnkit-inline-sentence > .l
   --lk-browser-header-bg: var(--color-base-20);
   --lk-browser-border-soft: var(--color-base-25);
   --lk-browser-border-strong: var(--color-base-30);
-  --lk-browser-row-hover: var(--color-base-00);
+  --lk-browser-row-hover: var(--color-base-10);
   --lk-browser-row-hover-border: var(--color-base-35);
 }
 
@@ -1503,15 +1608,15 @@ body.is-mobile .learnkit .lk-browser-action-btn svg {
 }
 
 body.is-mobile .learnkit .lk-browser-controls-row :is(
-  .lk-browser-filter .learnkit-btn-toolbar,
+  .learnkit-btn-toolbar,
   .lk-browser-action-btn
 ) {
   height: 28px !important;
   min-height: 28px !important;
   padding: 0 8px !important;
   border-radius: var(--radius-md) !important;
-  border: 0.5px solid var(--color-base-35) !important;
-  background: color-mix(in oklab, var(--background) 85%, transparent 15%) !important;
+  border: 0.5px solid transparent !important;
+  background: transparent !important;
   color: var(--text-normal) !important;
   font-size: var(--learnkit-font-xs) !important;
   gap: 6px !important;

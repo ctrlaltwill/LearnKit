@@ -317,10 +317,10 @@ export function makeColumnsDropdown(
   popover.id = `${id}-popover`;
   popover.className = "";
   popover.setAttribute("aria-hidden", "true");
-  popover.classList.add("learnkit-popover-overlay", "learnkit-popover-overlay");
+  popover.classList.add("learnkit-popover-overlay", "learnkit-dd-popover");
 
   const panel = document.createElement("div");
-  panel.className = "rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-0 learnkit-pointer-auto learnkit-columns-panel";
+  panel.className = "rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-0 learnkit-pointer-auto learnkit-columns-panel learnkit-dd-panel";
   popover.appendChild(panel);
 
   const menu = document.createElement("div");

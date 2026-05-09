@@ -936,6 +936,7 @@ export class SproutHomeView extends ItemView {
           const pinnedLeafName = getDeckLeafName(path);
           const pinnedTooltip = tx("ui.home.deck.tooltip.study", "Study {deck}", { deck: pinnedLeafName || "deck" });
           row.setAttr("aria-label", pinnedTooltip);
+          row.setAttr("data-tooltip-position", "bottom");
           
           // Make row clickable to open deck
           row.addEventListener("click", (e) => {
@@ -950,7 +951,11 @@ export class SproutHomeView extends ItemView {
           // Hamburger menu for reordering
           const hamburger = left.createEl("span", { 
             cls: "learnkit-drag-handle learnkit-drag-handle inline-flex items-center justify-center",
-            attr: { "data-action": "drag", "aria-label": tx("ui.home.deck.tooltip.drag", "Drag to reorder") }
+            attr: {
+              "data-action": "drag",
+              "aria-label": tx("ui.home.deck.tooltip.drag", "Drag to reorder"),
+              "data-tooltip-position": "top",
+            }
           });
           setIcon(hamburger, "grip-vertical");
           
@@ -965,7 +970,11 @@ export class SproutHomeView extends ItemView {
           
           const removeBtn = right.createEl("span", { 
             cls: "learnkit-deck-remove-btn learnkit-deck-remove-btn inline-flex items-center justify-center cursor-pointer",
-            attr: { "data-action": "delete", "aria-label": tx("ui.home.deck.tooltip.removePinned", "Remove from pinned decks") }
+            attr: {
+              "data-action": "delete",
+              "aria-label": tx("ui.home.deck.tooltip.removePinned", "Remove from pinned decks"),
+              "data-tooltip-position": "top",
+            }
           });
           setIcon(removeBtn, "x");
           removeBtn.addEventListener("click", (e) => {

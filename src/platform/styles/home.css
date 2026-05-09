@@ -251,7 +251,7 @@ body.is-phone .learnkit .lk-home-title-strip .lk-home-quick-study-btn {
 .learnkit-deck-search-input {
   height: var(--lk-home-row-height, 42px);
   padding: 10px;
-  border: 1px dashed var(--border);
+  border: 0.5px dashed var(--border);
   border-radius: var(--radius-md, var(--radius-md));
   background: var(--background-modifier-form-field);
 }
@@ -386,16 +386,16 @@ body.is-phone .learnkit .lk-home-title-strip .lk-home-quick-study-btn {
   stroke: currentColor;
 }
 
-.learnkit .learnkit-deck-row[data-tooltip] {
+.learnkit .learnkit-deck-row:is([data-tooltip], [aria-label][data-tooltip-position]) {
   position: relative;
   overflow: visible;
 }
 
-.learnkit .learnkit-deck-row[data-tooltip]:is(:hover, :focus-within) {
+.learnkit .learnkit-deck-row:is([data-tooltip], [aria-label][data-tooltip-position]):is(:hover, :focus-within) {
   z-index: var(--lk-z-max-minus-1);
 }
 
-.learnkit .learnkit-deck-row[data-tooltip]::after {
+.learnkit .learnkit-deck-row:is([data-tooltip], [aria-label][data-tooltip-position])::after {
   top: calc(100% + 6px);
   bottom: auto;
   left: 50%;
@@ -547,7 +547,7 @@ body.is-phone .learnkit .lk-home-title-strip .lk-home-quick-study-btn {
   justify-content: center;
   height: var(--lk-home-row-height, 42px);
   padding: 10px;
-  border: 1px dashed rgba(var(--text-muted-rgb), 0.4);
+  border: 0.5px dashed rgba(var(--text-muted-rgb), 0.4);
   border-radius: var(--radius-md);
   background-color: rgba(var(--text-muted-rgb), 0.1);
   color: var(--text-muted);

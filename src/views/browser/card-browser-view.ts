@@ -1023,6 +1023,20 @@ export class SproutCardBrowserView extends ItemView {
       this._updateSelectionIndicator();
     });
 
+    // Allow clicking the whole select-all header cell to toggle selection.
+    refs.selectAllHeaderEl.addEventListener("click", (ev: MouseEvent) => {
+      if (!(ev.target instanceof HTMLElement)) return;
+      if (ev.target.closest("input.lk-browser-select-all")) return;
+      ev.preventDefault();
+      const enabled = !(refs.selectAllCheckboxEl.checked && !refs.selectAllCheckboxEl.indeterminate);
+      refs.selectAllCheckboxEl.checked = enabled;
+      refs.selectAllCheckboxEl.indeterminate = false;
+      for (const id of this._currentPageRowIds) this._setSelection(id, enabled);
+      this._syncRowCheckboxes();
+      this._updateSelectAllCheckboxState();
+      this._updateSelectionIndicator();
+    });
+
     // Prune any stale cols that no longer exist
     for (const s of [this._comfortableCols, this._compactCols]) {
       for (const c of Array.from(s)) {

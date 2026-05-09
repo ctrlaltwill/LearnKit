@@ -187,6 +187,16 @@
 .learnkit .learnkit-popover-dropdown .learnkit-search-naked,
 .learnkit .learnkit-popover-overlay .learnkit-search-naked {
   border: none !important;
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.learnkit .learnkit-popover-dropdown .learnkit-search-naked:is(:hover, :focus, :focus-visible, :active),
+.learnkit .learnkit-popover-overlay .learnkit-search-naked:is(:hover, :focus, :focus-visible, :active) {
+  border-color: transparent !important;
+  background: transparent !important;
   box-shadow: none !important;
   outline: none !important;
 }
@@ -227,6 +237,14 @@
 .learnkit .learnkit-group-picker-results {
   max-height: 264px !important;
   overflow-y: auto;
+}
+
+/* Group selector divider: full-width line with no top/bottom margin. */
+.learnkit .learnkit-group-picker-divider {
+  display: block;
+  width: 100%;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
 }
 
 .learnkit .learnkit-columns-panel {

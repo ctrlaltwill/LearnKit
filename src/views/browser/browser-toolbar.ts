@@ -90,6 +90,7 @@ export interface ToolbarRefs {
   summaryEl: HTMLElement;
   selectionCountEl: HTMLElement;
   clearSelectionEl: HTMLElement;
+  selectAllHeaderEl: HTMLTableCellElement;
   selectAllCheckboxEl: HTMLInputElement;
   pagerHostEl: HTMLElement;
   tableWrapEl: HTMLElement;
@@ -556,6 +557,7 @@ export function buildBrowserLayout(
     summaryEl: summary,
     selectionCountEl: selectionCount,
     clearSelectionEl: clearSelection,
+    selectAllHeaderEl: selectTh,
     selectAllCheckboxEl: selectAll,
     pagerHostEl: pagerHost,
     tableWrapEl: tableWrap,

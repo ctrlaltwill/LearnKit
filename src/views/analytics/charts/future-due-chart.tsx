@@ -524,6 +524,9 @@ export function FutureDueChart(props: {
             aria-haspopup="listbox"
             aria-expanded={open ? "true" : "false"}
             aria-controls="learnkit-forecast-filter-listbox"
+            aria-label={tx("ui.analytics.filter", "Filter")}
+            data-tooltip-position="top"
+            data-learnkit-tooltip-explicit="1"
             onClick={() => setOpen((prev) => !prev)}
           >
             <svg

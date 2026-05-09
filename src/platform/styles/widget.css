@@ -993,7 +993,7 @@
   background-color: var(--color-base-20);
   color: var(--color-base-70);
   border-radius: 4px;
-  border: 1px solid var(--color-base-30) !important;
+  border: 0.5px solid var(--color-base-30) !important;
   padding: 0.2rem 0.4rem;
   font-size: 0.85em;
 }

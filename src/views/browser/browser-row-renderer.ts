@@ -277,7 +277,11 @@ export function buildPageTableBody(
       if (target instanceof HTMLButtonElement) return;
       if (target instanceof HTMLTextAreaElement) return;
       if (target instanceof HTMLSelectElement) return;
-      const interactive = target instanceof Element ? target.closest('input, button, textarea, select, [role="button"], [data-interactive]') : null;
+      const interactive = target instanceof Element
+        ? target.closest(
+          'input, button, textarea, select, a, [role="button"], [data-interactive], [contenteditable="true"], .lk-browser-textarea, .lk-browser-flag-editor-wrap, .lk-browser-flag-overlay, .lk-browser-img-editor-wrap, .lk-browser-img-overlay, .lk-browser-tag-box, .lk-browser-io-box'
+        )
+        : null;
       if (interactive) return;
       const selection = window.getSelection();
       if (selection && selection.toString().length > 0) return;
@@ -377,6 +381,11 @@ export function clearEmptyState(rootEl: HTMLElement | null): void {
   if (prev) prev.remove();
 }
 
+function applyBrowserEditorBackground(el: HTMLElement): void {
+  // Keep editor surfaces in sync with row-state shading despite theme textarea rules.
+  el.style.setProperty("background-color", "var(--lk-browser-editor-bg, var(--color-base-10))", "important");
+}
+
 // ── Private cell builders ─────────────────────────────────
 
 function makeReadOnlyFieldCell(
@@ -406,6 +415,7 @@ function makeReadOnlyFieldCell(
   ta.className = `textarea w-full ${ctx.readonlyTextClass} lk-browser-textarea lk-browser-textarea--readonly`;
   ta.value = value;
   ta.readOnly = true;
+  applyBrowserEditorBackground(ta);
   if (title) ta.setAttribute("aria-label", title);
 
   const h = `${ctx.editorHeightPx}px`;
@@ -438,6 +448,7 @@ function makeImageEditorCell(
   const ta = document.createElement("textarea");
   ta.className = `textarea w-full ${ctx.cellTextClass} lk-browser-textarea lk-browser-textarea--editable lk-browser-img-textarea`;
   ta.value = initial;
+  applyBrowserEditorBackground(ta);
   setCssProps(ta, "--learnkit-editor-height", h);
 
   /* ── overlay (rendered HTML with images, shown when NOT focused) ── */
@@ -519,6 +530,7 @@ function wrapBrowserFlagPreviewInput(input: HTMLInputElement): HTMLElement {
 
   overlay.addEventListener("click", () => input.focus());
   input.classList.add("lk-browser-flag-input");
+  applyBrowserEditorBackground(input);
 
   input.addEventListener("focus", () => {
     wrap.classList.add("lk-browser-flag-editor--focused");
@@ -558,6 +570,7 @@ function makeFlagPreviewEditorCell(
   const ta = document.createElement("textarea");
   ta.className = `textarea w-full ${ctx.cellTextClass} lk-browser-textarea lk-browser-textarea--editable lk-browser-flag-textarea`;
   ta.value = initial;
+  applyBrowserEditorBackground(ta);
   setCssProps(ta, "--learnkit-editor-height", h);
 
   const overlay = document.createElement("div");
@@ -1270,11 +1283,11 @@ function makeGroupsEditorCell(
 
   const panel = document.createElement("div");
   panel.className =
-    "rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-0 learnkit-pointer-auto";
+    "rounded-md border border-border bg-popover text-popover-foreground shadow-lg py-1 px-1.5 learnkit-pointer-auto learnkit-header-menu-panel";
   popover.appendChild(panel);
 
   const searchWrap = document.createElement("div");
-  searchWrap.className = "flex items-center gap-1 border-b border-border pl-1 pr-0 lk-browser-search-wrap min-h-[38px]";
+  searchWrap.className = "flex items-center gap-1 pl-1 pr-0 lk-browser-search-wrap min-h-[38px]";
   panel.appendChild(searchWrap);
 
   const searchIcon = document.createElement("span");
@@ -1289,6 +1302,11 @@ function makeGroupsEditorCell(
   search.className = "bg-transparent text-sm flex-1 h-9 min-w-0 w-full learnkit-search-naked";
   search.placeholder = txFromCtx(ctx, "ui.browser.groups.searchOrAdd", "Search or add group");
   searchWrap.appendChild(search);
+
+  const divider = document.createElement("div");
+  divider.className = "h-px bg-border w-full learnkit-group-picker-divider";
+  divider.setAttribute("role", "separator");
+  panel.appendChild(divider);
 
   const list = document.createElement("div");
   list.className = "flex flex-col max-h-60 overflow-auto p-1 learnkit-group-picker-results";
@@ -1337,6 +1355,13 @@ function makeGroupsEditorCell(
     const rawDisplay = formatGroupDisplay(rawTitle);
     const q = raw.toLowerCase();
     const options = allOptions.filter((t) => formatGroupDisplay(t).toLowerCase().includes(q));
+    const selectedOptions = options
+      .filter((opt) => selected.includes(opt))
+      .sort((a, b) => formatGroupDisplay(a).localeCompare(formatGroupDisplay(b)));
+    const unselectedOptions = options
+      .filter((opt) => !selected.includes(opt))
+      .sort((a, b) => formatGroupDisplay(a).localeCompare(formatGroupDisplay(b)));
+    const orderedOptions = [...selectedOptions, ...unselectedOptions];
     const exact =
       raw && allOptions.some((t) => formatGroupDisplay(t).toLowerCase() === rawDisplay.toLowerCase());
 
@@ -1351,6 +1376,8 @@ function makeGroupsEditorCell(
       const text = document.createElement("span");
       text.textContent = label;
       row.appendChild(text);
+
+      row.style.order = isAdd ? "-2" : (selected.includes(value) ? "-1" : "0");
 
       if (selected.includes(value) && !isAdd) {
         const check = document.createElement("span");
@@ -1411,7 +1438,7 @@ function makeGroupsEditorCell(
 
     list.classList.remove("learnkit-list-unbounded", "learnkit-list-unbounded");
 
-    for (const opt of options) addRow(formatGroupDisplay(opt), opt);
+    for (const opt of orderedOptions) addRow(formatGroupDisplay(opt), opt);
 
     if (shouldDropUp) {
       requestAnimationFrame(() => place());

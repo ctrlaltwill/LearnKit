@@ -31,11 +31,7 @@ body[data-learnkit-theme-preset="glass"] .learnkit,
   --popover-foreground: var(--color-base-100);
   --sidebar-foreground: var(--color-base-100);
 
-  /*
-   * Full normalized 00..100 base scale in 5-point increments.
-   * This keeps in-between colors consistent when themes only expose 10-point
-   * stops or ship non-uniform intermediate values.
-   */
+
   --color-base-00: var(--background) !important;
   --color-base-05: color-mix(in srgb, var(--background) 98%, var(--foreground) 2%) !important;
   --color-base-10: color-mix(in srgb, var(--background) 96%, var(--foreground) 4%) !important;
@@ -57,6 +53,11 @@ body[data-learnkit-theme-preset="glass"] .learnkit,
   --color-base-90: color-mix(in srgb, var(--background) 10%, var(--foreground) 90%) !important;
   --color-base-95: color-mix(in srgb, var(--background) 5%, var(--foreground) 95%) !important;
   --color-base-100: var(--foreground) !important;
+
+  /* Keep tooltip surface aligned with LearnKit base tokens, with slight transparency. */
+  --learnkit-tooltip-background: color-mix(in srgb, var(--color-base-05) 95%, transparent 5%);
+  --learnkit-tooltip-foreground: #f5f5f5;
+  --learnkit-tooltip-surface: var(--learnkit-tooltip-background) !important;
 
   /* Primary brand */
   --primary: rgb(94, 165, 0);
@@ -248,6 +249,10 @@ body.theme-dark[data-learnkit-theme-preset="glass"] .learnkit,
 
   --learnkit-deck-dropdown-bg: rgb(42, 42, 42);
   --learnkit-deck-hover-bg: rgb(60, 60, 60);
+
+  --learnkit-tooltip-background: color-mix(in srgb, var(--color-base-05) 95%, transparent 5%);
+  --learnkit-tooltip-foreground: #f5f5f5;
+  --learnkit-tooltip-surface: var(--learnkit-tooltip-background) !important;
 
   --lk-color-accent: var(--theme-accent);
   --lk-color-text-primary: var(--foreground);

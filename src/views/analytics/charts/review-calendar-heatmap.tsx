@@ -381,6 +381,9 @@ export function ReviewCalendarHeatmap(props: {
             aria-haspopup="listbox"
             aria-expanded={open ? "true" : "false"}
             aria-controls="learnkit-heatmap-filter-listbox"
+            aria-label={tx("ui.analytics.heatmap.filter", "Filter")}
+            data-tooltip-position="top"
+            data-learnkit-tooltip-explicit="1"
             onClick={() => setOpen((prev) => !prev)}
           >
             <svg

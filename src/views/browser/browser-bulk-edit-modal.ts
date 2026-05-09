@@ -427,7 +427,7 @@ export class BulkEditModal extends Modal {
     list.className = "flex flex-col max-h-60 overflow-auto p-1 learnkit-group-picker-results";
 
     const searchWrap = document.createElement("div");
-    searchWrap.className = "flex items-center gap-1 border-b border-border pl-1 pr-0 lk-browser-search-wrap min-h-[38px]";
+    searchWrap.className = "flex items-center gap-1 pl-1 pr-0 lk-browser-search-wrap min-h-[38px]";
 
     const searchIconEl = document.createElement("span");
     searchIconEl.className = "inline-flex items-center justify-center [&_svg]:size-3 text-muted-foreground learnkit-search-icon";
@@ -441,9 +441,14 @@ export class BulkEditModal extends Modal {
     search.placeholder = tx("ui.browser.bulkEdit.groups.searchPlaceholder", "Search or add group");
     searchWrap.appendChild(search);
 
+    const divider = document.createElement("div");
+    divider.className = "h-px bg-border w-full learnkit-group-picker-divider";
+    divider.setAttribute("role", "separator");
+
     const panelEl = document.createElement("div");
-    panelEl.className = "rounded-md border border-border bg-popover text-popover-foreground p-0 flex flex-col learnkit-pointer-auto";
+    panelEl.className = "rounded-md border border-border bg-popover text-popover-foreground shadow-lg py-1 px-1.5 flex flex-col learnkit-pointer-auto learnkit-header-menu-panel";
     panelEl.appendChild(searchWrap);
+    panelEl.appendChild(divider);
     panelEl.appendChild(list);
 
     const popover = document.createElement("div");
@@ -533,6 +538,13 @@ export class BulkEditModal extends Modal {
       const rawDisplay = formatGroupDisplay(rawTitle);
       const q = raw.toLowerCase();
       const options = allOptions.filter((t) => formatGroupDisplay(t).toLowerCase().includes(q));
+      const selectedOptions = options
+        .filter((opt) => selected.includes(opt))
+        .sort((a, b) => formatGroupDisplay(a).localeCompare(formatGroupDisplay(b)));
+      const unselectedOptions = options
+        .filter((opt) => !selected.includes(opt))
+        .sort((a, b) => formatGroupDisplay(a).localeCompare(formatGroupDisplay(b)));
+      const orderedOptions = [...selectedOptions, ...unselectedOptions];
       const exact =
         raw && allOptions.some((t) => formatGroupDisplay(t).toLowerCase() === rawDisplay.toLowerCase());
 
@@ -546,6 +558,8 @@ export class BulkEditModal extends Modal {
         const text = document.createElement("span");
         text.textContent = label;
         row.appendChild(text);
+
+        row.style.order = isAdd ? "-2" : (selected.includes(value) ? "-1" : "0");
 
         if (selected.includes(value) && !isAdd) {
           const check = document.createElement("span");
@@ -604,7 +618,7 @@ export class BulkEditModal extends Modal {
 
       list.classList.remove("learnkit-list-unbounded", "learnkit-list-unbounded");
 
-      for (const opt of options) addRow(formatGroupDisplay(opt), opt);
+      for (const opt of orderedOptions) addRow(formatGroupDisplay(opt), opt);
     };
 
     let cleanup: (() => void) | null = null;

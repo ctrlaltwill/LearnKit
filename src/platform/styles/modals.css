@@ -1547,7 +1547,7 @@ body.is-mobile .learnkit .learnkit-edit-modal {
   font-size: var(--learnkit-io-text-size, var(--learnkit-font-xs));
   line-height: 1.3;
   color: var(--learnkit-io-text-color, #111);
-  border: 1px dashed rgba(16, 185, 129, 0.6);
+  border: 0.5px dashed rgba(16, 185, 129, 0.6);
   border-radius: var(--radius-md, var(--radius-md));
   outline: none;
   background: var(--learnkit-io-text-bg, transparent);
@@ -2541,7 +2541,7 @@ z-index: 11;
 
 .learnkit-io-toolbar-group {
   border-radius: var(--radius-md);
-  border: 1px solid var(--color-base-35);
+  border: 0.5px solid var(--color-base-35);
   background: var(--color-base-25);
   flex-wrap: wrap;
   align-items: center;
