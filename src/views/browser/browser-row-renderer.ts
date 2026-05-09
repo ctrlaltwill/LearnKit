@@ -383,7 +383,7 @@ export function clearEmptyState(rootEl: HTMLElement | null): void {
 
 function applyBrowserEditorBackground(el: HTMLElement): void {
   // Keep editor surfaces in sync with row-state shading despite theme textarea rules.
-  el.style.setProperty("background-color", "var(--lk-browser-editor-bg, var(--color-base-10))", "important");
+  setCssProps(el, "background-color", "var(--lk-browser-editor-bg, var(--color-base-10))");
 }
 
 // ── Private cell builders ─────────────────────────────────
