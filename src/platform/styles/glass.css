@@ -37,14 +37,14 @@ body[data-learnkit-theme-preset="glass"] .learnkit,
    * stops or ship non-uniform intermediate values.
    */
   --color-base-00: var(--background) !important;
-  --color-base-05: color-mix(in srgb, var(--background) 98%, var(--foreground) 2%) !important;
-  --color-base-10: color-mix(in srgb, var(--background) 96%, var(--foreground) 4%) !important;
-  --color-base-15: color-mix(in srgb, var(--background) 92%, var(--foreground) 8%) !important;
-  --color-base-20: color-mix(in srgb, var(--background) 90%, var(--foreground) 10%) !important;
-  --color-base-25: color-mix(in srgb, var(--background) 85%, var(--foreground) 15%) !important;
-  --color-base-30: color-mix(in srgb, var(--background) 80%, var(--foreground) 20%) !important;
-  --color-base-35: color-mix(in srgb, var(--background) 70%, var(--foreground) 30%) !important;
-  --color-base-40: color-mix(in srgb, var(--background) 65%, var(--foreground) 35%) !important;
+  --color-base-05: color-mix(in srgb, var(--background) 95%, var(--foreground) 5%) !important;
+  --color-base-10: color-mix(in srgb, var(--background) 90%, var(--foreground) 10%) !important;
+  --color-base-15: color-mix(in srgb, var(--background) 85%, var(--foreground) 15%) !important;
+  --color-base-25: color-mix(in srgb, var(--background) 75%, var(--foreground) 25%) !important;
+  --color-base-20: color-mix(in srgb, var(--background) 80%, var(--foreground) 20%) !important;
+  --color-base-30: color-mix(in srgb, var(--background) 70%, var(--foreground) 30%) !important;
+  --color-base-35: color-mix(in srgb, var(--background) 65%, var(--foreground) 35%) !important;
+  --color-base-40: color-mix(in srgb, var(--background) 60%, var(--foreground) 40%) !important;
   --color-base-45: color-mix(in srgb, var(--background) 55%, var(--foreground) 45%) !important;
   --color-base-50: color-mix(in srgb, var(--background) 50%, var(--foreground) 50%) !important;
   --color-base-55: color-mix(in srgb, var(--background) 45%, var(--foreground) 55%) !important;
@@ -176,7 +176,8 @@ body[data-learnkit-theme-preset="glass"] .learnkit,
 
 body.theme-dark[data-learnkit-theme-preset="glass"] .learnkit,
 .theme-dark .learnkit {
-  --background: var(--learnkit-base-background);
+  --background: var(--color-base-00);
+  --background-primary: var(--color-base-00);
   --color-popover: var(--color-base-00);
   --file-header-background-focused: transparent;
 
@@ -188,7 +189,7 @@ body.theme-dark[data-learnkit-theme-preset="glass"] .learnkit,
 
   --accent: var(--color-base-30);
 
-  --foreground: var(--learnkit-base-foreground);
+  --foreground: var(--color-base-100);
   --text-color: var(--color-base-100);
   --card-foreground: var(--color-base-100);
   --color-card-foreground: var(--text-color);

@@ -19,7 +19,7 @@
 }
 
 .learnkit .learnkit-analytics-root .card:hover {
-  background-color: var(--background);
+  background-color: var(--color-base-10);
 }
 
 .learnkit .learnkit-analytics-root .learnkit-ana-grid {
