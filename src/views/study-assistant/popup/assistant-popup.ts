@@ -2396,8 +2396,9 @@ export class SproutAssistantPopup {
     const imageFile = resolveImageFile(this.plugin.app, file.path, ref);
     if (!(imageFile instanceof TFile)) return null;
 
-    const mimeType = mimeFromExt(String(imageFile.extension || ""));
-    if (!mimeType.startsWith("image/")) return null;
+    const ext = String(imageFile.extension || "").toLowerCase();
+    if (!isImageExt(ext)) return null;
+    const mimeType = mimeFromExt(ext);
 
     try {
       const data = await this.readVaultBinary(imageFile);
@@ -2472,8 +2473,8 @@ export class SproutAssistantPopup {
     for (const ref of refs) {
       const imageFile = resolveImageFile(this.plugin.app, file.path, ref);
       if (!(imageFile instanceof TFile)) continue;
-      const mimeType = mimeFromExt(String(imageFile.extension || ""));
-      if (!mimeType.startsWith("image/")) continue;
+      const ext = String(imageFile.extension || "").toLowerCase();
+      if (!isImageExt(ext)) continue;
       out.push(ref);
       if (out.length >= maxImages) break;
     }

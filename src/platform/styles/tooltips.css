@@ -29,19 +29,9 @@
   transition-delay: 0s;
   z-index: 950;
   /* Use the normalized theme tooltip surface instead of hard black inversion. */
-  background: none !important;
   background-color: var(--learnkit-tooltip-surface, var(--color-base-05));
-  background-color: color-mix(in srgb, var(--learnkit-tooltip-surface, var(--color-base-05)) 95%, transparent 5%) !important;
   color: var(--learnkit-tooltip-foreground, var(--color-base-100));
-  border: 0.5px solid var(--color-base-35) !important;
-  background-image: none !important;
-  filter: none !important;
-  text-shadow: none !important;
-  clip-path: none !important;
-  -webkit-mask-image: none !important;
-  mask-image: none !important;
-  -webkit-backdrop-filter: blur(8px) !important;
-  backdrop-filter: blur(8px) !important;
+  border: var(--learnkit-border-width) solid var(--learnkit-border-color);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -68,19 +58,8 @@
 }
 
 .learnkit [data-tooltip]::before {
-  content: none !important;
-  display: none !important;
-  border: 0 !important;
-  background: none !important;
-  box-shadow: none !important;
-  clip-path: none !important;
-}
-
-/* Aria-label tooltips should use host tooltip rendering only (no LearnKit pseudo bubble). */
-.learnkit [aria-label][data-tooltip-position]::before,
-.learnkit [aria-label][data-tooltip-position]::after {
-  content: none !important;
-  display: none !important;
+  content: "";
+  display: none;
 }
 
 /* ---- Shared tooltip surface (for programmatic tooltips) ---- */
@@ -92,12 +71,9 @@
   font-weight: 400;
   line-height: 1.4;
   background-color: var(--learnkit-tooltip-surface, var(--color-base-05));
-  background-color: color-mix(in srgb, var(--learnkit-tooltip-surface, var(--color-base-05)) 95%, transparent 5%) !important;
   color: var(--learnkit-tooltip-foreground, var(--color-base-100));
-  border: 0.5px solid var(--color-base-35) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
-  backdrop-filter: blur(8px) !important;
-  box-shadow: none !important;
+  border: var(--learnkit-border-width) solid var(--learnkit-border-color);
+  box-shadow: none;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -109,23 +85,23 @@
 
 /* Bottom (default) — centred horizontally, just below the parent */
 .learnkit [data-tooltip]::after,
-.learnkit [data-tooltip][data-tooltip-position="bottom"]::after {
-  top: calc(100% + 3px);
+.learnkit [data-tooltip-position="bottom"]::after {
+  top: calc(100% + 6px);
   left: 50%;
   transform: translateX(calc(-50% + var(--learnkit-tooltip-shift-x, 0px)));
 }
 
 /* Left — centred vertically, just left of the parent */
-.learnkit [data-tooltip][data-tooltip-position="left"]::after {
-  right: calc(100% + 3px);
+.learnkit [data-tooltip-position="left"]::after {
+  right: calc(100% + 6px);
   left: auto;
   top: 50%;
   transform: translateY(-50%);
 }
 
 /* Right — centred vertically, just right of the parent */
-.learnkit [data-tooltip][data-tooltip-position="right"]::after {
-  left: calc(100% + 3px);
+.learnkit [data-tooltip-position="right"]::after {
+  left: calc(100% + 6px);
   top: 50%;
   transform: translateY(-50%);
 }
@@ -134,66 +110,8 @@
 
 .theme-dark .learnkit [data-tooltip]::after {
   background-color: var(--learnkit-tooltip-surface, var(--color-base-05));
-  background-color: color-mix(in srgb, var(--learnkit-tooltip-surface, var(--color-base-05)) 95%, transparent 5%) !important;
   color: var(--learnkit-tooltip-foreground, var(--color-base-100));
-  border: 0.5px solid var(--color-base-35) !important;
-  box-shadow: none !important;
-  -webkit-backdrop-filter: blur(8px) !important;
-  backdrop-filter: blur(8px) !important;
-}
-
-/* Host tooltip redesign for aria-label + data-tooltip-position controls in LearnKit. */
-body:has(.learnkit [aria-label][data-tooltip-position]:is(:hover, :focus-visible)) :is(
-  .tooltip,
-  .mod-tooltip,
-  [role="tooltip"],
-  .tooltip .tooltip-inner,
-  .tooltip .tooltip-content,
-  .mod-tooltip .tooltip-inner,
-  .mod-tooltip .tooltip-content,
-  [role="tooltip"] .tooltip-inner,
-  [role="tooltip"] .tooltip-content
-) {
-  --tooltip-offset: 3px !important;
-  padding: 6px 10px !important;
-  margin: 0 !important;
-  background: color-mix(in srgb, var(--learnkit-tooltip-surface, var(--color-base-05)) 95%, transparent 5%) !important;
-  color: var(--learnkit-tooltip-foreground, var(--color-base-100)) !important;
-  border: 0.5px solid var(--color-base-35) !important;
-  border-radius: var(--radius-md) !important;
-  text-shadow: none !important;
-  box-shadow: none !important;;
-  -webkit-backdrop-filter: blur(8px) !important;
-  backdrop-filter: blur(8px) !important;
-}
-
-/* Normalize host tooltip placement gap to 3px for aria-label tooltips in LearnKit. */
-body:has(.learnkit [aria-label][data-tooltip-position]:is(:hover, :focus-visible)) :is(.tooltip, .mod-tooltip, [role="tooltip"])[data-popper-placement^="top"],
-body:has(.learnkit [aria-label][data-tooltip-position]:is(:hover, :focus-visible)) :is(.tooltip, .mod-tooltip, [role="tooltip"])[data-placement^="top"] {
-  margin-bottom: 3px !important;
-}
-
-body:has(.learnkit [aria-label][data-tooltip-position]:is(:hover, :focus-visible)) :is(.tooltip, .mod-tooltip, [role="tooltip"])[data-popper-placement^="bottom"],
-body:has(.learnkit [aria-label][data-tooltip-position]:is(:hover, :focus-visible)) :is(.tooltip, .mod-tooltip, [role="tooltip"])[data-placement^="bottom"] {
-  margin-top: 3px !important;
-}
-
-body:has(.learnkit [aria-label][data-tooltip-position]:is(:hover, :focus-visible)) :is(.tooltip, .mod-tooltip, [role="tooltip"])[data-popper-placement^="left"],
-body:has(.learnkit [aria-label][data-tooltip-position]:is(:hover, :focus-visible)) :is(.tooltip, .mod-tooltip, [role="tooltip"])[data-placement^="left"] {
-  margin-right: 3px !important;
-}
-
-body:has(.learnkit [aria-label][data-tooltip-position]:is(:hover, :focus-visible)) :is(.tooltip, .mod-tooltip, [role="tooltip"])[data-popper-placement^="right"],
-body:has(.learnkit [aria-label][data-tooltip-position]:is(:hover, :focus-visible)) :is(.tooltip, .mod-tooltip, [role="tooltip"])[data-placement^="right"] {
-  margin-left: 3px !important;
-}
-
-body:has(.learnkit [aria-label][data-tooltip-position]:is(:hover, :focus-visible)) :is(.tooltip, .mod-tooltip, [role="tooltip"])::before,
-body:has(.learnkit [aria-label][data-tooltip-position]:is(:hover, :focus-visible)) :is(.tooltip, .mod-tooltip, [role="tooltip"])::after,
-body:has(.learnkit [aria-label][data-tooltip-position]:is(:hover, :focus-visible)) :is(.tooltip, .mod-tooltip, [role="tooltip"]) .tooltip-arrow,
-body:has(.learnkit [aria-label][data-tooltip-position]:is(:hover, :focus-visible)) :is(.tooltip, .mod-tooltip, [role="tooltip"]) .tooltip-arrow::before,
-body:has(.learnkit [aria-label][data-tooltip-position]:is(:hover, :focus-visible)) :is(.tooltip, .mod-tooltip, [role="tooltip"]) .tooltip-arrow::after {
-  display: none !important;
+  border: var(--learnkit-border-width) solid var(--learnkit-border-color);
 }
 
 /* ---- Settings tooltips: allow overflow and ensure visibility ---- */
