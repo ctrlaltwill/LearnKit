@@ -549,11 +549,23 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
 
 /* ---- Lists inside reviewer session cards ---- */
 .lk-session-card :is(ul, ol) {
+  /* Guard against external theme rules that make lists flex/grid and stretch items. */
+  display: block !important;
+  /* Prevent inherited pre-wrap from rendering newline text nodes as blank lines between li items. */
+  white-space: normal !important;
   margin-top: 0.3rem;
   margin-bottom: 0.3rem;
-  padding-inline-start: 1.5em;
+  padding-inline-start: calc(1.5em + 1px);
   font-size: var(--lk-session-body-font-size);
   line-height: 1.75;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  align-content: normal !important;
+  justify-content: flex-start !important;
+  gap: 0 !important;
+  row-gap: 0 !important;
+  column-gap: 0 !important;
 }
 
 .lk-session-card ul {
@@ -565,10 +577,16 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
 }
 
 .lk-session-card li {
-  margin: 0.3rem 0;
+  display: list-item !important;
+  white-space: normal !important;
+  margin: 0;
   padding: 0;
   font-size: inherit;
   line-height: inherit;
+}
+
+.lk-session-card li + li {
+  margin-top: 0.3rem !important;
 }
 
 .lk-session-card li > p {
@@ -587,7 +605,7 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
 }
 
 .lk-session-card .learnkit-md-block :is(ul, ol) {
-  margin-block: 0.7rem;
+  margin-block: 0.4rem;
 }
 
 /* ---- Markdown heading scale inside session cards ---- */

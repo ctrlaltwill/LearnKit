@@ -1030,7 +1030,7 @@
 .learnkit .learnkit-gatekeeper-body :is(ul, ol) {
   margin-top: 0.3rem;
   margin-bottom: 0.3rem;
-  padding-inline-start: 1.5em;
+  padding-inline-start: calc(1.5em + 1px);
   line-height: 2;
 }
 
