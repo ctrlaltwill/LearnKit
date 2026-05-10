@@ -8,13 +8,13 @@
 
 ![LearnKit Banner One - Welcome](site/branding/Banner%20One%20-%20Welcome.png)
 
-LearnKit helps you remember what you write. It brings flashcards, note review, tests, and AI-assisted study tools into Obsidian, so your vault becomes a place to learn, not just store information.
+LearnKit helps you retain what you write. It brings flashcards, note review, tests, and AI-assisted study tools into Obsidian, so your vault becomes a place to actively learn, not just store information.
 
-Flashcards are where LearnKit started, but the goal was always bigger: to turn your vault into a memory layer that connects notes, review, and long-term retention.
+Flashcards are where LearnKit started, but the goal was always bigger: to connect notes, review, and long-term retention in one continuous workflow.
 
 ## Why LearnKit
 
-Most note apps help you capture information. LearnKit helps you study it. Instead of splitting your workflow across notes, flashcards, and different applications, LearnKit keeps review in the same vault you already use.
+Obsidian is great for capturing information. LearnKit is built for studying it. Instead of splitting your workflow between Obsidian and separate study apps, LearnKit keeps your learning in the same vault you already use.
 
 ## Start learning from your vault
 

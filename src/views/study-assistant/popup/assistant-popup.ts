@@ -2886,12 +2886,17 @@ export class SproutAssistantPopup {
   }
 
   /** Speak an assistant reply using TTS (if read-aloud is enabled). */
+  private _isCompanionReplyTtsEnabled(): boolean {
+    return !!this.plugin.settings.studyAssistant.voiceChat && !!this.plugin.settings.audio.enabled;
+  }
+
+  /** Speak an assistant reply using TTS (if read-aloud is enabled). */
   private _speakReply(text: string, messageIndex: number): void {
-    if (!this.plugin.settings.studyAssistant.voiceChat) return;
+    if (!this._isCompanionReplyTtsEnabled()) return;
     const tts = getTtsService();
     if (!tts.isSupported) return;
     const audioSettings = this.plugin.settings.audio;
-    // Speak with TTS, bypassing the audio.enabled check since voice chat has its own toggle
+    // Companion reply TTS follows both the Companion voice toggle and global audio master switch.
     tts.speak(text, audioSettings.defaultLanguage || "en-US", audioSettings, true, true);
     this._isTtsSpeaking = true;
     this._ttsPaused = false;
@@ -2906,7 +2911,7 @@ export class SproutAssistantPopup {
 
   /** Toggle playback for a specific assistant reply bubble. */
   private _toggleReplyAudio(text: string, messageIndex: number): void {
-    if (!this.plugin.settings.studyAssistant.voiceChat) return;
+    if (!this._isCompanionReplyTtsEnabled()) return;
 
     // Second click during delay cancels pending start.
     if (this._pendingTtsMessageIndex === messageIndex) {
@@ -5963,6 +5968,12 @@ export class SproutAssistantPopup {
     const chatWrap = parent.createDiv({ cls: "learnkit-assistant-popup-chat-wrap learnkit-assistant-popup-chat-wrap" });
     this._bindChatAutoFollowTracking(chatWrap, "assistant");
     const userInitial = this.getUserAvatarInitial();
+    const companionReplyTtsEnabled = this._isCompanionReplyTtsEnabled();
+
+    if (!companionReplyTtsEnabled && (this._isTtsSpeaking || this._pendingTtsMessageIndex != null)) {
+      getTtsService().stop();
+      this._resetTtsPlaybackState();
+    }
 
     const messages = this.chatMessages;
     // Only show welcome message + actions when conversation is empty
@@ -6011,7 +6022,7 @@ export class SproutAssistantPopup {
 
       const bubbleContent = bubble.createDiv({ cls: "learnkit-assistant-popup-message-content learnkit-assistant-popup-message-content" });
 
-      if (msg.role === "assistant" && this.plugin.settings.studyAssistant.voiceChat) {
+      if (msg.role === "assistant" && companionReplyTtsEnabled) {
         const isActiveTts = this._isTtsSpeaking && this._activeTtsMessageIndex === i;
         const audioBar = bubble.createDiv({
           cls: `learnkit-assistant-reply-audio${isActiveTts ? " is-active" : ""}${this._ttsPaused ? " is-paused" : ""}`,
