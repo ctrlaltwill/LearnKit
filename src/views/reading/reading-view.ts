@@ -845,6 +845,123 @@ export function __testRunPostRefreshSpilloverCleanup(scope: ParentNode): void {
   runPostRefreshSpilloverCleanup(scope);
 }
 
+/** Attribute marking a DOM sibling as owned by a specific card anchor. */
+const OWNED_BY_ATTR = 'data-learnkit-owned-by';
+
+/* =========================
+   Deterministic spillover ownership
+   ========================= */
+
+/**
+ * Walk forward from a card element through section siblings and mark any
+ * that textually belong to the card's raw source with `data-learnkit-owned-by`
+ * so downstream passes (reflow, refresh, reset) have a stable invariant.
+ *
+ * This replaces post-hoc heuristic guessing with a single deterministic pass
+ * during card enhancement, before the DOM is mutated by layout wrapping.
+ */
+function collectAndMarkOwnedSiblings(cardEl: HTMLElement, cardRawText?: string): void {
+  const rawSrc = cardRawText ? clean(cardRawText) : '';
+  const cardTextNorm = rawSrc.replace(/\s+/g, ' ').trim();
+  const cardTextStripped = rawSrc ? stripMarkdownFormatting(rawSrc) : '';
+  const cardMathSig = cardTextNorm ? normalizeMathSignature(cardTextNorm) : '';
+  const anchorId = String(cardEl.getAttribute('data-learnkit-id') || cardEl.dataset.sproutId || '').trim();
+
+  if (!rawSrc || !anchorId) return;
+
+  const section = cardEl.closest<HTMLElement>('.markdown-preview-section');
+  if (!section) return;
+
+  // Start from the card-run wrapper if the card is wrapped, otherwise from the card itself.
+  const run = cardEl.closest('.learnkit-reading-card-run');
+  const startEl: Element = run ?? cardEl;
+
+  let sibling: Element | null = startEl.nextElementSibling;
+  let ownedCount = 0;
+  // Safety cap — never consume more than 8 consecutive siblings
+  const MAX_OWNED_SIBLINGS = 8;
+
+  while (sibling && ownedCount < MAX_OWNED_SIBLINGS) {
+    const classes = String(sibling.className || '');
+
+    // Already hidden or already owned — skip but continue
+    if (sibling.hasAttribute('data-learnkit-hidden') || sibling.hasAttribute(OWNED_BY_ATTR)) {
+      sibling = sibling.nextElementSibling;
+      continue;
+    }
+
+    // Stop at structural boundaries
+    if (classes.includes('learnkit-pretty-card') || classes.includes('learnkit-reading-card-run') || sibling.hasAttribute('data-learnkit-processed')) {
+      break;
+    }
+
+    // Stop at anchors for other cards
+    if (classes.includes('el-p') && !classes.includes('learnkit-pretty-card')) {
+      const txt = extractRawTextFromParagraph(sibling as HTMLElement);
+      if (ANCHOR_RE.test(clean(txt)) && !hasCardAnchorForId(clean(txt), anchorId)) {
+        break;
+      }
+    }
+
+    // Never consume pusher, footnotes, headings, or horizontal rules
+    if (classes.includes('markdown-preview-pusher')) break;
+    if (/\bel-h[1-6]\b/.test(classes) || classes.includes('el-hr')) break;
+    const rawText = (sibling as HTMLElement).innerText || (sibling as HTMLElement).textContent || '';
+    if (/^\[\^.+?\]:/.test(rawText.trim())) break;
+
+    // Extract sibling text for matching
+    let siblingText = '';
+    if (classes.includes('el-p')) {
+      siblingText = extractRawTextFromParagraph(sibling as HTMLElement);
+    } else if (classes.includes('el-div')) {
+      siblingText = extractTextWithLaTeX(sibling as HTMLElement);
+    } else {
+      // List blocks, blockquotes, tables, code blocks — use textContent
+      siblingText = (sibling as HTMLElement).innerText || (sibling as HTMLElement).textContent || '';
+    }
+
+    if (!siblingText.trim()) {
+      // Empty siblings between card paragraphs — own them
+      markOwnedSibling(sibling, anchorId);
+      ownedCount++;
+      sibling = sibling.nextElementSibling;
+      continue;
+    }
+
+    // Check if this sibling's text belongs to the card
+    const belongs = siblingTextBelongsToCard(
+      siblingText,
+      cardTextStripped,
+      cardTextNorm,
+      rawSrc,
+      cardMathSig,
+      sibling,
+    );
+
+    if (belongs || isLikelyDanglingCardResidue(siblingText, sibling)) {
+      markOwnedSibling(sibling, anchorId);
+      ownedCount++;
+      sibling = sibling.nextElementSibling;
+      continue;
+    }
+
+    // No match — stop consuming
+    break;
+  }
+}
+
+/** Mark a sibling as owned by a card and hide it. */
+function markOwnedSibling(el: Element, anchorId: string): void {
+  (el as HTMLElement).setAttribute(OWNED_BY_ATTR, anchorId);
+  (el as HTMLElement).classList.add('learnkit-hidden-important', 'learnkit-hidden-important');
+  (el as HTMLElement).setAttribute('data-learnkit-hidden', 'true');
+}
+
+// ── Test exports ──
+export function __testCollectAndMarkOwnedSiblings(cardEl: HTMLElement, cardRawText?: string): void {
+  collectAndMarkOwnedSiblings(cardEl, cardRawText);
+}
+
 /* =========================
    Debounced MutationObserver
    ========================= */
@@ -1071,6 +1188,28 @@ function scheduleFlashcardsBootstrapReflow(): void {
       scheduleViewportReflow();
       nudgeFlashcardsSections();
     }, 180);
+
+    // When pages contain many flashcards, Obsidian's virtualizer may not
+    // render the trailing cards and follow-on content in its initial pass.
+    // A scroll micro-nudge at a longer delay forces the virtualizer to
+    // re-evaluate and render the remaining chunks — matching the effect
+    // of a manual viewport resize, but without a visible scroll jump.
+    window.setTimeout(() => {
+      const prevScrollY = window.scrollY;
+      // scrollBy with a 0,0 delta dispatches a scroll event without
+      // actually moving the viewport, which is enough to prod Obsidian's
+      // virtualizer into rendering below-the-fold content.
+      window.scrollBy(0, 0);
+      // Belt-and-suspenders: a 1px down-then-up pair catches virtualizers
+      // that only respond to non-zero scroll deltas.
+      window.scrollBy(0, 1);
+      window.scrollBy(0, -1);
+      if (Math.abs(window.scrollY - prevScrollY) > 0.5) {
+        window.scrollTo(0, prevScrollY);
+      }
+      scheduleViewportReflow();
+      nudgeFlashcardsSections();
+    }, 600);
   }, 90);
 }
 
@@ -1162,10 +1301,24 @@ async function processCardElements(container: HTMLElement, _ctx?: MarkdownPostPr
       // Extract anchor ID first to find the card in source
       let rawText = extractRawTextFromParagraph(el);
       const rawClean = clean(rawText);
-      const anchorMatch = rawClean.match(ANCHOR_RE);
-      if (!anchorMatch) continue;
-      
-      const anchorId = anchorMatch[1];
+      let anchorMatch = rawClean.match(ANCHOR_RE);
+
+      // When a previously-enhanced card is re-processed (e.g. after the
+      // scroll-nudge virtualizer prod retriggers MarkdownPostProcessor),
+      // its innerHTML has already been replaced with pretty-card HTML and
+      // extractRawTextFromParagraph can no longer find the `^learnkit-`
+      // anchor.  Fall back to data-sprout-id so we still extract the
+      // full card from source and re-run ownership marking.
+      let anchorId = anchorMatch?.[1] ?? '';
+      if (!anchorId && el.classList.contains('learnkit-pretty-card') && el.dataset.sproutId) {
+        anchorId = el.dataset.sproutId;
+        if (sourceContent) {
+          const extracted = extractCardFromSource(sourceContent, anchorId);
+          if (extracted) rawText = extracted;
+        }
+      }
+
+      if (!anchorId) continue;
       
       // If we have source content, try to extract the card from it
       if (sourceContent) {
@@ -1253,6 +1406,13 @@ export async function __testRefreshProcessedCards(container: HTMLElement, source
 }
 
 function resetCardsToNativeReading(container: HTMLElement) {
+  // Also release any DOM fragments previously marked as owned by these cards.
+  container.querySelectorAll<HTMLElement>(`[${OWNED_BY_ATTR}]`).forEach((el) => {
+    el.removeAttribute(OWNED_BY_ATTR);
+    el.classList.remove('learnkit-hidden-important', 'learnkit-hidden-important');
+    el.removeAttribute('data-learnkit-hidden');
+  });
+
   const cards = Array.from(container.querySelectorAll<HTMLElement>('.learnkit-pretty-card'));
   for (const card of cards) {
     try {
@@ -1462,7 +1622,8 @@ function unwrapCardRuns(section: HTMLElement) {
 
 function wrapContiguousCardRuns(section: HTMLElement) {
   // Fast-path: skip destructive teardown + rebuild when every visible
-  // card is already inside a .learnkit-reading-card-run wrapper.
+  // card is already inside a .learnkit-reading-card-run wrapper AND
+  // no owned spillover elements are stranded outside a card-run.
   // This prevents the column→single-column→column flicker (#56)
   // that occurs when scroll / resize debounce triggers a full reflow.
   const hasUnwrappedVisibleCards = Array.from(section.children).some(child => {
@@ -1471,7 +1632,16 @@ function wrapContiguousCardRuns(section: HTMLElement) {
            !child.classList.contains('learnkit-hidden-important') &&
            child.getAttribute('data-learnkit-hidden') !== 'true';
   });
-  if (!hasUnwrappedVisibleCards) return;
+  // Detect owned elements (data-learnkit-owned-by) that are direct
+  // children of the section — they need to be folded into a card-run
+  // but were marked after the last wrapContiguousCardRuns pass.
+  const hasStrandedOwnedElements = !hasUnwrappedVisibleCards &&
+    Array.from(section.children).some(child => {
+      if (!(child instanceof HTMLElement)) return false;
+      return child.hasAttribute('data-learnkit-owned-by') &&
+             !child.closest('.learnkit-reading-card-run');
+    });
+  if (!hasUnwrappedVisibleCards && !hasStrandedOwnedElements) return;
 
   unwrapCardRuns(section);
 
@@ -1481,10 +1651,11 @@ function wrapContiguousCardRuns(section: HTMLElement) {
   for (const child of children) {
     const isCard = child.classList.contains('learnkit-pretty-card');
     const isHidden = child.classList.contains('learnkit-hidden-important') || child.getAttribute('data-learnkit-hidden') === 'true';
+    const isOwned = child.hasAttribute('data-learnkit-owned-by');
     // Raw cloze list blocks that contain {{c…}} syntax are never meant to
     // be visible — treat them as hidden residue and fold into the current
     // card-run so they don't break the masonry column layout.
-    const isRawClozeList = !isCard && !isHidden && currentRun !== null &&
+    const isRawClozeList = !isCard && !isHidden && !isOwned && currentRun !== null &&
       (child.classList.contains('el-ul') || child.classList.contains('el-ol')) &&
       /\{\{c\d+::/.test((child).innerText || (child).textContent || '');
 
@@ -1498,11 +1669,11 @@ function wrapContiguousCardRuns(section: HTMLElement) {
       continue;
     }
 
-    // Hidden elements (duplicate siblings from multi-line card blocks)
-    // should stay inside the current card-run so they don't break the
-    // masonry column layout between consecutive visible cards.
+    // Owned siblings (deterministically marked during card enhancement) and
+    // other hidden elements should stay inside the current card-run so they
+    // don't break the masonry column layout between consecutive visible cards.
     // CSS already hides them via display:none inside the card-run.
-    if ((isHidden || isRawClozeList) && currentRun) {
+    if ((isHidden || isOwned || isRawClozeList) && currentRun) {
       if (isRawClozeList) {
         child.classList.add('learnkit-hidden-important', 'learnkit-hidden-important');
         child.setAttribute('data-learnkit-hidden', 'true');
@@ -1646,6 +1817,12 @@ function stripMarkdownFormatting(s: string): string {
   return out;
 }
 
+function extractElementTextForComparison(element: HTMLElement): string {
+  const clone = element.cloneNode(true) as HTMLElement;
+  clone.querySelectorAll('br').forEach((br) => br.replaceWith(element.ownerDocument.createTextNode('\n')));
+  return clone.innerText || clone.textContent || '';
+}
+
 /**
  * Check if a sibling's text is part of the card's raw source.
  * Compares stripped-markdown versions of both to account for Obsidian
@@ -1677,9 +1854,23 @@ function siblingTextBelongsToCard(
   // If each list line can be mapped back to the raw card source (with or without
   // markdown list marker), treat it as belonging to the same card.
   if (siblingEl.classList.contains('el-ul') || siblingEl.classList.contains('el-ol')) {
-    const listLines = String(siblingText ?? '')
-      .split(/\r?\n/g)
-      .map((line) => clean(line).trim())
+    const directChildLists = Array.from(siblingEl.children).filter(
+      (child): child is HTMLElement => child.tagName === 'UL' || child.tagName === 'OL',
+    );
+    const listContainer =
+      siblingEl.tagName === 'UL' || siblingEl.tagName === 'OL'
+        ? siblingEl
+        : (directChildLists[0] ?? null);
+    const listItems = listContainer
+      ? Array.from(listContainer.children).filter(
+        (child): child is HTMLElement => child.tagName === 'LI',
+      )
+      : [];
+    const listLines = (listItems.length > 0
+      ? listItems.map((item) => extractElementTextForComparison(item))
+      : String(siblingText ?? '').split(/\r?\n/g)
+    )
+      .map((line) => clean(line).replace(/\s+/g, ' ').trim())
       .filter(Boolean);
 
     if (listLines.length > 0 && cardTextRaw) {
@@ -1799,7 +1990,7 @@ function hideCardSiblingElements(cardEl: HTMLElement, cardRawText?: string) {
       // follow the card-run — those are guarded by collectSiblingsToHide
       // checking siblingTextBelongsToCard before hiding anything.
       const candidate = run.nextElementSibling;
-      if (candidate instanceof HTMLElement) {
+      if (candidate) {
         const isHiddenResidue =
           candidate.classList.contains('learnkit-hidden-important') ||
           candidate.getAttribute('data-learnkit-hidden') === 'true';
@@ -1822,7 +2013,7 @@ function hideCardSiblingElements(cardEl: HTMLElement, cardRawText?: string) {
     const run = cardEl.closest('.learnkit-reading-card-run');
     if (run && cardEl.parentElement === run) {
       const candidate = run.previousElementSibling;
-      if (candidate instanceof HTMLElement) {
+      if (candidate) {
         const isHiddenResidue =
           candidate.classList.contains('learnkit-hidden-important') ||
           candidate.getAttribute('data-learnkit-hidden') === 'true';
@@ -3284,8 +3475,16 @@ function enhanceCardElement(
   }
   el.toggleAttribute('data-hide-labels', !displayLabels);
 
-  // Hide any sibling elements that were part of this card's content
-  // (Obsidian renders block math as separate <div class="el-div"> siblings)
+  // Deterministic ownership pass: mark sibling elements that belong to this
+  // card's source so downstream layout (wrapContiguousCardRuns) and refresh
+  // passes can fold them into the card-run without re-running heuristics.
+  if (!skipSiblingHiding && cardRawText) {
+    collectAndMarkOwnedSiblings(el, cardRawText);
+  }
+
+  // Fallback: hide any sibling elements that were part of this card's content
+  // (Obsidian renders block math as separate <div class="el-div"> siblings).
+  // The deterministic pass above should catch most cases; this is a safety net.
   if (!skipSiblingHiding) {
     hideCardSiblingElements(el, cardRawText);
     scheduleDeferredSiblingHide(el, cardRawText);

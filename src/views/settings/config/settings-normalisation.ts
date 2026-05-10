@@ -66,6 +66,9 @@ export function normaliseSettingsInPlace(s: SproutSettings): void {
   s.general.themeAccentOverride = normaliseHexColorOrEmpty(
     s.general.themeAccentOverride ?? DEFAULT_SETTINGS.general.themeAccentOverride,
   );
+  s.general.syncPrivileges = (s.general.syncPrivileges === "full" || s.general.syncPrivileges === "simple" || s.general.syncPrivileges === "off")
+    ? s.general.syncPrivileges
+    : DEFAULT_SETTINGS.general.syncPrivileges;
 
   s.studyAssistant ??= {} as SproutSettings["studyAssistant"];
   s.studyAssistant.enabled ??= DEFAULT_SETTINGS.studyAssistant.enabled;
@@ -79,7 +82,7 @@ export function normaliseSettingsInPlace(s: SproutSettings): void {
   s.studyAssistant.voiceChat ??= DEFAULT_SETTINGS.studyAssistant.voiceChat;
   const provider = String(s.studyAssistant.provider ?? DEFAULT_SETTINGS.studyAssistant.provider);
   s.studyAssistant.provider =
-    provider === "openai" || provider === "anthropic" || provider === "deepseek" || provider === "xai" || provider === "google" || provider === "perplexity" || provider === "openrouter" || provider === "custom"
+    provider === "openai" || provider === "anthropic" || provider === "deepseek" || provider === "xai" || provider === "google" || provider === "perplexity" || provider === "openrouter" || provider === "ollama" || provider === "custom"
       ? provider
       : provider === "groq"
         ? "xai"

@@ -57,6 +57,34 @@ The most common causes are:
 
 If a card has invalid syntax, LearnKit quarantines it instead of silently deleting it. Fix the note, then sync again.
 
+## Sync Privileges
+
+Sync privileges control what sync is allowed to modify in your Markdown notes. You can set this in **Settings → User Details → Sync privileges**.
+
+Three levels are available:
+
+| Level | Behaviour |
+|-------|-----------|
+| **Full** | Rewrites flashcards into canonical format — adds anchor IDs, normalises group fields, strips hidden storage fields from IO/HQ cards, and migrates legacy shorthand. This keeps everything tidy and future-proof. |
+| **Simple** | Only adds missing anchor IDs to flashcards that lack them, without making any other changes to your notes. |
+| **Off** | Blocks all sync operations. You will see a notice directing you back to Settings if you try to sync. |
+
+If you have never chosen a privilege level, the first sync attempt will show a one-time modal asking you to pick one. You can change your choice at any time.
+
+### Editing Individual Cards
+
+When you edit a flashcard through the Library, a study session, or the inline edit modal and save your changes, LearnKit automatically processes that card so your edits take effect.
+
+To support additional fields such as extra info, titles, and groups, LearnKit always writes edited cards back in the canonical pipe-delimited format. This is required — without it the extra fields could not be saved. The rewrite affects only the card you edited.
+
+The sync privilege you have chosen controls what else happens during the save:
+
+| Privilege | Behaviour on card save |
+|-----------|------------------------|
+| **Full** | The whole note is normalised — other cards in the same file may be updated to canonical format as well. |
+| **Simple** | Only the card you edited is updated. Other cards in the same note are left untouched. |
+| **Off** | Same as Simple — the edited card is saved, but nothing else in the note is changed. |
+
 ## What Sync Ignores
 
 - fenced code blocks by default

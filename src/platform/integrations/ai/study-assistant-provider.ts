@@ -50,6 +50,7 @@ type StreamingTransportResponse = {
 
 const DEFAULT_MAX_OUTPUT_TOKENS = 8000;
 const REASONING_MAX_OUTPUT_TOKENS = 25000;
+const DEFAULT_OLLAMA_BASE_URL = "http://localhost:11434";
 
 type ProviderRequestError = Error & {
   provider?: StudyAssistantProvider;
@@ -79,6 +80,14 @@ function isValidHttpUrl(value: string): boolean {
 
 function providerBaseUrl(settings: SproutSettings["studyAssistant"]): string {
   const override = String(settings.endpointOverride || "").trim();
+  if (settings.provider === "ollama") {
+    const ollamaBase = override || DEFAULT_OLLAMA_BASE_URL;
+    if (!isValidHttpUrl(ollamaBase)) {
+      throw new Error(`Invalid endpoint URL: must start with https:// or http://`);
+    }
+    return trimTrailingSlash(ollamaBase);
+  }
+
   if (settings.provider === "custom" && override) {
     if (!isValidHttpUrl(override)) {
       throw new Error(`Invalid endpoint URL: must start with https:// or http://`);
@@ -99,10 +108,15 @@ function providerBaseUrl(settings: SproutSettings["studyAssistant"]): string {
   return "";
 }
 
+function providerRequiresApiKey(provider: StudyAssistantProvider): boolean {
+  return provider !== "ollama";
+}
+
 export function providerApiKey(
   provider: StudyAssistantProvider,
   apiKeys: SproutSettings["studyAssistant"]["apiKeys"],
 ): string {
+  if (provider === "ollama") return "";
   if (provider === "openai") return String(apiKeys.openai || "").trim();
   if (provider === "anthropic") return String(apiKeys.anthropic || "").trim();
   if (provider === "deepseek") return String(apiKeys.deepseek || "").trim();
@@ -390,6 +404,7 @@ function shouldRetryOpenAiLikeCompatibility(provider: StudyAssistantProvider, er
   const supportsCompatibilityRetry = providerUsesResponsesApi(provider)
     || provider === "openrouter"
     || provider === "google"
+    || provider === "ollama"
     || provider === "custom";
   if (!supportsCompatibilityRetry) return false;
 
@@ -947,6 +962,24 @@ function isAttachmentRelatedRequestError(err: unknown): boolean {
   return false;
 }
 
+function shouldRetryWithoutAttachments(err: unknown): boolean {
+  const status = statusFromUnknownError(err)
+    ?? (recordFromUnknown(err)?.status as number | undefined)
+    ?? 0;
+  if (status === 400 || status === 413 || status === 415 || status === 422) return true;
+  if (status < 400 || status >= 500) return false;
+
+  const obj = recordFromUnknown(err) || {};
+  const detail = stringValueFromUnknown(obj.detail)
+    || responseTextFromUnknownError(err)
+    || stringValueFromUnknown(obj.message);
+  const code = stringValueFromUnknown(obj.code);
+  const errorType = stringValueFromUnknown(obj.errorType);
+  const combined = `${detail} ${code} ${errorType}`.toLowerCase();
+
+  return /(invalid request|invalid payload|bad request|unsupported|attachment|file|multimodal|content block|media|tool_calls|messages\[|input\[)/.test(combined);
+}
+
 function buildDocumentFallbackContext(
   userPrompt: string,
   dataUrls: string[],
@@ -1340,7 +1373,7 @@ export async function requestStudyAssistantCompletionDetailed(params: {
   } = params;
 
   const apiKey = providerApiKey(settings.provider, settings.apiKeys);
-  if (!apiKey) {
+  if (providerRequiresApiKey(settings.provider) && !apiKey) {
     throw new Error(`Missing API key for provider: ${settings.provider}`);
   }
 
@@ -1369,29 +1402,64 @@ export async function requestStudyAssistantCompletionDetailed(params: {
   if (settings.provider === "anthropic") {
     const endpoint = `${base}/messages`;
     const tokenBudget = completionTokenBudget(settings.provider, model);
+    let activeUserPrompt = effectiveUserPrompt;
+    let activeAttachments = attachments;
+    const sendAnthropicRequest = () => requestUrl({
+      url: endpoint,
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: tokenBudget,
+        system: systemPrompt,
+        messages: [{
+          role: "user",
+          content: buildAnthropicUserContent(activeUserPrompt, activeAttachments),
+        }],
+      }),
+    });
+
     let res: Awaited<ReturnType<typeof requestUrl>>;
     try {
-      res = await requestUrl({
-        url: endpoint,
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01",
-        },
-        body: JSON.stringify({
-          model,
-          max_tokens: tokenBudget,
-          system: systemPrompt,
-          messages: [{
-            role: "user",
-            content: buildAnthropicUserContent(effectiveUserPrompt, attachments),
-          }],
-        }),
-      });
+      res = await sendAnthropicRequest();
     } catch (err) {
       const status = statusFromUnknownError(err) ?? 0;
+      if (activeAttachments.length > 0 && shouldRetryWithoutAttachments(err)) {
+        activeUserPrompt = userPrompt;
+        activeAttachments = [];
+        activeAttachmentRoute = "forced-fallback";
+        try {
+          res = await sendAnthropicRequest();
+        } catch (retryErr) {
+          const retryStatus = statusFromUnknownError(retryErr) ?? 0;
+          if (retryStatus > 0) {
+            const responseText = responseTextFromUnknownError(retryErr);
+            const responseJson = responseJsonFromUnknownError(retryErr);
+            const detail = providerErrorDetail({ json: responseJson, text: responseText });
+            const code = providerErrorCode({ json: responseJson, text: responseText });
+            const errorType = providerErrorType({ json: responseJson });
+            throw buildProviderRequestError({
+              provider: settings.provider,
+              endpoint,
+              status: retryStatus,
+              attachmentRoute: activeAttachmentRoute,
+              detail,
+              code,
+              errorType,
+              responseText,
+              responseJson,
+              originalError: retryErr,
+            });
+          }
+          throw attachAttachmentRouteToError(errorFromUnknown(retryErr), activeAttachmentRoute);
+        }
+      }
+
       if (status > 0) {
         const responseText = responseTextFromUnknownError(err);
         const responseJson = responseJsonFromUnknownError(err);
@@ -1415,20 +1483,29 @@ export async function requestStudyAssistantCompletionDetailed(params: {
     }
 
     if (res.status < 200 || res.status >= 300) {
-      const detail = providerErrorDetail(res);
-      const code = providerErrorCode(res);
-      const errorType = providerErrorType(res);
-      throw buildProviderRequestError({
-        provider: settings.provider,
-        endpoint,
-        status: res.status,
-        attachmentRoute: activeAttachmentRoute,
-        detail,
-        code,
-        errorType,
-        responseText: typeof res.text === "string" ? res.text : "",
-        responseJson: res.json,
-      });
+      if (activeAttachments.length > 0 && shouldRetryWithoutAttachments({ status: res.status, text: res.text, json: res.json as unknown })) {
+        activeUserPrompt = userPrompt;
+        activeAttachments = [];
+        activeAttachmentRoute = "forced-fallback";
+        res = await sendAnthropicRequest();
+      }
+
+      if (res.status < 200 || res.status >= 300) {
+        const detail = providerErrorDetail(res);
+        const code = providerErrorCode(res);
+        const errorType = providerErrorType(res);
+        throw buildProviderRequestError({
+          provider: settings.provider,
+          endpoint,
+          status: res.status,
+          attachmentRoute: activeAttachmentRoute,
+          detail,
+          code,
+          errorType,
+          responseText: typeof res.text === "string" ? res.text : "",
+          responseJson: res.json,
+        });
+      }
     }
 
     const json = parseJsonFromUnknown(sanitizeJsonResponse(res.json));
@@ -1468,7 +1545,7 @@ export async function requestStudyAssistantCompletionDetailed(params: {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
-            Authorization: `Bearer ${apiKey}`,
+            ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
           },
           body: JSON.stringify(buildResponsesRequestBody({
             provider: settings.provider,
@@ -1579,6 +1656,24 @@ export async function requestStudyAssistantCompletionDetailed(params: {
         }
       }
 
+      if (retryError && activeAttachments.length > 0 && shouldRetryWithoutAttachments(retryError)) {
+        activeUserPrompt = userPrompt;
+        activeDataUrls = [];
+        activeAttachments = [];
+        activeAttachmentRoute = "forced-fallback";
+        try {
+          res = await requestResponsesApi(model, {
+            userPromptOverride: activeUserPrompt,
+            attachmentsOverride: activeAttachments,
+            variant: activeVariant,
+          });
+          assertOkOrThrow(res);
+          retryError = null;
+        } catch (noAttachmentErr) {
+          retryError = noAttachmentErr;
+        }
+      }
+
       if (retryError) throw attachAttachmentRouteToError(errorFromUnknown(retryError), activeAttachmentRoute);
     }
 
@@ -1598,7 +1693,9 @@ export async function requestStudyAssistantCompletionDetailed(params: {
     };
   }
 
-  const endpoint = `${base}/chat/completions`;
+  const endpoint = settings.provider === "ollama"
+    ? `${base}/v1/chat/completions`
+    : `${base}/chat/completions`;
 
   const requestOpenAiLike = async (
     requestModel: string,
@@ -1618,7 +1715,7 @@ export async function requestStudyAssistantCompletionDetailed(params: {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
-          Authorization: `Bearer ${apiKey}`,
+          ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
           ...(settings.provider === "openrouter"
             ? { "HTTP-Referer": "https://github.com/ctrlaltwill/learnkit", "X-Title": "LearnKit" }
             : {}),
@@ -1757,6 +1854,24 @@ export async function requestStudyAssistantCompletionDetailed(params: {
         retryError = null;
       } catch (compatibilityErr) {
         retryError = compatibilityErr;
+      }
+    }
+
+    if (retryError && activeAttachments.length > 0 && shouldRetryWithoutAttachments(retryError)) {
+      activeUserPrompt = userPrompt;
+      activeDataUrls = [];
+      activeAttachments = [];
+      activeAttachmentRoute = "forced-fallback";
+      try {
+        res = await requestOpenAiLike(activeModel, {
+          userPromptOverride: activeUserPrompt,
+          attachmentsOverride: activeAttachments,
+          variant: activeVariant,
+        });
+        assertOkOrThrow(res);
+        retryError = null;
+      } catch (noAttachmentErr) {
+        retryError = noAttachmentErr;
       }
     }
 
@@ -1923,7 +2038,7 @@ export async function requestStudyAssistantStreamingCompletion(params: {
   } = params;
 
   const apiKey = providerApiKey(settings.provider, settings.apiKeys);
-  if (!apiKey) throw new Error(`Missing API key for provider: ${settings.provider}`);
+  if (providerRequiresApiKey(settings.provider) && !apiKey) throw new Error(`Missing API key for provider: ${settings.provider}`);
 
   const base = providerBaseUrl(settings);
   const model = String(settings.model || "").trim();
@@ -1952,7 +2067,9 @@ export async function requestStudyAssistantStreamingCompletion(params: {
     ? `${base}/messages`
     : requestFamily === "responses"
       ? `${base}/responses`
-      : `${base}/chat/completions`;
+      : settings.provider === "ollama"
+        ? `${base}/v1/chat/completions`
+        : `${base}/chat/completions`;
 
   let headers: Record<string, string>;
   let body: string;
@@ -2017,14 +2134,14 @@ export async function requestStudyAssistantStreamingCompletion(params: {
     headers = {
       "Content-Type": "application/json",
       Accept: "text/event-stream",
-      Authorization: `Bearer ${apiKey}`,
+      ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
     };
     body = buildResponsesStreamingBody(activeModel, activeUserPrompt, activeAttachments, activeResponsesVariant);
   } else {
     headers = {
       "Content-Type": "application/json",
       Accept: "text/event-stream",
-      Authorization: `Bearer ${apiKey}`,
+      ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
       ...(settings.provider === "openrouter"
         ? { "HTTP-Referer": "https://github.com/ctrlaltwill/learnkit", "X-Title": "LearnKit" }
         : {}),
@@ -2104,6 +2221,32 @@ export async function requestStudyAssistantStreamingCompletion(params: {
         retryResponse = await sendStreamingRequest(compatibilityBody);
       } catch (compatibilityErr) {
         latestError = compatibilityErr;
+      }
+    }
+
+    if (!retryResponse && activeAttachments.length > 0 && shouldRetryWithoutAttachments(latestError)) {
+      activeUserPrompt = userPrompt;
+      activeDataUrls = [];
+      activeAttachments = [];
+      activeAttachmentRoute = "forced-fallback";
+      const noAttachmentBody = requestFamily === "anthropic"
+        ? JSON.stringify({
+          model,
+          max_tokens: completionTokenBudget(settings.provider, model),
+          stream: true,
+          system: systemPrompt,
+          messages: [{
+            role: "user",
+            content: buildAnthropicUserContent(activeUserPrompt, activeAttachments),
+          }],
+        })
+        : requestFamily === "responses"
+          ? buildResponsesStreamingBody(activeModel, activeUserPrompt, activeAttachments, activeResponsesVariant)
+          : buildChatStreamingBody(activeModel, activeUserPrompt, activeAttachments, activeVariant);
+      try {
+        retryResponse = await sendStreamingRequest(noAttachmentBody);
+      } catch (noAttachmentErr) {
+        latestError = noAttachmentErr;
       }
     }
 
@@ -2209,6 +2352,28 @@ export async function requestStudyAssistantStreamingCompletion(params: {
         ? buildResponsesStreamingBody(activeModel, activeUserPrompt, activeAttachments, activeResponsesVariant)
         : buildChatStreamingBody(activeModel, activeUserPrompt, activeAttachments, activeVariant);
       response = await sendStreamingRequest(compatibilityBody);
+    }
+
+    if (response.status >= 400 && activeAttachments.length > 0 && shouldRetryWithoutAttachments(response)) {
+      activeUserPrompt = userPrompt;
+      activeDataUrls = [];
+      activeAttachments = [];
+      activeAttachmentRoute = "forced-fallback";
+      const noAttachmentBody = requestFamily === "anthropic"
+        ? JSON.stringify({
+          model,
+          max_tokens: completionTokenBudget(settings.provider, model),
+          stream: true,
+          system: systemPrompt,
+          messages: [{
+            role: "user",
+            content: buildAnthropicUserContent(activeUserPrompt, activeAttachments),
+          }],
+        })
+        : requestFamily === "responses"
+          ? buildResponsesStreamingBody(activeModel, activeUserPrompt, activeAttachments, activeResponsesVariant)
+          : buildChatStreamingBody(activeModel, activeUserPrompt, activeAttachments, activeVariant);
+      response = await sendStreamingRequest(noAttachmentBody);
     }
 
     if (response.status === 404 && settings.provider === "openrouter") {

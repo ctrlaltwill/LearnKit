@@ -44,6 +44,9 @@ import {
   unescapeDelimiterText,
   splitAtDelimiterTerminator,
   escapeDelimiterRe,
+  BASIC_SHORTHAND_RE,
+  REVERSED_SHORTHAND_RE,
+  CLOZE_SHORTHAND_RE,
 } from "../../platform/core/delimiter";
 import { CARD_ANCHOR_INLINE_RE } from "../../platform/core/identity";
 import { splitComboVariants, splitZipVariants } from "../../platform/core/delimiter";
@@ -128,6 +131,27 @@ export function clean(s: string): string {
  */
 export function unescapePipeText(s: string): string {
   return unescapeDelimiterText(s);
+}
+
+/**
+ * Auto-number bare `{{text}}` tokens into `{{c1::text}}`, `{{c2::text}}`, etc.
+ * Already-numbered `{{cN::text}}` tokens are left untouched.
+ *
+ * Starts numbering from the highest existing cN + 1 so that inserting
+ * new bare tokens after already-numbered ones doesn't create duplicates.
+ */
+function autoNumberClozeTokens(text: string): string {
+  let maxExisting = 0;
+  const existingRe = /\{\{c(\d+)::/g;
+  let em: RegExpExecArray | null;
+  while ((em = existingRe.exec(text)) !== null) {
+    maxExisting = Math.max(maxExisting, Number(em[1]));
+  }
+  let counter = maxExisting;
+  return text.replace(/\{\{(?!c\d+::)([\s\S]*?)\}\}/g, (_match, content) => {
+    counter += 1;
+    return `{{c${counter}::${content}}}`;
+  });
 }
 
 export function normalizeMathSignature(s: string): string {
@@ -380,8 +404,24 @@ export function extractCardFromSource(sourceContent: string, anchorId: string): 
       continue;
     }
     
-    // If we're not in a field and hit a non-empty line that isn't a field start, we're done
+    // If we're not in a field and hit a non-empty line that isn't a field start,
+    // check for shorthand card syntax before giving up.
     if (trimmed && !matchKnownFieldStart(trimmed)) {
+      // Shorthand cloze: cloze::text / cq::text / CQ::text
+      if (CLOZE_SHORTHAND_RE.test(trimmed)) {
+        cardLines.push(line);
+        break;
+      }
+      // Shorthand reversed: Q:::A
+      if (REVERSED_SHORTHAND_RE.test(trimmed)) {
+        cardLines.push(line);
+        break;
+      }
+      // Shorthand basic: Q::A
+      if (BASIC_SHORTHAND_RE.test(trimmed)) {
+        cardLines.push(line);
+        break;
+      }
       break;
     }
     
@@ -433,6 +473,58 @@ export function parseLearnKitCard(text: string): LearnKitCard | null {
   let currentField: string | null = null;
   let currentContent: string[] = [];
   const parseFrom = anchorLineIndex + 1 < lines.length ? anchorLineIndex + 1 : 0;
+
+  // ── Shorthand card detection ──────────────────────────────────────
+  // Before falling through to canonical pipe-delimited parsing, check
+  // whether the anchor-adjacent line(s) use single-line shorthand syntax:
+  //   cloze:: / cq:: / CQ::text      → cloze card
+  //   Question::Answer               → basic card
+  //   Question:::Answer              → reversed (bidirectional) card
+  let shorthandLineIndex = -1;
+  for (let si = parseFrom; si < lines.length; si++) {
+    const t = lines[si].trim();
+    if (!t) continue;
+    shorthandLineIndex = si;
+    break;
+  }
+
+  if (shorthandLineIndex >= 0) {
+    const shorthandLine = lines[shorthandLineIndex].trim();
+
+    // Cloze shorthand (checked first to avoid :: collision with basic)
+    const cm = shorthandLine.match(CLOZE_SHORTHAND_RE);
+    if (cm) {
+      const body = cm[1].trim();
+      if (body) {
+        fields.CQ = autoNumberClozeTokens(body);
+        return { anchorId, type: "cloze", title: "", fields, comboMode: undefined };
+      }
+    }
+
+    // Reversed shorthand (checked before basic to avoid ambiguity with :::)
+    const rm = shorthandLine.match(REVERSED_SHORTHAND_RE);
+    if (rm) {
+      const qText = rm[1].trim();
+      const aText = rm[2].trim();
+      if (qText && aText) {
+        fields.RQ = qText;
+        fields.A = aText;
+        return { anchorId, type: "reversed", title: "", fields, comboMode: undefined };
+      }
+    }
+
+    // Basic shorthand
+    const sm = shorthandLine.match(BASIC_SHORTHAND_RE);
+    if (sm) {
+      const qText = sm[1].trim();
+      const aText = sm[2].trim();
+      if (qText && aText) {
+        fields.Q = qText;
+        fields.A = aText;
+        return { anchorId, type: "basic", title: "", fields, comboMode: undefined };
+      }
+    }
+  }
 
   for (let i = parseFrom; i < lines.length; i++) {
     const line = lines[i];

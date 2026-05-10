@@ -35,6 +35,9 @@ export type LearnKitSettings = {
     enableReadingStyles: boolean;
     /** "off" disables card styling; "accent" uses theme accent colour; "theme" uses background/text alt colours. */
     prettifyCards: string;
+    /** Controls what sync commands are allowed to modify in markdown files.
+     * `undefined` = not yet chosen (modal will prompt). */
+    syncPrivileges?: "full" | "simple" | "off";
   };
 
   // Study — reviewer behaviour, limits, deck scope
@@ -98,7 +101,7 @@ export type LearnKitSettings = {
     location: "widget" | "modal";
     modalButtonVisibility: "hidden" | "always" | "hover";
     voiceChat: boolean;
-    provider: "openai" | "anthropic" | "deepseek" | "xai" | "google" | "perplexity" | "openrouter" | "custom";
+    provider: "openai" | "anthropic" | "deepseek" | "xai" | "google" | "perplexity" | "openrouter" | "ollama" | "custom";
     openRouterTier: "free" | "paid";
     model: string;
     endpointOverride: string;

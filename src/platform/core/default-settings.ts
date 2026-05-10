@@ -36,6 +36,7 @@ export const DEFAULT_SETTINGS: LearnKitSettings = {
     showLaunchNoticeModal: true,
     enableReadingStyles: true,
     prettifyCards: "accent", // default to 'accent', options: 'off' | 'accent' | 'theme'
+    syncPrivileges: "off", // "off" | "simple" | "full" — modal prompts on first sync
   },
 
   study: {
@@ -90,7 +91,7 @@ export const DEFAULT_SETTINGS: LearnKitSettings = {
     },
     prompts: {
       assistant: "",
-      noteReview: "Review this note for correctness, clarity, and exam readiness. Suggest concrete improvements. If I ask for flashcards, format them as parser-compatible rows in a markdown code block and remind me that the Generate key creates context-aware cards I can insert directly.",
+      noteReview: "Review this note for correctness, clarity, and exam readiness. Suggest concrete improvements. Focus on inaccuracies, missing content, and study-quality feedback. Do NOT generate flashcards in this mode — use the Generate tab for flashcard creation.",
       generator: "Generate high-quality flashcards from this note. Avoid duplicates and prioritize testable facts.",
       tests: "",
     },

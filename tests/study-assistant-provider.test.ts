@@ -704,4 +704,60 @@ describe("study assistant provider attachments", () => {
     const thirdCall = vi.mocked(requestUrl).mock.calls[2][0] as any;
     expect(JSON.parse(thirdCall.body).model).toBe("anthropic/claude-sonnet-4-5");
   });
+
+  it("uses Ollama local default endpoint and omits bearer auth when no API key is configured", async () => {
+    vi.mocked(requestUrl).mockResolvedValue(makeChatSuccessResponse("hello from ollama"));
+
+    const settings = makeStudyAssistant({
+      provider: "ollama",
+      model: "llama3.2:latest",
+      endpointOverride: "",
+      apiKeys: makeApiKeys(),
+    });
+
+    const result = await requestStudyAssistantCompletionDetailed({
+      settings,
+      systemPrompt: "You are helpful.",
+      userPrompt: "Say hello.",
+    });
+
+    expect(result.text).toBe("hello from ollama");
+    expect(requestUrl).toHaveBeenCalledOnce();
+    const call = vi.mocked(requestUrl).mock.calls[0][0] as any;
+    expect(call.url).toBe("http://localhost:11434/v1/chat/completions");
+    expect(call.headers.Authorization).toBeUndefined();
+  });
+
+  it("retries Ollama requests with plain markdown when attachment payload is rejected", async () => {
+    vi.mocked(requestUrl)
+      .mockResolvedValueOnce(makeProviderErrorResponse(400, "invalid request payload"))
+      .mockResolvedValueOnce(makeProviderErrorResponse(400, "invalid request payload"))
+      .mockResolvedValueOnce(makeChatSuccessResponse("markdown only ok"));
+
+    const settings = makeStudyAssistant({
+      provider: "ollama",
+      model: "qwen2.5:7b",
+      endpointOverride: "http://localhost:11434",
+      apiKeys: makeApiKeys(),
+    });
+
+    const result = await requestStudyAssistantCompletionDetailed({
+      settings,
+      systemPrompt: "You are helpful.",
+      userPrompt: "Review this note",
+      imageDataUrls: ["data:image/png;base64,QUJD"],
+    });
+
+    expect(result.text).toBe("markdown only ok");
+    expect(requestUrl).toHaveBeenCalledTimes(3);
+
+    const firstBody = JSON.parse((vi.mocked(requestUrl).mock.calls[0][0] as any).body);
+    expect(JSON.stringify(firstBody)).toContain("image_url");
+
+    const thirdBody = JSON.parse((vi.mocked(requestUrl).mock.calls[2][0] as any).body);
+    const thirdBodyText = JSON.stringify(thirdBody);
+    expect(thirdBodyText).toContain("Review this note");
+    expect(thirdBodyText).not.toContain("image_url");
+    expect(thirdBodyText).not.toContain("file_data");
+  });
 });

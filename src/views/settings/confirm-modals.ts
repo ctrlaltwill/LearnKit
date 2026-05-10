@@ -1,6 +1,6 @@
 /**
  * @file src/settings/confirm-modals.ts
- * @summary Confirmation-dialog modals used exclusively by LearnKitSettingsTab. Contains Modal subclasses for destructive or irreversible settings actions: card scheduling reset, note scheduling reset, analytics reset, card deletion, defaults restoration, backup comparison, backup restoration, and backup deletion.
+ * @summary Confirmation-dialog modals used exclusively by LearnKitSettingsTab. Contains Modal subclasses for destructive or irreversible settings actions: card scheduling reset, note scheduling reset, analytics reset, card deletion, defaults restoration, backup comparison, backup restoration, backup deletion, and sync-privileges selection.
  *
  * @exports
  *  - ConfirmResetSchedulingModal     — modal confirming a wipe of all card scheduling data (reset to New)
@@ -12,14 +12,16 @@
  *  - CurrentDbSnapshot               — type describing the shape of a current-DB snapshot for comparison
  *  - ConfirmRestoreBackupModal       — modal confirming overwrite of the DB from a chosen backup file
  *  - ConfirmDeleteBackupModal        — modal confirming permanent deletion of a backup file on disk
+ *  - ConfirmSyncPrivilegesModal      — one-time modal prompting the user to choose a sync-privilege level
  */
 
-import { type App, Modal, Notice, Setting } from "obsidian";
+import { type App, Modal, Notice, Setting, setIcon } from "obsidian";
 import type LearnKitPlugin from "../../main";
 import { log } from "../../platform/core/logger";
 import type { DataJsonBackupStats } from "../../platform/integrations/sync/backup";
 import { restoreFromDataJsonBackup, deleteDataJsonBackup } from "../../platform/integrations/sync/backup";
 import { scopeModalToWorkspace } from "../../platform/modals/modal-utils";
+import { setCssProps } from "../../platform/core/ui";
 import { t } from "../../platform/translations/translator";
 import { txCommon } from "../../platform/translations/ui-common";
 
@@ -607,6 +609,196 @@ export class ConfirmDeleteBackupModal extends Modal {
   }
 
   onClose() {
+    this.contentEl.empty();
+  }
+}
+
+// ────────────────────────────────────────────
+// 8) ConfirmSyncPrivilegesModal
+// ────────────────────────────────────────────
+
+interface AffectedCounts {
+  totalWithCards: number;
+  totalNeedingAnchors: number;
+  totalNeedingUpdate: number;
+}
+
+/**
+ * One-time modal shown when a user first attempts to sync before choosing
+ * a sync-privilege level.  Offers three choices:
+ * - Cancel Sync (dismisses; setting stays undefined)
+ * - Allow Simple Sync (anchor IDs only)
+ * - Allow Full Sync (all normalizations)
+ *
+ * Closing via X, Esc, or click-outside is equivalent to Cancel.
+ */
+export class ConfirmSyncPrivilegesModal extends Modal {
+  plugin: LearnKitPlugin;
+  counts: AffectedCounts;
+  onChoice: (choice: "cancel" | "simple" | "full") => void;
+  private _resolved = false;
+
+  constructor(
+    app: App,
+    plugin: LearnKitPlugin,
+    counts: AffectedCounts,
+    onChoice: (choice: "cancel" | "simple" | "full") => void,
+  ) {
+    super(app);
+    this.plugin = plugin;
+    this.counts = counts;
+    this.onChoice = onChoice;
+  }
+
+  onOpen() {
+    const locale = this.plugin.settings?.general?.interfaceLanguage;
+    const common = txCommon(locale);
+    const { contentEl } = this;
+    contentEl.empty();
+
+    // ── Container & modal shell (match card-creator pattern exactly) ──────
+    this.containerEl.addClass("lk-modal-container", "lk-modal-dim", "learnkit");
+    setCssProps(this.containerEl, "z-index", "2147483000");
+    this.modalEl.addClass("lk-modals", "learnkit-sync-privileges-modal");
+    setCssProps(this.modalEl, "z-index", "2147483001");
+    scopeModalToWorkspace(this);
+    contentEl.addClass("learnkit-sync-privileges-content");
+
+    // Escape key closes modal
+    this.scope.register([], "Escape", () => { this._resolve("cancel"); return false; });
+
+    // ── Header: title + styled close button ───────────────────────────────
+    const headerEl = this.modalEl.querySelector<HTMLElement>(":scope > .modal-header");
+    if (headerEl) {
+      const titleEl = headerEl.querySelector<HTMLElement>(":scope > .modal-title");
+      if (titleEl) titleEl.setText(
+        tx(locale, "ui.sync.modal.title", "Sync your flashcards?"),
+      );
+
+      // Remove Obsidian's default close button
+      const legacyCloseBtn = this.modalEl.querySelector<HTMLElement>(":scope > .modal-close-button");
+      if (legacyCloseBtn) legacyCloseBtn.remove();
+
+      // Add styled close button inside header (matching card creator pattern)
+      const closeBtn = headerEl.createEl("button", {
+        cls: "learnkit-btn-toolbar learnkit-btn-toolbar learnkit-btn-filter learnkit-btn-filter h-7 px-3 text-sm inline-flex items-center gap-2 learnkit-scope-clear-btn learnkit-scope-clear-btn learnkit-sync-privileges-close-btn learnkit-sync-privileges-close-btn",
+        attr: { type: "button", "aria-label": common.close },
+      });
+      closeBtn.setAttr("data-tooltip-position", "top");
+      const closeIconWrap = closeBtn.createSpan({ cls: "inline-flex items-center justify-center" });
+      setIcon(closeIconWrap, "x");
+      closeBtn.addEventListener("click", () => this._resolve("cancel"));
+    }
+
+    // ── Content ───────────────────────────────────────────────────────────
+    const body = contentEl.createDiv({ cls: "flex flex-col gap-1" });
+
+    // New to LearnKit? label
+    body.createEl("label", {
+      cls: "text-sm font-medium",
+      text: tx(locale, "ui.sync.modal.labelNewToLearnKit", "New to LearnKit?"),
+    });
+
+    // Intro paragraph
+    body.createEl("p", {
+      cls: "text-sm text-muted-foreground learnkit-sync-privileges-desc",
+      text: tx(
+        locale,
+        "ui.sync.modal.bodyIntro",
+        "Syncing updates your flashcard database from your markdown notes. This is a two-way sync. Your vault currently has {totalWithCards} notes containing flashcards.",
+        {
+          totalWithCards: this.counts.totalWithCards,
+        },
+      ),
+    });
+
+    // Full Sync – label + description
+    const fullSection = body.createDiv({ cls: "flex flex-col gap-1" });
+    fullSection.createEl("label", {
+      cls: "text-sm font-medium",
+      text: tx(locale, "ui.sync.modal.labelFull", "Allow full syncing"),
+    });
+    fullSection.createEl("p", {
+      cls: "text-sm text-muted-foreground learnkit-sync-privileges-desc",
+      text: tx(
+        locale,
+        "ui.sync.modal.bodyFull",
+        "Full sync adds anchor IDs, normalises your group fields and migrates shorthand to LearnKit syntax. This keeps everything tidy and future-proof. It doesn\u2019t touch any other part of your notes. This will also migrate Obsidian Spaced Repetition style shorthand into the LearnKit syntax.",
+      ),
+    });
+
+    // Simple Sync – label + description
+    const simpleSection = body.createDiv({ cls: "flex flex-col gap-1" });
+    simpleSection.createEl("label", {
+      cls: "text-sm font-medium",
+      text: tx(locale, "ui.sync.modal.labelSimple", "Allow simple syncing"),
+    });
+    simpleSection.createEl("p", {
+      cls: "text-sm text-muted-foreground learnkit-sync-privileges-desc",
+      text: tx(
+        locale,
+        "ui.sync.modal.bodySimple",
+        "Simple sync only adds missing anchor IDs to flashcards to track them, without making any other changes to your notes. These are small invisible comments just above each flashcard in the style ^learnkit-123456789.",
+      ),
+    });
+
+    // Can I undo? – label + description
+    const undoSection = body.createDiv({ cls: "flex flex-col gap-1" });
+    undoSection.createEl("label", {
+      cls: "text-sm font-medium",
+      text: tx(locale, "ui.sync.modal.labelCanUndo", "Can I undo my choice here?"),
+    });
+    undoSection.createEl("p", {
+      cls: "text-sm text-muted-foreground learnkit-sync-privileges-desc",
+      text: tx(
+        locale,
+        "ui.sync.modal.bodySettingsHint",
+        "You can change your sync permissions anytime in Settings \u2192 User Details \u2192 Sync Permissions.",
+      ),
+    });
+
+    // ── Footer buttons ────────────────────────────────────────────────────
+    const footer = this.modalEl.createDiv({
+      cls: "flex items-center justify-end gap-4 lk-modal-footer learnkit-sync-privileges-footer learnkit-sync-privileges-footer",
+    });
+
+    const cancelBtn = footer.createEl("button", {
+      cls: "learnkit-btn-toolbar learnkit-btn-toolbar learnkit-btn-filter learnkit-btn-filter inline-flex items-center gap-2 h-9 px-3 text-sm",
+      attr: { type: "button", "aria-label": tx(locale, "ui.sync.modal.cancelSync", "Cancel Sync") },
+    });
+    cancelBtn.setAttr("data-tooltip-position", "top");
+    cancelBtn.createSpan({ text: tx(locale, "ui.sync.modal.cancelSync", "Cancel Sync") });
+    cancelBtn.onclick = () => this._resolve("cancel");
+
+    const simpleBtn = footer.createEl("button", {
+      cls: "learnkit-btn-toolbar learnkit-btn-toolbar learnkit-btn-filter learnkit-btn-filter inline-flex items-center gap-2 h-9 px-3 text-sm",
+      attr: { type: "button", "aria-label": tx(locale, "ui.sync.modal.allowSimple", "Allow Simple Syncing") },
+    });
+    simpleBtn.setAttr("data-tooltip-position", "top");
+    simpleBtn.createSpan({ text: tx(locale, "ui.sync.modal.allowSimple", "Allow Simple Syncing") });
+    simpleBtn.onclick = () => this._resolve("simple");
+
+    const fullBtn = footer.createEl("button", {
+      cls: "learnkit-btn-toolbar learnkit-btn-toolbar learnkit-btn-accent learnkit-btn-accent learnkit-sync-privileges-full-btn learnkit-sync-privileges-full-btn h-9 inline-flex items-center gap-2",
+      attr: { type: "button", "aria-label": tx(locale, "ui.sync.modal.allowFull", "Allow Full Syncing") },
+    });
+    fullBtn.setAttr("data-tooltip-position", "top");
+    fullBtn.createSpan({ text: tx(locale, "ui.sync.modal.allowFull", "Allow Full Syncing") });
+    fullBtn.onclick = () => this._resolve("full");
+  }
+
+  private _resolve(choice: "cancel" | "simple" | "full") {
+    if (this._resolved) return;
+    this._resolved = true;
+    this.close();
+    this.onChoice(choice);
+  }
+
+  onClose() {
+    if (!this._resolved) {
+      this._resolved = true;
+      this.onChoice("cancel");
+    }
     this.contentEl.empty();
   }
 }

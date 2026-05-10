@@ -2827,3 +2827,8 @@ z-index: 11;
 .learnkit .learnkit-shortcuts-popover {
   pointer-events: auto;
 }
+
+/* Sync privileges modal: description margin under section labels */
+.learnkit-sync-privileges-desc {
+  margin: 0.4rem auto 0.8rem;
+}

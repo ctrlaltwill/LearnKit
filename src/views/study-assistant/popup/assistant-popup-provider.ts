@@ -18,6 +18,7 @@ export function formatProviderLabel(
   if (provider === "google") return "Google";
   if (provider === "perplexity") return "Perplexity";
   if (provider === "openrouter") return "OpenRouter";
+  if (provider === "ollama") return "Ollama";
   if (provider === "custom") return "Custom provider";
   if (!provider) return txUnknown();
   return provider.charAt(0).toUpperCase() + provider.slice(1);

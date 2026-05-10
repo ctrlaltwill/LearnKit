@@ -276,15 +276,32 @@ export function attachFlagPreviewOverlay(
   };
 
   const focusEditorFromPreview = () => {
+    const placeCaretAtEnd = () => {
+      if (control instanceof HTMLInputElement || control instanceof HTMLTextAreaElement) {
+        const end = control.value.length;
+        control.setSelectionRange(end, end);
+      }
+    };
+
     try {
       control.focus({ preventScroll: true });
     } catch {
       control.focus();
     }
-    if (control instanceof HTMLInputElement || control instanceof HTMLTextAreaElement) {
-      const end = control.value.length;
-      control.setSelectionRange(end, end);
+    if (document.activeElement !== control) {
+      window.requestAnimationFrame(() => {
+        if (!wrap.isConnected) return;
+        try {
+          control.focus({ preventScroll: true });
+        } catch {
+          control.focus();
+        }
+        if (document.activeElement !== control) return;
+        placeCaretAtEnd();
+      });
+      return;
     }
+    placeCaretAtEnd();
   };
 
   const handlePreviewPointerDown = (ev: PointerEvent) => {
@@ -303,6 +320,13 @@ export function attachFlagPreviewOverlay(
     focusEditorFromPreview();
   };
 
+  const handlePreviewClick = (ev: MouseEvent) => {
+    if (document.activeElement === control) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    focusEditorFromPreview();
+  };
+
   // Focus on pointer-down so preview clicks/taps reliably enter edit mode.
   wrap.addEventListener("pointerdown", (ev: PointerEvent) => {
     handlePreviewPointerDown(ev);
@@ -312,16 +336,20 @@ export function attachFlagPreviewOverlay(
   overlay.addEventListener("mousedown", handlePreviewMouseDown, true);
 
   // Keep click as a fallback for environments that do not dispatch pointer events.
-  overlay.addEventListener("click", (ev: MouseEvent) => {
-    ev.preventDefault();
-    ev.stopPropagation();
-    focusEditorFromPreview();
-  });
+  wrap.addEventListener("click", handlePreviewClick);
+  overlay.addEventListener("click", handlePreviewClick, true);
 
   const handleDocumentPointerDown = (ev: PointerEvent) => {
     const target = ev.target;
     if (!(target instanceof Node)) return;
-    if (wrap.contains(target)) return;
+    if (wrap.contains(target)) {
+      const isPrimaryPointer = ev.pointerType !== "mouse" || ev.button === 0;
+      if (isPrimaryPointer && document.activeElement !== control) {
+        ev.preventDefault();
+        focusEditorFromPreview();
+      }
+      return;
+    }
     if (document.activeElement === control) {
       control.blur();
     }

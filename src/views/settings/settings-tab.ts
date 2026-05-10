@@ -105,6 +105,11 @@ export class LearnKitSettingsTab extends PluginSettingTab {
   private _openRouterModelsCache: OpenRouterModel[] | null = null;
   private _openRouterModelsLoading = false;
   private _openRouterModelsError: string | null = null;
+  private _ollamaModelsCache: StudyAssistantModelOption[] | null = null;
+  private _ollamaModelsLoading = false;
+  private _ollamaModelsError: string | null = null;
+  private _ollamaModelsEndpoint = "";
+  private static readonly DEFAULT_OLLAMA_ENDPOINT = "http://localhost:11434";
   private static readonly TRANSLATIONS_GUIDE_URL = "https://github.com/ctrlaltwill/LearnKit/blob/main/CONTRIBUTING.md#translation-contributions";
   private readonly _noticeLines: SettingsNoticeLines;
 
@@ -1090,6 +1095,24 @@ export class LearnKitSettingsTab extends PluginSettingTab {
           this.queueSettingsNotice("general.userName", this._noticeLines.userName(next));
         });
       });
+
+    // Sync privileges dropdown
+    this._addSearchablePopover(wrapper, {
+      name: this._tx("ui.settings.appearance.syncPrivileges.name", "Sync privileges"),
+      description: this._tx("ui.settings.appearance.syncPrivileges.desc", "Controls what sync is allowed to modify in your markdown notes."),
+      options: [
+        { value: "full", label: this._tx("ui.sync.privileges.full", "Full") },
+        { value: "simple", label: this._tx("ui.sync.privileges.simple", "Simple") },
+        { value: "off", label: this._tx("ui.sync.privileges.off", "Off") },
+      ],
+      value: this.plugin.settings.general.syncPrivileges ?? "off",
+      onChange: (value: string) => {
+        void (async () => {
+          this.plugin.settings.general.syncPrivileges = value === "full" ? "full" : value === "simple" ? "simple" : "off";
+          await this.plugin.saveAll();
+        })();
+      },
+    });
 
     new Setting(wrapper).setName(this._tx("ui.settings.sections.language", "Language")).setHeading();
 
@@ -3562,7 +3585,7 @@ export class LearnKitSettingsTab extends PluginSettingTab {
       ].some((token) => model.includes(token));
     };
 
-    const staticModelOptions: Record<Exclude<StudyAssistantProvider, "openrouter" | "custom">, StudyAssistantModelOption[]> = {
+    const staticModelOptions: Record<Exclude<StudyAssistantProvider, "openrouter" | "custom" | "ollama">, StudyAssistantModelOption[]> = {
       openai: [
         { value: "gpt-5", label: "GPT-5" },
         { value: "gpt-5-mini", label: "GPT-5 Mini" },
@@ -3600,6 +3623,9 @@ export class LearnKitSettingsTab extends PluginSettingTab {
       if (selectedProvider === "custom") return [];
       if (selectedProvider === "openrouter") {
         return this._getOpenRouterModelOptions(getOpenRouterTier());
+      }
+      if (selectedProvider === "ollama") {
+        return this._getOllamaModelOptions();
       }
       return staticModelOptions[selectedProvider];
     };
@@ -3674,6 +3700,7 @@ export class LearnKitSettingsTab extends PluginSettingTab {
       { value: "google", label: "Google" },
       { value: "xai", label: "xAI" },
       { value: "openrouter", label: "OpenRouter" },
+      { value: "ollama", label: "Ollama" },
       { value: "openai", label: "OpenAI" },
       { value: "perplexity", label: "Perplexity" },
     ] satisfies Array<{ value: StudyAssistantProvider; label: string }>;
@@ -3696,12 +3723,16 @@ export class LearnKitSettingsTab extends PluginSettingTab {
             value: this.plugin.settings.studyAssistant.provider,
             separatorAfterIndex: standardProviderOptions.length - 1,
             onChange: (value) => {
-              const next = value === "openai" || value === "deepseek" || value === "anthropic" || value === "xai" || value === "google" || value === "perplexity" || value === "openrouter" || value === "custom"
+              const next = value === "openai" || value === "deepseek" || value === "anthropic" || value === "xai" || value === "google" || value === "perplexity" || value === "openrouter" || value === "ollama" || value === "custom"
                 ? value
                 : "openai";
               const previousProvider = this.plugin.settings.studyAssistant.provider;
               const previousModel = String(this.plugin.settings.studyAssistant.model || "").trim();
               this.plugin.settings.studyAssistant.provider = next;
+
+              if (next === "ollama" && !String(this.plugin.settings.studyAssistant.endpointOverride || "").trim()) {
+                this.plugin.settings.studyAssistant.endpointOverride = LearnKitSettingsTab.DEFAULT_OLLAMA_ENDPOINT;
+              }
 
               if (next !== "custom") {
                 const nextProviderModels = getProviderModelOptions(next);
@@ -3751,6 +3782,13 @@ export class LearnKitSettingsTab extends PluginSettingTab {
       }
     }
 
+    if (provider === "ollama") {
+      const activeEndpoint = this._resolveOllamaEndpoint();
+      if ((!this._ollamaModelsCache && !this._ollamaModelsLoading) || this._ollamaModelsEndpoint !== activeEndpoint) {
+        void this._loadOllamaModels();
+      }
+    }
+
     withDependentSetting(
       new Setting(wrapper)
         .setName(this._tx("ui.settings.studyAssistant.model.name", "Model"))
@@ -3765,6 +3803,54 @@ export class LearnKitSettingsTab extends PluginSettingTab {
                 await this.plugin.saveAll();
               });
             });
+            return;
+          }
+
+          if (provider === "ollama") {
+            const models = getProviderModelOptions(provider);
+            const sortedModels = [...models].sort((a, b) => a.label.localeCompare(b.label));
+            const currentModel = String(this.plugin.settings.studyAssistant.model || "").trim();
+            const modelOptions = [...sortedModels];
+            if (currentModel && !modelOptions.some((model) => model.value === currentModel)) {
+              modelOptions.push({
+                value: currentModel,
+                label: `${this._formatModelLabel(currentModel)} (custom)`,
+              });
+              modelOptions.sort((a, b) => a.label.localeCompare(b.label));
+            }
+
+            this._addSimpleSelect(setting.controlEl, {
+              options: modelOptions.length
+                ? modelOptions
+                : [{
+                  value: "",
+                  label: this._tx("ui.settings.studyAssistant.ollama.empty", "No Ollama models found"),
+                }],
+              value: currentModel || modelOptions[0]?.value || "",
+              onChange: (value) => {
+                const next = String(value || "").trim();
+                if (!next) return;
+                this.plugin.settings.studyAssistant.model = next;
+                void this.plugin.saveAll();
+              },
+            });
+
+            setting.addButton((button) => {
+              button
+                .setButtonText(this._tx("ui.settings.studyAssistant.ollama.refresh", "Refresh"))
+                .setDisabled(this._ollamaModelsLoading)
+                .onClick(() => {
+                  void this._loadOllamaModels(true);
+                });
+            });
+
+            if (this._ollamaModelsLoading) {
+              setting.setDesc(this._tx("ui.settings.studyAssistant.ollama.loading", "Loading Ollama models from your local endpoint."));
+            } else if (this._ollamaModelsError) {
+              setting.setDesc(this._tx("ui.settings.studyAssistant.ollama.loadError", "Could not load Ollama models. Check the URL and ensure Ollama is running."));
+            } else {
+              setting.setDesc(this._tx("ui.settings.studyAssistant.ollama.model.desc", "Pick one of your installed Ollama models."));
+            }
             return;
           }
 
@@ -3834,22 +3920,36 @@ export class LearnKitSettingsTab extends PluginSettingTab {
         }),
     );
 
-    if (provider === "custom") {
+    if (provider === "custom" || provider === "ollama") {
       withDependentSetting(
         new Setting(wrapper)
           .setName(this._tx("ui.settings.studyAssistant.endpointOverride.name", "Endpoint override"))
-          .setDesc(this._tx("ui.settings.studyAssistant.endpointOverride.custom.desc", "Required custom base URL for your endpoint."))
+          .setDesc(provider === "ollama"
+            ? this._tx("ui.settings.studyAssistant.endpointOverride.ollama.desc", "Base URL for your local Ollama server.")
+            : this._tx("ui.settings.studyAssistant.endpointOverride.custom.desc", "Required custom base URL for your endpoint."))
           .addText((text) => {
-            text.setValue(this.plugin.settings.studyAssistant.endpointOverride || "");
+            if (provider === "ollama") {
+              text.setPlaceholder(LearnKitSettingsTab.DEFAULT_OLLAMA_ENDPOINT);
+            }
+            const currentValue = provider === "ollama"
+              ? (this.plugin.settings.studyAssistant.endpointOverride || LearnKitSettingsTab.DEFAULT_OLLAMA_ENDPOINT)
+              : (this.plugin.settings.studyAssistant.endpointOverride || "");
+            text.setValue(currentValue);
             text.onChange(async (value) => {
-              this.plugin.settings.studyAssistant.endpointOverride = String(value || "").trim();
+              const trimmed = String(value || "").trim();
+              this.plugin.settings.studyAssistant.endpointOverride = provider === "ollama"
+                ? (trimmed || LearnKitSettingsTab.DEFAULT_OLLAMA_ENDPOINT)
+                : trimmed;
+              if (provider === "ollama") {
+                this._ollamaModelsCache = null;
+              }
               await this.plugin.saveAll();
             });
           }),
       );
     }
 
-    const providerKeyField: Record<typeof provider, { key: keyof SproutSettings["studyAssistant"]["apiKeys"]; label: string; placeholder: string }> = {
+    const providerKeyField: Partial<Record<StudyAssistantProvider, { key: keyof SproutSettings["studyAssistant"]["apiKeys"]; label: string; placeholder: string }>> = {
       openai: { key: "openai", label: "OpenAI API key", placeholder: "sk-..." },
       deepseek: { key: "deepseek", label: "DeepSeek API key", placeholder: "sk-..." },
       anthropic: { key: "anthropic", label: "Anthropic API key", placeholder: "sk-ant-..." },
@@ -3861,31 +3961,33 @@ export class LearnKitSettingsTab extends PluginSettingTab {
     };
 
     const currentKeyField = providerKeyField[provider];
-    const currentKeyToken = String(currentKeyField.key);
-    const pluginId = this.plugin.manifest?.id || "sprout";
-    const apiKeysPath = `.obsidian/plugins/${pluginId}/configuration/api-keys.json`;
+    if (currentKeyField) {
+      const currentKeyToken = String(currentKeyField.key);
+      const pluginId = this.plugin.manifest?.id || "sprout";
+      const apiKeysPath = `.obsidian/plugins/${pluginId}/configuration/api-keys.json`;
 
-    withDependentSetting(
-      new Setting(wrapper)
-          .setName(this._tx(`ui.settings.studyAssistant.keys.${currentKeyToken}.name`, currentKeyField.label))
-        .setDesc(
-          this._tx(
-              `ui.settings.studyAssistant.keys.${currentKeyToken}.desc`,
-            "Stored at {path}. Add this file to .gitignore if syncing with Git.",
-            { path: apiKeysPath },
-          ),
-        )
-        .addText((text) => {
-          text.inputEl.type = "password";
-          text.inputEl.autocomplete = "off";
-          text.setPlaceholder(currentKeyField.placeholder);
-          text.setValue(this.plugin.settings.studyAssistant.apiKeys[currentKeyField.key] || "");
-          text.onChange(async (value) => {
-            this.plugin.settings.studyAssistant.apiKeys[currentKeyField.key] = String(value || "").trim();
-            await this.plugin.saveAll();
-          });
-        }),
-    );
+      withDependentSetting(
+        new Setting(wrapper)
+            .setName(this._tx(`ui.settings.studyAssistant.keys.${currentKeyToken}.name`, currentKeyField.label))
+          .setDesc(
+            this._tx(
+                `ui.settings.studyAssistant.keys.${currentKeyToken}.desc`,
+              "Stored at {path}. Add this file to .gitignore if syncing with Git.",
+              { path: apiKeysPath },
+            ),
+          )
+          .addText((text) => {
+            text.inputEl.type = "password";
+            text.inputEl.autocomplete = "off";
+            text.setPlaceholder(currentKeyField.placeholder);
+            text.setValue(this.plugin.settings.studyAssistant.apiKeys[currentKeyField.key] || "");
+            text.onChange(async (value) => {
+              this.plugin.settings.studyAssistant.apiKeys[currentKeyField.key] = String(value || "").trim();
+              await this.plugin.saveAll();
+            });
+          }),
+      );
+    }
 
     withDependentSetting(
       new Setting(wrapper)
@@ -4214,6 +4316,15 @@ export class LearnKitSettingsTab extends PluginSettingTab {
     return rawTier === "paid" ? "paid" : "free";
   }
 
+  private _resolveOllamaEndpoint(): string {
+    const override = String(this.plugin.settings.studyAssistant.endpointOverride || "").trim();
+    return override || LearnKitSettingsTab.DEFAULT_OLLAMA_ENDPOINT;
+  }
+
+  private _getOllamaModelOptions(): StudyAssistantModelOption[] {
+    return this._ollamaModelsCache ?? [];
+  }
+
   private _getOpenRouterModelOptions(tier: "free" | "paid"): StudyAssistantModelOption[] {
     const models = this._openRouterModelsCache ?? [];
     if (!models.length) return [];
@@ -4362,6 +4473,72 @@ export class LearnKitSettingsTab extends PluginSettingTab {
           : "Unknown error";
     } finally {
       this._openRouterModelsLoading = false;
+      this._softRerender();
+    }
+  }
+
+  private async _loadOllamaModels(forceReload = false): Promise<void> {
+    const endpoint = this._resolveOllamaEndpoint();
+    if (this._ollamaModelsLoading) return;
+    if (!forceReload && this._ollamaModelsCache && this._ollamaModelsEndpoint === endpoint) return;
+
+    this._ollamaModelsLoading = true;
+    this._ollamaModelsError = null;
+    this._ollamaModelsEndpoint = endpoint;
+
+    try {
+      const base = endpoint.replace(/\/+$/, "");
+      const res = await requestUrl({
+        url: `${base}/api/tags`,
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+
+      if (res.status < 200 || res.status >= 300) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
+      const rawJson: unknown = res.json && typeof res.json === "object" ? res.json : {};
+      const root = rawJson as { models?: unknown };
+      const rawModels = Array.isArray(root?.models) ? root.models : [];
+      const parsed: StudyAssistantModelOption[] = [];
+
+      for (const entry of rawModels) {
+        if (!entry || typeof entry !== "object") continue;
+        const model = entry as Record<string, unknown>;
+        const rawName = typeof model.name === "string" && model.name.trim().length > 0
+          ? model.name
+          : typeof model.model === "string"
+            ? model.model
+            : "";
+        const id = String(rawName || "").trim();
+        if (!id) continue;
+
+        parsed.push({
+          value: id,
+          label: id,
+        });
+      }
+
+      const deduped = Array.from(new Map(parsed.map((model) => [model.value, model])).values())
+        .sort((a, b) => a.label.localeCompare(b.label));
+      this._ollamaModelsCache = deduped;
+
+      if (this.plugin.settings.studyAssistant.provider === "ollama") {
+        if (deduped.length && !deduped.some((opt) => opt.value === this.plugin.settings.studyAssistant.model)) {
+          this.plugin.settings.studyAssistant.model = deduped[0].value;
+          await this.plugin.saveAll();
+        }
+      }
+    } catch (error) {
+      this._ollamaModelsError = error instanceof Error
+        ? error.message
+        : typeof error === "string"
+          ? error
+          : "Unknown error";
+      this._ollamaModelsCache = [];
+    } finally {
+      this._ollamaModelsLoading = false;
       this._softRerender();
     }
   }

@@ -28,7 +28,9 @@ export function setRemoteConversationForMode(
   remoteConversationsByMode[mode] = {
     provider,
     conversationId: id,
-    backend: provider === "custom" ? String(settings.endpointOverride || "").trim() : undefined,
+    backend: provider === "custom" || provider === "ollama"
+      ? String(settings.endpointOverride || "").trim()
+      : undefined,
   };
 }
 

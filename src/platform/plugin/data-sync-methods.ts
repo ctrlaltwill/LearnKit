@@ -8,6 +8,7 @@
 
 import { Notice, TFile, requestUrl } from "obsidian";
 import { LearnKitPluginBase, type Constructor } from "./plugin-base";
+import type LearnKitPlugin from "../../main";
 import { DEFAULT_SETTINGS } from "../core/constants";
 import { log } from "../core/logger";
 import { clonePlain, isPlainObject } from "../core/utils";
@@ -23,19 +24,110 @@ import { SqliteStore } from "../core/sqlite-store";
 import { NoteReviewSqlite } from "../core/note-review-sqlite";
 import { resetCardScheduling, type CardState } from "../../engine/scheduler/scheduler";
 import { joinPath, safeStatMtime, createDataJsonBackupNow } from "../integrations/sync/backup";
-import { formatSyncNotice, syncOneFile, syncQuestionBank } from "../integrations/sync/sync-engine";
+import { formatSyncNotice, syncOneFile, syncQuestionBank, shouldSyncFile, type SyncNoticeCounts } from "../integrations/sync/sync-engine";
 import { ParseErrorModal } from "../modals/parse-error-modal";
 import { formatCurrentNoteSyncNotice } from "../integrations/sync/sync-notices";
+import { isAnchorLine } from "../../views/settings/settings-utils";
+import { parseCardsFromText } from "../../engine/parser/parser";
+import { ConfirmSyncPrivilegesModal } from "../../views/settings/confirm-modals";
+
+// ────────────────────────────────────────────
+// Helpers
+// ────────────────────────────────────────────
+
+interface AffectedCounts {
+  totalWithCards: number;
+  totalNeedingAnchors: number;
+  totalNeedingUpdate: number;
+}
+
+/**
+ * Lightweight scan that counts how many markdown files contain cards
+ * and how many are missing anchor IDs.  Uses `cachedRead` which is O(1)
+ * for files already cached in memory.
+ */
+async function countAffectedFiles(plugin: LearnKitPluginBase): Promise<AffectedCounts> {
+  const vault = plugin.app.vault;
+  const mdFiles = vault.getMarkdownFiles();
+  const ignoreFences = plugin.settings.indexing.ignoreInCodeFences;
+
+  let totalWithCards = 0;
+  let totalNeedingAnchors = 0;
+  let totalNeedingUpdate = 0;
+
+  for (const file of mdFiles) {
+    if (!shouldSyncFile(plugin as unknown as LearnKitPlugin, file)) continue;
+
+    let text: string;
+    try {
+      text = await vault.cachedRead(file);
+    } catch {
+      continue;
+    }
+
+    const lines = text.split(/\r?\n/);
+    const { cards } = parseCardsFromText(file.path, text, ignoreFences);
+    const anchorIds = new Set<string>();
+    for (const ln of lines) {
+      if (isAnchorLine(ln)) {
+        const m = /^[\t >]*\^[a-z]+-(\d+)/.exec(ln.trim());
+        if (m) anchorIds.add(m[1]);
+      }
+    }
+
+    const hasCards = cards.length > 0 || anchorIds.size > 0;
+    if (!hasCards) continue;
+
+    totalWithCards += 1;
+
+    const missingAnchor = cards.some((c) => !c.id || !anchorIds.has(String(c.id)));
+    if (missingAnchor) totalNeedingAnchors += 1;
+
+    // Files that have cards and would benefit from full-sync normalisation
+    // (group normalisation, legacy shorthand migration, hidden storage fields cleanup)
+    totalNeedingUpdate += 1;
+  }
+
+  return { totalWithCards, totalNeedingAnchors, totalNeedingUpdate };
+}
 
 export function WithDataSyncMethods<T extends Constructor<LearnKitPluginBase>>(Base: T) {
   return class WithDataSyncMethods extends Base {
     _runSync = async (): Promise<void> => {
-      const res = await syncQuestionBank(this);
+      // ── Sync privileges gate ──
+      const priv = this.settings.general.syncPrivileges;
 
+      // undefined or "off" → show modal so the user can choose
+      if (priv === undefined || priv === "off") {
+        const counts = await countAffectedFiles(this);
+        const choice = await new Promise<"cancel" | "simple" | "full">((resolve) => {
+          new ConfirmSyncPrivilegesModal(this.app, this as unknown as LearnKitPlugin, counts, resolve).open();
+        });
+        if (choice === "cancel") return; // setting unchanged, modal re-appears next time
+        this.settings.general.syncPrivileges = choice;
+        await this.saveAll();
+        if (choice !== "full") {
+          const res = await syncQuestionBank(this as unknown as LearnKitPlugin, { syncMode: "simple" });
+          this._showSyncResult(res);
+          return;
+        }
+        // full sync falls through to existing logic
+      } else if (priv === "simple") {
+        const res = await syncQuestionBank(this as unknown as LearnKitPlugin, { syncMode: "simple" });
+        this._showSyncResult(res);
+        return;
+      }
+
+      // full sync (existing behavior)
+      const res = await syncQuestionBank(this as unknown as LearnKitPlugin);
+      this._showSyncResult(res);
+    };
+
+    private _showSyncResult(res: SyncNoticeCounts & { quarantinedCount: number; quarantinedIds: string[] }) {
       const notice = formatSyncNotice("Sync complete", res, { includeDeleted: true });
       new Notice(notice);
 
-      const tagsDeleted = Number((res as { tagsDeleted?: number }).tagsDeleted ?? 0);
+      const tagsDeleted = Number(res.tagsDeleted ?? 0);
       if (tagsDeleted > 0) {
         new Notice(this._tx("ui.main.notice.deletedUnusedTags", "Deleted {count}, unused tag{suffix}", {
           count: tagsDeleted,
@@ -44,10 +136,10 @@ export function WithDataSyncMethods<T extends Constructor<LearnKitPluginBase>>(B
       }
 
       if (res.quarantinedCount > 0) {
-        new ParseErrorModal(this.app, this, res.quarantinedIds).open();
+        new ParseErrorModal(this.app, this as unknown as LearnKitPlugin, res.quarantinedIds).open();
       }
       this.notifyWidgetCardsSynced();
-    };
+    }
 
     _formatCurrentNoteSyncNotice = (
       pageTitle: string,
@@ -63,7 +155,37 @@ export function WithDataSyncMethods<T extends Constructor<LearnKitPluginBase>>(B
         return;
       }
 
-      const res = await syncOneFile(this, file, { pruneGlobalOrphans: false });
+      // ── Sync privileges gate ──
+      const priv = this.settings.general.syncPrivileges;
+
+      if (priv === undefined || priv === "off") {
+        const counts = await countAffectedFiles(this);
+        const choice = await new Promise<"cancel" | "simple" | "full">((resolve) => {
+          new ConfirmSyncPrivilegesModal(this.app, this as unknown as LearnKitPlugin, counts, resolve).open();
+        });
+        if (choice === "cancel") return;
+        this.settings.general.syncPrivileges = choice;
+        await this.saveAll();
+        if (choice !== "full") {
+          const res = await syncOneFile(this as unknown as LearnKitPlugin, file, { pruneGlobalOrphans: false, syncMode: "simple" });
+          new Notice(this._formatCurrentNoteSyncNotice(file.basename, res));
+          if (res.quarantinedCount > 0) {
+            new ParseErrorModal(this.app, this as unknown as LearnKitPlugin, res.quarantinedIds).open();
+          }
+          this.notifyWidgetCardsSynced();
+          return;
+        }
+      } else if (priv === "simple") {
+        const res = await syncOneFile(this as unknown as LearnKitPlugin, file, { pruneGlobalOrphans: false, syncMode: "simple" });
+        new Notice(this._formatCurrentNoteSyncNotice(file.basename, res));
+        if (res.quarantinedCount > 0) {
+          new ParseErrorModal(this.app, this as unknown as LearnKitPlugin, res.quarantinedIds).open();
+        }
+        this.notifyWidgetCardsSynced();
+        return;
+      }
+
+      const res = await syncOneFile(this as unknown as LearnKitPlugin, file, { pruneGlobalOrphans: false });
       new Notice(this._formatCurrentNoteSyncNotice(file.basename, res));
 
       if (res.quarantinedCount > 0) {

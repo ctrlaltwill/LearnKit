@@ -37,6 +37,7 @@ General combines appearance, profile, language, and Reading view settings.
 ### User Details
 
 - **User name**: the display name used in LearnKit greetings
+- **Sync privileges**: controls what sync is allowed to modify in your Markdown notes. Choose between **Full** (rewrites cards into canonical format, adds anchors, normalises fields), **Simple** (only adds missing anchor IDs), or **Off** (blocks all sync). See [Syncing](../Syncing#sync-privileges) for details.
 
 ### Language
 

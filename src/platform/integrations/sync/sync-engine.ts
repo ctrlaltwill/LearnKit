@@ -61,7 +61,7 @@ import { deleteTtsCacheForCardIds, getTtsCacheDirPath } from "../../../platform/
 // ────────────────────────────────────────────
 
 /** Counts returned from sync operations for user-facing notices. */
-type SyncNoticeCounts = {
+export type SyncNoticeCounts = {
   newCount: number;
   updatedCount: number;
   sameCount?: number;
@@ -1888,9 +1888,10 @@ async function pruneTtsCacheForCards(plugin: LearnKitPlugin, cardIds: readonly s
 export async function syncOneFile(
   plugin: LearnKitPlugin,
   file: TFile,
-  options?: { pruneGlobalOrphans?: boolean; sourceTextOverride?: string },
+  options?: { pruneGlobalOrphans?: boolean; sourceTextOverride?: string; syncMode?: "full" | "simple" },
 ) {
   return withFileSyncLock(file.path, async () => {
+    const syncMode = options?.syncMode ?? (plugin.settings?.general?.syncPrivileges === "simple" ? "simple" : "full");
     const vault = plugin.app.vault;
     const now = Date.now();
 
@@ -1977,35 +1978,44 @@ export async function syncOneFile(
       keepIds.add(id);
 
       if (c.isShorthand) {
-        // Shorthand card: replace the :: / ::: line with canonical format.
-        // sourceEndLine is the actual shorthand line (sourceStartLine may point to an anchor line above it).
+        // Shorthand card: in simple mode only insert a missing anchor;
+        // in full mode replace :: / ::: with canonical format.
         const shorthandLine = c.sourceEndLine;
         const prefix = inferPrefixAt(lines, shorthandLine);
-        const d = getDelimiter();
 
-        const canonicalLines: string[] = [];
-        if (!existingAnchorIds.has(id)) {
-          canonicalLines.push(`${prefix}${buildPrimaryCardAnchor(id)}`);
-          idsInserted += 1;
-        }
-
-        if (c.type === "cloze") {
-          const cqEsc = escapeDelimiterText(c.clozeText ?? "");
-          canonicalLines.push(`${prefix}CQ ${d} ${cqEsc} ${d}`);
-        } else if (c.type === "reversed") {
-          const qEsc = escapeDelimiterText(c.q ?? "");
-          const aEsc = escapeDelimiterText(c.a ?? "");
-          canonicalLines.push(`${prefix}RQ ${d} ${qEsc} ${d}`);
-          canonicalLines.push(`${prefix}A ${d} ${aEsc} ${d}`);
+        if (syncMode === "simple") {
+          if (!existingAnchorIds.has(id)) {
+            const insertAt = findAnchorInsertLineIndex(lines, c.sourceStartLine);
+            edits.push({ lineIndex: insertAt, insertText: `${prefix}${buildPrimaryCardAnchor(id)}` });
+            idsInserted += 1;
+            existingAnchorIds.add(id);
+          }
         } else {
-          const qEsc = escapeDelimiterText(c.q ?? "");
-          const aEsc = escapeDelimiterText(c.a ?? "");
-          canonicalLines.push(`${prefix}Q ${d} ${qEsc} ${d}`);
-          canonicalLines.push(`${prefix}A ${d} ${aEsc} ${d}`);
-        }
+          const d = getDelimiter();
+          const canonicalLines: string[] = [];
+          if (!existingAnchorIds.has(id)) {
+            canonicalLines.push(`${prefix}${buildPrimaryCardAnchor(id)}`);
+            idsInserted += 1;
+          }
 
-        edits.push({ lineIndex: shorthandLine, deleteLine: true });
-        edits.push({ lineIndex: shorthandLine, insertText: canonicalLines.join("\n") });
+          if (c.type === "cloze") {
+            const cqEsc = escapeDelimiterText(c.clozeText ?? "");
+            canonicalLines.push(`${prefix}CQ ${d} ${cqEsc} ${d}`);
+          } else if (c.type === "reversed") {
+            const qEsc = escapeDelimiterText(c.q ?? "");
+            const aEsc = escapeDelimiterText(c.a ?? "");
+            canonicalLines.push(`${prefix}RQ ${d} ${qEsc} ${d}`);
+            canonicalLines.push(`${prefix}A ${d} ${aEsc} ${d}`);
+          } else {
+            const qEsc = escapeDelimiterText(c.q ?? "");
+            const aEsc = escapeDelimiterText(c.a ?? "");
+            canonicalLines.push(`${prefix}Q ${d} ${qEsc} ${d}`);
+            canonicalLines.push(`${prefix}A ${d} ${aEsc} ${d}`);
+          }
+
+          edits.push({ lineIndex: shorthandLine, deleteLine: true });
+          edits.push({ lineIndex: shorthandLine, insertText: canonicalLines.join("\n") });
+        }
         existingAnchorIds.add(id);
       } else if (!existingAnchorIds.has(id)) {
         const insertAt = findAnchorInsertLineIndex(lines, c.sourceStartLine);
@@ -2013,7 +2023,8 @@ export async function syncOneFile(
         edits.push({ lineIndex: insertAt, insertText: `${prefix}${buildPrimaryCardAnchor(id)}` });
         idsInserted += 1;
         existingAnchorIds.add(id);
-      } else {
+      } else if (syncMode !== "simple") {
+        // Full sync: apply normalisation edits for existing anchored cards
         queueCanonicalGroupFieldEdit(lines, edits, c);
         queueStripHiddenFields(lines, edits, c);
         queueComboTypeMigration(lines, edits, c);
@@ -2422,8 +2433,9 @@ export async function syncOneFile(
  * card database, inserts missing anchors, removes stale entries,
  * and cleans up orphaned IO images.
  */
-export async function syncQuestionBank(plugin: LearnKitPlugin) {
+export async function syncQuestionBank(plugin: LearnKitPlugin, options?: { syncMode?: "full" | "simple" }) {
   return withVaultSyncLock(async () => {
+    const syncMode = options?.syncMode ?? (plugin.settings?.general?.syncPrivileges === "simple" ? "simple" : "full");
     const now = Date.now();
 
     const groupsBefore = collectGroupKeys(plugin.store.data.cards || {});
@@ -2543,34 +2555,44 @@ export async function syncQuestionBank(plugin: LearnKitPlugin) {
         keepIds.add(id);
 
         if (c.isShorthand) {
-          // Shorthand card: replace the :: / ::: line with canonical format.
+          // Shorthand card: in simple mode only insert a missing anchor;
+          // in full mode replace :: / ::: with canonical format.
           const shorthandLine = c.sourceEndLine;
           const prefix = inferPrefixAt(lines, shorthandLine);
-          const d = getDelimiter();
 
-          const canonicalLines: string[] = [];
-          if (!existingAnchorIds.has(id)) {
-            canonicalLines.push(`${prefix}${buildPrimaryCardAnchor(id)}`);
-            planInserted += 1;
-          }
-
-          if (c.type === "cloze") {
-            const cqEsc = escapeDelimiterText(c.clozeText ?? "");
-            canonicalLines.push(`${prefix}CQ ${d} ${cqEsc} ${d}`);
-          } else if (c.type === "reversed") {
-            const qEsc = escapeDelimiterText(c.q ?? "");
-            const aEsc = escapeDelimiterText(c.a ?? "");
-            canonicalLines.push(`${prefix}RQ ${d} ${qEsc} ${d}`);
-            canonicalLines.push(`${prefix}A ${d} ${aEsc} ${d}`);
+          if (syncMode === "simple") {
+            if (!existingAnchorIds.has(id)) {
+              const insertAt = findAnchorInsertLineIndex(lines, c.sourceStartLine);
+              edits.push({ lineIndex: insertAt, insertText: `${prefix}${buildPrimaryCardAnchor(id)}` });
+              planInserted += 1;
+              existingAnchorIds.add(id);
+            }
           } else {
-            const qEsc = escapeDelimiterText(c.q ?? "");
-            const aEsc = escapeDelimiterText(c.a ?? "");
-            canonicalLines.push(`${prefix}Q ${d} ${qEsc} ${d}`);
-            canonicalLines.push(`${prefix}A ${d} ${aEsc} ${d}`);
-          }
+            const d = getDelimiter();
+            const canonicalLines: string[] = [];
+            if (!existingAnchorIds.has(id)) {
+              canonicalLines.push(`${prefix}${buildPrimaryCardAnchor(id)}`);
+              planInserted += 1;
+            }
 
-          edits.push({ lineIndex: shorthandLine, deleteLine: true });
-          edits.push({ lineIndex: shorthandLine, insertText: canonicalLines.join("\n") });
+            if (c.type === "cloze") {
+              const cqEsc = escapeDelimiterText(c.clozeText ?? "");
+              canonicalLines.push(`${prefix}CQ ${d} ${cqEsc} ${d}`);
+            } else if (c.type === "reversed") {
+              const qEsc = escapeDelimiterText(c.q ?? "");
+              const aEsc = escapeDelimiterText(c.a ?? "");
+              canonicalLines.push(`${prefix}RQ ${d} ${qEsc} ${d}`);
+              canonicalLines.push(`${prefix}A ${d} ${aEsc} ${d}`);
+            } else {
+              const qEsc = escapeDelimiterText(c.q ?? "");
+              const aEsc = escapeDelimiterText(c.a ?? "");
+              canonicalLines.push(`${prefix}Q ${d} ${qEsc} ${d}`);
+              canonicalLines.push(`${prefix}A ${d} ${aEsc} ${d}`);
+            }
+
+            edits.push({ lineIndex: shorthandLine, deleteLine: true });
+            edits.push({ lineIndex: shorthandLine, insertText: canonicalLines.join("\n") });
+          }
           existingAnchorIds.add(id);
         } else if (!existingAnchorIds.has(id)) {
           const insertAt = findAnchorInsertLineIndex(lines, c.sourceStartLine);
@@ -2578,7 +2600,8 @@ export async function syncQuestionBank(plugin: LearnKitPlugin) {
           edits.push({ lineIndex: insertAt, insertText: `${prefix}${buildPrimaryCardAnchor(id)}` });
           planInserted += 1;
           existingAnchorIds.add(id);
-        } else {
+        } else if (syncMode !== "simple") {
+          // Full sync: apply normalisation edits for existing anchored cards
           queueCanonicalGroupFieldEdit(lines, edits, c);
           queueStripHiddenFields(lines, edits, c);
           queueComboTypeMigration(lines, edits, c);

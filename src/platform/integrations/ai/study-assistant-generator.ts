@@ -1789,6 +1789,9 @@ function buildChatSystemPrompt(input: StudyAssistantChatInput): string {
     "Use a warm, human tone when appropriate. Be motivating and supportive, especially when the user seems discouraged.",
     "Be concise, clear, and practical.",
     "When content is not supported by the note, state that it is external/background knowledge.",
+    input.mode === "review"
+      ? "CRITICAL: Do NOT generate flashcards, flashcard rows, or flashcard-formatted content in this mode. Focus only on reviewing the note for improvements, inaccuracies, clarity, completeness, and exam readiness. Flashcard generation is handled separately in the Generate tab. If the user asks for flashcards, politely remind them to switch to the Generate tab."
+      : "",
     input.mode === "edit"
       ? `First, write a brief plain-text summary for the user. Then output ${EDIT_PROPOSAL_START_TAG} followed by strictly valid JSON and then ${EDIT_PROPOSAL_END_TAG}.`
       : "",
@@ -1849,6 +1852,9 @@ function buildChatUserPrompt(input: StudyAssistantChatInput): string {
       : "Review the note and respond with concrete improvement actions, using both note evidence and reliable general knowledge.",
     input.mode === "review"
       ? "Match response depth to reviewDepth: quick = concise priorities, standard = balanced coverage, comprehensive = detailed audit with concrete rewrites."
+      : "",
+    input.mode === "review"
+      ? "CRITICAL: Do NOT generate flashcards, flashcard rows, or flashcard-formatted content. If the user asks for flashcards, politely remind them to use the Generate tab instead. Focus exclusively on reviewing the note for improvements, inaccuracies, clarity, completeness, and exam readiness."
       : "",
     "If a point comes from outside the note, label it briefly as external/background knowledge.",
     "Return plain markdown text only.",

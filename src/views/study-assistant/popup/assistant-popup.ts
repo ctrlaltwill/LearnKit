@@ -4142,7 +4142,7 @@ export class SproutAssistantPopup {
       this._isStreaming = false;
       this._streamAbort = null;
 
-      const reply = this._appendFlashcardDisclaimerIfNeeded(String(result.reply || "").trim(), draft) || this._tx(
+      const reply = String(result.reply || "").trim() || this._tx(
         "ui.studyAssistant.chat.emptyReply",
         "No response returned.",
       );
