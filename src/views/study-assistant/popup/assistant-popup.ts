@@ -1908,7 +1908,7 @@ export class SproutAssistantPopup {
     options: { forceBottom?: boolean } = {},
   ): void {
     const shouldAutoFollow = options.forceBottom || this._shouldAutoFollowChat(mode);
-    requestAnimationFrame(() => {
+    const applyScrollPosition = () => {
       if (shouldAutoFollow) {
         chatWrap.scrollTop = chatWrap.scrollHeight;
         return;
@@ -1917,6 +1917,13 @@ export class SproutAssistantPopup {
       if (preservedScrollTop == null) return;
       const maxScrollTop = Math.max(0, chatWrap.scrollHeight - chatWrap.clientHeight);
       chatWrap.scrollTop = Math.min(maxScrollTop, Math.max(0, preservedScrollTop));
+    };
+
+    // Apply immediately so rapid back-to-back renders don't snapshot scrollTop at 0.
+    applyScrollPosition();
+    // Re-apply on next frame for late layout changes (e.g. markdown/image sizing).
+    requestAnimationFrame(() => {
+      applyScrollPosition();
     });
   }
 
