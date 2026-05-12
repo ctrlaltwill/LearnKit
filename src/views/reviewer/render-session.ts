@@ -1455,7 +1455,13 @@ export function renderSessionMode(args: Args) {
     section.appendChild(labelRow(reveal ? t(args.interfaceLanguage, "ui.common.answer", "Answer") : t(args.interfaceLanguage, "ui.common.question", "Question"), reveal ? args.ttsReplayBack : args.ttsReplayFront));
     const clozContainer = document.createElement("div");
     clozContainer.className = "learnkit-cloze whitespace-pre-wrap break-words learnkit-md-block";
-    if (text.includes("$") || text.includes("\\(") || text.includes("\\[") || text.includes("[[")) {
+    
+    // Check if text has markdown features (math, links, lists)
+    const hasMarkdownTable = /^\|.+\|\s*\n\|[\s:|-]+\|/m.test(text);
+    const hasMarkdownList = /^[ \t]*(?:[-+*]|\d+[.)])\s/m.test(text);
+    const hasMarkdownFeatures = text.includes("$") || text.includes("\\(") || text.includes("\\[") || text.includes("[[") || hasMarkdownTable || hasMarkdownList;
+    
+    if (hasMarkdownFeatures) {
       const clozeOpts = args.getClozeRenderOptions();
       const processedText = processClozeForMath(text, reveal, targetIndex, {
         blankClassName: "learnkit-cloze-blank hidden-cloze",
