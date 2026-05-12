@@ -1455,33 +1455,16 @@ export function renderSessionMode(args: Args) {
     section.appendChild(labelRow(reveal ? t(args.interfaceLanguage, "ui.common.answer", "Answer") : t(args.interfaceLanguage, "ui.common.question", "Question"), reveal ? args.ttsReplayBack : args.ttsReplayFront));
     const clozContainer = document.createElement("div");
     clozContainer.className = "learnkit-cloze whitespace-pre-wrap break-words learnkit-md-block";
-    
-    // Check if text has markdown features (math, links, lists)
-    const hasMarkdownTable = /^\|.+\|\s*\n\|[\s:|-]+\|/m.test(text);
-    const hasMarkdownList = /^[ \t]*(?:[-+*]|\d+[.)])\s/m.test(text);
-    const hasMarkdownFeatures = text.includes("$") || text.includes("\\(") || text.includes("\\[") || text.includes("[[") || hasMarkdownTable || hasMarkdownList;
-    
-    if (hasMarkdownFeatures) {
-      const clozeOpts = args.getClozeRenderOptions();
-      const processedText = processClozeForMath(text, reveal, targetIndex, {
-        blankClassName: "learnkit-cloze-blank hidden-cloze",
-        useHintText: clozeOpts.mode !== "typed",
-      });
-      void args.renderMarkdownInto(clozContainer, processedText, sourcePath).then(() => {
-        setupLinkHandlers(clozContainer, sourcePath);
-        hydrateRenderedMathCloze(clozContainer, text, reveal, targetIndex, clozeOpts);
-      });
-    } else {
-      const clozeContent = args.renderClozeFront(text, reveal, targetIndex, undefined);
-      if (reveal) {
-        const span = document.createElement("span");
-        span.className = "whitespace-pre-wrap break-words";
-        span.appendChild(clozeContent);
-        clozContainer.appendChild(span);
-      } else {
-        clozContainer.appendChild(clozeContent);
-      }
-    }
+
+    const clozeOpts = args.getClozeRenderOptions();
+    const processedText = processClozeForMath(text, reveal, targetIndex, {
+      blankClassName: "learnkit-cloze-blank hidden-cloze",
+      useHintText: clozeOpts.mode !== "typed",
+    });
+    void args.renderMarkdownInto(clozContainer, processedText, sourcePath).then(() => {
+      setupLinkHandlers(clozContainer, sourcePath);
+      hydrateRenderedMathCloze(clozContainer, text, reveal, targetIndex, clozeOpts);
+    });
     section.appendChild(clozContainer);
   } else if (card.type === "mcq") {
     renderMcqContent({ section, labelRow, renderMdBlock, setupLinkHandlers, args, card, graded, sourcePath });
