@@ -32,4 +32,38 @@ describe("renderClozeFront cloze widths", () => {
     expect(hints).toHaveLength(2);
     expect(hints[0].style.width).not.toBe(hints[1].style.width);
   });
+
+  it("treats caret notation as equivalent to superscript digits in typed mode", () => {
+    const rendered = renderClozeFront(
+      "Power {{c1::x²}}",
+      false,
+      null,
+      { mode: "typed", typedAnswers: new Map([["1#1", "x^"]]) },
+    );
+
+    const input = rendered.querySelector<HTMLInputElement>(".learnkit-cloze-typed-input");
+    expect(input).not.toBeNull();
+    expect(input?.classList.contains("learnkit-cloze-typed--partial")).toBe(true);
+
+    const revealed = renderClozeFront(
+      "Power {{c1::x²}}",
+      true,
+      1,
+      { mode: "typed", typedAnswers: new Map([["1#1", "x^2"]]) },
+    );
+    expect(revealed.querySelector(".learnkit-cloze-typed-wrong")).toBeNull();
+    expect(revealed.querySelector(".learnkit-cloze-typed-correct")).not.toBeNull();
+  });
+
+  it("treats plain digits as equivalent to subscript digits in typed mode", () => {
+    const revealed = renderClozeFront(
+      "Chem {{c1::CO₂}}",
+      true,
+      1,
+      { mode: "typed", typedAnswers: new Map([["1#1", "CO2"]]) },
+    );
+
+    expect(revealed.querySelector(".learnkit-cloze-typed-wrong")).toBeNull();
+    expect(revealed.querySelector(".learnkit-cloze-typed-correct")).not.toBeNull();
+  });
 });

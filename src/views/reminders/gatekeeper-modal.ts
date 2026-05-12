@@ -979,12 +979,37 @@ export class GatekeeperModal extends Modal {
     });
   }
 
+  private escapeAngleBracketsOutsideCode(text: string): string {
+    const codePlaceholders: string[] = [];
+    const CODE_PH = "@@SPROUTCODE";
+
+    // Extract inline code blocks
+    const withCodePlaceholders = text.replace(/`([^`]*)`/g, (match) => {
+      const idx = codePlaceholders.length;
+      codePlaceholders.push(match);
+      return `${CODE_PH}${idx}@@`;
+    });
+
+    // Escape angle brackets in non-code content
+    let result = withCodePlaceholders
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+    // Restore code blocks
+    if (codePlaceholders.length) {
+      result = result.replace(/@@SPROUTCODE(\d+)@@/g, (_m, idx) => {
+        return codePlaceholders[Number(idx)] ?? _m;
+      });
+    }
+
+    return result;
+  }
+
   private renderTextBlock(el: HTMLElement, text: string, card: CardRecord) {
     if (this.hasMarkdownTable(text) || this.hasMarkdownList(text) || text.includes("[[") || text.includes("$") || text.includes("\\(") || text.includes("\\[")) {
       const sourcePath = String(card.sourceNotePath || "");
-      // Escape HTML so Obsidian's MarkdownRenderer doesn't strip literal <angle> brackets
-      const safe = String(text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      void this.renderMarkdownInto(el, convertInlineDisplayMath(safe), sourcePath);
+      const escaped = this.escapeAngleBracketsOutsideCode(String(text || ""));
+      void this.renderMarkdownInto(el, convertInlineDisplayMath(escaped), sourcePath);
       return;
     }
 

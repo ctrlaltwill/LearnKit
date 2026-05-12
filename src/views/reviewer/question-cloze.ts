@@ -50,6 +50,15 @@ function stripInlineMarkdown(s: string): string {
     .trim();
 }
 
+function normalizeTypedClozeForCompare(s: string): string {
+  return s
+    .trim()
+    .normalize("NFKC")
+    .toLowerCase()
+    // Treat caret exponent notation as equivalent to superscript digits.
+    .replace(/\^\s*(?=\d|$)/g, "");
+}
+
 function measureClozeTextWidthPx(host: HTMLElement, text: string): number {
   const normalizedText = text.trim();
   if (!normalizedText) return 0;
@@ -258,7 +267,7 @@ export function renderClozeFront(
       } else if (reveal) {
         if (mode === "typed") {
           const typed = (typedAnswers.get(answerKey) ?? "").trim();
-          const isCorrect = typed.toLowerCase() === plainAns.toLowerCase();
+          const isCorrect = normalizeTypedClozeForCompare(typed) === normalizeTypedClozeForCompare(plainAns);
 
           if (isCorrect) {
             const span = document.createElement("span");
@@ -361,8 +370,8 @@ function updateTypedInputState(input: HTMLInputElement, typed: string, expected:
 
   if (!typed) return; // empty → neutral
 
-  const tLower = typed.toLowerCase();
-  const eLower = expected.toLowerCase();
+  const tLower = normalizeTypedClozeForCompare(typed);
+  const eLower = normalizeTypedClozeForCompare(expected);
 
   if (tLower === eLower) {
     input.classList.add("learnkit-cloze-typed--correct", "learnkit-cloze-typed--correct");

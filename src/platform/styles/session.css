@@ -992,6 +992,15 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
   background-color: rgba(239, 68, 68, 0.15) !important;
 }
 
+/* Dark mode: white text for correct/wrong answers */
+.theme-dark .learnkit :is(.lk-session-card, .learnkit-gatekeeper-modal, .learnkit-widget, .learnkit-widget-card-body) :is(.learnkit-mcq-correct-highlight, .learnkit-oq-correct-highlight) :is(.learnkit-mcq-option-text, .learnkit-mcq-option-line, .learnkit-oq-step-text) {
+  color: white !important;
+}
+
+.theme-dark .learnkit :is(.lk-session-card, .learnkit-gatekeeper-modal, .learnkit-widget, .learnkit-widget-card-body) :is(.learnkit-mcq-wrong-highlight, .learnkit-oq-wrong-highlight) :is(.learnkit-mcq-option-text, .learnkit-mcq-option-line, .learnkit-oq-step-text) {
+  color: white !important;
+}
+
 .learnkit :is(.lk-session-card, .learnkit-gatekeeper-modal, .learnkit-widget, .learnkit-widget-card-body) :is(.learnkit-mcq-correct-highlight, .learnkit-oq-correct-highlight) :is(kbd, .kbd) {
   background: color-mix(in srgb, var(--learnkit-good-bg) 80%, transparent) !important;
   border-color: color-mix(in srgb, var(--learnkit-good-bg) 48%, transparent) !important;

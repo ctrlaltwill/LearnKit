@@ -280,6 +280,33 @@ export function renderWidgetSession(view: WidgetViewLike, root: HTMLElement): vo
 /*  Card-type renderers (private to this module)                       */
 /* ================================================================== */
 
+/** Escape angle brackets outside code blocks to prevent HTML tag stripping */
+function escapeAngleBracketsOutsideCode(text: string): string {
+  const codePlaceholders: string[] = [];
+  const CODE_PH = "@@SPROUTCODE";
+
+  // Extract inline code blocks
+  const withCodePlaceholders = text.replace(/`([^`]*)`/g, (match) => {
+    const idx = codePlaceholders.length;
+    codePlaceholders.push(match);
+    return `${CODE_PH}${idx}@@`;
+  });
+
+  // Escape angle brackets in non-code content
+  let result = withCodePlaceholders
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  // Restore code blocks
+  if (codePlaceholders.length) {
+    result = result.replace(/@@SPROUTCODE(\d+)@@/g, (_m, idx) => {
+      return codePlaceholders[Number(idx)] ?? _m;
+    });
+  }
+
+  return result;
+}
+
 function renderBasicCard(
   view: WidgetViewLike,
   body: HTMLElement,
@@ -305,9 +332,8 @@ function renderBasicCard(
     const qContainer = document.createElement("div");
     qContainer.className = "whitespace-pre-wrap break-words";
     const sourcePath = String(card.sourceNotePath || view.activeFile?.path || "");
-    // Escape HTML so Obsidian's MarkdownRenderer doesn't strip literal <angle> brackets
-    const safeQText = String(qText || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    void view.renderMarkdownInto(qContainer, convertInlineDisplayMath(safeQText), sourcePath);
+    const escaped = escapeAngleBracketsOutsideCode(String(qText || ""));
+    void view.renderMarkdownInto(qContainer, convertInlineDisplayMath(escaped), sourcePath);
     qEl.appendChild(qContainer);
   } else {
     const qDiv = document.createElement("div");
@@ -335,9 +361,8 @@ function renderBasicCard(
       const aContainer = document.createElement("div");
       aContainer.className = "whitespace-pre-wrap break-words";
       const sourcePath = String(card.sourceNotePath || view.activeFile?.path || "");
-      // Escape HTML so Obsidian's MarkdownRenderer doesn't strip literal <angle> brackets
-      const safeAText = String(aText || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      void view.renderMarkdownInto(aContainer, convertInlineDisplayMath(safeAText), sourcePath);
+      const escaped = escapeAngleBracketsOutsideCode(String(aText || ""));
+      void view.renderMarkdownInto(aContainer, convertInlineDisplayMath(escaped), sourcePath);
       aEl.appendChild(aContainer);
     } else {
       const aDiv = document.createElement("div");

@@ -1396,12 +1396,38 @@ export function renderSessionMode(args: Args) {
     });
   };
 
+  // Escape angle brackets outside code blocks to prevent HTML tag stripping
+  const escapeAngleBracketsOutsideCode = (text: string): string => {
+    const codePlaceholders: string[] = [];
+    const CODE_PH = "@@SPROUTCODE";
+
+    // Extract inline code blocks
+    const withCodePlaceholders = text.replace(/`([^`]*)`/g, (match) => {
+      const idx = codePlaceholders.length;
+      codePlaceholders.push(match);
+      return `${CODE_PH}${idx}@@`;
+    });
+
+    // Escape angle brackets in non-code content
+    let result = withCodePlaceholders
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+    // Restore code blocks
+    if (codePlaceholders.length) {
+      result = result.replace(/@@SPROUTCODE(\d+)@@/g, (_m, idx) => {
+        return codePlaceholders[Number(idx)] ?? _m;
+      });
+    }
+
+    return result;
+  };
+
   const renderMdBlock = (cls: string, md: string) => {
     const block = document.createElement("div");
     block.className = `bc ${cls} whitespace-pre-wrap break-words learnkit-md-block`;
-    // Escape HTML so Obsidian's MarkdownRenderer doesn't strip literal <angle> brackets
-    const safe = String(md ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    void args.renderMarkdownInto(block, safe, sourcePath).then(() => setupLinkHandlers(block, sourcePath));
+    const escaped = escapeAngleBracketsOutsideCode(String(md ?? ""));
+    void args.renderMarkdownInto(block, escaped, sourcePath).then(() => setupLinkHandlers(block, sourcePath));
     return block;
   };
 
