@@ -135,25 +135,25 @@ body.is-phone .learnkit .learnkit-analytics-content-shell > * + * {
 .learnkit .learnkit-analytics-badge.learnkit-trend-badge {
   background-color: var(--theme-accent);
   border: 0.5px solid hsl(var(--accent-h), var(--accent-s), calc(var(--accent-l) * 0.85));
-  color: #fff;
+  color: #ffffff;
 }
 
 .theme-dark .learnkit .learnkit-analytics-badge.learnkit-trend-badge {
   background-color: hsl(var(--accent-h), var(--accent-s), var(--accent-l), .14);
   border: 0.5px solid hsl(var(--accent-h), var(--accent-s), var(--accent-l), .24);
-  color: #fff;
+  color: #ffffff;
 }
 
 .learnkit .learnkit-analytics-badge.learnkit-live-badge-orange {
   background-color: var(--color-orange, #f59e0b);
   border: 0.5px solid color-mix(in srgb, var(--color-orange, #f59e0b) 78%, black);
-  color: #fff;
+  color: #ffffff;
 }
 
 .theme-dark .learnkit .learnkit-analytics-badge.learnkit-live-badge-orange {
   background-color: color-mix(in srgb, var(--color-orange, #f59e0b) 28%, transparent);
   border: 0.5px solid color-mix(in srgb, var(--color-orange, #f59e0b) 52%, transparent);
-  color: #fff;
+  color: #ffffff;
 }
 
 .learnkit .learnkit-analytics-live-pulse {
@@ -182,10 +182,10 @@ body.is-phone .learnkit .learnkit-analytics-content-shell > * + * {
 /* ---- Pie chart center value ---- */
 
 .learnkit .learnkit-analytics-root .fill-foreground {
-  fill: #111;
+  fill: #111111;
 }
 .theme-dark .learnkit .learnkit-analytics-root .fill-foreground {
-  fill: #fff;
+  fill: #ffffff;
 }
 
 /* ---- Info icons ---- */

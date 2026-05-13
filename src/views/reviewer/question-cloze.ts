@@ -304,7 +304,7 @@ export function renderClozeFront(
               if (rgb && rgb.length >= 3) {
                 const [r, g, b] = rgb;
                 const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-                setCssProps(answerSpan, "--learnkit-cloze-color", luminance > 0.7 ? "#111" : "#fff");
+                setCssProps(answerSpan, "--learnkit-cloze-color", luminance > 0.7 ? "#111111" : "#ffffff");
               }
             }, 0);
           }

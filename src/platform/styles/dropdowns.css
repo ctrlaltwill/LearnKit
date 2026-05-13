@@ -28,7 +28,7 @@
 /* ---- Dropdown menu hover/focus: light + dark ---- */
 
 .learnkit.dropdown-menu .bg-popover {
-  background-color: #fff;
+  background-color: #ffffff;
   color: var(--popover-fg, var(--foreground));
   border-radius: var(--radius-md);
 }

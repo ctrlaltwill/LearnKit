@@ -1896,7 +1896,7 @@ td.learnkit-backup-cell.learnkit-backup-cell.learnkit-backup-actions.learnkit-ba
 .learnkit .learnkit-about-buttons :is(.learnkit-about-btn--coffee, .sprout-about-btn--coffee).learnkit-btn-accent:hover,
 .learnkit .learnkit-about-buttons :is(.learnkit-about-btn--coffee, .sprout-about-btn--coffee).learnkit-btn-accent:focus-visible,
 .learnkit .learnkit-about-buttons :is(.learnkit-about-btn--coffee, .sprout-about-btn--coffee).learnkit-btn-accent:active {
-  color: #fff !important;
+  color: #ffffff !important;
 }
 
 .learnkit .learnkit-about-buttons :is(.learnkit-about-btn--feature, .sprout-about-btn--feature).learnkit-btn-accent .learnkit-about-btn-label,
@@ -1905,15 +1905,15 @@ td.learnkit-backup-cell.learnkit-backup-cell.learnkit-backup-actions.learnkit-ba
 .learnkit .learnkit-about-buttons :is(.learnkit-about-btn--coffee, .sprout-about-btn--coffee).learnkit-btn-accent .learnkit-about-btn-label,
 .learnkit .learnkit-about-buttons :is(.learnkit-about-btn--coffee, .sprout-about-btn--coffee).learnkit-btn-accent .learnkit-about-btn-icon,
 .learnkit .learnkit-about-buttons :is(.learnkit-about-btn--coffee, .sprout-about-btn--coffee).learnkit-btn-accent .learnkit-about-btn-icon .svg-icon {
-  color: #fff !important;
+  color: #ffffff !important;
 }
 
 .learnkit .learnkit-about-buttons :is(.learnkit-about-btn--feature, .sprout-about-btn--feature).learnkit-btn-accent .learnkit-about-btn-icon svg,
 .learnkit .learnkit-about-buttons :is(.learnkit-about-btn--feature, .sprout-about-btn--feature).learnkit-btn-accent .learnkit-about-btn-icon svg *,
 .learnkit .learnkit-about-buttons :is(.learnkit-about-btn--coffee, .sprout-about-btn--coffee).learnkit-btn-accent .learnkit-about-btn-icon svg,
 .learnkit .learnkit-about-buttons :is(.learnkit-about-btn--coffee, .sprout-about-btn--coffee).learnkit-btn-accent .learnkit-about-btn-icon svg * {
-  color: #fff !important;
-  stroke: #fff !important;
+  color: #ffffff !important;
+  stroke: #ffffff !important;
 }
 
 .learnkit .learnkit-about-buttons .learnkit-about-btn .learnkit-about-btn-icon,
@@ -2268,7 +2268,7 @@ td.learnkit-backup-cell.learnkit-backup-cell.learnkit-backup-actions.learnkit-ba
 .learnkit .learnkit-settings-action-btn.learnkit-btn-danger:not(.learnkit-ss-trigger) {
   background-color: rgba(var(--color-red-rgb,255, 59, 48), 0.85) !important;
 border-color: rgba(var(--color-red-rgb,255, 59, 48), 0.85) !important;
-color: #fff !important;
+color: #ffffff !important;
 
 
 }
@@ -2277,7 +2277,7 @@ color: #fff !important;
 .learnkit .learnkit-settings-action-btn.learnkit-btn-danger:not(.learnkit-ss-trigger):focus-visible {
   background-color: rgba(var(--color-red-rgb,255, 59, 48), 1) !important;
     border-color: rgba(var(--color-red-rgb,255, 59, 48), 1) !important;
-    color: #fff !important;
+    color: #ffffff !important;
 }
 
 .learnkit .learnkit-settings-layout-content h2 + .setting-item {

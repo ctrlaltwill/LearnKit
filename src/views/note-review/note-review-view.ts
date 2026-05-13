@@ -838,7 +838,7 @@ export class SproutNoteReviewView extends ItemView {
   }
 
   private _registerHotkeys(): void {
-    this.registerDomEvent(document, "keydown", (evt: KeyboardEvent) => {
+    this.registerDomEvent(activeDocument, "keydown", (evt: KeyboardEvent) => {
       if (!this._rootEl || !this.contentEl.isConnected) return;
       const target = evt.target as HTMLElement | null;
       const inEditable =

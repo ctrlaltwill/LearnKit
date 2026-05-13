@@ -1244,7 +1244,7 @@ export class SproutReviewerView extends ItemView {
       this._moreOutsideBound = true;
 
       this.registerDomEvent(
-        document,
+        activeDocument,
         "mousedown",
         (ev: MouseEvent) => {
           if (!this._moreOpen) return;

@@ -973,7 +973,7 @@ mjx-container[jax="CHTML"][display="true"] {
 }
 
 .learnkit-pretty-card .learnkit-io-reading-mask-label {
-  color: #fff;
+  color: #ffffff;
   white-space: nowrap;
   text-overflow: ellipsis;
   background: var(--color-accent);

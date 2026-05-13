@@ -177,13 +177,13 @@
 
 .learnkit .learnkit-btn-toolbar.learnkit-btn-accent {
   background: var(--theme-base-95) !important;
-  color: #fff !important;
+  color: #ffffff !important;
   border: 0.5px solid var(--theme-black-95) !important;
 }
 
 .learnkit .learnkit-btn-toolbar.learnkit-btn-accent:hover {
   background: var(--theme-black-95) !important;
-  color: #fff !important;
+  color: #ffffff !important;
   border: 0.5px solid var(--theme-black-85) !important;
   transform: translateY(-1px);
 }
@@ -191,7 +191,7 @@
 .learnkit .learnkit-btn-toolbar.learnkit-btn-accent:focus-visible,
 .learnkit .learnkit-btn-toolbar.learnkit-btn-accent:active {
   background: var(--theme-black-85) !important;
-  color: #fff !important;
+  color: #ffffff !important;
   border: 0.5px solid var(--theme-black-75) !important;
   transform: translateY(0);
 }
@@ -291,7 +291,7 @@
   ) {
   border: 0.5px solid var(--theme-black-95) !important;
   background: var(--theme-base-95) !important;
-  color: #fff !important;
+  color: #ffffff !important;
 }
 
 .learnkit .lk-home-title-strip :is(
@@ -308,7 +308,7 @@
   ):focus-visible {
   border: 0.5px solid var(--theme-black-95) !important;
   background: var(--theme-base-95) !important;
-  color: #fff !important;
+  color: #ffffff !important;
   transform: translateY(0);
 }
 
@@ -436,19 +436,19 @@
 /* Dark theme: let accent win over toolbar defaults */
 .theme-dark .learnkit .learnkit-btn-toolbar.learnkit-btn-accent {
   background: var(--theme-base-95) !important;
-  color: #fff !important;
+  color: #ffffff !important;
   border: 0.5px solid var(--theme-black-95) !important;
 }
 .theme-dark .learnkit .learnkit-btn-toolbar.learnkit-btn-accent:hover {
   background: var(--theme-black-95) !important;
-  color: #fff !important;
+  color: #ffffff !important;
   border: 0.5px solid var(--theme-black-85) !important;
   transform: translateY(-1px);
 }
 .theme-dark .learnkit .learnkit-btn-toolbar.learnkit-btn-accent:focus-visible,
 .theme-dark .learnkit .learnkit-btn-toolbar.learnkit-btn-accent:active {
   background: var(--theme-black-85) !important;
-  color: #fff !important;
+  color: #ffffff !important;
   border: 0.5px solid var(--theme-black-75) !important;
   transform: translateY(0);
 }
@@ -483,7 +483,7 @@
   ) {
   border: 0.5px solid var(--theme-black-95) !important;
   background: var(--theme-base-95) !important;
-  color: #fff !important;
+  color: #ffffff !important;
 }
 
 .learnkit :is(.lk-home-title-strip, .learnkit-analytics-title-strip) :is(
@@ -494,7 +494,7 @@
   ):is(:hover, :focus-visible, :active) {
   border: 0.5px solid var(--theme-black-95) !important;
   background: var(--theme-base-95) !important;
-  color: #fff !important;
+  color: #ffffff !important;
 }
 
 /* ---- Global Obsidian button padding reset ---- */

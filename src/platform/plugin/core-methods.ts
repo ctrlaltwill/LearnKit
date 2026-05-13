@@ -180,7 +180,7 @@ export function WithCoreMethods<T extends Constructor<LearnKitPluginBase>>(Base:
       this._applySproutZoom(this.settings.general.workspaceContentZoom ?? 1);
 
       this.registerDomEvent(
-        document,
+        activeDocument,
         "wheel",
         (ev: WheelEvent) => {
           if (!ev.ctrlKey) return;
@@ -259,7 +259,7 @@ export function WithCoreMethods<T extends Constructor<LearnKitPluginBase>>(Base:
       registerMarkdownSourceClozeShortcuts({
         app: this.app,
         registerDomEvent: (type, callback, options) => {
-          this.registerDomEvent(document, type, callback as (this: HTMLElement, ev: KeyboardEvent) => void, options);
+          this.registerDomEvent(activeDocument, type, callback as (this: HTMLElement, ev: KeyboardEvent) => void, options);
         },
         applyClozeShortcut: (editor: Editor, clozeIndex: number) => {
           this._applyClozeShortcutToEditor(editor, clozeIndex);

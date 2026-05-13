@@ -685,7 +685,7 @@
 
 .learnkit .lk-browser-tag-empty {
   display: inline-flex;
-  color: #fff;
+  color: #ffffff;
 }
 
 .learnkit .lk-browser-tag-badge {
@@ -696,7 +696,7 @@
 
 .learnkit .lk-browser-tag-badge,
 .learnkit .lk-browser-tag-empty {
-  color: #fff;
+  color: #ffffff;
 }
 
 .learnkit .lk-browser-tag-remove,
@@ -1189,7 +1189,7 @@ font-size: var(--learnkit-font-xs);
 .theme-dark .learnkit :where(.rounded-md.border.border-border.bg-popover.text-popover-foreground.p-0)
   :is([role="menuitemcheckbox"], [role="menuitemradio"], [role="menuitem"]).group:focus-visible {
   background-color: #23272e;
-  color: var(--accent-foreground, #fff);
+  color: var(--accent-foreground, #ffffff);
 }
 
 /* ---- IO toolbar ---- */
@@ -1203,9 +1203,9 @@ font-size: var(--learnkit-font-xs);
 /* Make Hide All and Hide One buttons black */
 .learnkit .learnkit-btn-toolbar[data-tooltip="Hide All"],
 .learnkit .learnkit-btn-toolbar[data-tooltip="Hide One"] {
-  background: #111;
-  color: #fff;
-  border-color: #111;
+  background: #111111;
+  color: #ffffff;
+  border-color: #111111;
 }
 
 /* IO widget overflow */

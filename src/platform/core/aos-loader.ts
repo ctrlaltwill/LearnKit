@@ -38,7 +38,7 @@ function isMobileAOSDisabled(): boolean {
   return false;
 }
 
-function forceRevealAosElements(root: ParentNode = document): void {
+function forceRevealAosElements(root: ParentNode = activeDocument): void {
   let elements: HTMLElement[] = [];
   try {
     elements = Array.from(root.querySelectorAll<HTMLElement>("[data-aos]"));
@@ -101,7 +101,7 @@ void loadAOS();
 
 export function initAOS(config?: Record<string, unknown>): void {
   if (isMobileAOSDisabled()) {
-    forceRevealAosElements(document);
+    forceRevealAosElements(activeDocument);
     return;
   }
   if (AOS_INITIALIZED || AOS_LOAD_FAILED) return;
@@ -141,7 +141,7 @@ export function initAOS(config?: Record<string, unknown>): void {
 
 export function refreshAOS(): void {
   if (isMobileAOSDisabled()) {
-    forceRevealAosElements(document);
+    forceRevealAosElements(activeDocument);
     return;
   }
   if (AOS_LOAD_FAILED) return;
@@ -252,7 +252,7 @@ export function resetAOS(): void {
   AOS_INITIALIZED = false;
 
   if (isMobileAOSDisabled()) {
-    forceRevealAosElements(document);
+    forceRevealAosElements(activeDocument);
     return;
   }
   

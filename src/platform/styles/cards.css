@@ -283,7 +283,7 @@ body.is-phone .small-card {
 /* Badge placeholder (no-group state) */
 .learnkit-badge-placeholder {
   display: inline-flex;
-  color: #fff;
+  color: #ffffff;
 }
 
 /* Badge inline */
@@ -1725,7 +1725,7 @@ body.is-mobile .learnkit .learnkit-coach-scope-actions-grid {
 .learnkit .learnkit-coach-intensity-btn.is-active {
   border-color: var(--theme-black-95);
   background: var(--theme-base-95);
-  color: #fff;
+  color: #ffffff;
 }
 
 .learnkit .learnkit-coach-intensity-btn.is-active:hover,
@@ -1755,7 +1755,7 @@ body.is-mobile .learnkit .learnkit-coach-scope-actions-grid {
 }
 
 .learnkit .learnkit-coach-intensity-btn.is-active .learnkit-coach-intensity-level {
-  color: color-mix(in srgb, #fff 86%, transparent);
+  color: color-mix(in srgb, #ffffff 86%, transparent);
 }
 
 .learnkit .learnkit-coach-intensity-star {

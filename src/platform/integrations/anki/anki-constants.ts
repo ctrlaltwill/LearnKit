@@ -144,7 +144,7 @@ const LATEX_PRE =
 const LATEX_POST = "\\end{document}";
 
 const BASE_CSS =
-  ".card { font-family: arial; font-size: 20px; text-align: center; color: black; background-color: white; }\n.extra { font-size: 16px; color: #555; }";
+  ".card { font-family: arial; font-size: 20px; text-align: center; color: black; background-color: white; }\n.extra { font-size: 16px; color: #555555; }";
 
 function makeField(name: string, ord: number): AnkiModel["flds"][number] {
   return { name, ord, font: "Arial", media: [], rtl: false, size: 20, sticky: false };

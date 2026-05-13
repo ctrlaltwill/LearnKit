@@ -41,7 +41,7 @@ let dynamicStyleSheet: CSSStyleSheet | null = null;
 function supportsConstructedSheets(): boolean {
   return hasDom
     && typeof CSSStyleSheet !== "undefined"
-    && Array.isArray((document as Document & { adoptedStyleSheets?: CSSStyleSheet[] }).adoptedStyleSheets);
+    && Array.isArray((activeDocument as Document & { adoptedStyleSheets?: CSSStyleSheet[] }).adoptedStyleSheets);
 }
 
 const sharedRuleByKey = new Map<string, { className: string; rule: string }>();
@@ -59,7 +59,7 @@ const appliedByEl = new WeakMap<HTMLElement, Map<string, AppliedProp>>();
 
 function ensureStyleEls(): void {
   if (!supportsConstructedSheets()) return;
-  const doc = document as Document & { adoptedStyleSheets: CSSStyleSheet[] };
+  const doc = activeDocument as Document & { adoptedStyleSheets: CSSStyleSheet[] };
 
   if (!sharedStyleSheet) sharedStyleSheet = new CSSStyleSheet();
   if (!dynamicStyleSheet) dynamicStyleSheet = new CSSStyleSheet();

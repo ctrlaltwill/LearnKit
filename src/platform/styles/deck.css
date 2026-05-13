@@ -376,8 +376,8 @@ body.is-mobile .learnkit .learnkit-deck-expand-buttons .learnkit-btn-toolbar {
 
 /* Ensure group select popover is never transparent */
 .learnkit-group-select-popover {
-  background: var(--background, #fff) !important;
-  background-color: var(--background, #fff) !important;
+  background: var(--background, #ffffff) !important;
+  background-color: var(--background, #ffffff) !important;
 }
 
 /* ---- RenderDeck table padding + rounded row edges on hover ---- */

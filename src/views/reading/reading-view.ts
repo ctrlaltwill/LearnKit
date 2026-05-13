@@ -368,7 +368,7 @@ function getReadingDynamicStyleSheet(): CSSStyleSheet | null {
 
   if (readingDynamicStyleSheet) return readingDynamicStyleSheet;
 
-  const doc = document as AdoptedStyleSheetsDocument;
+  const doc = activeDocument as AdoptedStyleSheetsDocument;
   const existing = doc.adoptedStyleSheets;
   if (!Array.isArray(existing)) return null;
 
@@ -1009,7 +1009,7 @@ export function teardownReadingView(): void {
   delete (window as unknown as Record<string, unknown>).sproutApplyMasonryGrid;
   // Detach dynamic reading stylesheet
   if (readingDynamicStyleSheet) {
-    const doc = document as AdoptedStyleSheetsDocument;
+    const doc = activeDocument as AdoptedStyleSheetsDocument;
     if (Array.isArray(doc.adoptedStyleSheets)) {
       doc.adoptedStyleSheets = doc.adoptedStyleSheets.filter((sheet) => sheet !== readingDynamicStyleSheet);
     }
@@ -1763,7 +1763,7 @@ function collectSectionsWithPrettyCards(scope: ParentNode): Set<HTMLElement> {
   return sections;
 }
 
-function reflowPrettyCardLayouts(scope: ParentNode = document): void {
+function reflowPrettyCardLayouts(scope: ParentNode = activeDocument): void {
   const sections = collectSectionsWithPrettyCards(scope);
   if (!sections.size) return;
   const rvSettings = getSproutPlugin()?.settings?.readingView;
@@ -1776,7 +1776,7 @@ function scheduleViewportReflow(): void {
   }
   viewportReflowTimer = window.requestAnimationFrame(() => {
     viewportReflowTimer = null;
-    reflowPrettyCardLayouts(document);
+    reflowPrettyCardLayouts(activeDocument);
   });
 }
 

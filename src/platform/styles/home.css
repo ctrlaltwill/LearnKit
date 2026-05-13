@@ -153,7 +153,7 @@
   border: 0.5px solid var(--theme-black-95) !important;
   border-radius: 8px;
   background: var(--theme-base-95) !important;
-  color: #fff !important;
+  color: #ffffff !important;
   font-size: var(--learnkit-font-xs);
   font-weight: 600;
   line-height: 1;
@@ -166,7 +166,7 @@
     border: 0.5px solid var(--theme-black-85) !important;
   border-radius: 8px;
   background: var(--theme-black-95) !important; 
-  color: #fff !important;
+  color: #ffffff !important;
   transform: translateY(-1px);
   box-shadow: none;
 }
@@ -175,7 +175,7 @@
 .learnkit .learnkit-btn-accent:active {
       border: 0.5px solid var(--theme-black-75) !important;
         background: var(--theme-black-85) !important; 
-        color: #fff !important;
+        color: #ffffff !important;
   transform: translateY(0);
 }
 
@@ -473,14 +473,14 @@ body.is-phone .learnkit .lk-home-title-strip .lk-home-quick-study-btn {
 .learnkit-live-badge.learnkit-trend-badge {
   background-color: var(--theme-accent);
   border-color: transparent;
-  color: #fff;
+  color: #ffffff;
 }
 
 .learnkit-live-badge-orange,
 .learnkit-live-badge-dark {
   background-color: var(--theme-accent);
   border: 0.5px solid hsl(var(--accent-h), var(--accent-s), calc(var(--accent-l) * 0.85));
-  color: #fff;
+  color: #ffffff;
 }
 
 .theme-dark .learnkit-live-badge-dark,
