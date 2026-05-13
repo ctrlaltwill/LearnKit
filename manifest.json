@@ -1,6 +1,6 @@
 {
-  "id": "learnkit",
-  "name": "LearnKit — Flashcards & Study Tools",
+  "id": "learnkit-for-obsidian",
+  "name": "LearnKit",
   "version": "1.4.2",
   "minAppVersion": "1.7.2",
   "description": "LearnKit is a native study system for your vault. It combines flashcards, spaced repetition, note review, test generation and AI tools to help you turn your notes into durable knowledge.",
