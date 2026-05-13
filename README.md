@@ -19,18 +19,17 @@ Obsidian is great for capturing knowledge. LearnKit is built for retaining it. I
 
 LearnKit is easiest to understand once you use it. Install it, create a flashcard, run a review, or generate a test to see how it fits your study workflow.
 
-- Download from community plugins – coming very soon!
-- [Install with BRAT](https://github.com/TfTHacker/obsidian42-brat)
+- Install from [Community Plugins](https://community.obsidian.md/plugins/learnkit) in Obsidian
 - [Explore documentation](https://ctrlaltwill.github.io/LearnKit/)
 - [Download the latest release](https://github.com/ctrlaltwill/LearnKit/releases)
 
-### Option 1 — BRAT (Recommended)
+### Install from Community Plugins (Recommended)
 
-1. Install [BRAT](https://github.com/TfTHacker/obsidian42-brat) in Obsidian
-2. Add `ctrlaltwill/LearnKit` as a community plugin in BRAT
-3. Start creating flashcards
+1. Open Obsidian → Settings → Community Plugins
+2. Browse Community Plugins and search for **LearnKit**
+3. Install and enable **LearnKit**
 
-### Option 2 — Manual install from Releases
+### Manual install from Releases
 
 1. Go to [Releases](https://github.com/ctrlaltwill/LearnKit/releases) and download the latest release
 2. Copy `main.js`, `styles.css`, and `manifest.json` into:
