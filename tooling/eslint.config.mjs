@@ -23,6 +23,8 @@ export default defineConfig([
       globals: {
         ...globals.browser,
         ...globals.node,
+        activeDocument: "writable",
+        activeWindow: "writable",
       },
     },
   },
