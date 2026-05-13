@@ -649,7 +649,7 @@ export class SproutExamGeneratorView extends ItemView {
 
     const formatSavedName = (test: SavedExamTestSummary): string => {
       const raw = (test.label || this._tx("ui.view.examGenerator.savedTests.untitled", "Untitled test")).trim();
-      const withoutDateTime = raw.replace(/\s+-\s+\d{1, 2}\/\d{1, 2}\/\d{4}, \s*\d{2}:\d{2}:\d{2}\s*$/u, "").trim();
+      const withoutDateTime = raw.replace(/\s+-\s+\d{1,2}\/\d{1,2}\/\d{4},\s*\d{2}:\d{2}:\d{2}\s*$/u, "").trim();
       return withoutDateTime || this._tx("ui.view.examGenerator.savedTests.untitled", "Untitled test");
     };
 
