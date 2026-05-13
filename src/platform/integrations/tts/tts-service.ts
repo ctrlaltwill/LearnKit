@@ -1229,7 +1229,7 @@ export function extractClozeAnswerForTts(
 export class TtsService {
   private _speaking = false;
   private _speakSession = 0;
-  private _resumeKeepAliveInterval: ReturnType<typeof setInterval> | null = null;
+  private _resumeKeepAliveInterval: ReturnType<typeof setTimeout> | null = null;
   private _activeAudioContext: AudioContext | null = null;
   private _activePitchShifter: PitchShifter | null = null;
   private _activeGainNode: GainNode | null = null;
@@ -1265,7 +1265,7 @@ export class TtsService {
 
   private _clearResumeKeepAliveInterval(): void {
     if (this._resumeKeepAliveInterval) {
-      clearInterval(this._resumeKeepAliveInterval);
+      clearTimeout(this._resumeKeepAliveInterval);
       this._resumeKeepAliveInterval = null;
     }
   }
@@ -1555,12 +1555,17 @@ export class TtsService {
       utterance.onstart = () => {
         this._setSpeaking(true);
         this._clearResumeKeepAliveInterval();
-        this._resumeKeepAliveInterval = setInterval(() => {
-          if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
-            window.speechSynthesis.pause();
-            window.speechSynthesis.resume();
-          }
-        }, 10_000);
+        const scheduleResumeKeepAlive = () => {
+          this._resumeKeepAliveInterval = window.setTimeout(() => {
+            this._resumeKeepAliveInterval = null;
+            if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+              window.speechSynthesis.pause();
+              window.speechSynthesis.resume();
+              scheduleResumeKeepAlive();
+            }
+          }, 10_000);
+        };
+        scheduleResumeKeepAlive();
         if (_ttsDebug) {
           const actualVoice = utterance.voice;
           log.debug("[TTS] Speaking started", {

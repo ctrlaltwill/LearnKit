@@ -1316,7 +1316,7 @@ export class SproutReviewerView extends ItemView {
 
   clearCountdown() {
     if (this._countdownInterval) {
-      window.clearInterval(this._countdownInterval);
+      window.clearTimeout(this._countdownInterval);
       this._countdownInterval = null;
     }
   }
@@ -1330,8 +1330,15 @@ export class SproutReviewerView extends ItemView {
     };
 
     update();
-    this._countdownInterval = window.setInterval(update, 1000);
-    this.registerInterval(this._countdownInterval);
+    const scheduleCountdownUpdate = () => {
+      this._countdownInterval = window.setTimeout(() => {
+        this._countdownInterval = null;
+        update();
+        scheduleCountdownUpdate();
+      }, 1000);
+    };
+    scheduleCountdownUpdate();
+    if (this._countdownInterval != null) this.registerInterval(this._countdownInterval);
   }
 
   private armTimer() {

@@ -17,7 +17,7 @@
  * @exports createBodyPortalPopover
  */
 
-import { placePopover } from "./ui";
+import { placePopover, activeDocument } from "./ui";
 
 // ────────────────────────────────────────────
 // Public API
@@ -132,8 +132,8 @@ export function createBodyPortalPopover(
     cleanup?.();
     cleanup = null;
 
-    if (sproutWrapper?.parentNode === document.body) {
-      document.body.removeChild(sproutWrapper);
+    if (sproutWrapper?.parentNode === activeDocument().body) {
+      activeDocument().body.removeChild(sproutWrapper);
     }
     sproutWrapper = null;
 
@@ -147,15 +147,15 @@ export function createBodyPortalPopover(
     close();
 
     // Step 2: create DOM
-    sproutWrapper = document.createElement("div");
+    sproutWrapper = activeDocument().createElement("div");
     sproutWrapper.className = "learnkit";
 
-    const overlay = document.createElement("div");
+    const overlay = activeDocument().createElement("div");
     overlay.classList.add("learnkit-popover-overlay", "learnkit-popover-overlay", ...overlayClasses);
     if (ariaHidden) overlay.setAttribute("aria-hidden", "true");
     sproutWrapper.appendChild(overlay);
 
-    const panel = document.createElement("div");
+    const panel = activeDocument().createElement("div");
     if (panelClasses.length) panel.classList.add(...panelClasses);
     overlay.appendChild(panel);
 
@@ -163,7 +163,7 @@ export function createBodyPortalPopover(
     buildContent(panel, close);
 
     // Step 4: body-portal
-    document.body.appendChild(sproutWrapper);
+    activeDocument().body.appendChild(sproutWrapper);
 
     // Step 5: mark open
     overlay.classList.add("is-open");
@@ -205,7 +205,7 @@ export function createBodyPortalPopover(
       bodyObserver = new MutationObserver(() =>
         requestAnimationFrame(() => place()),
       );
-      bodyObserver.observe(document.body, {
+      bodyObserver.observe(activeDocument().body, {
         attributes: true,
         attributeFilter: ["class", "style"],
       });
@@ -230,9 +230,9 @@ export function createBodyPortalPopover(
 
     // Defer outside-click so the opening click doesn't immediately close.
     const tid = window.setTimeout(() => {
-      document.addEventListener("pointerdown", onDocPointerDown, true);
+      activeDocument().addEventListener("pointerdown", onDocPointerDown, true);
       if (onDocKeydown) {
-        document.addEventListener("keydown", onDocKeydown, true);
+        activeDocument().addEventListener("keydown", onDocKeydown, true);
       }
     }, 0);
 
@@ -245,9 +245,9 @@ export function createBodyPortalPopover(
         window.visualViewport?.removeEventListener("resize", onResizeOrScroll);
         bodyObserver?.disconnect();
       }
-      document.removeEventListener("pointerdown", onDocPointerDown, true);
+      activeDocument().removeEventListener("pointerdown", onDocPointerDown, true);
       if (onDocKeydown) {
-        document.removeEventListener("keydown", onDocKeydown, true);
+        activeDocument().removeEventListener("keydown", onDocKeydown, true);
       }
     };
   };

@@ -570,12 +570,13 @@ export function parseLearnKitCard(text: string): LearnKitCard | null {
   // Join multi-line fields with newlines to preserve formatting (especially for LaTeX)
   // Then unescape pipe-delimited content (convert \\ to \ and \| to |)
   Object.keys(fields).forEach(k => {
-    if (Array.isArray(fields[k])) {
-      if (fields[k].length === 1) {
-        fields[k] = unescapePipeText(fields[k][0]);
+    const fieldValue = fields[k];
+    if (Array.isArray(fieldValue)) {
+      if (fieldValue.length === 1) {
+        fields[k] = unescapePipeText(fieldValue[0]);
       } else {
         // Join with newlines to preserve multi-line content like LaTeX blocks
-        fields[k] = unescapePipeText(fields[k].join('\n'));
+        fields[k] = unescapePipeText(fieldValue.join('\n'));
       }
     }
   });

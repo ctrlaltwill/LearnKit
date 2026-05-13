@@ -118,15 +118,21 @@ export function renderStudySessionHeader(
     playBtn.disabled = true;
     pauseBtn.disabled = false;
     syncTimerControls();
-    timerState.timerInterval = window.setInterval(() => {
-      timerState.elapsedSeconds++;
-      updateTimerDisplay();
-    }, 1000);
+    const scheduleTimerTick = () => {
+      timerState.timerInterval = window.setTimeout(() => {
+        timerState.timerInterval = null;
+        if (!timerState.timerRunning) return;
+        timerState.elapsedSeconds++;
+        updateTimerDisplay();
+        scheduleTimerTick();
+      }, 1000);
+    };
+    scheduleTimerTick();
   };
 
   const pauseTimer = () => {
     if (timerState.timerInterval === null) return;
-    clearInterval(timerState.timerInterval);
+    clearTimeout(timerState.timerInterval);
     timerState.timerInterval = null;
     timerState.timerRunning = false;
     playBtn.disabled = false;
@@ -136,7 +142,7 @@ export function renderStudySessionHeader(
 
   const disposeTimer = () => {
     if (timerState.timerInterval !== null) {
-      clearInterval(timerState.timerInterval);
+      clearTimeout(timerState.timerInterval);
       timerState.timerInterval = null;
     }
     timerState.timerRunning = false;

@@ -46,7 +46,7 @@ import {
 } from "../card-editor/card-editor";
 import type { CardRecord } from "../core/store";
 import type { CardRecordType } from "../types/card";
-import { setCssProps } from "../core/ui";
+import { activeDocument, setCssProps } from "../core/ui";
 import { t } from "../translations/translator";
 
 // ──────────────────────────────────────────────────────────────────────────────

@@ -2593,48 +2593,61 @@ export class SproutExamGeneratorView extends ItemView {
     applyCurrentPair(initialPair);
     lastShownPairKey = pairKey(initialPair);
 
-    this._loadingWordInterval = window.setInterval(() => {
-      if (this._mode !== mode) return;
-      if (this._loadingWordSwapTimeout != null) return;
+    const scheduleLoadingTick = () => {
+      this._loadingWordInterval = window.setTimeout(() => {
+        this._loadingWordInterval = null;
+        if (this._mode !== mode) {
+          scheduleLoadingTick();
+          return;
+        }
+        if (this._loadingWordSwapTimeout != null) {
+          scheduleLoadingTick();
+          return;
+        }
 
-      let nextIndex = queueIndex + 1;
-      if (nextIndex >= pairQueue.length) {
-        pairQueue = buildQueue();
-        nextIndex = 0;
-      }
+        let nextIndex = queueIndex + 1;
+        if (nextIndex >= pairQueue.length) {
+          pairQueue = buildQueue();
+          nextIndex = 0;
+        }
 
-      const nextPair = pairQueue[nextIndex] ?? fallbackPair;
-      const [nextFirst, nextSecond] = nextPair;
-      firstNext.textContent = nextFirst;
-      secondNext.textContent = nextSecond;
+        const nextPair = pairQueue[nextIndex] ?? fallbackPair;
+        const [nextFirst, nextSecond] = nextPair;
+        firstNext.textContent = nextFirst;
+        secondNext.textContent = nextSecond;
 
-      firstSlot.classList.add("is-swapping");
-      secondSlot.classList.add("is-swapping");
+        firstSlot.classList.add("is-swapping");
+        secondSlot.classList.add("is-swapping");
 
-      this._loadingWordSwapTimeout = window.setTimeout(() => {
-        queueIndex = nextIndex;
-        lastShownPairKey = pairKey(nextPair);
+        this._loadingWordSwapTimeout = window.setTimeout(() => {
+          queueIndex = nextIndex;
+          lastShownPairKey = pairKey(nextPair);
 
-        // Snap to post-transition baseline without animating back.
-        firstSlot.classList.add("is-resetting");
-        secondSlot.classList.add("is-resetting");
-        applyCurrentPair(nextPair);
-        firstNext.textContent = "";
-        secondNext.textContent = "";
-        firstSlot.classList.remove("is-swapping");
-        secondSlot.classList.remove("is-swapping");
-        void firstSlot.getBoundingClientRect();
-        void secondSlot.getBoundingClientRect();
-        firstSlot.classList.remove("is-resetting");
-        secondSlot.classList.remove("is-resetting");
-        this._loadingWordSwapTimeout = null;
-      }, swapMs);
-    }, stepMs);
+          // Snap to post-transition baseline without animating back.
+          firstSlot.classList.add("is-resetting");
+          secondSlot.classList.add("is-resetting");
+          applyCurrentPair(nextPair);
+          firstNext.textContent = "";
+          secondNext.textContent = "";
+          firstSlot.classList.remove("is-swapping");
+          secondSlot.classList.remove("is-swapping");
+          void firstSlot.getBoundingClientRect();
+          void secondSlot.getBoundingClientRect();
+          firstSlot.classList.remove("is-resetting");
+          secondSlot.classList.remove("is-resetting");
+          this._loadingWordSwapTimeout = null;
+        }, swapMs);
+
+        scheduleLoadingTick();
+      }, stepMs);
+    };
+
+    scheduleLoadingTick();
   }
 
   private _stopLoadingWordAnimation(): void {
     if (this._loadingWordInterval != null) {
-      window.clearInterval(this._loadingWordInterval);
+      window.clearTimeout(this._loadingWordInterval);
       this._loadingWordInterval = null;
     }
     if (this._loadingWordSwapTimeout != null) {
@@ -2647,33 +2660,46 @@ export class SproutExamGeneratorView extends ItemView {
     this._stopTimer();
 
     if (this._config.timed) {
-      this._timerInterval = window.setInterval(() => {
-        if (this._mode !== "taking") return;
-        this._elapsedSec = Math.max(0, Math.floor((Date.now() - this._examStartMs) / 1000));
-        const remaining = this._remainingSec();
-        if (this._titleTimerEl) {
-          this._titleTimerEl.textContent = this._formatTime(remaining);
-        }
-        if (remaining <= 0 && this._autoSubmitGrace === null) {
-          this._triggerAutoSubmitWarning();
-        }
-      }, 1000);
+      const tickTimedTimer = () => {
+        this._timerInterval = window.setTimeout(() => {
+          this._timerInterval = null;
+          if (this._mode !== "taking") return;
+          this._elapsedSec = Math.max(0, Math.floor((Date.now() - this._examStartMs) / 1000));
+          const remaining = this._remainingSec();
+          if (this._titleTimerEl) {
+            this._titleTimerEl.textContent = this._formatTime(remaining);
+          }
+          if (remaining <= 0 && this._autoSubmitGrace === null) {
+            this._triggerAutoSubmitWarning();
+            return;
+          }
+          tickTimedTimer();
+        }, 1000);
+      };
+      tickTimedTimer();
     } else {
       // Count-up timer for untimed mode
       this._untimedPaused = false;
-      this._timerInterval = window.setInterval(() => {
-        if (this._mode !== "taking" || this._untimedPaused) return;
-        this._elapsedSec++;
-        if (this._titleTimerEl) {
-          this._titleTimerEl.textContent = this._formatTime(this._elapsedSec);
-        }
-      }, 1000);
+      const tickUntimedTimer = () => {
+        this._timerInterval = window.setTimeout(() => {
+          this._timerInterval = null;
+          if (this._mode !== "taking") return;
+          if (!this._untimedPaused) {
+            this._elapsedSec++;
+            if (this._titleTimerEl) {
+              this._titleTimerEl.textContent = this._formatTime(this._elapsedSec);
+            }
+          }
+          tickUntimedTimer();
+        }, 1000);
+      };
+      tickUntimedTimer();
     }
   }
 
   private _stopTimer(): void {
     if (this._timerInterval != null) {
-      window.clearInterval(this._timerInterval);
+      window.clearTimeout(this._timerInterval);
       this._timerInterval = null;
     }
   }
@@ -2682,23 +2708,29 @@ export class SproutExamGeneratorView extends ItemView {
     this._stopTimer();
     this._autoSubmitGrace = 30;
     this._render();
-    this._autoSubmitGraceInterval = window.setInterval(() => {
-      if (this._autoSubmitGrace === null) return;
-      this._autoSubmitGrace = Math.max(0, this._autoSubmitGrace - 1);
-      if (this._autoSubmitWarningCountdownEl) {
-        this._autoSubmitWarningCountdownEl.textContent = String(this._autoSubmitGrace);
-      }
-      if (this._autoSubmitGrace <= 0) {
-        this._clearAutoSubmitGrace();
-        this._autoSubmitted = true;
-        void this._submitExam(true);
-      }
-    }, 1000);
+    const tickAutoSubmitGrace = () => {
+      this._autoSubmitGraceInterval = window.setTimeout(() => {
+        this._autoSubmitGraceInterval = null;
+        if (this._autoSubmitGrace === null) return;
+        this._autoSubmitGrace = Math.max(0, this._autoSubmitGrace - 1);
+        if (this._autoSubmitWarningCountdownEl) {
+          this._autoSubmitWarningCountdownEl.textContent = String(this._autoSubmitGrace);
+        }
+        if (this._autoSubmitGrace <= 0) {
+          this._clearAutoSubmitGrace();
+          this._autoSubmitted = true;
+          void this._submitExam(true);
+          return;
+        }
+        tickAutoSubmitGrace();
+      }, 1000);
+    };
+    tickAutoSubmitGrace();
   }
 
   private _clearAutoSubmitGrace(): void {
     if (this._autoSubmitGraceInterval !== null) {
-      window.clearInterval(this._autoSubmitGraceInterval);
+      window.clearTimeout(this._autoSubmitGraceInterval);
       this._autoSubmitGraceInterval = null;
     }
     this._autoSubmitGrace = null;

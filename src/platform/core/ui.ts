@@ -227,6 +227,20 @@ export function setCssProps(
   }
 }
 
+/**
+ * Returns the correct document for the current context.
+ * Handles both main window and Obsidian popout windows.
+ * 
+ * @param context Optional HTMLElement to extract document context from.
+ *                 When provided, uses context.ownerDocument (popout-safe).
+ *                 When omitted, falls back to window.document.
+ * @returns Document object for the current context
+ */
+export function activeDocument(context?: HTMLElement): Document {
+  if (context) return context.ownerDocument;
+  return window.document;
+}
+
 export function el(tag: string, cls?: string, text?: string): HTMLElement {
   const e = document.createElement(tag);
   if (cls) e.className = cls;
@@ -654,7 +668,8 @@ export function placePopover(opts: PlacePopoverOpts): void {
   const popW = opts.width ?? Math.max(panelRect.width || 0, r.width);
   const popH = Math.max(1, panelRect.height || 1);
 
-  const zoomRaw = Number.parseFloat(window.getComputedStyle(popoverEl).zoom || "1");
+  const zoomCss = window.getComputedStyle(popoverEl).getPropertyValue("zoom");
+  const zoomRaw = Number.parseFloat(zoomCss || "1");
   const zoom = Number.isFinite(zoomRaw) && zoomRaw > 0 ? zoomRaw : 1;
 
   const leftRaw = align === 'right' ? (r.right - popW) : r.left;

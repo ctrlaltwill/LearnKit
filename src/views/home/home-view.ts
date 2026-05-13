@@ -15,6 +15,7 @@ import { AOS_DURATION, MAX_CONTENT_WIDTH_PX, VIEW_TYPE_BROWSER, VIEW_TYPE_HOME, 
 import { setCssProps } from "../../platform/core/ui";
 import type LearnKitPlugin from "../../main";
 import type { CardRecord } from "../../platform/core/store";
+import type { AnalyticsEvent, AnalyticsReviewEvent, AnalyticsSessionEvent } from "../../platform/types/analytics";
 import type { Scope } from "../reviewer/types";
 import { isParentCard } from "../../platform/core/card-utils";
 import { ReviewCalendarHeatmap } from "../analytics/charts/review-calendar-heatmap";
@@ -151,11 +152,11 @@ export class SproutHomeView extends ItemView {
     } catch (e) { log.swallow("dispose header", e); }
     this._header = null;
     if (this._streakTimer) {
-      window.clearInterval(this._streakTimer);
+      window.clearTimeout(this._streakTimer);
       this._streakTimer = null;
     }
     if (this._liveTimer) {
-      window.clearInterval(this._liveTimer);
+      window.clearTimeout(this._liveTimer);
       this._liveTimer = null;
     }
     if (this._typingTimer) {
@@ -224,7 +225,7 @@ export class SproutHomeView extends ItemView {
     this._titleStripEl = null;
     root.empty();
     if (this._streakTimer) {
-      window.clearInterval(this._streakTimer);
+      window.clearTimeout(this._streakTimer);
       this._streakTimer = null;
     }
     if (this._heatmapRoot) {
@@ -472,7 +473,7 @@ export class SproutHomeView extends ItemView {
     applyRootAos(contentShell, HOME_AOS_FIRST_DELAY);
 
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const events = this.plugin.store.getAnalyticsEvents?.() ?? [];
+    const events: AnalyticsEvent[] = this.plugin.store.getAnalyticsEvents?.() ?? [];
     const cards = this.plugin.store.getAllCards?.() ?? [];
     const states = this.plugin.store.data.states ?? {};
 
@@ -491,8 +492,8 @@ export class SproutHomeView extends ItemView {
       return source.length > 0;
     });
 
-    const reviewEvents = events.filter((ev) => ev && ev.kind === "review");
-    const sessionEvents = events.filter((ev) => ev && ev.kind === "session");
+    const reviewEvents = events.filter((ev): ev is AnalyticsReviewEvent => ev.kind === "review");
+    const sessionEvents = events.filter((ev): ev is AnalyticsSessionEvent => ev.kind === "session");
     reviewEvents.sort((a, b) => Number(b.at) - Number(a.at));
     sessionEvents.sort((a, b) => Number(b.at) - Number(a.at));
 

@@ -73,9 +73,16 @@ export class ReminderEngine {
 
     if (cfg.repeatEnabled) {
       const intervalMinutes = normaliseReminderIntervalMinutes(cfg.repeatIntervalMinutes, 30);
-      this._intervalTimer = window.setInterval(() => {
-        this._emit("interval");
-      }, minutesToMs(intervalMinutes));
+      const intervalMs = minutesToMs(intervalMinutes);
+      const scheduleRoutineTick = () => {
+        this._intervalTimer = window.setTimeout(() => {
+          this._intervalTimer = null;
+          this._emit("interval");
+          const latestCfg = this.plugin.settings?.reminders;
+          if (latestCfg?.repeatEnabled) scheduleRoutineTick();
+        }, intervalMs);
+      };
+      scheduleRoutineTick();
     }
 
     if (cfg.gatekeeperEnabled) {
@@ -83,9 +90,15 @@ export class ReminderEngine {
       this._gatekeeperIntervalMs = minutesToMs(gatekeeperInterval);
       this._gatekeeperRemainingMs = this._gatekeeperIntervalMs;
       this._gatekeeperLastTickAt = Date.now();
-      this._gatekeeperTickTimer = window.setInterval(() => {
-        this._tickGatekeeperTimer();
-      }, ReminderEngine.GATEKEEPER_TICK_MS);
+      const scheduleGatekeeperTick = () => {
+        this._gatekeeperTickTimer = window.setTimeout(() => {
+          this._gatekeeperTickTimer = null;
+          this._tickGatekeeperTimer();
+          const latestCfg = this.plugin.settings?.reminders;
+          if (latestCfg?.gatekeeperEnabled) scheduleGatekeeperTick();
+        }, ReminderEngine.GATEKEEPER_TICK_MS);
+      };
+      scheduleGatekeeperTick();
     }
   }
 
@@ -101,12 +114,12 @@ export class ReminderEngine {
     }
 
     if (this._intervalTimer != null) {
-      window.clearInterval(this._intervalTimer);
+      window.clearTimeout(this._intervalTimer);
       this._intervalTimer = null;
     }
 
     if (this._gatekeeperTickTimer != null) {
-      window.clearInterval(this._gatekeeperTickTimer);
+      window.clearTimeout(this._gatekeeperTickTimer);
       this._gatekeeperTickTimer = null;
     }
     this._gatekeeperIntervalMs = 0;

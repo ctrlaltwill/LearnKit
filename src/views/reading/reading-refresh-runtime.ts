@@ -210,6 +210,13 @@ export function startMarkdownModeWatcher(params: {
   };
 
   scanModes();
-  state.readingModeWatcherInterval = window.setInterval(scanModes, 180);
-  registerInterval(state.readingModeWatcherInterval);
+  const scheduleModeScan = () => {
+    state.readingModeWatcherInterval = window.setTimeout(() => {
+      state.readingModeWatcherInterval = null;
+      scanModes();
+      scheduleModeScan();
+    }, 180);
+  };
+  scheduleModeScan();
+  if (state.readingModeWatcherInterval != null) registerInterval(state.readingModeWatcherInterval);
 }

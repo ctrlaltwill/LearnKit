@@ -387,7 +387,7 @@ export function WithLifecycleMethods<T extends Constructor<LearnKitPluginBase>>(
         this._readingViewRefreshTimer = null;
       }
       if (this._readingModeWatcherInterval != null) {
-        window.clearInterval(this._readingModeWatcherInterval);
+        window.clearTimeout(this._readingModeWatcherInterval);
         this._readingModeWatcherInterval = null;
       }
 

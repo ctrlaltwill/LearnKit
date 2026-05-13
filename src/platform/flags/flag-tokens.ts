@@ -174,8 +174,9 @@ function setCachedFlagDataUri(code: string, dataUri: string): void {
   map.delete(code);
   map.set(code, dataUri);
   while (cacheBytes(map) > FLAG_CACHE_MAX_BYTES && map.size > 0) {
-    const first = map.keys().next().value;
-    if (!first) break;
+    const nextKey = map.keys().next();
+    if (nextKey.done) break;
+    const first = nextKey.value;
     map.delete(first);
   }
   queuePersistCache();
