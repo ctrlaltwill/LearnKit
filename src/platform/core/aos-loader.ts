@@ -10,7 +10,6 @@
  */
 import { log } from "./logger";
 import { AOS_DURATION } from "./constants";
-import { activeDocument } from "obsidian";
 
 type AOSModule = {
   init: (config: Record<string, unknown>) => void;
