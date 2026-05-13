@@ -1,9 +1,9 @@
 {
-  "id": "learnkit-for-obsidian",
+  "id": "learnkit",
   "name": "LearnKit",
   "version": "1.4.2",
   "minAppVersion": "1.7.2",
-  "description": "LearnKit is a native study system for your vault. It combines flashcards, spaced repetition, note review, test generation and AI tools to help you turn your notes into durable knowledge.",
+  "description": "A native study system for your vault. It combines flashcards, spaced repetition, note review, test generation and AI tools to help you turn your notes into durable knowledge.",
   "author": "William Guy",
   "authorUrl": "https://github.com/ctrlaltwill",
   "isDesktopOnly": false
