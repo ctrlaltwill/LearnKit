@@ -1,4 +1,4 @@
-# LearnKit — Flashcards & Study Tools
+# LearnKit
 
 ![GitHub Release](https://img.shields.io/github/v/release/ctrlaltwill/LearnKit)
 [![GitHub issues](https://img.shields.io/github/issues/ctrlaltwill/LearnKit)](https://github.com/ctrlaltwill/LearnKit/issues)
@@ -7,19 +7,19 @@
 [![Docs](https://img.shields.io/badge/docs-astro%2Fstarlight-blue)](https://ctrlaltwill.github.io/LearnKit/)
 
 ![LearnKit Banner One - Welcome](site/branding/Banner%20One%20-%20Welcome.png)
+LearnKit helps you remember what you write. With flashcards, note review, tests, and AI-assisted study tools built into Obsidian, your vault becomes a place to actively learn, not just store information.
 
-LearnKit helps you retain what you write. It brings flashcards, note review, tests, and AI-assisted study tools into Obsidian, so your vault becomes a place to actively learn, not just store information.
-
-Flashcards are where LearnKit started, but the goal was always bigger: to connect notes, review, and long-term retention in one continuous workflow.
+Flashcards were where LearnKit began, but the goal was always bigger: to connect notes, review, and long-term retention in one workflow.
 
 ## Why LearnKit
 
-Obsidian is great for capturing information. LearnKit is built for studying it. Instead of splitting your workflow between Obsidian and separate study apps, LearnKit keeps your learning in the same vault you already use.
+Obsidian is great for capturing knowledge. LearnKit is built for retaining it. Instead of splitting your workflow across multiple study apps, LearnKit keeps learning inside your vault.
 
 ## Start learning from your vault
 
 LearnKit is easiest to understand once you use it. Install it, create a flashcard, run a review, or generate a test to see how it fits your study workflow.
 
+- Download from community plugins – coming very soon!
 - [Install with BRAT](https://github.com/TfTHacker/obsidian42-brat)
 - [Explore documentation](https://ctrlaltwill.github.io/LearnKit/)
 - [Download the latest release](https://github.com/ctrlaltwill/LearnKit/releases)
