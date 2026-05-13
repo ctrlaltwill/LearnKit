@@ -18,6 +18,21 @@ if (typeof window === "undefined") {
   });
 }
 
+// When running under jsdom, alias Obsidian's ambient globals so that
+// code paths referencing activeDocument/activeWindow resolve correctly.
+if (typeof document !== "undefined") {
+  Object.defineProperty(globalThis, "activeDocument", {
+    value: document,
+    writable: true,
+    configurable: true,
+  });
+  Object.defineProperty(globalThis, "activeWindow", {
+    value: window,
+    writable: true,
+    configurable: true,
+  });
+}
+
 // Node-based Vitest runs cannot import raw .wasm modules directly.
 // Mock sql.js wasm asset so suites that do not execute SQLite paths can load.
 vi.mock("sql.js/dist/sql-wasm.wasm", () => ({
