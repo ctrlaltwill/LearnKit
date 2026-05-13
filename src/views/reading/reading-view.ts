@@ -642,7 +642,7 @@ export function registerReadingViewPrettyCards(plugin: Plugin) {
   // Listen for prettify-cards-refresh event on each markdown view's containerEl
   function attachRefreshListenerToMarkdownViews() {
     // Attach to the actual markdown content container, not just workspace-leaf-content
-    const leafContents = Array.from(document.querySelectorAll<HTMLElement>(
+    const leafContents = Array.from(activeDocument.querySelectorAll<HTMLElement>(
       ".workspace-leaf-content[data-type='markdown']"
     ));
     for (const leaf of leafContents) {
@@ -669,9 +669,9 @@ export function registerReadingViewPrettyCards(plugin: Plugin) {
       ? !!pluginState.settings?.general?.enableReadingStyles
       : true;
 
-    const root = (e.currentTarget instanceof HTMLElement)
-      ? e.currentTarget
-      : (e.target instanceof HTMLElement ? e.target : null);
+    const root = (e.currentTarget && (e.currentTarget as Node).nodeType === 1
+      ? e.currentTarget as HTMLElement
+      : (e.target && (e.target as Node).nodeType === 1 ? e.target as HTMLElement : null));
     const refreshDetail = (e as CustomEvent<{ sourceContent?: string; sourcePath?: string }>).detail;
     const sourceFromEvent = typeof refreshDetail?.sourceContent === 'string'
       ? refreshDetail.sourceContent
@@ -680,11 +680,11 @@ export function registerReadingViewPrettyCards(plugin: Plugin) {
     // When reading styles are disabled, remove all Sprout DOM adjustments
     if (!stylesEnabled) {
       if (root) resetCardsToNativeReading(root);
-      else resetCardsToNativeReading(document.documentElement);
+      else resetCardsToNativeReading(activeDocument.documentElement);
       return;
     }
 
-    const refreshRoot = root ?? document.documentElement;
+    const refreshRoot = root ?? activeDocument.documentElement;
     resetCardsToNativeReading(refreshRoot);
     clearStaleReadingViewState(refreshRoot);
     void processCardElements(refreshRoot, undefined, sourceFromEvent)
@@ -710,8 +710,8 @@ export function registerReadingViewPrettyCards(plugin: Plugin) {
 function setupManualTrigger() {
   window.sproutApplyMasonryGrid = () => {
     debugLog('[LearnKit] Manual sproutApplyMasonryGrid() called');
-    requestAnimationFrame(() => {
-      void processCardElements(document.documentElement, undefined, '');
+    window.requestAnimationFrame(() => {
+      void processCardElements(activeDocument.documentElement, undefined, '');
     });
   };
 
@@ -777,11 +777,11 @@ async function forceReadingViewRefreshAfterModalSave(
     const view = leaf.view;
     if (!(view instanceof MarkdownView)) continue;
 
-    const content = queryFirst(
+    const content = queryFirst<HTMLElement>(
       view.containerEl,
       ".markdown-reading-view, .markdown-preview-view, .markdown-rendered, .markdown-preview-sizer, .markdown-preview-section",
     );
-    if (!(content instanceof HTMLElement)) continue;
+    if (!content) continue;
 
     const dispatchRefresh = () => {
       try {
@@ -1033,19 +1033,20 @@ function setupDebouncedMutationObserver() {
     for (const m of mutations) {
       // Only watch for added nodes (new content), ignore removals and repositioning
       if (m.type === 'childList' && m.addedNodes.length > 0) {
+        const mutationTargetEl = m.target.nodeType === Node.ELEMENT_NODE ? (m.target as Element) : null;
         // Skip mutations inside the editor
-        if (m.target instanceof Element && m.target.closest('.cm-content')) continue;
+        if (mutationTargetEl?.closest('.cm-content')) continue;
         // Skip mutations inside our own card-run wrappers (from wrapping/unwrapping)
-        if (m.target instanceof Element && m.target.closest('.learnkit-reading-card-run')) continue;
+        if (mutationTargetEl?.closest('.learnkit-reading-card-run')) continue;
         // Skip mutations outside reading view contexts
-        if (m.target instanceof Element && !m.target.closest('.markdown-reading-view, .markdown-preview-view, .markdown-rendered')) continue;
+        if (mutationTargetEl && !mutationTargetEl.closest('.markdown-reading-view, .markdown-preview-view, .markdown-rendered')) continue;
 
         for (const n of Array.from(m.addedNodes)) {
           if (n.nodeType === Node.ELEMENT_NODE) {
             const el = n as Element;
 
             // Skip our own wrapper nodes being added
-            if (el instanceof HTMLElement && el.classList.contains('learnkit-reading-card-run')) continue;
+            if (el.nodeType === Node.ELEMENT_NODE && (el as HTMLElement).classList.contains('learnkit-reading-card-run')) continue;
 
             // Only trigger if we see actual NEW .el-p or sprout cards
             // Skip if the added node is just being moved (check if it already has sprout-processed)
@@ -1062,20 +1063,24 @@ function setupDebouncedMutationObserver() {
             // cards that aren't wrapped in .learnkit-reading-card-run yet.
             // This handles Obsidian's virtualised scroll (#56) — sections
             // removed from the DOM and re-added lose their card-run wrappers.
-            if (el instanceof HTMLElement) {
-              const isSection = el.classList.contains('markdown-preview-section');
-              if (isSection && el.querySelector('.learnkit-pretty-card') && !el.querySelector('.learnkit-reading-card-run')) {
-                sectionsNeedingLayout.add(el);
-              } else if (el.classList.contains('learnkit-pretty-card') && !el.closest('.learnkit-reading-card-run')) {
+            if (el.nodeType === Node.ELEMENT_NODE) {
+              const elElement = el as HTMLElement;
+              const isSection = elElement.classList.contains('markdown-preview-section');
+              if (isSection && elElement.querySelector('.learnkit-pretty-card') && !elElement.querySelector('.learnkit-reading-card-run')) {
+                sectionsNeedingLayout.add(elElement);
+              } else if (elElement.classList.contains('learnkit-pretty-card') && !elElement.closest('.learnkit-reading-card-run')) {
                 // A processed card was added outside a card-run wrapper
                 // (e.g. post-processor ran while element was detached).
-                const section = el.closest<HTMLElement>('.markdown-preview-section');
+                const section = elElement.closest<HTMLElement>('.markdown-preview-section');
                 if (section) sectionsNeedingLayout.add(section);
               } else if (!isSection) {
                 // The added node might contain sections (e.g. a container node)
-                el.querySelectorAll?.('.markdown-preview-section')?.forEach((sec) => {
-                  if (sec instanceof HTMLElement && sec.querySelector('.learnkit-pretty-card') && !sec.querySelector('.learnkit-reading-card-run')) {
-                    sectionsNeedingLayout.add(sec);
+                elElement.querySelectorAll?.('.markdown-preview-section')?.forEach((sec) => {
+                  if (sec.nodeType === Node.ELEMENT_NODE) {
+                    const secEl = sec as HTMLElement;
+                    if (secEl.querySelector('.learnkit-pretty-card') && !secEl.querySelector('.learnkit-reading-card-run')) {
+                      sectionsNeedingLayout.add(secEl);
+                    }
                   }
                 });
               }
@@ -1129,7 +1134,7 @@ function setupDebouncedMutationObserver() {
     pendingRafId = window.requestAnimationFrame(processBatch);
   });
 
-  const body = document.body;
+  const body = activeDocument.body;
   if (body) {
     // Only observe childList (DOM structure) changes, not attributes (styles, sizes)
     mutationObserver.observe(body, { 
@@ -1138,9 +1143,9 @@ function setupDebouncedMutationObserver() {
       attributes: false,
       characterData: false // Also ignore text content changes
     });
-    debugLog('[LearnKit] MutationObserver attached to document.body');
+    debugLog('[LearnKit] MutationObserver attached to activeDocument.body');
   } else {
-    debugLog('[LearnKit] document.body not available for MutationObserver');
+    debugLog('[LearnKit] activeDocument.body not available for MutationObserver');
   }
 }
 
@@ -1163,7 +1168,7 @@ function scheduleFlashcardsBootstrapReflow(): void {
   flashcardsBootstrapTimer = window.setTimeout(() => {
     flashcardsBootstrapTimer = null;
     const nudgeFlashcardsSections = () => {
-      const sections = Array.from(document.querySelectorAll<HTMLElement>('.markdown-preview-section.learnkit-layout-masonry'));
+      const sections = Array.from(activeDocument.querySelectorAll<HTMLElement>('.markdown-preview-section.learnkit-layout-masonry'));
       const flashSections = sections.filter((section) => !!section.querySelector('.learnkit-pretty-card.learnkit-macro-flashcards'));
       for (const section of flashSections) {
         const previousWidth = section.style.width;
@@ -1278,7 +1283,7 @@ async function processCardElements(container: HTMLElement, _ctx?: MarkdownPostPr
 
   container.querySelectorAll<HTMLElement>('.el-p:not([data-learnkit-processed])').forEach(el => found.push(el));
 
-  const allowFlashcardsBootstrap = !!_ctx || container === document.documentElement;
+  const allowFlashcardsBootstrap = !!_ctx || container === activeDocument.documentElement;
 
   if (found.length === 0) {
     debugLog('[LearnKit] No unprocessed .el-p elements found in container');
@@ -1602,7 +1607,7 @@ function flipAnimateCards(before: Map<HTMLElement, DOMRect>, lockedCard?: HTMLEl
       });
     }
   };
-  setTimeout(cleanup, FLIP_DURATION + 20);
+  window.setTimeout(cleanup, FLIP_DURATION + 20);
 }
 
 function unwrapCardRuns(section: HTMLElement) {
@@ -1627,19 +1632,21 @@ function wrapContiguousCardRuns(section: HTMLElement) {
   // This prevents the column→single-column→column flicker (#56)
   // that occurs when scroll / resize debounce triggers a full reflow.
   const hasUnwrappedVisibleCards = Array.from(section.children).some(child => {
-    if (!(child instanceof HTMLElement)) return false;
-    return child.classList.contains('learnkit-pretty-card') &&
-           !child.classList.contains('learnkit-hidden-important') &&
-           child.getAttribute('data-learnkit-hidden') !== 'true';
+      if (child.nodeType !== Node.ELEMENT_NODE) return false;
+      const childEl = child as HTMLElement;
+      return childEl.classList.contains('learnkit-pretty-card') &&
+        !childEl.classList.contains('learnkit-hidden-important') &&
+        childEl.getAttribute('data-learnkit-hidden') !== 'true';
   });
   // Detect owned elements (data-learnkit-owned-by) that are direct
   // children of the section — they need to be folded into a card-run
   // but were marked after the last wrapContiguousCardRuns pass.
   const hasStrandedOwnedElements = !hasUnwrappedVisibleCards &&
     Array.from(section.children).some(child => {
-      if (!(child instanceof HTMLElement)) return false;
-      return child.hasAttribute('data-learnkit-owned-by') &&
-             !child.closest('.learnkit-reading-card-run');
+      if (child.nodeType !== Node.ELEMENT_NODE) return false;
+      const childEl = child as HTMLElement;
+      return childEl.hasAttribute('data-learnkit-owned-by') &&
+             !childEl.closest('.learnkit-reading-card-run');
     });
   if (!hasUnwrappedVisibleCards && !hasStrandedOwnedElements) return;
 
@@ -1735,14 +1742,15 @@ function applyLayoutToSections(sections: Iterable<HTMLElement>, rvSettings: Read
 function collectSectionsWithPrettyCards(scope: ParentNode): Set<HTMLElement> {
   const sections = new Set<HTMLElement>();
 
-  if (scope instanceof HTMLElement) {
+  if ((scope as Node).nodeType === Node.ELEMENT_NODE) {
+    const scopeEl = scope as HTMLElement;
     // If scope itself is a .markdown-preview-section containing cards
-    if (scope.classList.contains('markdown-preview-section') && scope.querySelector('.learnkit-pretty-card')) {
-      sections.add(scope);
+    if (scopeEl.classList.contains('markdown-preview-section') && scopeEl.querySelector('.learnkit-pretty-card')) {
+      sections.add(scopeEl);
     }
     // If scope itself is (or has become) a pretty card, find its parent section
-    if (scope.classList.contains('learnkit-pretty-card')) {
-      const section = scope.closest<HTMLElement>('.markdown-preview-section');
+    if (scopeEl.classList.contains('learnkit-pretty-card')) {
+      const section = scopeEl.closest<HTMLElement>('.markdown-preview-section');
       if (section) sections.add(section);
     }
   }
@@ -2147,11 +2155,12 @@ function scheduleDeferredSiblingHide(cardEl: HTMLElement, cardRawText?: string) 
 
 function hideSectionLevelOrphanDelimitedParagraphs(scope: ParentNode): void {
   const sections: HTMLElement[] = [];
-  if (scope instanceof HTMLElement) {
-    if (scope.classList.contains('markdown-preview-section')) {
-      sections.push(scope);
+  if ((scope as Node).nodeType === Node.ELEMENT_NODE) {
+    const scopeEl = scope as HTMLElement;
+    if (scopeEl.classList.contains('markdown-preview-section')) {
+      sections.push(scopeEl);
     }
-    scope.querySelectorAll<HTMLElement>('.markdown-preview-section').forEach((sec) => sections.push(sec));
+    scopeEl.querySelectorAll<HTMLElement>('.markdown-preview-section').forEach((sec) => sections.push(sec));
   }
 
   const delimEsc = escapeDelimiterRe();
@@ -2161,7 +2170,7 @@ function hideSectionLevelOrphanDelimitedParagraphs(scope: ParentNode): void {
     const hasReadingCards = !!section.querySelector('.learnkit-pretty-card[data-learnkit-processed], .learnkit-pretty-card[data-sprout-processed]');
     if (!hasReadingCards) continue;
 
-    const children = Array.from(section.children).filter((c): c is HTMLElement => c instanceof HTMLElement);
+    const children = Array.from(section.children).filter((c): c is HTMLElement => c.nodeType === Node.ELEMENT_NODE);
     for (let i = 0; i < children.length; i++) {
       const el = children[i];
       const isParagraph = el.classList.contains('el-p');
@@ -2300,7 +2309,7 @@ function resolveCleanMarkdownClozeStyle(plugin: SproutPluginLike | null): CleanM
   const lightBg = sanitizeHexColor(markdownColours?.clozeBgLight) || sanitizeHexColor(cards?.clozeBgColor);
   const lightText = sanitizeHexColor(markdownColours?.clozeTextLight) || sanitizeHexColor(cards?.clozeTextColor);
 
-  const isDark = document.body.classList.contains('theme-dark');
+  const isDark = activeDocument.body.classList.contains('theme-dark');
   let bg = isDark ? sanitizeHexColor(markdownColours?.clozeBgDark) : lightBg;
   let text = isDark ? sanitizeHexColor(markdownColours?.clozeTextDark) : lightText;
 
@@ -2419,12 +2428,13 @@ function buildLatexMathRangeChecker(text: string): (pos: number) => boolean {
 function renderLatexInContainer(container: HTMLElement): void {
   // Collect text nodes containing LaTeX markers.
   const textNodes: Text[] = [];
-  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+  const walker = activeDocument.createTreeWalker(container, NodeFilter.SHOW_TEXT);
   let node: Node | null;
   while ((node = walker.nextNode()) !== null) {
-    if (!(node instanceof Text)) continue;
+    if (node.nodeType !== Node.TEXT_NODE) continue;
+    const textNode = node as Text;
 
-    const parent = node.parentElement;
+    const parent = textNode.parentElement;
     if (!parent) continue;
 
     // Skip text nodes inside the hidden original content store.
@@ -2433,10 +2443,10 @@ function renderLatexInContainer(container: HTMLElement): void {
     // Skip nodes already rendered by Obsidian/MathJax.
     if (parent.closest('.MathJax, mjx-container, .math')) continue;
 
-    const text = node.nodeValue ?? '';
+    const text = textNode.nodeValue ?? '';
     if (!/\\\(|\\\[|\$\$|\$/.test(text)) continue;
 
-    textNodes.push(node);
+    textNodes.push(textNode);
   }
 
   if (textNodes.length === 0) return;
@@ -2496,13 +2506,13 @@ function renderLatexInContainer(container: HTMLElement): void {
     if (filtered.length === 0) continue;
 
     // Build a document fragment with text + math interleaved
-    const frag = document.createDocumentFragment();
+    const frag = activeDocument.createDocumentFragment();
     let cursor = 0;
 
     for (const seg of filtered) {
       // Text before this math segment
       if (seg.start > cursor) {
-        frag.appendChild(document.createTextNode(text.slice(cursor, seg.start)));
+        frag.appendChild(activeDocument.createTextNode(text.slice(cursor, seg.start)));
       }
 
       try {
@@ -2520,7 +2530,7 @@ function renderLatexInContainer(container: HTMLElement): void {
         rendered = true;
       } catch {
         // Fallback: keep original text
-        frag.appendChild(document.createTextNode(text.slice(seg.start, seg.end)));
+        frag.appendChild(activeDocument.createTextNode(text.slice(seg.start, seg.end)));
       }
 
       cursor = seg.end;
@@ -2528,7 +2538,7 @@ function renderLatexInContainer(container: HTMLElement): void {
 
     // Remaining text after last math segment
     if (cursor < text.length) {
-      frag.appendChild(document.createTextNode(text.slice(cursor)));
+      frag.appendChild(activeDocument.createTextNode(text.slice(cursor)));
     }
 
     parent.replaceChild(frag, textNode);
@@ -3217,22 +3227,22 @@ function setupGuidebookCarousel(el: HTMLElement) {
   const slides = Array.from(content.querySelectorAll<HTMLElement>('.learnkit-card-section'));
   if (slides.length <= 1) return;
 
-  const prevBtn = document.createElement('button');
+  const prevBtn = activeDocument.createElement('button');
   prevBtn.className = 'learnkit-guidebook-nav learnkit-guidebook-nav-prev';
   prevBtn.type = 'button';
   prevBtn.setAttribute('aria-label', t(undefined, "ui.reading.guidebook.previousSection", "Previous section"));
   prevBtn.textContent = '‹';
 
-  const nextBtn = document.createElement('button');
+  const nextBtn = activeDocument.createElement('button');
   nextBtn.className = 'learnkit-guidebook-nav learnkit-guidebook-nav-next';
   nextBtn.type = 'button';
   nextBtn.setAttribute('aria-label', t(undefined, "ui.reading.guidebook.nextSection", "Next section"));
   nextBtn.textContent = '›';
 
-  const dots = document.createElement('div');
+  const dots = activeDocument.createElement('div');
   dots.className = 'learnkit-guidebook-dots';
   const dotEls = slides.map((_, i) => {
-    const dot = document.createElement('button');
+    const dot = activeDocument.createElement('button');
     dot.className = 'learnkit-guidebook-dot';
     dot.type = 'button';
     dot.setAttribute('aria-label', t(undefined, "ui.reading.guidebook.goToSection", "Go to section {index}", { index: String(i + 1) }));
@@ -3277,7 +3287,7 @@ function setupGuidebookCarousel(el: HTMLElement) {
   content.addEventListener('scroll', updateDots, { passive: true });
   updateDots();
 
-  const wrap = document.createElement('div');
+  const wrap = activeDocument.createElement('div');
   wrap.className = 'learnkit-guidebook-controls';
   wrap.appendChild(prevBtn);
   wrap.appendChild(dots);
@@ -3325,7 +3335,7 @@ function setupFlashcardFlip(el: HTMLElement) {
   };
 
   el.addEventListener('click', (ev: Event) => {
-    const target = ev.target instanceof Element ? ev.target : null;
+      const target = ev.target && (ev.target as Node).nodeType === Node.ELEMENT_NODE ? (ev.target as Element) : null;
     if (target?.closest('.learnkit-card-edit-btn, .learnkit-flashcard-speak-btn')) return;
     if (el.classList.contains('learnkit-flashcard-animating')) return;
 
@@ -3336,7 +3346,7 @@ function setupFlashcardFlip(el: HTMLElement) {
       showingAnswer = !showingAnswer;
       applyFaceState();
 
-      requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
         flipAnimateCards(before, el);
       });
     }, 180);
@@ -3740,7 +3750,7 @@ function enhanceCardElement(
 
       // FLIP step 2: after the browser reflows, animate cards
       // from their old positions to their new ones
-      requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
         flipAnimateCards(before, el);
       });
     });
@@ -3916,7 +3926,7 @@ function resolveUnloadedEmbeds(
     try {
       const imageFile = resolveImageFile(app, sourcePath, embedSrc);
       if (imageFile) {
-        const img = document.createElement('img');
+        const img = activeDocument.createElement('img');
         img.src = app.vault.getResourcePath(imageFile);
         img.alt = embedSrc.split('/').pop() || embedSrc;
         img.className = 'learnkit-reading-embed-img';
@@ -4145,7 +4155,7 @@ function renderIoInReadingCard(
     w: number,
     h: number,
   ): void => {
-    const stroke = document.createElementNS(SVG_NS, 'svg');
+    const stroke = activeDocument.createElementNS(SVG_NS, 'svg');
     stroke.classList.add('learnkit-io-reading-mask-stroke');
     stroke.setAttribute('viewBox', MASK_STROKE_VIEWBOX);
     stroke.setAttribute('preserveAspectRatio', 'none');
@@ -4167,7 +4177,7 @@ function renderIoInReadingCard(
     const strokeColor = `hsl(var(--accent-h) var(--accent-s) ${lExpr} / 0.55)`;
 
     if (rect.shape === 'circle') {
-      const ellipse = document.createElementNS(SVG_NS, 'ellipse');
+      const ellipse = activeDocument.createElementNS(SVG_NS, 'ellipse');
       ellipse.setAttribute('cx', '50');
       ellipse.setAttribute('cy', '50');
       ellipse.setAttribute('rx', '50');
@@ -4178,13 +4188,13 @@ function renderIoInReadingCard(
     } else if (rect.shape === 'polygon') {
       const points = normalizePolygonPointsForMask(rect);
       if (!points || points.length < 3) return;
-      const polygon = document.createElementNS(SVG_NS, 'polygon');
+      const polygon = activeDocument.createElementNS(SVG_NS, 'polygon');
       polygon.setAttribute('points', points.map((point) => `${point.x * 100},${point.y * 100}`).join(' '));
       polygon.setAttribute('fill', fillColor);
       polygon.setAttribute('stroke', strokeColor);
       stroke.appendChild(polygon);
     } else {
-      const rectEl = document.createElementNS(SVG_NS, 'rect');
+      const rectEl = activeDocument.createElementNS(SVG_NS, 'rect');
       rectEl.setAttribute('x', '0');
       rectEl.setAttribute('y', '0');
       rectEl.setAttribute('width', '100');
@@ -4425,17 +4435,17 @@ function renderIoInReadingCard(
   const questionEl = queryFirst<HTMLElement>(el, '[id^="sprout-io-question-"], [id^="learnkit-io-question-"]');
   if (questionEl) {
     questionEl.replaceChildren();
-    const container = document.createElement('div');
+    const container = activeDocument.createElement('div');
     container.className = 'learnkit-io-reading-container';
 
-    const img = document.createElement('img');
+    const img = activeDocument.createElement('img');
     img.src = imageSrc;
     img.alt = card.title || 'Image Occlusion';
     img.className = 'learnkit-io-reading-img';
     container.appendChild(img);
 
     if (occlusions.length > 0) {
-      const overlay = document.createElement('div');
+      const overlay = activeDocument.createElement('div');
       overlay.className = 'learnkit-io-reading-overlay';
 
       // Sync overlay to the actual rendered image layout bounds using inline
@@ -4461,7 +4471,7 @@ function renderIoInReadingCard(
         });
       };
 
-      const scheduleSync = () => requestAnimationFrame(syncOverlay);
+      const scheduleSync = () => window.requestAnimationFrame(syncOverlay);
 
       if (img.complete && img.naturalWidth > 0) {
         scheduleSync();
@@ -4479,7 +4489,7 @@ function renderIoInReadingCard(
         const w = Number.isFinite(rect.w) ? Number(rect.w) : 0;
         const h = Number.isFinite(rect.h) ? Number(rect.h) : 0;
 
-        const mask = document.createElement('div');
+        const mask = activeDocument.createElement('div');
         mask.className = 'learnkit-io-reading-mask learnkit-io-reading-mask-filled learnkit-io-reading-mask-hotspot-answer';
         mask.classList.add('learnkit-io-reading-mask-no-border');
         if (rect.shape === 'circle') {
@@ -4511,7 +4521,7 @@ function renderIoInReadingCard(
           labelStr = rect.groupKey ? String(rect.groupKey) : String(index + 1);
         }
         const label = labelStr.trim() || String(index + 1);
-        const labelEl = document.createElement('span');
+        const labelEl = activeDocument.createElement('span');
         labelEl.className = 'learnkit-io-reading-mask-label learnkit-io-reading-mask-label-floating';
         labelEl.textContent = label;
         const polygonAnchor = getPolygonLabelAnchor(rect);
@@ -4537,17 +4547,17 @@ function renderIoInReadingCard(
   const answerEl = queryFirst<HTMLElement>(el, '[id^="sprout-io-answer-"], [id^="learnkit-io-answer-"]');
   if (answerEl) {
     answerEl.replaceChildren();
-    const container = document.createElement('div');
+    const container = activeDocument.createElement('div');
     container.className = 'learnkit-io-reading-container';
 
-    const img = document.createElement('img');
+    const img = activeDocument.createElement('img');
     img.src = imageSrc;
     img.alt = card.title || 'Image Occlusion — Answer';
     img.className = 'learnkit-io-reading-img';
     container.appendChild(img);
 
     if (isHotspot && occlusions.length > 0) {
-      const overlay = document.createElement('div');
+      const overlay = activeDocument.createElement('div');
       overlay.className = 'learnkit-io-reading-overlay';
 
       const syncOverlay = () => {
@@ -4569,7 +4579,7 @@ function renderIoInReadingCard(
         });
       };
 
-      const scheduleSync = () => requestAnimationFrame(syncOverlay);
+      const scheduleSync = () => window.requestAnimationFrame(syncOverlay);
 
       if (img.complete && img.naturalWidth > 0) {
         scheduleSync();
@@ -4587,7 +4597,7 @@ function renderIoInReadingCard(
         const w = Number.isFinite(rect.w) ? Number(rect.w) : 0;
         const h = Number.isFinite(rect.h) ? Number(rect.h) : 0;
 
-        const mask = document.createElement('div');
+        const mask = activeDocument.createElement('div');
         mask.className = 'learnkit-io-reading-mask learnkit-io-reading-mask-filled learnkit-io-reading-mask-hotspot-answer';
         mask.classList.add('learnkit-io-reading-mask-no-border');
         if (rect.shape === 'circle') {
@@ -4619,7 +4629,7 @@ function renderIoInReadingCard(
           labelStr = rect.groupKey ? String(rect.groupKey) : String(index + 1);
         }
         const label = labelStr.trim() || String(index + 1);
-        const labelEl = document.createElement('span');
+        const labelEl = activeDocument.createElement('span');
         labelEl.className = 'learnkit-io-reading-mask-label learnkit-io-reading-mask-label-floating';
         labelEl.textContent = label;
         const polygonAnchor = getPolygonLabelAnchor(rect);
@@ -4650,5 +4660,5 @@ declare global { interface Window { sproutApplyMasonryGrid?: () => void; } }
 
 window.sproutApplyMasonryGrid = window.sproutApplyMasonryGrid || (() => {
   debugLog('[LearnKit] sproutApplyMasonryGrid placeholder invoked');
-  void processCardElements(document.documentElement, undefined, '');
+  void processCardElements(activeDocument.documentElement, undefined, '');
 });

@@ -134,7 +134,7 @@ export class SproutHomeView extends ItemView {
     // Init AOS after render completes (DOM ready)
     if (this.plugin.settings?.general?.enableAnimations ?? true) {
       // Delay init to ensure DOM is fully rendered
-      setTimeout(() => {
+      window.setTimeout(() => {
         initAOS({
           duration: AOS_DURATION,
           easing: "ease-out",
@@ -299,7 +299,7 @@ export class SproutHomeView extends ItemView {
     const subtitleRow = titleFrame.subtitle;
     subtitleRow.classList.add("lk-home-title-subtitle");
 
-    const quickStudyBtn = document.createElement("button");
+    const quickStudyBtn = activeDocument.createElement("button");
     quickStudyBtn.className = "lk-home-quick-study-btn learnkit-btn-toolbar learnkit-btn-outline-muted inline-flex items-center gap-2";
     quickStudyBtn.type = "button";
     quickStudyBtn.setAttribute("aria-label", tx("ui.home.quickAction.startStudying", "Start studying"));
@@ -339,7 +339,7 @@ export class SproutHomeView extends ItemView {
     {
       subtitleRow.createSpan({ text: greetingPrefix });
 
-      const nameInput = document.createElement("input");
+      const nameInput = activeDocument.createElement("input");
       nameInput.className = "lk-home-name-input min-w-[1ch] shrink-0 grow-0 basis-auto max-w-full border-0 p-0 m-0 shadow-none text-[0.95rem] font-normal leading-[1.3] text-muted-foreground bg-transparent";
       nameInput.type = "text";
       nameInput.maxLength = HOME_NAME_MAX_LENGTH;
@@ -347,12 +347,12 @@ export class SproutHomeView extends ItemView {
       nameInput.value = trimmedName;
       subtitleRow.appendChild(nameInput);
 
-      const greetingSuffixEl = document.createElement("div");
+      const greetingSuffixEl = activeDocument.createElement("div");
       greetingSuffixEl.className = "learnkit-greeting-suffix -ml-1 text-[0.95rem] font-normal leading-[1.3] text-muted-foreground";
       greetingSuffixEl.textContent = greeting.suffix;
       subtitleRow.appendChild(greetingSuffixEl);
 
-      const nameSizer = document.createElement("span");
+      const nameSizer = activeDocument.createElement("span");
       nameSizer.className = "learnkit-name-sizer absolute invisible whitespace-pre pointer-events-none h-0 overflow-hidden text-[0.95rem] font-normal leading-[1.3] text-muted-foreground";
       subtitleRow.appendChild(nameSizer);
 
@@ -461,11 +461,11 @@ export class SproutHomeView extends ItemView {
 
     // (greeting input logic is now only inside the showGreeting block)
 
-    const contentShell = document.createElement("div");
+    const contentShell = activeDocument.createElement("div");
     contentShell.className = "learnkit-view-content-shell lk-home-content-shell";
     root.appendChild(contentShell);
 
-    const body = document.createElement("div");
+    const body = activeDocument.createElement("div");
     body.className = "w-full flex flex-col gap-4";
     contentShell.appendChild(body);
 
@@ -497,9 +497,17 @@ export class SproutHomeView extends ItemView {
     reviewEvents.sort((a, b) => Number(b.at) - Number(a.at));
     sessionEvents.sort((a, b) => Number(b.at) - Number(a.at));
 
+    const isScopeObject = (value: unknown): value is Scope => {
+      if (!value || typeof value !== "object") return false;
+      const candidate = value as { type?: unknown; key?: unknown; name?: unknown };
+      const type = typeof candidate.type === "string" ? candidate.type : "";
+      if (!["vault", "folder", "note", "group", "tag", "property"].includes(type)) return false;
+      return typeof candidate.key === "string" && typeof candidate.name === "string";
+    };
+
     const recentDecks: Array<{ scope: Scope; lastAt: number; label: string }> = [];
-    const scopeExists = (scope: Scope): boolean => {
-      if (!scope || typeof scope !== "object") return false;
+    const scopeExists = (scope: unknown): boolean => {
+      if (!isScopeObject(scope)) return false;
       const type = String(scope.type || "");
       if (type === "vault") return true;
       const key = String(scope.key || "").trim();
@@ -510,8 +518,8 @@ export class SproutHomeView extends ItemView {
       if (type === "folder") return af instanceof TFolder;
       return false;
     };
-    const scopeHasCards = (scope: Scope): boolean => {
-      if (!scope || typeof scope !== "object") return false;
+    const scopeHasCards = (scope: unknown): boolean => {
+      if (!isScopeObject(scope)) return false;
       for (const card of activeStudyCards) {
         const path = String(card.sourceNotePath ?? "").trim();
         if (!path) continue;
@@ -521,8 +529,9 @@ export class SproutHomeView extends ItemView {
     };
     const seenDecks = new Set<string>();
     for (const ev of sessionEvents) {
-      const scope = ev?.scope;
-      if (!scope || typeof scope !== "object") continue;
+      const scopeRaw: unknown = ev?.scope;
+      if (!isScopeObject(scopeRaw)) continue;
+      const scope: Scope = scopeRaw;
       const type = String(scope.type || "");
       const key = String(scope.key || "");
       const name = String(scope.name || "");
@@ -721,7 +730,7 @@ export class SproutHomeView extends ItemView {
     };
 
     const makeDeckSection = (label: string, iconName?: string) => {
-      const section = document.createElement("div");
+      const section = activeDocument.createElement("div");
       section.className = "card learnkit-ana-card lk-home-deck-section flex flex-col gap-3 p-3 rounded-lg border border-border bg-background";
       const headingRow = section.createDiv({ cls: "m-0 flex items-center justify-between gap-2" });
       headingRow.createDiv({ cls: "lk-home-section-title font-semibold", text: label });
@@ -741,13 +750,13 @@ export class SproutHomeView extends ItemView {
     const pinnedSection = makeDeckSection(tx("ui.home.deck.pinned", "Pinned decks"), "pin");
     const recentSection = makeDeckSection(tx("ui.home.deck.recent", "Recent decks"), "clock");
 
-    const statsRow = document.createElement("div");
+    const statsRow = activeDocument.createElement("div");
     statsRow.className = "learnkit-ana-grid lk-home-stats-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4";
     applyAos(statsRow, HOME_AOS_FIRST_DELAY + HOME_AOS_STEP);
     body.appendChild(statsRow);
 
     // Decks row: pinned (left) and recent (right), no parent wrapper card.
-    const decksRow = document.createElement("div");
+    const decksRow = activeDocument.createElement("div");
     decksRow.className = "lk-home-decks-row grid grid-cols-1 lg:grid-cols-2 gap-4";
     applyAos(decksRow, HOME_AOS_FIRST_DELAY + HOME_AOS_STEP * 2);
     body.appendChild(decksRow);
@@ -755,7 +764,7 @@ export class SproutHomeView extends ItemView {
     decksRow.appendChild(recentSection.section);
 
     const makeStatCard = (label: string, value: string, note?: string) => {
-      const card = document.createElement("div");
+      const card = activeDocument.createElement("div");
       card.className = "card learnkit-ana-card learnkit-stat-card small-card flex flex-col gap-2 lg:flex-1";
       statsRow.appendChild(card);
       card.createDiv({ cls: "text-sm text-muted-foreground", text: label });
@@ -795,14 +804,14 @@ export class SproutHomeView extends ItemView {
     };
 
     const buildTrendBadge = (trend: { value: number; text: string; dir: number }) => {
-      const badge = document.createElement("span");
+      const badge = activeDocument.createElement("span");
       badge.className = "learnkit-trend-badge";
-      const icon = document.createElement("span");
+      const icon = activeDocument.createElement("span");
       icon.className = "inline-flex items-center justify-center";
       const iconName = trend.dir > 0 ? "trending-up" : trend.dir < 0 ? "trending-down" : "minus";
       setIcon(icon, iconName);
       badge.appendChild(icon);
-      const valueEl = document.createElement("span");
+      const valueEl = activeDocument.createElement("span");
       valueEl.textContent = trend.dir === 0
         ? tx("ui.home.trend.zero", "0%")
         : tx("ui.home.trend.signedPercent", "{sign}{value}%", { sign: trend.dir > 0 ? "+" : "", value: 0 });
@@ -821,10 +830,10 @@ export class SproutHomeView extends ItemView {
           sign: currentVal >= 0 ? "+" : "",
           value: currentVal.toFixed(0),
         });
-        if (p < 1) requestAnimationFrame(animate);
+        if (p < 1) window.requestAnimationFrame(animate);
         else valueEl.textContent = trend.text;
       };
-      requestAnimationFrame(animate);
+      window.requestAnimationFrame(animate);
       return badge;
     };
 
@@ -841,7 +850,7 @@ export class SproutHomeView extends ItemView {
 
     // Avg time/day card with trend badge
     {
-      const card = document.createElement("div");
+      const card = activeDocument.createElement("div");
       card.className = "card learnkit-ana-card learnkit-stat-card small-card p-4 flex flex-col gap-2 lg:flex-1";
       statsRow.appendChild(card);
       const header = card.createDiv({ cls: "flex items-center justify-between text-sm text-muted-foreground" });
@@ -857,7 +866,7 @@ export class SproutHomeView extends ItemView {
 
     // Avg cards/day card with trend badge
     {
-      const card = document.createElement("div");
+      const card = activeDocument.createElement("div");
       card.className = "card learnkit-ana-card learnkit-stat-card small-card p-4 flex flex-col gap-2 lg:flex-1";
       statsRow.appendChild(card);
       const header = card.createDiv({ cls: "flex items-center justify-between text-sm text-muted-foreground" });
@@ -1019,7 +1028,7 @@ export class SproutHomeView extends ItemView {
           });
           
           searchInputEl.addEventListener("blur", () => {
-            setTimeout(() => {
+            window.setTimeout(() => {
               if (searchInputEl!.value === "") {
                 searchInputEl!.classList.remove("learnkit-deck-search-input-focused", "learnkit-deck-search-input-focused");
               }
@@ -1202,7 +1211,7 @@ export class SproutHomeView extends ItemView {
       }
     }
 
-    const heatmapHost = document.createElement("div");
+    const heatmapHost = activeDocument.createElement("div");
     heatmapHost.className = "learnkit-heatmap-host";
     applyAos(heatmapHost, HOME_AOS_FIRST_DELAY + HOME_AOS_STEP * 3);
     body.appendChild(heatmapHost);
@@ -1391,12 +1400,12 @@ export class SproutHomeView extends ItemView {
       },
     ];
 
-    const infoRow = document.createElement("div");
+    const infoRow = activeDocument.createElement("div");
     infoRow.className = "lk-home-info-row grid grid-cols-1 lg:grid-cols-2 gap-4";
     applyAos(infoRow, HOME_AOS_FIRST_DELAY + HOME_AOS_STEP * 4);
     body.appendChild(infoRow);
 
-    const tipCard = document.createElement("div");
+    const tipCard = activeDocument.createElement("div");
     tipCard.className = "card learnkit-ana-card lk-home-tip-card p-4 flex flex-col gap-3";
     infoRow.appendChild(tipCard);
 
@@ -1452,7 +1461,7 @@ export class SproutHomeView extends ItemView {
     });
     renderTip();
 
-    const projectCard = document.createElement("div");
+    const projectCard = activeDocument.createElement("div");
     projectCard.className = "card learnkit-ana-card lk-home-project-card p-4 flex flex-col gap-3";
     infoRow.appendChild(projectCard);
 
@@ -1501,7 +1510,7 @@ export class SproutHomeView extends ItemView {
 
       // Fallback: force elements visible only after the cascade *should* have finished.
       const fallbackAfterMs = Math.max(600, Math.floor(maxDelay + AOS_DURATION + 250));
-      setTimeout(() => {
+      window.setTimeout(() => {
         const aosElements = root.querySelectorAll('[data-aos]');
         aosElements.forEach((el) => {
           if (!el.isConnected) return;

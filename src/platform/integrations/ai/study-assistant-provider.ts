@@ -610,7 +610,9 @@ async function requestStreamingTransport(params: {
   signal?: AbortSignal;
 }): Promise<StreamingTransportResponse> {
   const { url, method, headers, body, signal } = params;
-  const fetchImpl = typeof globalThis.fetch === "function" ? globalThis.fetch.bind(globalThis) : null;
+  const fetchImpl = typeof window !== "undefined" && typeof window.fetch === "function"
+    ? window.fetch.bind(window)
+    : null;
 
   if (fetchImpl) {
     try {

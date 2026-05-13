@@ -7,6 +7,7 @@
  *   - toggleMoreMenu — Toggles the "More" popover menu open or closed with positioning logic
  *   - injectMoreMenu — Injects the "More" button and its popover menu into the current card's action row
  */
+import {  } from "obsidian";
 
 import { log } from "../../platform/core/logger";
 import { placePopover, queryFirst } from "../../platform/core/ui";
@@ -64,9 +65,9 @@ export function toggleMoreMenu(view: SproutReviewerView, force?: boolean) {
   popover.setAttribute("aria-hidden", "false");
   popover.classList.add("is-open");
 
-  document.body.appendChild(popover);
+  activeDocument.body.appendChild(popover);
 
-  requestAnimationFrame(() => place());
+  window.requestAnimationFrame(() => place());
 
   const onResizeOrScroll = () => place();
   const onDocPointerDown = (ev: PointerEvent) => {
@@ -86,16 +87,16 @@ export function toggleMoreMenu(view: SproutReviewerView, force?: boolean) {
   window.addEventListener("resize", onResizeOrScroll, true);
   window.addEventListener("scroll", onResizeOrScroll, true);
   const tid = window.setTimeout(() => {
-    document.addEventListener("pointerdown", onDocPointerDown, true);
-    document.addEventListener("keydown", onDocKeydown, true);
+    activeDocument.addEventListener("pointerdown", onDocPointerDown, true);
+    activeDocument.addEventListener("keydown", onDocKeydown, true);
   }, 0);
 
   (view as unknown as { _moreCleanup: (() => void) | null })._moreCleanup = () => {
     window.clearTimeout(tid);
     window.removeEventListener("resize", onResizeOrScroll, true);
     window.removeEventListener("scroll", onResizeOrScroll, true);
-    document.removeEventListener("pointerdown", onDocPointerDown, true);
-    document.removeEventListener("keydown", onDocKeydown, true);
+    activeDocument.removeEventListener("pointerdown", onDocPointerDown, true);
+    activeDocument.removeEventListener("keydown", onDocKeydown, true);
   };
 
   const firstItem = popover.querySelector<HTMLElement>("[role='menuitem']");
@@ -164,11 +165,11 @@ export function injectMoreMenu(view: SproutReviewerView) {
   const menuId = `${popoverId}-menu`;
 
   // Instead of rendering the menu inside the card row, render the popover at the document body root for correct positioning
-  const wrap = document.createElement("div");
+  const wrap = activeDocument.createElement("div");
   wrap.className = "learnkit relative inline-flex overflow-visible";
   wrap.dataset.sproutAction = "more-wrap";
 
-  const moreBtn = document.createElement("button");
+  const moreBtn = activeDocument.createElement("button");
   moreBtn.type = "button";
   moreBtn.id = triggerId;
   moreBtn.className = "learnkit-btn-toolbar learnkit-btn-filter";
@@ -181,7 +182,7 @@ export function injectMoreMenu(view: SproutReviewerView) {
   moreBtn.setAttribute("aria-label", tx("ui.reviewer.more.tooltip", "Open menu"));
   moreBtn.textContent = tx("ui.reviewer.more.label", "More");
 
-  const kbd = document.createElement("kbd");
+  const kbd = activeDocument.createElement("kbd");
   kbd.className = "kbd ml-2";
   kbd.textContent = "M";
   moreBtn.appendChild(kbd);
@@ -200,20 +201,20 @@ export function injectMoreMenu(view: SproutReviewerView) {
     }
   });
 
-  // Create the popover and append to document.body for global positioning
-  const popover = document.createElement("div");
+  // Create the popover and append to activeDocument.body for global positioning
+  const popover = activeDocument.createElement("div");
   popover.id = popoverId;
   popover.className = "learnkit";
   popover.setAttribute("aria-hidden", "true");
   popover.classList.add("learnkit-popover-overlay", "learnkit-popover-overlay");
-  document.body.appendChild(popover);
+  activeDocument.body.appendChild(popover);
 
-  const panel = document.createElement("div");
+  const panel = activeDocument.createElement("div");
   panel.className =
     "lk-more-panel rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 learnkit-pointer-auto";
   popover.appendChild(panel);
 
-  const menu = document.createElement("div");
+  const menu = activeDocument.createElement("div");
   menu.setAttribute("role", "menu");
   menu.id = menuId;
   
@@ -227,7 +228,7 @@ export function injectMoreMenu(view: SproutReviewerView) {
     disabled?: boolean,
     ariaLabel?: string,
   ) => {
-    const item = document.createElement("div");
+    const item = activeDocument.createElement("div");
     item.setAttribute("role", "menuitem");
     item.tabIndex = disabled ? -1 : 0;
     item.setAttribute("aria-label", ariaLabel ?? label);
@@ -236,12 +237,12 @@ export function injectMoreMenu(view: SproutReviewerView) {
       ? "group flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm select-none opacity-50 cursor-not-allowed pointer-events-none"
       : "group flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer select-none outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground";
 
-    const label_span = document.createElement("span");
+    const label_span = activeDocument.createElement("span");
     label_span.className = "";
     label_span.textContent = label;
     item.appendChild(label_span);
 
-    const spacer = document.createElement("kbd");
+    const spacer = activeDocument.createElement("kbd");
     spacer.className = "kbd ml-auto text-xs text-muted-foreground tracking-widest";
     spacer.textContent = hotkey;
     item.appendChild(spacer);
@@ -283,7 +284,7 @@ export function injectMoreMenu(view: SproutReviewerView) {
   menu.appendChild(suspendItem);
 
   if (showUndoHere) {
-    const sep = document.createElement("hr");
+    const sep = activeDocument.createElement("hr");
     sep.setAttribute("role", "separator");
     sep.className = "h-px bg-border my-2";
     menu.appendChild(sep);
@@ -306,7 +307,7 @@ export function injectMoreMenu(view: SproutReviewerView) {
   menu.addEventListener("pointerdown", (ev) => ev.stopPropagation());
 
   wrap.appendChild(moreBtn);
-  // Do NOT append popover to wrap/card; it's now in document.body
+  // Do NOT append popover to wrap/card; it's now in activeDocument.body
   targetRow.appendChild(wrap);
 
   for (const r of rows) {

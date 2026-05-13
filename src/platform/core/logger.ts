@@ -14,10 +14,11 @@
 const PREFIX = "[LearnKit]";
 
 // Bind console methods once so call-sites don't trigger the no-console rule.
-const _debug = globalThis.console.debug.bind(globalThis.console);
-const _log = globalThis.console.log.bind(globalThis.console);
-const _warn = globalThis.console.warn.bind(globalThis.console);
-const _error = globalThis.console.error.bind(globalThis.console);
+const _console = typeof window !== "undefined" ? window.console : console;
+const _debug = _console.debug.bind(_console);
+const _log = _console.log.bind(_console);
+const _warn = _console.warn.bind(_console);
+const _error = _console.error.bind(_console);
 
 export type LogLevel = "debug" | "info" | "warn" | "error" | "silent";
 
@@ -84,12 +85,18 @@ export const log = {
   },
 };
 
-// Expose on globalThis so devs can toggle from the console:
+// Expose on window so devs can toggle from the console:
 //   window.__learnkitLog.setLevel("debug")
 try {
-  globalThis.__learnkitLog = log;
-  // Backward compatibility for older snippets/docs.
-  globalThis.__sproutLog = log;
+  if (typeof window !== "undefined") {
+    const loggerWindow = window as Window & {
+      __learnkitLog?: typeof log;
+      __sproutLog?: typeof log;
+    };
+    loggerWindow.__learnkitLog = log;
+    // Backward compatibility for older snippets/docs.
+    loggerWindow.__sproutLog = log;
+  }
 } catch {
   // non-browser environment — harmless
 }

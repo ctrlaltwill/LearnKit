@@ -9,6 +9,7 @@
  * @exports
  *   - FutureDueChart — React component rendering a study forecast composed chart with filter controls
  */
+import {  } from "obsidian";
 
 import * as React from "react";
 import { Area, Bar, ComposedChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -306,8 +307,8 @@ export function FutureDueChart(props: {
       if (!target || !wrapRef.current) return;
       if (!wrapRef.current.contains(target)) setOpen(false);
     };
-    document.addEventListener("mousedown", onDocClick, true);
-    return () => document.removeEventListener("mousedown", onDocClick, true);
+    activeDocument.addEventListener("mousedown", onDocClick, true);
+    return () => activeDocument.removeEventListener("mousedown", onDocClick, true);
   }, [open]);
 
   React.useEffect(() => {

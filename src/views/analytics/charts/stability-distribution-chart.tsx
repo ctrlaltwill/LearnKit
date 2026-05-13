@@ -9,6 +9,7 @@
  * @exports
  *   - StabilityDistributionChart — React component rendering a stability distribution area chart with filter controls
  */
+import {  } from "obsidian";
 
 import * as React from "react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -307,8 +308,8 @@ export function StabilityDistributionChart(props: StabilityDistributionChartProp
       if (!target || !wrapRef.current) return;
       if (!wrapRef.current.contains(target)) setOpen(false);
     };
-    document.addEventListener("mousedown", onDocClick, true);
-    return () => document.removeEventListener("mousedown", onDocClick, true);
+    activeDocument.addEventListener("mousedown", onDocClick, true);
+    return () => activeDocument.removeEventListener("mousedown", onDocClick, true);
   }, [open]);
 
   React.useEffect(() => {

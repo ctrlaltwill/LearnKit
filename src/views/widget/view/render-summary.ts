@@ -5,6 +5,7 @@
  * @exports
  *  - renderWidgetSummary — builds and mounts the summary-mode DOM into the widget container
  */
+import {  } from "obsidian";
 
 import { MS_DAY } from "../../../platform/core/constants";
 import { el } from "../../../platform/core/ui";
@@ -156,7 +157,7 @@ export function renderWidgetSummary(view: WidgetViewLike, root: HTMLElement): vo
   });
   applyWidgetActionButtonStyles(studyBtn);
 
-  const studyKbd = document.createElement("kbd");
+  const studyKbd = activeDocument.createElement("kbd");
   studyKbd.className = "kbd sprout-widget-kbd";
   studyKbd.textContent = "↵";
   studyBtn.appendChild(studyKbd);

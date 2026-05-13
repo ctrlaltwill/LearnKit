@@ -70,18 +70,18 @@ function makeIconButton(opts: {
   iconAfterLabel?: boolean;
   onClick: () => void;
 }) {
-  const btn = document.createElement("button");
+  const btn = activeDocument.createElement("button");
   btn.type = "button";
   btn.className = opts.className || "learnkit-btn-toolbar";
   btn.setAttribute("aria-label", opts.title || opts.label);
   btn.setAttribute("data-tooltip-position", "top");
 
-  const iconWrap = document.createElement("span");
+  const iconWrap = activeDocument.createElement("span");
   iconWrap.className = `inline-flex items-center justify-center${opts.iconClassName ? ` ${opts.iconClassName}` : ""}`;
   setIcon(iconWrap, opts.icon);
   queryFirst(iconWrap, "svg")?.classList.add("shrink-0");
 
-  const text = document.createElement("span");
+  const text = activeDocument.createElement("span");
   text.textContent = opts.label;
   text.className = opts.labelClassName ?? "ml-2";
 
@@ -102,7 +102,7 @@ function makeIconButton(opts: {
 }
 
 function makeDisclosureChevron(isOpen: boolean, onToggle: () => void, collapseLabel: string, expandLabel: string) {
-  const btn = document.createElement("button");
+  const btn = activeDocument.createElement("button");
   btn.type = "button";
   btn.className =
     "learnkit-deck-disclosure learnkit-deck-disclosure-btn inline-flex items-center justify-center text-muted-foreground hover:text-foreground focus-visible:text-foreground";
@@ -111,7 +111,7 @@ function makeDisclosureChevron(isOpen: boolean, onToggle: () => void, collapseLa
   btn.setAttribute("aria-expanded", isOpen ? "true" : "false");
   btn.dataset.open = isOpen ? "true" : "false";
 
-  const iconWrap = document.createElement("span");
+  const iconWrap = activeDocument.createElement("span");
   iconWrap.className = "learnkit-deck-expand-icon inline-flex items-center justify-center [&_svg]:size-4";
   const renderIcon = (open: boolean) => {
     iconWrap.replaceChildren();
@@ -149,7 +149,7 @@ export function renderDeckMode(args: Args) {
   const states = plugin.store.data.states || {};
   const vaultName = app?.vault?.getName?.() || "Vault";
 
-  const root = document.createElement("div");
+  const root = activeDocument.createElement("div");
   root.className = "flex flex-col min-h-0 gap-0 learnkit-deck-root";
 
   const titleRoot = container.closest(".lk-review-root, .learnkit-review-root");
@@ -167,7 +167,7 @@ export function renderDeckMode(args: Args) {
     args.setExpanded(new Set(next));
   };
 
-  const topActions = document.createElement("div");
+  const topActions = activeDocument.createElement("div");
   topActions.className = "flex flex-row flex-wrap items-center gap-2 learnkit-deck-title-actions";
 
   const studyAllBtn = makeIconButton({
@@ -184,21 +184,21 @@ export function renderDeckMode(args: Args) {
   // ===== Group combobox (single select) =====
   const gx = getGroupIndex(plugin);
 
-  const groupCombo = document.createElement("div");
+  const groupCombo = activeDocument.createElement("div");
   groupCombo.className = "relative w-full md:w-auto learnkit-deck-group-combo";
 
-  const comboTrigger = document.createElement("button");
+  const comboTrigger = activeDocument.createElement("button");
   comboTrigger.type = "button";
   comboTrigger.className =
     "learnkit-btn-toolbar learnkit-btn-outline-muted h-9 w-full md:w-auto inline-flex items-center gap-2 equal-height-btn learnkit-deck-group-trigger";
   comboTrigger.setAttribute("aria-haspopup", "listbox");
   comboTrigger.setAttribute("aria-expanded", "false");
 
-  const comboIcon = document.createElement("span");
+  const comboIcon = activeDocument.createElement("span");
   comboIcon.className = "learnkit-btn-icon inline-flex items-center justify-center [&_svg]:size-3.5";
   setIcon(comboIcon, "arrow-right");
 
-  const comboLabel = document.createElement("span");
+  const comboLabel = activeDocument.createElement("span");
   comboLabel.textContent = tx("ui.reviewer.deck.studyGroup", "Study by group");
   comboTrigger.appendChild(comboLabel);
   comboTrigger.appendChild(comboIcon);
@@ -239,16 +239,16 @@ export function renderDeckMode(args: Args) {
     width: 320,
     buildContent(panel, close) {
       // ── Search input ──
-      const searchWrap = document.createElement("div");
+      const searchWrap = activeDocument.createElement("div");
       searchWrap.className = "learnkit-ss-search-wrap";
       panel.appendChild(searchWrap);
 
-      const searchIcon = document.createElement("span");
+      const searchIcon = activeDocument.createElement("span");
       searchIcon.className = "learnkit-ss-search-icon";
       setIcon(searchIcon, "search");
       searchWrap.appendChild(searchIcon);
 
-      const searchInput = document.createElement("input");
+      const searchInput = activeDocument.createElement("input");
       searchInput.type = "text";
       searchInput.className = "learnkit-ss-search-input";
       searchInput.placeholder = tx("ui.reviewer.deck.searchGroups", "Search groups") + "\u2026";
@@ -258,14 +258,14 @@ export function renderDeckMode(args: Args) {
       searchWrap.appendChild(searchInput);
 
       // ── Options list (hidden until search text is entered) ──
-      const listbox = document.createElement("div");
+      const listbox = activeDocument.createElement("div");
       listbox.setAttribute("role", "listbox");
       listbox.className = "learnkit-ss-listbox";
       setCssProps(listbox, "display", "none");
       panel.appendChild(listbox);
 
       // ── Empty state ──
-      const emptyMsg = document.createElement("div");
+      const emptyMsg = activeDocument.createElement("div");
       emptyMsg.className = "learnkit-ss-empty";
       emptyMsg.textContent = tx("ui.reviewer.deck.noGroupsFound", "No groups found.");
       setCssProps(emptyMsg, "display", "none");
@@ -294,15 +294,15 @@ export function renderDeckMode(args: Args) {
         setCssProps(listbox, "display", "");
 
         // "Study all" option
-        const studyAllItem = document.createElement("div");
+        const studyAllItem = activeDocument.createElement("div");
         studyAllItem.setAttribute("role", "option");
         studyAllItem.setAttribute("aria-selected", "false");
         studyAllItem.tabIndex = 0;
         studyAllItem.className = "learnkit-ss-item";
 
-        const studyAllText = document.createElement("div");
+        const studyAllText = activeDocument.createElement("div");
         studyAllText.className = "learnkit-ss-item-text";
-        const studyAllLabel = document.createElement("span");
+        const studyAllLabel = activeDocument.createElement("span");
         studyAllLabel.className = "learnkit-ss-item-label";
         studyAllLabel.textContent = tx("ui.reviewer.deck.studyAll", "Study all");
         studyAllText.appendChild(studyAllLabel);
@@ -320,15 +320,15 @@ export function renderDeckMode(args: Args) {
         // Group options
         const limitedOptions = options.slice(0, 5);
         for (const tag of limitedOptions) {
-          const item = document.createElement("div");
+          const item = activeDocument.createElement("div");
           item.setAttribute("role", "option");
           item.setAttribute("aria-selected", "false");
           item.tabIndex = 0;
           item.className = "learnkit-ss-item";
 
-          const textWrap = document.createElement("div");
+          const textWrap = activeDocument.createElement("div");
           textWrap.className = "learnkit-ss-item-text";
-          const label = document.createElement("span");
+          const label = activeDocument.createElement("span");
           label.className = "learnkit-ss-item-label";
           label.textContent = prettifyGroupLabel(tag);
           textWrap.appendChild(label);
@@ -350,7 +350,7 @@ export function renderDeckMode(args: Args) {
         renderList();
         const value = searchInput.value;
         window.requestAnimationFrame(() => {
-          if (document.activeElement !== searchInput) searchInput.focus();
+          if (activeDocument.activeElement !== searchInput) searchInput.focus();
           try {
             searchInput.setSelectionRange(value.length, value.length);
           } catch (e) { log.swallow("render-deck searchInput setSelectionRange", e); }
@@ -397,7 +397,7 @@ export function renderDeckMode(args: Args) {
   }
 
   // ===== Body (table) =====
-  const bodyWrap = document.createElement("div");
+  const bodyWrap = activeDocument.createElement("div");
   bodyWrap.className = "learnkit-deck-body flex-1 min-h-0 overflow-hidden p-0";
   applyAos(bodyWrap, 0);
   root.appendChild(bodyWrap);
@@ -412,23 +412,23 @@ export function renderDeckMode(args: Args) {
     return;
   }
 
-  const tableOuter = document.createElement("div");
+  const tableOuter = activeDocument.createElement("div");
   tableOuter.className = "learnkit-deck-table-wrap learnkit-deck-table-outer w-full overflow-auto rounded-lg border";
   bodyWrap.appendChild(tableOuter);
 
-  const table = document.createElement("table");
+  const table = activeDocument.createElement("table");
   table.className = "learnkit-deck-table table w-full";
   tableOuter.appendChild(table);
 
-  const colgroup = document.createElement("colgroup");
+  const colgroup = activeDocument.createElement("colgroup");
   colgroup.className = "";
 
-  const colDeck = document.createElement("col");
+  const colDeck = activeDocument.createElement("col");
   colDeck.className = "";
   colgroup.appendChild(colDeck);
 
   const makeNumCol = () => {
-    const c = document.createElement("col");
+    const c = activeDocument.createElement("col");
     c.className = "w-20";
     return c;
   };
@@ -439,10 +439,10 @@ export function renderDeckMode(args: Args) {
 
   table.appendChild(colgroup);
 
-  const thead = document.createElement("thead");
+  const thead = activeDocument.createElement("thead");
   thead.className = "";
 
-  const headRow = document.createElement("tr");
+  const headRow = activeDocument.createElement("tr");
   headRow.className = "";
 
   const headers: Array<{ label: string; align?: "left" | "center"; tooltip?: string; key?: string }> = [
@@ -475,19 +475,19 @@ export function renderDeckMode(args: Args) {
   ];
 
   for (const h of headers) {
-    const th = document.createElement("th");
+    const th = activeDocument.createElement("th");
     th.className = `${h.align === "center" ? "text-center" : "text-left"} text-muted-foreground`;
 
     if (h.key === "deck") {
-      const flex = document.createElement("div");
+      const flex = activeDocument.createElement("div");
       flex.className = "flex items-center gap-2 min-w-0";
 
-      const spacer = document.createElement("span");
+      const spacer = activeDocument.createElement("span");
       spacer.className = "learnkit-deck-spacer";
       setCssProps(spacer, "--learnkit-deck-spacer-size", "28px");
       flex.appendChild(spacer);
 
-      const label = document.createElement("span");
+      const label = activeDocument.createElement("span");
       label.textContent = h.label;
       label.className = "truncate learnkit-deck-header-label";
       if (h.tooltip) {
@@ -498,7 +498,7 @@ export function renderDeckMode(args: Args) {
 
       th.appendChild(flex);
     } else {
-      const label = document.createElement("span");
+      const label = activeDocument.createElement("span");
       label.textContent = h.label;
       label.className = "learnkit-deck-header-label";
       if (h.tooltip) {
@@ -514,7 +514,7 @@ export function renderDeckMode(args: Args) {
   thead.appendChild(headRow);
   table.appendChild(thead);
 
-  const tbody = document.createElement("tbody");
+  const tbody = activeDocument.createElement("tbody");
   tbody.className = "";
   table.appendChild(tbody);
 
@@ -525,13 +525,13 @@ export function renderDeckMode(args: Args) {
       const children = Array.from(node.children.values()).sort((a, b) => a.name.localeCompare(b.name));
 
       for (const child of children) {
-        const tr = document.createElement("tr");
+        const tr = activeDocument.createElement("tr");
         tr.className = "deck-row learnkit-deck-row";
 
-        const tdName = document.createElement("td");
+        const tdName = activeDocument.createElement("td");
         tdName.className = "";
 
-        const nameRow = document.createElement("div");
+        const nameRow = activeDocument.createElement("div");
         nameRow.className = "flex items-center gap-2 min-w-0 learnkit-deck-name-row";
         setCssProps(nameRow, "--learnkit-deck-indent", `${depth * 14}px`);
 
@@ -557,14 +557,14 @@ export function renderDeckMode(args: Args) {
           nameRow.appendChild(toggle);
           disclosureChevron = toggle;
         } else {
-          const spacer = document.createElement("span");
+          const spacer = activeDocument.createElement("span");
           spacer.className = "learnkit-deck-spacer";
           const toggleWidth = 28;
           setCssProps(spacer, "--learnkit-deck-spacer-size", `${toggleWidth}px`);
           nameRow.appendChild(spacer);
         }
 
-        const nameText = document.createElement("div");
+        const nameText = activeDocument.createElement("div");
         nameText.className = "truncate";
         nameText.textContent = child.name;
         nameRow.appendChild(nameText);
@@ -573,7 +573,7 @@ export function renderDeckMode(args: Args) {
         tr.appendChild(tdName);
 
         const makeNumCell = (value: number) => {
-          const td = document.createElement("td");
+          const td = activeDocument.createElement("td");
           td.className = "text-center";
           td.textContent = String(value);
           return td;

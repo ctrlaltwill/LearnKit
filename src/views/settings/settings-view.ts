@@ -200,19 +200,19 @@ export class LearnKitSettingsView extends ItemView {
     ];
 
     for (const tab of tabs) {
-      const btn = document.createElement("button");
+      const btn = activeDocument.createElement("button");
       btn.type = "button";
       btn.className = "learnkit-btn-toolbar learnkit-settings-title-tab-btn learnkit-btn-outline-muted inline-flex items-center gap-2";
       btn.setAttribute("aria-label", tab.label);
       btn.setAttribute("aria-pressed", tab.id === this._activeTab ? "true" : "false");
       btn.setAttribute("data-tooltip-position", "bottom");
 
-      const iconWrap = document.createElement("span");
+      const iconWrap = activeDocument.createElement("span");
       iconWrap.className = "learnkit-settings-title-tab-btn-icon inline-flex items-center justify-center";
       setIcon(iconWrap, tab.icon);
       btn.appendChild(iconWrap);
 
-      const label = document.createElement("span");
+      const label = activeDocument.createElement("span");
       label.className = "learnkit-settings-title-tab-btn-label";
       label.textContent = tab.label;
       btn.appendChild(label);
@@ -314,7 +314,7 @@ export class LearnKitSettingsView extends ItemView {
       el.classList.remove("aos-init", "aos-animate", "learnkit-aos-fallback", "learnkit-aos-fallback");
     }
 
-    requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
       for (const { el, delay } of stages) {
         if (!el.isConnected) continue;
         el.style.setProperty("--learnkit-settings-enter-delay", `${Math.max(0, delay)}ms`);
@@ -360,17 +360,17 @@ export class LearnKitSettingsView extends ItemView {
     this._header.install("settings");
     this._applyWidthMode();
 
-    const contentShell = document.createElement("div");
+    const contentShell = activeDocument.createElement("div");
     contentShell.className = `${SPROUT_HOME_CONTENT_SHELL_CLASS} learnkit-settings-content-shell`;
     root.appendChild(contentShell);
     this._contentShellEl = contentShell;
     this._pageTitleEl = null;
 
     // ── Tab content ──
-    const tabContentWrapper = document.createElement("div");
+    const tabContentWrapper = activeDocument.createElement("div");
     tabContentWrapper.className = "learnkit-settings-tab-content-wrapper";
 
-    const tabContent = document.createElement("div");
+    const tabContent = activeDocument.createElement("div");
     tabContent.className = "learnkit-settings-tab-content";
     tabContentWrapper.appendChild(tabContent);
     contentShell.appendChild(tabContentWrapper);
@@ -423,7 +423,7 @@ export class LearnKitSettingsView extends ItemView {
 
     if (tab === "about") {
       this._renderReleaseNotesTab(container);
-      requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
         container.scrollTop = prevScroll;
         this._clearInnerAOS(container);
       });
@@ -432,7 +432,7 @@ export class LearnKitSettingsView extends ItemView {
 
     if (tab === "guide") {
       this._renderGuideTab(container);
-      requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
         container.scrollTop = prevScroll;
         this._clearInnerAOS(container);
       });
@@ -443,7 +443,7 @@ export class LearnKitSettingsView extends ItemView {
 
     const paneTitle = paneTitleMap[tab];
     if (paneTitle) {
-      const heading = document.createElement("h1");
+      const heading = activeDocument.createElement("h1");
       heading.className = "learnkit-settings-pane-title";
       heading.textContent = paneTitle;
       container.appendChild(heading);
@@ -498,38 +498,38 @@ export class LearnKitSettingsView extends ItemView {
       let selectedSettingsSubTab: { id: string; label: string; paneTitle: string } | null = null;
 
       if (tab === "settings") {
-        const settingsLayout = document.createElement("div");
+        const settingsLayout = activeDocument.createElement("div");
         settingsLayout.className = "learnkit-settings-layout";
         container.appendChild(settingsLayout);
 
-        const settingsHeader = document.createElement("div");
+        const settingsHeader = activeDocument.createElement("div");
         settingsHeader.className = "learnkit-settings-layout-header";
         settingsLayout.appendChild(settingsHeader);
 
-        const subNav = document.createElement("nav");
+        const subNav = activeDocument.createElement("nav");
         subNav.className = "learnkit-settings-subtab-nav";
         settingsHeader.appendChild(subNav);
 
-        const settingsContentFrame = document.createElement("div");
+        const settingsContentFrame = activeDocument.createElement("div");
         settingsContentFrame.className = "learnkit-settings-layout-content-frame learnkit-guide-content";
         settingsLayout.appendChild(settingsContentFrame);
 
-        const settingsInner = document.createElement("div");
+        const settingsInner = activeDocument.createElement("div");
         settingsInner.className = "learnkit-guide-content-inner learnkit-guide-content-inner--snap";
         settingsContentFrame.appendChild(settingsInner);
-        const settingsBody = document.createElement("div");
+        const settingsBody = activeDocument.createElement("div");
         settingsBody.className = "learnkit-guide-body markdown-rendered learnkit-settings-layout-content";
         settingsInner.appendChild(settingsBody);
 
-        const settingsFooter = document.createElement("div");
+        const settingsFooter = activeDocument.createElement("div");
         settingsFooter.className = "learnkit-guide-footer";
         settingsLayout.appendChild(settingsFooter);
 
         settingsSubTabs.forEach((sub) => {
-          const group = document.createElement("div");
+          const group = activeDocument.createElement("div");
           group.className = "learnkit-guide-nav-group";
 
-          const btn = document.createElement("button");
+          const btn = activeDocument.createElement("button");
           btn.className = "inline-flex items-center gap-2 h-9 px-3 text-sm learnkit-settings-subtab-btn learnkit-settings-action-btn";
           btn.type = "button";
           const tooltipMap: Record<string, string> = {
@@ -545,7 +545,7 @@ export class LearnKitSettingsView extends ItemView {
           };
           btn.setAttribute("aria-label", tooltipMap[sub.id] ?? tx("ui.settings.subTabs.tooltip.openOptions", "Open options"));
           btn.setAttribute("data-tooltip-position", "bottom");
-          const label = document.createElement("span");
+          const label = activeDocument.createElement("span");
           label.textContent = sub.label;
           btn.appendChild(label);
           const isActive = this._activeSettingsSubTab === sub.id;
@@ -560,7 +560,7 @@ export class LearnKitSettingsView extends ItemView {
         });
 
         // Scroll the active subtab button into view so off-screen tabs are visible
-        requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
           const activeBtn = subNav.querySelector<HTMLElement>(".is-active");
           activeBtn?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
         });
@@ -569,7 +569,7 @@ export class LearnKitSettingsView extends ItemView {
           setCssProps(settingsLayout, "--learnkit-guide-topbar-clearance", "55px");
         };
 
-        requestAnimationFrame(() => updateSettingsHeaderClearance());
+        window.requestAnimationFrame(() => updateSettingsHeaderClearance());
         this._trackWindowListener("resize", updateSettingsHeaderClearance, { passive: true });
         if (typeof ResizeObserver !== "undefined") {
           const ro = new ResizeObserver(() => updateSettingsHeaderClearance());
@@ -592,18 +592,18 @@ export class LearnKitSettingsView extends ItemView {
         const nextSubTab = selectedIdx >= 0 && selectedIdx < settingsSubTabs.length - 1 ? settingsSubTabs[selectedIdx + 1] : null;
 
         if (prevSubTab || nextSubTab) {
-          const navBar = document.createElement("div");
+          const navBar = activeDocument.createElement("div");
           navBar.className = "learnkit-guide-prev-next";
           settingsFooter.appendChild(navBar);
 
           if (prevSubTab) {
-            const prevBtn = document.createElement("div");
+            const prevBtn = activeDocument.createElement("div");
             prevBtn.className = "learnkit-guide-prev-next-btn learnkit-guide-prev-btn";
-            const label = document.createElement("div");
+            const label = activeDocument.createElement("div");
             label.className = "learnkit-guide-prev-next-label";
             label.textContent = tx("ui.settings.nav.previous", "Previous");
             prevBtn.appendChild(label);
-            const link = document.createElement("a");
+            const link = activeDocument.createElement("a");
             link.className = "learnkit-guide-prev-next-link";
             link.textContent = "← " + t(
               this.plugin.settings?.general?.interfaceLanguage,
@@ -619,19 +619,19 @@ export class LearnKitSettingsView extends ItemView {
             prevBtn.appendChild(link);
             navBar.appendChild(prevBtn);
           } else {
-            const spacer = document.createElement("div");
+            const spacer = activeDocument.createElement("div");
             spacer.className = "learnkit-guide-prev-next-spacer";
             navBar.appendChild(spacer);
           }
 
           if (nextSubTab) {
-            const nextBtn = document.createElement("div");
+            const nextBtn = activeDocument.createElement("div");
             nextBtn.className = "learnkit-guide-prev-next-btn learnkit-guide-next-btn";
-            const label = document.createElement("div");
+            const label = activeDocument.createElement("div");
             label.className = "learnkit-guide-prev-next-label";
             label.textContent = tx("ui.settings.nav.next", "Next");
             nextBtn.appendChild(label);
-            const link = document.createElement("a");
+            const link = activeDocument.createElement("a");
             link.className = "learnkit-guide-prev-next-link";
             link.textContent = t(
               this.plugin.settings?.general?.interfaceLanguage,
@@ -647,7 +647,7 @@ export class LearnKitSettingsView extends ItemView {
             nextBtn.appendChild(link);
             navBar.appendChild(nextBtn);
           } else {
-            const spacer = document.createElement("div");
+            const spacer = activeDocument.createElement("div");
             spacer.className = "learnkit-guide-prev-next-spacer";
             navBar.appendChild(spacer);
           }
@@ -678,7 +678,7 @@ export class LearnKitSettingsView extends ItemView {
         }
       } else {
         // Fallback: show a message
-        const msg = document.createElement("div");
+        const msg = activeDocument.createElement("div");
         msg.className = "learnkit-settings-text-muted";
         msg.textContent = t(
           this.plugin.settings?.general?.interfaceLanguage,
@@ -692,14 +692,14 @@ export class LearnKitSettingsView extends ItemView {
 
     } catch (e) {
       log.error("Failed to render settings tab", e);
-      const msg = document.createElement("div");
+      const msg = activeDocument.createElement("div");
       msg.className = "learnkit-settings-text-muted";
       msg.textContent = tx("ui.settings.error.renderFailed", "Failed to render settings. See console for details.");
       container.appendChild(msg);
     }
 
     // Restore scroll position (or reset to top for fresh tab switch)
-    requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
       const nextInnerScroller = container.querySelector<HTMLElement>(".learnkit-guide-content-inner--snap");
       if (nextInnerScroller) {
         // Temporarily disable smooth scrolling so the position restores instantly
@@ -709,7 +709,7 @@ export class LearnKitSettingsView extends ItemView {
       container.scrollTop = prevScroll;
       this._clearInnerAOS(container);
       // Re-apply after a frame so future user scrolls are smooth again
-      requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
         if (nextInnerScroller) setCssProps(nextInnerScroller, "scroll-behavior", null);
       });
     });
@@ -832,16 +832,16 @@ export class LearnKitSettingsView extends ItemView {
   }
 
   private _renderGuideTab(container: HTMLElement) {
-    const layout = document.createElement("div");
+    const layout = activeDocument.createElement("div");
     layout.className = "learnkit-guide-layout";
     layout.classList.add("is-loading");
     container.appendChild(layout);
 
-    const content = document.createElement("div");
+    const content = activeDocument.createElement("div");
     content.className = "learnkit-guide-content";
     layout.appendChild(content);
 
-    let inner = document.createElement("div");
+    let inner = activeDocument.createElement("div");
     inner.className = "learnkit-guide-content-inner learnkit-guide-content-inner--snap";
     content.appendChild(inner);
 
@@ -861,11 +861,11 @@ export class LearnKitSettingsView extends ItemView {
           this._activeGuidePage = pages[0].key;
         }
 
-        const nav = document.createElement("nav");
+        const nav = activeDocument.createElement("nav");
         nav.className = "learnkit-guide-nav";
         layout.insertBefore(nav, content);
 
-        const footer = document.createElement("div");
+        const footer = activeDocument.createElement("div");
         footer.className = "learnkit-guide-footer";
         layout.appendChild(footer);
         const pageByKey = new Map(pages.map((page) => [page.key, page]));
@@ -875,9 +875,9 @@ export class LearnKitSettingsView extends ItemView {
         let openDropdownGroup: HTMLDivElement | null = null;
         let openDropdownEl: HTMLDivElement | null = null;
 
-        const dropdownPortal = document.createElement("div");
+        const dropdownPortal = activeDocument.createElement("div");
         dropdownPortal.className = "learnkit";
-        document.body.appendChild(dropdownPortal);
+        activeDocument.body.appendChild(dropdownPortal);
         this._guideDropdownPortal = dropdownPortal;
 
         for (const category of categories) {
@@ -887,24 +887,24 @@ export class LearnKitSettingsView extends ItemView {
             .filter((p): p is GuidePage => !!p);
           if (!categoryPages.length) continue;
 
-        const group = document.createElement("div");
+        const group = activeDocument.createElement("div");
         group.className = "learnkit-guide-nav-group";
         const tx = (token: string, fallback: string, vars?: Record<string, string | number>) =>
           t(this.plugin.settings?.general?.interfaceLanguage, token, fallback, vars);
 
-        const btn = document.createElement("button");
+        const btn = activeDocument.createElement("button");
         btn.className = "inline-flex items-center gap-2 h-9 px-3 text-sm learnkit-guide-nav-btn learnkit-settings-action-btn";
         const isCategoryActive = categoryPages.some((p) => p.key === this._activeGuidePage);
         btn.classList.toggle("is-active", isCategoryActive);
         navCategoryBtns.push({ btn, pageKeys: new Set(categoryPages.map((p) => p.key)) });
 
-        const categoryIcon = document.createElement("span");
+        const categoryIcon = activeDocument.createElement("span");
         categoryIcon.className =
           "learnkit-guide-nav-icon inline-flex items-center justify-center [&_svg]:size-4 text-muted-foreground";
         setIcon(categoryIcon, category.icon);
         btn.appendChild(categoryIcon);
 
-        const span = document.createElement("span");
+        const span = activeDocument.createElement("span");
         span.textContent = category.label;
         btn.appendChild(span);
 
@@ -923,14 +923,14 @@ export class LearnKitSettingsView extends ItemView {
           btn.setAttribute("aria-haspopup", "menu");
           btn.setAttribute("aria-expanded", "false");
 
-          const chevron = document.createElement("span");
+          const chevron = activeDocument.createElement("span");
           chevron.className = "learnkit-guide-nav-chevron";
           setIcon(chevron, "chevron-down");
           btn.appendChild(chevron);
 
-          const dropdown = document.createElement("div");
+          const dropdown = activeDocument.createElement("div");
           dropdown.className = "learnkit-guide-dropdown";
-          const menu = document.createElement("div");
+          const menu = activeDocument.createElement("div");
           menu.className =
             "learnkit-guide-dropdown-menu min-w-56 rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 learnkit-pointer-auto learnkit-header-menu-panel flex flex-col";
           menu.setAttribute("role", "menu");
@@ -942,20 +942,20 @@ export class LearnKitSettingsView extends ItemView {
             if (!sectionPages.length) continue;
 
             if (!firstSection) {
-              const divider = document.createElement("div");
+              const divider = activeDocument.createElement("div");
               divider.className = "learnkit-guide-dropdown-divider my-1 h-px bg-border";
               menu.appendChild(divider);
             }
 
             if (section.title) {
-              const labelEl = document.createElement("div");
+              const labelEl = activeDocument.createElement("div");
               labelEl.className = "learnkit-guide-dropdown-label px-2 py-1.5 text-sm text-muted-foreground";
               labelEl.textContent = section.title;
               menu.appendChild(labelEl);
             }
 
             for (const page of sectionPages) {
-              const item = document.createElement("button");
+              const item = activeDocument.createElement("button");
               item.type = "button";
               item.className =
                 "learnkit-guide-dropdown-item group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer select-none outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground";
@@ -968,13 +968,13 @@ export class LearnKitSettingsView extends ItemView {
               );
               item.setAttribute("data-tooltip-position", "bottom");
 
-              const iconWrap = document.createElement("span");
+              const iconWrap = activeDocument.createElement("span");
               iconWrap.className =
                 "learnkit-guide-dropdown-icon inline-flex items-center justify-center [&_svg]:size-4 text-muted-foreground group-hover:text-inherit group-focus:text-inherit";
               setIcon(iconWrap, this._getGuidePageIcon(page.key));
               item.appendChild(iconWrap);
 
-              const label = document.createElement("span");
+              const label = activeDocument.createElement("span");
               label.textContent = this._getGuidePageDisplayLabel(page.key);
               item.appendChild(label);
               navPageItems.push({ item, pageKey: page.key });
@@ -1073,13 +1073,13 @@ export class LearnKitSettingsView extends ItemView {
           this._clearWindowListeners();
           setActiveGuideNav();
 
-          const nextInner = document.createElement("div");
+          const nextInner = activeDocument.createElement("div");
           nextInner.className = "learnkit-guide-content-inner learnkit-guide-content-inner--snap";
           if (showInlineLoading) nextInner.classList.add("is-loading-inline");
           inner.replaceWith(nextInner);
           inner = nextInner;
 
-          const body = document.createElement("div");
+          const body = activeDocument.createElement("div");
           body.className = "learnkit-guide-body markdown-rendered";
           inner.appendChild(body);
 
@@ -1087,7 +1087,7 @@ export class LearnKitSettingsView extends ItemView {
           const guidePageClass = `sprout-guide-page-${selected.key.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
           body.classList.add(guidePageClass);
 
-          const pageTitle = document.createElement("h1");
+          const pageTitle = activeDocument.createElement("h1");
           pageTitle.className = "learnkit-guide-page-title";
           pageTitle.textContent = selected.label;
           body.appendChild(pageTitle);
@@ -1119,18 +1119,18 @@ export class LearnKitSettingsView extends ItemView {
 
           if (prevPage || nextPage) {
             const common = txCommon(this.plugin.settings?.general?.interfaceLanguage);
-            const navBar = document.createElement("div");
+            const navBar = activeDocument.createElement("div");
             navBar.className = "learnkit-guide-prev-next";
             footer.appendChild(navBar);
 
             if (prevPage) {
-              const prevBtn = document.createElement("div");
+              const prevBtn = activeDocument.createElement("div");
               prevBtn.className = "learnkit-guide-prev-next-btn learnkit-guide-prev-btn";
-              const label = document.createElement("div");
+              const label = activeDocument.createElement("div");
               label.className = "learnkit-guide-prev-next-label";
               label.textContent = common.previous;
               prevBtn.appendChild(label);
-              const link = document.createElement("a");
+              const link = activeDocument.createElement("a");
               link.className = "learnkit-guide-prev-next-link";
               link.textContent = "← " + t(
                 this.plugin.settings?.general?.interfaceLanguage,
@@ -1146,19 +1146,19 @@ export class LearnKitSettingsView extends ItemView {
               prevBtn.appendChild(link);
               navBar.appendChild(prevBtn);
             } else {
-              const spacer = document.createElement("div");
+              const spacer = activeDocument.createElement("div");
               spacer.className = "learnkit-guide-prev-next-spacer";
               navBar.appendChild(spacer);
             }
 
             if (nextPage) {
-              const nextBtn = document.createElement("div");
+              const nextBtn = activeDocument.createElement("div");
               nextBtn.className = "learnkit-guide-prev-next-btn learnkit-guide-next-btn";
-              const label = document.createElement("div");
+              const label = activeDocument.createElement("div");
               label.className = "learnkit-guide-prev-next-label";
               label.textContent = common.next;
               nextBtn.appendChild(label);
-              const link = document.createElement("a");
+              const link = activeDocument.createElement("a");
               link.className = "learnkit-guide-prev-next-link";
               link.textContent = t(
                 this.plugin.settings?.general?.interfaceLanguage,
@@ -1174,7 +1174,7 @@ export class LearnKitSettingsView extends ItemView {
               nextBtn.appendChild(link);
               navBar.appendChild(nextBtn);
             } else {
-              const spacer = document.createElement("div");
+              const spacer = activeDocument.createElement("div");
               spacer.className = "learnkit-guide-prev-next-spacer";
               navBar.appendChild(spacer);
             }
@@ -1228,29 +1228,29 @@ export class LearnKitSettingsView extends ItemView {
   }
 
   private _renderReleaseNotesTab(container: HTMLElement) {
-    const layout = document.createElement("div");
+    const layout = activeDocument.createElement("div");
     layout.className = "learnkit-guide-layout learnkit-release-layout";
     layout.classList.add("is-loading");
     container.appendChild(layout);
 
-    const navFrame = document.createElement("div");
+    const navFrame = activeDocument.createElement("div");
     navFrame.className = "learnkit-release-nav-frame is-at-start";
     navFrame.hidden = true;
     layout.appendChild(navFrame);
 
-    const nav = document.createElement("nav");
+    const nav = activeDocument.createElement("nav");
     nav.className = "learnkit-release-nav";
     navFrame.appendChild(nav);
 
-    const content = document.createElement("div");
+    const content = activeDocument.createElement("div");
     content.className = "learnkit-guide-content";
     layout.appendChild(content);
 
-    const contentInner = document.createElement("div");
+    const contentInner = activeDocument.createElement("div");
     contentInner.className = "learnkit-guide-content-inner learnkit-guide-content-inner--snap";
     content.appendChild(contentInner);
 
-    const footer = document.createElement("div");
+    const footer = activeDocument.createElement("div");
     footer.className = "learnkit-guide-footer";
     footer.hidden = true;
     layout.appendChild(footer);
@@ -1299,15 +1299,15 @@ export class LearnKitSettingsView extends ItemView {
   private _renderReleaseNotesNav(nav: HTMLElement, pages: ReleaseNotesPage[]) {
     nav.empty();
     for (const page of pages) {
-      const group = document.createElement("div");
+      const group = activeDocument.createElement("div");
       group.className = "learnkit-guide-nav-group";
 
-      const btn = document.createElement("button");
+      const btn = activeDocument.createElement("button");
       const isActive = page.key === this._activeReleasePage;
       btn.className = "inline-flex items-center gap-2 h-9 px-3 text-sm learnkit-settings-subtab-btn learnkit-settings-action-btn learnkit-release-nav-btn";
       btn.classList.toggle("is-active", isActive);
       btn.type = "button";
-      const label = document.createElement("span");
+      const label = activeDocument.createElement("span");
       label.textContent = page.label;
       btn.appendChild(label);
       const tx = (token: string, fallback: string, vars?: Record<string, string | number>) =>
@@ -1335,12 +1335,12 @@ export class LearnKitSettingsView extends ItemView {
     contentInner.empty();
     footer.empty();
 
-    const body = document.createElement("div");
+    const body = activeDocument.createElement("div");
     body.className = "learnkit-guide-body markdown-rendered";
     contentInner.appendChild(body);
 
     if (active.version) {
-      const h1 = document.createElement("h1");
+      const h1 = activeDocument.createElement("h1");
       h1.textContent = t(
         this.plugin.settings?.general?.interfaceLanguage,
         "ui.settings.releaseNotes.titleVersion",
@@ -1349,12 +1349,12 @@ export class LearnKitSettingsView extends ItemView {
       );
       body.appendChild(h1);
 
-      const badge = document.createElement("span");
+      const badge = activeDocument.createElement("span");
       badge.className = "learnkit-guide-updated-badge";
-      const iconSpan = document.createElement("span");
+      const iconSpan = activeDocument.createElement("span");
       iconSpan.className = "learnkit-guide-updated-badge-icon";
       setIcon(iconSpan, "calendar");
-      const textSpan = document.createElement("span");
+      const textSpan = activeDocument.createElement("span");
       textSpan.textContent = t(
         this.plugin.settings?.general?.interfaceLanguage,
         "ui.settings.releaseNotes.dateReleased",
@@ -1382,18 +1382,18 @@ export class LearnKitSettingsView extends ItemView {
 
     if (prevPage || nextPage) {
       const common = txCommon(this.plugin.settings?.general?.interfaceLanguage);
-      const navBar = document.createElement("div");
+      const navBar = activeDocument.createElement("div");
       navBar.className = "learnkit-guide-prev-next";
       footer.appendChild(navBar);
 
       if (prevPage) {
-        const prevBtn = document.createElement("div");
+        const prevBtn = activeDocument.createElement("div");
         prevBtn.className = "learnkit-guide-prev-next-btn learnkit-guide-prev-btn";
-        const label = document.createElement("div");
+        const label = activeDocument.createElement("div");
         label.className = "learnkit-guide-prev-next-label";
         label.textContent = common.previous;
         prevBtn.appendChild(label);
-        const link = document.createElement("a");
+        const link = activeDocument.createElement("a");
         link.className = "learnkit-guide-prev-next-link";
         link.textContent = "← " + t(
           this.plugin.settings?.general?.interfaceLanguage,
@@ -1409,19 +1409,19 @@ export class LearnKitSettingsView extends ItemView {
         prevBtn.appendChild(link);
         navBar.appendChild(prevBtn);
       } else {
-        const spacer = document.createElement("div");
+        const spacer = activeDocument.createElement("div");
         spacer.className = "learnkit-guide-prev-next-spacer";
         navBar.appendChild(spacer);
       }
 
       if (nextPage) {
-        const nextBtn = document.createElement("div");
+        const nextBtn = activeDocument.createElement("div");
         nextBtn.className = "learnkit-guide-prev-next-btn learnkit-guide-next-btn";
-        const label = document.createElement("div");
+        const label = activeDocument.createElement("div");
         label.className = "learnkit-guide-prev-next-label";
         label.textContent = common.next;
         nextBtn.appendChild(label);
-        const link = document.createElement("a");
+        const link = activeDocument.createElement("a");
         link.className = "learnkit-guide-prev-next-link";
         link.textContent = t(
           this.plugin.settings?.general?.interfaceLanguage,
@@ -1437,7 +1437,7 @@ export class LearnKitSettingsView extends ItemView {
         nextBtn.appendChild(link);
         navBar.appendChild(nextBtn);
       } else {
-        const spacer = document.createElement("div");
+        const spacer = activeDocument.createElement("div");
         spacer.className = "learnkit-guide-prev-next-spacer";
         navBar.appendChild(spacer);
       }
@@ -1478,7 +1478,7 @@ export class LearnKitSettingsView extends ItemView {
     tagName: "a" | "button" = "a",
     styleVariant: "muted" | "active" | "accent" = "muted",
   ): HTMLAnchorElement | HTMLButtonElement {
-    const btn = document.createElement(tagName);
+    const btn = activeDocument.createElement(tagName);
     const variantClass = styleVariant === "active"
       ? "is-active"
       : styleVariant === "accent"
@@ -1489,11 +1489,11 @@ export class LearnKitSettingsView extends ItemView {
     btn.setAttribute("data-tooltip-position", "top");
     btn.setAttribute("aria-pressed", styleVariant === "active" ? "true" : "false");
 
-    const icon = document.createElement("span");
+    const icon = activeDocument.createElement("span");
     icon.className = `bc learnkit-settings-title-tab-btn-icon inline-flex items-center justify-center [&_svg]:size-4 learnkit-about-btn-icon ${iconCls}`;
     setIcon(icon, iconName);
 
-    const label = document.createElement("span");
+    const label = activeDocument.createElement("span");
     label.className = "learnkit-about-btn-label learnkit-settings-title-tab-btn-label";
     label.textContent = labelText;
 
@@ -1573,7 +1573,7 @@ export class LearnKitSettingsView extends ItemView {
 
     const storyCodeBlock = body.querySelector<HTMLElement>("pre > code");
     if (storyCodeBlock?.textContent?.includes("Sprout was built by William Guy")) {
-      const paragraph = document.createElement("p");
+      const paragraph = activeDocument.createElement("p");
       paragraph.textContent = storyCodeBlock.textContent.trim();
       const pre = storyCodeBlock.closest("pre");
       if (pre) pre.replaceWith(paragraph);
@@ -1586,14 +1586,14 @@ export class LearnKitSettingsView extends ItemView {
     if (linkedinLink) {
       const storyUl = linkedinLink.closest("ul");
       if (storyUl) {
-        const storyCard = document.createElement("div");
+        const storyCard = activeDocument.createElement("div");
         storyCard.className = "learnkit-about-story-card";
 
-        const avatar = document.createElement("div");
+        const avatar = activeDocument.createElement("div");
         avatar.className = "learnkit-about-avatar";
         const avatarSrc = this._getAboutAvatarSrc();
         if (avatarSrc) {
-          const image = document.createElement("img");
+          const image = activeDocument.createElement("img");
           image.className = "learnkit-about-avatar-img";
           image.alt = "William Guy";
           image.src = avatarSrc;
@@ -1610,28 +1610,28 @@ export class LearnKitSettingsView extends ItemView {
           avatar.textContent = tx("ui.settings.about.avatarInitials", "WG");
         }
 
-        const info = document.createElement("div");
+        const info = activeDocument.createElement("div");
         info.className = "learnkit-about-info";
 
-        const founderName = document.createElement("div");
+        const founderName = activeDocument.createElement("div");
         founderName.className = "learnkit-about-name";
         founderName.textContent = tx("ui.settings.about.founderName", "William Guy");
 
-        const founderRole = document.createElement("div");
+        const founderRole = activeDocument.createElement("div");
         founderRole.className = "learnkit-about-role";
         founderRole.textContent = tx("ui.settings.about.founderRole", "Founder of LearnKit.");
 
-        const linksRow = document.createElement("div");
+        const linksRow = activeDocument.createElement("div");
         linksRow.className = "learnkit-about-links-row";
 
-        const githubAnchor = document.createElement("a");
+        const githubAnchor = activeDocument.createElement("a");
         githubAnchor.className = "learnkit-about-linkedin";
         githubAnchor.href = "https://github.com/ctrlaltwill";
         githubAnchor.target = "_blank";
         githubAnchor.rel = "noopener nofollow";
         githubAnchor.textContent = tx("ui.settings.about.link.githubProfile", "Github \u2192");
 
-        const linkedinAnchor = document.createElement("a");
+        const linkedinAnchor = activeDocument.createElement("a");
         linkedinAnchor.className = "learnkit-about-linkedin";
         linkedinAnchor.href = "https://www.linkedin.com/in/williamguy/";
         linkedinAnchor.target = "_blank";
@@ -1657,7 +1657,7 @@ export class LearnKitSettingsView extends ItemView {
 
     const feedbackUl = (bugLink ?? featureLink ?? browseLink)?.closest("ul");
     if (feedbackUl) {
-      const wrapper = document.createElement("div");
+      const wrapper = activeDocument.createElement("div");
       wrapper.className = "learnkit-about-buttons";
 
       if (bugLink) {
@@ -1696,14 +1696,14 @@ export class LearnKitSettingsView extends ItemView {
 
     const supportUl = (githubStarLink ?? shareLink ?? coffeeLink)?.closest("ul");
     if (supportUl) {
-      const wrapper = document.createElement("div");
+      const wrapper = activeDocument.createElement("div");
       wrapper.className = "learnkit-about-buttons";
 
       if (githubStarLink) {
         const btn = this._createAboutBtn("sprout-about-btn--star", "star", "sprout-about-star-spin", "Star on GitHub", "Star on GitHub");
         const starLabel = btn.querySelector<HTMLElement>(".learnkit-about-btn-label");
         if (starLabel) {
-          const githubIcon = document.createElement("span");
+          const githubIcon = activeDocument.createElement("span");
           githubIcon.className = "inline-flex items-center justify-center [&_svg]:size-4 learnkit-about-btn-icon learnkit-about-btn-icon--after";
           setIcon(githubIcon, "github");
           starLabel.insertAdjacentElement("afterend", githubIcon);
@@ -1749,7 +1749,7 @@ export class LearnKitSettingsView extends ItemView {
               shareLabel.textContent = tx("ui.settings.about.share.copied", "Copied!");
               setIcon(shareIcon, "check");
               shareBtn.classList.add("is-copied");
-              setTimeout(() => {
+              window.setTimeout(() => {
                 shareLabel.textContent = origLabel;
                 setIcon(shareIcon, "share-2");
                 shareBtn.classList.remove("is-copied");
@@ -1794,7 +1794,7 @@ export class LearnKitSettingsView extends ItemView {
         continue;
       }
 
-      const h2 = document.createElement("h2");
+      const h2 = activeDocument.createElement("h2");
       h2.classList.add("learnkit-guide-snap-heading", "learnkit-guide-snap-heading");
       if (heading.classList.contains("learnkit-settings-conditional-hidden")) {
         h2.classList.add("learnkit-settings-conditional-hidden", "learnkit-settings-conditional-hidden");
@@ -1822,7 +1822,7 @@ export class LearnKitSettingsView extends ItemView {
     const existing = container.querySelector<HTMLElement>(":scope > .learnkit-settings-pane-title");
     if (existing) existing.remove();
 
-    const h1 = document.createElement("h1");
+    const h1 = activeDocument.createElement("h1");
     h1.className = "learnkit-settings-pane-title learnkit-guide-snap-heading";
     h1.textContent = title;
     container.prepend(h1);
@@ -1854,7 +1854,7 @@ export class LearnKitSettingsView extends ItemView {
 
     const locale = this.plugin.settings?.general?.interfaceLanguage;
     const sections = new Map<string, HTMLElement[]>();
-    const allChildren = Array.from(wrapper.children).filter((child): child is HTMLElement => child instanceof HTMLElement);
+    const allChildren = Array.from(wrapper.children).filter((child): child is HTMLElement => child.nodeType === Node.ELEMENT_NODE);
 
     let activeSection = "";
     for (const child of allChildren) {
@@ -2002,7 +2002,7 @@ export class LearnKitSettingsView extends ItemView {
     }
 
     if (!wrapper.children.length) {
-      const empty = document.createElement("div");
+      const empty = activeDocument.createElement("div");
       empty.className = "learnkit-settings-text-muted";
       empty.textContent = t(this.plugin.settings?.general?.interfaceLanguage, "ui.settings.empty.section", "No settings in this section yet.");
       wrapper.appendChild(empty);

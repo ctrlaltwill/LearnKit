@@ -6,15 +6,7 @@
  *  - LearnKitSettingsTab — Obsidian PluginSettingTab subclass that renders and manages all LearnKit plugin settings
  */
 
-import {
-  PluginSettingTab,
-  Setting,
-  TFile,
-  type App,
-  Notice,
-  setIcon,
-  requestUrl,
-} from "obsidian";
+import { PluginSettingTab, Setting, TFile, type App, Notice, setIcon, requestUrl } from "obsidian";
 import type LearnKitPlugin from "../../main";
 import type { SproutSettings } from "../../platform/types/settings";
 import { log } from "../../platform/core/logger";
@@ -134,8 +126,8 @@ export class LearnKitSettingsTab extends PluginSettingTab {
     const localScrollable = /(auto|scroll)/.test(localStyle.overflowY) && local.scrollHeight > local.clientHeight;
     if (localScrollable) return local;
 
-    const nativeSettings = local.closest(".vertical-tab-content-container");
-    if (nativeSettings instanceof HTMLElement) return nativeSettings;
+    const nativeSettings = local.closest<HTMLElement>(".vertical-tab-content-container");
+    if (nativeSettings) return nativeSettings;
 
     let node: HTMLElement | null = local.parentElement;
     while (node) {
@@ -148,10 +140,10 @@ export class LearnKitSettingsTab extends PluginSettingTab {
 
   private _restoreScrollPosition(container: HTMLElement | null, top: number): void {
     if (!container) return;
-    requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
       container.scrollTop = top;
       // Some host layouts settle after one frame; apply once more to avoid jumps.
-      requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
         container.scrollTop = top;
       });
     });
@@ -343,7 +335,7 @@ export class LearnKitSettingsTab extends PluginSettingTab {
       /** Renders the backup table rows. */
       const renderTable = (rows: Array<{ stats: DataJsonBackupStats; ok: boolean; integrity: BackupIntegrityState }>) => {
         tableWrap.empty();
-        for (const stalePopover of Array.from(document.querySelectorAll(".learnkit-backup-pager-popover-host"))) {
+        for (const stalePopover of Array.from(activeDocument.querySelectorAll(".learnkit-backup-pager-popover-host"))) {
           try {
             stalePopover.remove();
           } catch (e: unknown) {
@@ -492,30 +484,30 @@ export class LearnKitSettingsTab extends PluginSettingTab {
         rowsBtn.setAttribute("aria-label", this._tx("ui.settings.backups.pager.rowsPerPage", "Rows per page"));
         rowsBtn.setAttribute("data-tooltip-position", "top");
 
-        const rowsBtnText = document.createElement("span");
+        const rowsBtnText = activeDocument.createElement("span");
         rowsBtnText.className = "truncate";
         rowsBtnText.textContent = String(backupRowsPerPage);
         rowsBtn.appendChild(rowsBtnText);
 
-        const rowsChevron = document.createElement("span");
+        const rowsChevron = activeDocument.createElement("span");
         rowsChevron.className = "inline-flex items-center justify-center [&_svg]:size-4 transition-transform duration-150 ease-out";
         rowsChevron.setAttribute("aria-hidden", "true");
         setIcon(rowsChevron, "chevron-down");
         rowsBtn.appendChild(rowsChevron);
 
-        const rowsPopoverHost = document.createElement("div");
+        const rowsPopoverHost = activeDocument.createElement("div");
         rowsPopoverHost.className = "learnkit learnkit-backup-pager-popover-host";
 
-        const rowsPopover = document.createElement("div");
+        const rowsPopover = activeDocument.createElement("div");
         rowsPopover.className = "learnkit-popover-overlay learnkit-dd-popover";
         rowsPopover.setAttribute("aria-hidden", "true");
         rowsPopoverHost.appendChild(rowsPopover);
 
-        const rowsPanel = document.createElement("div");
+        const rowsPanel = activeDocument.createElement("div");
         rowsPanel.className = "rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 learnkit-pointer-auto learnkit-dd-panel";
         rowsPopover.appendChild(rowsPanel);
 
-        const rowsMenu = document.createElement("div");
+        const rowsMenu = activeDocument.createElement("div");
         rowsMenu.setAttribute("role", "menu");
         rowsMenu.className = "flex flex-col";
         rowsPanel.appendChild(rowsMenu);
@@ -537,8 +529,8 @@ export class LearnKitSettingsTab extends PluginSettingTab {
           }
           detachRowsHandlers = null;
 
-          if (rowsPopoverHost.parentNode === document.body) {
-            document.body.removeChild(rowsPopoverHost);
+          if (rowsPopoverHost.parentNode === activeDocument.body) {
+            activeDocument.body.removeChild(rowsPopoverHost);
           }
           rowsOpen = false;
         };
@@ -547,22 +539,22 @@ export class LearnKitSettingsTab extends PluginSettingTab {
           while (rowsMenu.firstChild) rowsMenu.removeChild(rowsMenu.firstChild);
 
           for (const opt of pageSizeOptions) {
-            const item = document.createElement("div");
+            const item = activeDocument.createElement("div");
             item.setAttribute("role", "menuitemradio");
             item.setAttribute("aria-checked", opt === backupRowsPerPage ? "true" : "false");
             item.tabIndex = 0;
             item.className = "group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer select-none outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground";
 
-            const dotWrap = document.createElement("div");
+            const dotWrap = activeDocument.createElement("div");
             dotWrap.className = "size-4 flex items-center justify-center";
             item.appendChild(dotWrap);
 
-            const dot = document.createElement("div");
+            const dot = activeDocument.createElement("div");
             dot.className = "size-2 rounded-full bg-foreground invisible group-aria-checked:visible";
             dot.setAttribute("aria-hidden", "true");
             dotWrap.appendChild(dot);
 
-            const txt = document.createElement("span");
+            const txt = activeDocument.createElement("span");
             txt.textContent = String(opt);
             item.appendChild(txt);
 
@@ -602,9 +594,9 @@ export class LearnKitSettingsTab extends PluginSettingTab {
           rowsPopover.setAttribute("aria-hidden", "false");
           rowsPopover.classList.add("is-open");
 
-          if (!rowsPopoverHost.parentElement) document.body.appendChild(rowsPopoverHost);
+          if (!rowsPopoverHost.parentElement) activeDocument.body.appendChild(rowsPopoverHost);
 
-          requestAnimationFrame(() => {
+          window.requestAnimationFrame(() => {
             placePopover({
               trigger: rowsBtn,
               panel: rowsPanel,
@@ -639,16 +631,16 @@ export class LearnKitSettingsTab extends PluginSettingTab {
             });
           };
 
-          document.addEventListener("pointerdown", onDocPointerDown, true);
-          document.addEventListener("keydown", onDocKeydown, true);
+          activeDocument.addEventListener("pointerdown", onDocPointerDown, true);
+          activeDocument.addEventListener("keydown", onDocKeydown, true);
           window.addEventListener("resize", onRelayout);
-          document.addEventListener("scroll", onRelayout, true);
+          activeDocument.addEventListener("scroll", onRelayout, true);
 
           detachRowsHandlers = () => {
-            document.removeEventListener("pointerdown", onDocPointerDown, true);
-            document.removeEventListener("keydown", onDocKeydown, true);
+            activeDocument.removeEventListener("pointerdown", onDocPointerDown, true);
+            activeDocument.removeEventListener("keydown", onDocKeydown, true);
             window.removeEventListener("resize", onRelayout);
-            document.removeEventListener("scroll", onRelayout, true);
+            activeDocument.removeEventListener("scroll", onRelayout, true);
           };
 
           rowsOpen = true;
@@ -871,7 +863,7 @@ export class LearnKitSettingsTab extends PluginSettingTab {
 
     // Remove any orphaned body-portal popovers created by
     // _addSimpleSelect / _addSearchablePopover.
-    document.body
+    activeDocument.body
       .querySelectorAll(":scope > .learnkit > .learnkit-popover-overlay")
       .forEach((el) => el.parentElement?.remove());
   }
@@ -972,13 +964,13 @@ export class LearnKitSettingsTab extends PluginSettingTab {
           return `#${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`;
         }
 
-        const probe = document.createElement("span");
+        const probe = activeDocument.createElement("span");
         setCssProps(probe, "color", "");
         setCssProps(probe, "color", val);
         if (!probe.style.color) return null;
         setCssProps(probe, "position", "absolute");
         setCssProps(probe, "left", "-9999px");
-        document.body.appendChild(probe);
+        activeDocument.body.appendChild(probe);
         const resolved = getComputedStyle(probe).color.trim();
         probe.remove();
 
@@ -986,7 +978,7 @@ export class LearnKitSettingsTab extends PluginSettingTab {
       };
 
       const override = String(this.plugin.settings?.general?.themeAccentOverride ?? "").trim();
-      const bodyStyle = getComputedStyle(document.body);
+      const bodyStyle = getComputedStyle(activeDocument.body);
       const raw =
         override ||
         bodyStyle.getPropertyValue("--theme-accent").trim() ||
@@ -1040,7 +1032,7 @@ export class LearnKitSettingsTab extends PluginSettingTab {
         picker.onChange(async (value) => {
           const next = String(value ?? "").trim();
           this.plugin.settings.general.themeAccentOverride = next;
-          document.body.style.setProperty("--learnkit-theme-accent-override", next);
+          activeDocument.body.style.setProperty("--learnkit-theme-accent-override", next);
           await this.plugin.saveAll();
         });
       })
@@ -1050,7 +1042,7 @@ export class LearnKitSettingsTab extends PluginSettingTab {
           .setTooltip(this._tx("ui.settings.appearance.themeAccent.reset", "Reset to inherited theme accent"))
           .onClick(async () => {
             this.plugin.settings.general.themeAccentOverride = "";
-            document.body.style.removeProperty("--learnkit-theme-accent-override");
+            activeDocument.body.style.removeProperty("--learnkit-theme-accent-override");
             setAccentPickerValue?.(resolveThemeAccentHex());
             await this.plugin.saveAll();
           });
@@ -4841,7 +4833,7 @@ export class LearnKitSettingsTab extends PluginSettingTab {
           if (clearBtn) clearBtn.disabled = true;
 
           // Yield to the UI before running the CPU-intensive optimizer
-          await new Promise((r) => setTimeout(r, 50));
+          await new Promise((r) => window.setTimeout(r, 50));
 
           try {
             const result = optimizeFsrsWeights(reviewLog, (pct) => {
@@ -6203,17 +6195,17 @@ export class LearnKitSettingsTab extends PluginSettingTab {
     const id = `sprout-ss-${Math.random().toString(36).slice(2, 9)}`;
 
     // ── Trigger button ──
-    const trigger = document.createElement("button");
+    const trigger = activeDocument.createElement("button");
     trigger.type = "button";
     trigger.className = "learnkit-ss-trigger inline-flex items-center gap-2 h-9 px-3 text-sm learnkit-settings-action-btn";
     trigger.setAttribute("aria-haspopup", "listbox");
     trigger.setAttribute("aria-expanded", "false");
 
-    const trigLabel = document.createElement("span");
+    const trigLabel = activeDocument.createElement("span");
     trigLabel.className = "learnkit-ss-trigger-label";
     trigger.appendChild(trigLabel);
 
-    const chevron = document.createElement("span");
+    const chevron = activeDocument.createElement("span");
     chevron.className = "learnkit-ss-trigger-chevron";
     setIcon(chevron, "chevron-down");
     trigger.appendChild(chevron);
@@ -6225,20 +6217,20 @@ export class LearnKitSettingsTab extends PluginSettingTab {
     controlEl.appendChild(trigger);
 
     // ── Body-portal popover ──
-    const sproutWrapper = document.createElement("div");
+    const sproutWrapper = activeDocument.createElement("div");
     sproutWrapper.className = "learnkit";
-    const popover = document.createElement("div");
+    const popover = activeDocument.createElement("div");
     popover.id = `${id}-popover`;
     popover.setAttribute("aria-hidden", "true");
     popover.classList.add("learnkit-popover-overlay", "learnkit-popover-overlay", "learnkit-ss-popover", "learnkit-ss-popover");
 
-    const panel = document.createElement("div");
+    const panel = activeDocument.createElement("div");
     panel.className = "learnkit-ss-panel learnkit-header-menu-panel";
     popover.appendChild(panel);
     sproutWrapper.appendChild(popover);
 
     // ── Options list ──
-    const listbox = document.createElement("div");
+    const listbox = activeDocument.createElement("div");
     listbox.setAttribute("role", "listbox");
     listbox.className = "learnkit-ss-listbox";
     setCssProps(listbox, "scrollbar-gutter", "stable");
@@ -6257,25 +6249,25 @@ export class LearnKitSettingsTab extends PluginSettingTab {
         : args.options;
 
       for (const opt of orderedOptions) {
-        const item = document.createElement("div");
+        const item = activeDocument.createElement("div");
         item.setAttribute("role", "option");
         item.setAttribute("aria-selected", opt.value === current ? "true" : "false");
         item.tabIndex = 0;
         item.className = "learnkit-ss-item";
 
-        const dotWrap = document.createElement("div");
+        const dotWrap = activeDocument.createElement("div");
         dotWrap.className = "learnkit-ss-dot-wrap";
         item.appendChild(dotWrap);
 
-        const dot = document.createElement("div");
+        const dot = activeDocument.createElement("div");
         dot.className = "learnkit-ss-dot";
         if (opt.value === current) dot.classList.add("is-selected");
         dotWrap.appendChild(dot);
 
-        const textWrap = document.createElement("div");
+        const textWrap = activeDocument.createElement("div");
         textWrap.className = "learnkit-ss-item-text";
 
-        const txt = document.createElement("span");
+        const txt = activeDocument.createElement("span");
         txt.className = "learnkit-ss-item-label";
         txt.textContent = opt.label;
         textWrap.appendChild(txt);
@@ -6319,7 +6311,7 @@ export class LearnKitSettingsTab extends PluginSettingTab {
 
         // Insert separator after the specified index
         if (args.separatorAfterIndex != null && items.length - 1 === args.separatorAfterIndex) {
-          const sep = document.createElement("div");
+          const sep = activeDocument.createElement("div");
           sep.className = "learnkit-ss-separator";
           sep.setAttribute("role", "separator");
           listbox.appendChild(sep);
@@ -6329,7 +6321,7 @@ export class LearnKitSettingsTab extends PluginSettingTab {
 
     // ── Positioning ──
     const place = () => {
-      const isPhone = document.body.classList.contains("is-mobile") && window.innerWidth < 768;
+      const isPhone = activeDocument.body.classList.contains("is-mobile") && window.innerWidth < 768;
       placePopover({
         trigger, panel, popoverEl: popover,
         width: isPhone ? undefined : Math.max(220, trigger.getBoundingClientRect().width),
@@ -6347,8 +6339,8 @@ export class LearnKitSettingsTab extends PluginSettingTab {
       popover.classList.remove("is-open");
       cleanup?.();
       cleanup = null;
-      if (sproutWrapper.parentNode === document.body) {
-        document.body.removeChild(sproutWrapper);
+      if (sproutWrapper.parentNode === activeDocument.body) {
+        activeDocument.body.removeChild(sproutWrapper);
       }
     };
 
@@ -6359,8 +6351,8 @@ export class LearnKitSettingsTab extends PluginSettingTab {
       popover.setAttribute("aria-hidden", "false");
       popover.classList.add("is-open");
 
-      document.body.appendChild(sproutWrapper);
-      requestAnimationFrame(() => {
+      activeDocument.body.appendChild(sproutWrapper);
+      window.requestAnimationFrame(() => {
         place();
         const sel = listbox.querySelector<HTMLElement>('[aria-selected="true"]');
         sel?.focus();
@@ -6387,16 +6379,16 @@ export class LearnKitSettingsTab extends PluginSettingTab {
       window.addEventListener("scroll", onResizeOrScroll, true);
 
       const tid = window.setTimeout(() => {
-        document.addEventListener("pointerdown", onDocPointerDown, true);
-        document.addEventListener("keydown", onDocKeydown, true);
+        activeDocument.addEventListener("pointerdown", onDocPointerDown, true);
+        activeDocument.addEventListener("keydown", onDocKeydown, true);
       }, 0);
 
       cleanup = () => {
         window.clearTimeout(tid);
         window.removeEventListener("resize", onResizeOrScroll, true);
         window.removeEventListener("scroll", onResizeOrScroll, true);
-        document.removeEventListener("pointerdown", onDocPointerDown, true);
-        document.removeEventListener("keydown", onDocKeydown, true);
+        activeDocument.removeEventListener("pointerdown", onDocPointerDown, true);
+        activeDocument.removeEventListener("keydown", onDocKeydown, true);
       };
     };
 
@@ -6434,17 +6426,17 @@ export class LearnKitSettingsTab extends PluginSettingTab {
     const setting = new Setting(container).setName(args.name).setDesc(args.description);
 
     // ── Trigger button ──
-    const trigger = document.createElement("button");
+    const trigger = activeDocument.createElement("button");
     trigger.type = "button";
     trigger.className = "learnkit-ss-trigger inline-flex items-center gap-2 h-9 px-3 text-sm learnkit-settings-action-btn";
     trigger.setAttribute("aria-haspopup", "listbox");
     trigger.setAttribute("aria-expanded", "false");
 
-    const trigLabel = document.createElement("span");
+    const trigLabel = activeDocument.createElement("span");
     trigLabel.className = "learnkit-ss-trigger-label";
     trigger.appendChild(trigLabel);
 
-    const chevron = document.createElement("span");
+    const chevron = activeDocument.createElement("span");
     chevron.className = "learnkit-ss-trigger-chevron";
     setIcon(chevron, "chevron-down");
     trigger.appendChild(chevron);
@@ -6454,7 +6446,7 @@ export class LearnKitSettingsTab extends PluginSettingTab {
     const renderLabel = (target: HTMLElement, label: string, flagCode?: string) => {
       target.replaceChildren();
       if (flagCode) {
-        const img = document.createElement("img");
+        const img = activeDocument.createElement("img");
         img.className = "learnkit-inline-flag";
         img.alt = flagCode;
         img.src = getCircleFlagUrl(flagCode);
@@ -6471,7 +6463,7 @@ export class LearnKitSettingsTab extends PluginSettingTab {
         img.referrerPolicy = "no-referrer";
         target.appendChild(img);
       }
-      target.appendChild(document.createTextNode(label));
+      target.appendChild(activeDocument.createTextNode(label));
     };
     {
       const selected = optionFor(current);
@@ -6481,14 +6473,14 @@ export class LearnKitSettingsTab extends PluginSettingTab {
     setting.controlEl.appendChild(trigger);
 
     // ── Body-portal popover ──
-    const sproutWrapper = document.createElement("div");
+    const sproutWrapper = activeDocument.createElement("div");
     sproutWrapper.className = "learnkit";
-    const popover = document.createElement("div");
+    const popover = activeDocument.createElement("div");
     popover.id = `${id}-popover`;
     popover.setAttribute("aria-hidden", "true");
     popover.classList.add("learnkit-popover-overlay", "learnkit-popover-overlay", "learnkit-ss-popover", "learnkit-ss-popover");
 
-    const panel = document.createElement("div");
+    const panel = activeDocument.createElement("div");
     panel.className = "learnkit-ss-panel learnkit-header-menu-panel";
     popover.appendChild(panel);
     sproutWrapper.appendChild(popover);
@@ -6498,16 +6490,16 @@ export class LearnKitSettingsTab extends PluginSettingTab {
     let searchInput: HTMLInputElement | null = null;
 
     if (showSearch) {
-      const searchWrap = document.createElement("div");
+      const searchWrap = activeDocument.createElement("div");
       searchWrap.className = "learnkit-ss-search-wrap";
       panel.appendChild(searchWrap);
 
-      const searchIcon = document.createElement("span");
+      const searchIcon = activeDocument.createElement("span");
       searchIcon.className = "learnkit-ss-search-icon";
       setIcon(searchIcon, "search");
       searchWrap.appendChild(searchIcon);
 
-      searchInput = document.createElement("input");
+      searchInput = activeDocument.createElement("input");
       searchInput.type = "text";
       searchInput.className = "learnkit-ss-search-input";
       searchInput.placeholder = this._tx("ui.settings.searchableSelect.searchPlaceholder", "Search...");
@@ -6517,13 +6509,13 @@ export class LearnKitSettingsTab extends PluginSettingTab {
     }
 
     // ── Options list ──
-    const listbox = document.createElement("div");
+    const listbox = activeDocument.createElement("div");
     listbox.setAttribute("role", "listbox");
     listbox.className = "learnkit-ss-listbox";
     panel.appendChild(listbox);
 
     // ── Empty state ──
-    const emptyMsg = document.createElement("div");
+    const emptyMsg = activeDocument.createElement("div");
     emptyMsg.className = "learnkit-ss-empty";
     emptyMsg.textContent = this._tx("ui.settings.searchableSelect.empty", "No results");
     emptyMsg.hidden = true;
@@ -6577,25 +6569,25 @@ export class LearnKitSettingsTab extends PluginSettingTab {
           previousSection = sectionKey;
         }
 
-        const item = document.createElement("div");
+        const item = activeDocument.createElement("div");
         item.setAttribute("role", "option");
         item.setAttribute("aria-selected", opt.value === current ? "true" : "false");
         item.tabIndex = 0;
         item.className = "learnkit-ss-item";
 
-        const dotWrap = document.createElement("div");
+        const dotWrap = activeDocument.createElement("div");
         dotWrap.className = "learnkit-ss-dot-wrap";
         item.appendChild(dotWrap);
 
-        const dot = document.createElement("div");
+        const dot = activeDocument.createElement("div");
         dot.className = "learnkit-ss-dot";
         if (opt.value === current) dot.classList.add("is-selected");
         dotWrap.appendChild(dot);
 
-        const textWrap = document.createElement("div");
+        const textWrap = activeDocument.createElement("div");
         textWrap.className = "learnkit-ss-item-text";
 
-        const txt = document.createElement("span");
+        const txt = activeDocument.createElement("span");
         txt.className = "learnkit-ss-item-label";
         renderLabel(txt, opt.label, opt.flagCode);
         textWrap.appendChild(txt);
@@ -6696,7 +6688,7 @@ export class LearnKitSettingsTab extends PluginSettingTab {
     // ── Positioning ──
     const measureBaseContentWidth = (): number => {
       const triggerWidth = Math.ceil(trigger.getBoundingClientRect().width);
-      const searchWrap = searchInput?.parentElement instanceof HTMLElement ? searchInput.parentElement : null;
+      const searchWrap = searchInput?.parentElement ?? null;
       const optionWidth = items.reduce((max, item) => Math.max(max, Math.ceil(item.el.scrollWidth)), 0);
       const sectionWidth = Array.from(sections.values()).reduce(
         (max, section) => Math.max(max, Math.ceil(section.titleEl.scrollWidth)),
@@ -6712,7 +6704,7 @@ export class LearnKitSettingsTab extends PluginSettingTab {
     };
 
     const measurePopoverWidth = (): number | undefined => {
-      const isPhone = document.body.classList.contains("is-mobile") && window.innerWidth < 768;
+      const isPhone = activeDocument.body.classList.contains("is-mobile") && window.innerWidth < 768;
       if (isPhone) return undefined;
 
       const viewportMaxWidth = Math.max(280, window.innerWidth - 32);
@@ -6740,8 +6732,8 @@ export class LearnKitSettingsTab extends PluginSettingTab {
       baseContentWidth = 0;
       cleanup?.();
       cleanup = null;
-      if (sproutWrapper.parentNode === document.body) {
-        document.body.removeChild(sproutWrapper);
+      if (sproutWrapper.parentNode === activeDocument.body) {
+        activeDocument.body.removeChild(sproutWrapper);
       }
     };
 
@@ -6754,8 +6746,8 @@ export class LearnKitSettingsTab extends PluginSettingTab {
       popover.setAttribute("aria-hidden", "false");
       popover.classList.add("is-open");
 
-      document.body.appendChild(sproutWrapper);
-      requestAnimationFrame(() => {
+      activeDocument.body.appendChild(sproutWrapper);
+      window.requestAnimationFrame(() => {
         baseContentWidth = measureBaseContentWidth();
         applyFilter();
         place();
@@ -6788,16 +6780,16 @@ export class LearnKitSettingsTab extends PluginSettingTab {
       window.addEventListener("scroll", onResizeOrScroll, true);
 
       const tid = window.setTimeout(() => {
-        document.addEventListener("pointerdown", onDocPointerDown, true);
-        document.addEventListener("keydown", onDocKeydown, true);
+        activeDocument.addEventListener("pointerdown", onDocPointerDown, true);
+        activeDocument.addEventListener("keydown", onDocKeydown, true);
       }, 0);
 
       cleanup = () => {
         window.clearTimeout(tid);
         window.removeEventListener("resize", onResizeOrScroll, true);
         window.removeEventListener("scroll", onResizeOrScroll, true);
-        document.removeEventListener("pointerdown", onDocPointerDown, true);
-        document.removeEventListener("keydown", onDocKeydown, true);
+        activeDocument.removeEventListener("pointerdown", onDocPointerDown, true);
+        activeDocument.removeEventListener("keydown", onDocKeydown, true);
       };
     };
 

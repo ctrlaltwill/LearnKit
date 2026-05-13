@@ -22,7 +22,7 @@ import { t } from "../translations/translator";
 
 function isMobileLikePlatform(): boolean {
   if (Platform.isMobileApp || Platform.isIosApp || Platform.isAndroidApp) return true;
-  if (typeof document !== "undefined" && document.body?.classList.contains("is-mobile")) return true;
+  if (typeof document !== "undefined" && activeDocument.body?.classList.contains("is-mobile")) return true;
   return false;
 }
 
@@ -116,7 +116,7 @@ export function buildToolbar(parent: HTMLElement, cb: ToolbarCallbacks): Toolbar
   };
 
   // File upload button
-  const fileInput = document.createElement("input");
+  const fileInput = activeDocument.createElement("input");
   fileInput.type = "file";
   fileInput.accept = "image/*";
   fileInput.classList.add("learnkit-io-file-input", "learnkit-io-file-input");
@@ -312,19 +312,19 @@ export function buildFooter(parent: HTMLElement, cb: FooterCallbacks, defaultMod
   const chevronWrap = trigger.createEl("span", { cls: "inline-flex items-center justify-center [&_svg]:size-3" });
   setIcon(chevronWrap, "chevron-down");
 
-  const popover = document.createElement("div");
-  const sproutWrapper = document.createElement("div");
+  const popover = activeDocument.createElement("div");
+  const sproutWrapper = activeDocument.createElement("div");
   sproutWrapper.className = "learnkit";
   popover.className = "";
   popover.setAttribute("aria-hidden", "true");
   popover.classList.add("learnkit-popover-overlay", "learnkit-popover-overlay", "learnkit-card-creator-type-popover", "learnkit-card-creator-type-popover");
   sproutWrapper.appendChild(popover);
 
-  const panel = document.createElement("div");
+  const panel = activeDocument.createElement("div");
   panel.className = "rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 learnkit-pointer-auto learnkit-card-creator-type-panel";
   popover.appendChild(panel);
 
-  const menuList = document.createElement("div");
+  const menuList = activeDocument.createElement("div");
   menuList.className = "flex flex-col";
   menuList.setAttribute("role", "menu");
   panel.appendChild(menuList);
@@ -337,7 +337,7 @@ export function buildFooter(parent: HTMLElement, cb: FooterCallbacks, defaultMod
     popover.setAttribute("aria-hidden", "true");
     popover.classList.remove("is-open");
     if (onDocPointerDown) {
-      document.removeEventListener("pointerdown", onDocPointerDown, true);
+      activeDocument.removeEventListener("pointerdown", onDocPointerDown, true);
       onDocPointerDown = null;
     }
     try {
@@ -361,8 +361,8 @@ export function buildFooter(parent: HTMLElement, cb: FooterCallbacks, defaultMod
     trigger.setAttribute("aria-expanded", "true");
     popover.setAttribute("aria-hidden", "false");
     popover.classList.add("is-open");
-    if (!sproutWrapper.parentElement) document.body.appendChild(sproutWrapper);
-    requestAnimationFrame(() => placeModeMenu());
+    if (!sproutWrapper.parentElement) activeDocument.body.appendChild(sproutWrapper);
+    window.requestAnimationFrame(() => placeModeMenu());
 
     onDocPointerDown = (ev: PointerEvent) => {
       const t = ev.target as Node | null;
@@ -372,7 +372,7 @@ export function buildFooter(parent: HTMLElement, cb: FooterCallbacks, defaultMod
     };
 
     window.setTimeout(() => {
-      if (onDocPointerDown) document.addEventListener("pointerdown", onDocPointerDown, true);
+      if (onDocPointerDown) activeDocument.addEventListener("pointerdown", onDocPointerDown, true);
     }, 0);
 
     menuOpen = true;
@@ -434,7 +434,7 @@ export function buildFooter(parent: HTMLElement, cb: FooterCallbacks, defaultMod
   const observer = new MutationObserver(() => {
     if (!footer.isConnected) cleanup();
   });
-  observer.observe(document.body, { childList: true, subtree: true });
+  observer.observe(activeDocument.body, { childList: true, subtree: true });
 
   trigger.addEventListener("pointerdown", (ev: PointerEvent) => {
     if (ev.button !== 0) return;

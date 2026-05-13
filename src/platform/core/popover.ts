@@ -16,8 +16,9 @@
  *
  * @exports createBodyPortalPopover
  */
+import {  } from "obsidian";
 
-import { placePopover, activeDocument } from "./ui";
+import { placePopover } from "./ui";
 
 // ────────────────────────────────────────────
 // Public API
@@ -55,7 +56,7 @@ export interface BodyPortalPopoverOpts {
   panelClasses?: string[];
 
   /**
-   * Observe `window.visualViewport` resize and `document.body` mutations
+   * Observe `window.visualViewport` resize and `activeDocument.body` mutations
    * for repositioning.  Useful for the top-level header but not needed for
    * settings selects.  Default `false`.
    */
@@ -91,7 +92,7 @@ export interface BodyPortalPopoverHandle {
  *   1. Close any existing instance (idempotent).
  *   2. Create DOM: `.learnkit` wrapper → overlay root → inner panel.
  *   3. Build content into the panel.
- *   4. Append wrapper to `document.body`.
+ *   4. Append wrapper to `activeDocument.body`.
  *   5. Mark open state (classes + ARIA).
  *   6. Position via `placePopover()` in a `requestAnimationFrame`.
  *   7. Register dismiss listeners (resize, scroll, outside click, Escape).
@@ -132,8 +133,8 @@ export function createBodyPortalPopover(
     cleanup?.();
     cleanup = null;
 
-    if (sproutWrapper?.parentNode === activeDocument().body) {
-      activeDocument().body.removeChild(sproutWrapper);
+    if (sproutWrapper?.parentNode === activeDocument.body) {
+      activeDocument.body.removeChild(sproutWrapper);
     }
     sproutWrapper = null;
 
@@ -147,15 +148,15 @@ export function createBodyPortalPopover(
     close();
 
     // Step 2: create DOM
-    sproutWrapper = activeDocument().createElement("div");
+    sproutWrapper = activeDocument.createElement("div");
     sproutWrapper.className = "learnkit";
 
-    const overlay = activeDocument().createElement("div");
+    const overlay = activeDocument.createElement("div");
     overlay.classList.add("learnkit-popover-overlay", "learnkit-popover-overlay", ...overlayClasses);
     if (ariaHidden) overlay.setAttribute("aria-hidden", "true");
     sproutWrapper.appendChild(overlay);
 
-    const panel = activeDocument().createElement("div");
+    const panel = activeDocument.createElement("div");
     if (panelClasses.length) panel.classList.add(...panelClasses);
     overlay.appendChild(panel);
 
@@ -163,7 +164,7 @@ export function createBodyPortalPopover(
     buildContent(panel, close);
 
     // Step 4: body-portal
-    activeDocument().body.appendChild(sproutWrapper);
+    activeDocument.body.appendChild(sproutWrapper);
 
     // Step 5: mark open
     overlay.classList.add("is-open");
@@ -188,7 +189,7 @@ export function createBodyPortalPopover(
       });
     };
 
-    requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
       place();
       opts.onOpened?.(panel);
     });
@@ -203,9 +204,9 @@ export function createBodyPortalPopover(
     if (observeViewport) {
       window.visualViewport?.addEventListener("resize", onResizeOrScroll);
       bodyObserver = new MutationObserver(() =>
-        requestAnimationFrame(() => place()),
+        window.requestAnimationFrame(() => place()),
       );
-      bodyObserver.observe(activeDocument().body, {
+      bodyObserver.observe(activeDocument.body, {
         attributes: true,
         attributeFilter: ["class", "style"],
       });
@@ -230,9 +231,9 @@ export function createBodyPortalPopover(
 
     // Defer outside-click so the opening click doesn't immediately close.
     const tid = window.setTimeout(() => {
-      activeDocument().addEventListener("pointerdown", onDocPointerDown, true);
+      activeDocument.addEventListener("pointerdown", onDocPointerDown, true);
       if (onDocKeydown) {
-        activeDocument().addEventListener("keydown", onDocKeydown, true);
+        activeDocument.addEventListener("keydown", onDocKeydown, true);
       }
     }, 0);
 
@@ -245,9 +246,9 @@ export function createBodyPortalPopover(
         window.visualViewport?.removeEventListener("resize", onResizeOrScroll);
         bodyObserver?.disconnect();
       }
-      activeDocument().removeEventListener("pointerdown", onDocPointerDown, true);
+      activeDocument.removeEventListener("pointerdown", onDocPointerDown, true);
       if (onDocKeydown) {
-        activeDocument().removeEventListener("keydown", onDocKeydown, true);
+        activeDocument.removeEventListener("keydown", onDocKeydown, true);
       }
     };
   };

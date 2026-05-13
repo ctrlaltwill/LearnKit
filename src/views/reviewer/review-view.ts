@@ -6,13 +6,7 @@
  *   - SproutReviewerView — ItemView subclass that manages the reviewer's lifecycle, state, rendering, and user interactions
  */
 
-import {
-  ItemView,
-  Notice,
-  type WorkspaceLeaf,
-  TFile,
-  setIcon,
-} from "obsidian";
+import { ItemView, Notice, type WorkspaceLeaf, TFile, setIcon } from "obsidian";
 
 import { MAX_CONTENT_WIDTH, MAX_CONTENT_WIDTH_PX, VIEW_TYPE_REVIEWER } from "../../platform/core/constants";
 import { log } from "../../platform/core/logger";
@@ -547,7 +541,7 @@ export class SproutReviewerView extends ItemView {
       return;
     }
 
-    const timerHost = document.createElement("div");
+    const timerHost = activeDocument.createElement("div");
     timerHost.className = "lk-review-title-timer-host";
     right.appendChild(timerHost);
 
@@ -2171,7 +2165,7 @@ export class SproutReviewerView extends ItemView {
 
     // Let active zoom modals consume Escape so it closes the modal instead
     // of quitting the study session.
-    if (ev.key === "Escape" && document.querySelector(".lk-modals.learnkit-zoom-overlay")) {
+    if (ev.key === "Escape" && activeDocument.querySelector(".lk-modals.learnkit-zoom-overlay")) {
       return;
     }
 
@@ -2426,7 +2420,7 @@ export class SproutReviewerView extends ItemView {
               submitBtnEl.setAttribute("aria-label", this.tx("ui.reviewer.mcq.chooseOne", "Choose at least one answer to proceed"));
               submitBtnEl.setAttribute("data-tooltip-position", "top");
               submitBtnEl.classList.add("learnkit-mcq-submit-tooltip-visible", "learnkit-mcq-submit-tooltip-visible");
-              setTimeout(() => {
+              window.setTimeout(() => {
                 submitBtnEl.classList.remove("learnkit-mcq-submit-tooltip-visible", "learnkit-mcq-submit-tooltip-visible");
               }, 2500);
             }
@@ -2886,7 +2880,7 @@ export class SproutReviewerView extends ItemView {
 
     let contentHost: HTMLElement = root;
     if (this.mode === "deck" || this.mode === "session") {
-      const contentShell = document.createElement("div");
+      const contentShell = activeDocument.createElement("div");
       contentShell.className = `${SPROUT_HOME_CONTENT_SHELL_CLASS} lk-review-content-shell`;
       root.appendChild(contentShell);
       contentHost = contentShell;
@@ -2894,7 +2888,7 @@ export class SproutReviewerView extends ItemView {
 
     let sessionColumn: HTMLElement | null = null;
     if (this.mode === "session") {
-      sessionColumn = document.createElement("div");
+      sessionColumn = activeDocument.createElement("div");
       sessionColumn.className = "learnkit-study-column lk-session-column flex flex-col min-h-0";
       contentHost.appendChild(sessionColumn);
     }

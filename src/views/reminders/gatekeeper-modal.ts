@@ -156,9 +156,10 @@ export class GatekeeperModal extends Modal {
   }
 
   private isEditableTarget(target: EventTarget | null): boolean {
-    if (!(target instanceof HTMLElement)) return false;
-    if (target.closest("input, textarea, select")) return true;
-    return !!target.closest("[contenteditable='true']");
+    if (!target || (target as Node).nodeType !== 1) return false;
+    const el = target as HTMLElement;
+    if (el.closest("input, textarea, select")) return true;
+    return !!el.closest("[contenteditable='true']");
   }
 
   private isFromGatekeeperContext(ev: KeyboardEvent): boolean {
@@ -492,9 +493,9 @@ export class GatekeeperModal extends Modal {
 
   /** Build a label row matching the study session style ("Question", "Answer", etc.) */
   private makeLabelRow(text: string, card?: CardRecord, answerSide?: boolean): HTMLElement {
-    const row = document.createElement("div");
+    const row = activeDocument.createElement("div");
     row.className = "flex items-center justify-between learnkit-label-row";
-    const label = document.createElement("div");
+    const label = activeDocument.createElement("div");
     label.className = "text-muted-foreground text-sm font-medium";
     label.textContent = text;
     row.appendChild(label);
@@ -567,7 +568,7 @@ export class GatekeeperModal extends Modal {
 
   /** Create a styled markdown block matching the study session pattern. */
   private renderMdBlock(cls: string, text: string, card: CardRecord): HTMLElement {
-    const block = document.createElement("div");
+    const block = activeDocument.createElement("div");
     block.className = `bc ${cls} whitespace-pre-wrap break-words learnkit-md-block`;
     this.renderTextBlock(block, text, card);
     return block;
@@ -664,7 +665,7 @@ export class GatekeeperModal extends Modal {
     const targetIndex = card.type === "cloze-child" ? Number(card.clozeIndex) : undefined;
 
     if (text.includes("$") || text.includes("\\(") || text.includes("\\[") || text.includes("[[") || this.hasMarkdownList(text)) {
-      const clozeEl = document.createElement("div");
+      const clozeEl = activeDocument.createElement("div");
       clozeEl.className = "learnkit-widget-cloze learnkit-widget-text w-full whitespace-pre-wrap break-words";
       const sourcePath = String(card.sourceNotePath || "");
       const clozeMode = this.plugin.settings.cards?.clozeMode ?? "standard";

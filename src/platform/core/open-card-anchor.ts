@@ -54,7 +54,7 @@ export async function openCardAnchorInNote(
     for (let i = 0; i < 30; i++) {
       const editor = view.editor;
       if (editor) return editor;
-      await new Promise((r) => setTimeout(r, 25));
+      await new Promise((r) => window.setTimeout(r, 25));
     }
     return null;
   };

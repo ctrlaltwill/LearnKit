@@ -54,7 +54,7 @@ class ConfirmBuryForTodayModal extends Modal {
 
     head.createEl("h3", { text: tx("ui.reviewer.skip.modal.title", "Bury for today?") });
 
-    const xBtn = document.createElement("button");
+    const xBtn = activeDocument.createElement("button");
     xBtn.type = "button";
     xBtn.className = "clickable-icon";
     xBtn.setAttribute("aria-label", tx("ui.reviewer.skip.modal.close", "Close (Esc)"));

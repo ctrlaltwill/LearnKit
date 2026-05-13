@@ -168,7 +168,7 @@ export class SproutCardBrowserView extends ItemView {
   async onOpen() {
     this.render();
     if (this.plugin.settings?.general?.enableAnimations ?? true) {
-      setTimeout(() => {
+      window.setTimeout(() => {
         initAOS({ duration: AOS_DURATION, easing: "ease-out", once: true, offset: 50 });
       }, 100);
     }
@@ -219,7 +219,7 @@ export class SproutCardBrowserView extends ItemView {
     if (!root) return;
 
     const isPhoneMobile = () =>
-      document.body.classList.contains("is-mobile") && window.matchMedia("(max-width: 767px)").matches;
+      activeDocument.body.classList.contains("is-mobile") && window.matchMedia("(max-width: 767px)").matches;
 
     const setInset = (px: number) => {
       setCssProps(root, "--lk-browser-kb-inset", `${Math.max(0, px)}px`);
@@ -247,8 +247,8 @@ export class SproutCardBrowserView extends ItemView {
     };
 
     const scrollFocusedIntoView = (target: EventTarget | null) => {
-      if (!(target instanceof HTMLElement)) return;
-      const editable = target.closest<HTMLElement>(
+      if (!target || (target as Node).nodeType !== 1) return;
+      const editable = (target as HTMLElement).closest<HTMLElement>(
         "input, textarea, [contenteditable]:not([contenteditable='false'])",
       );
       if (!editable) return;
@@ -294,7 +294,7 @@ export class SproutCardBrowserView extends ItemView {
   }
 
   private _isPhoneMobile(): boolean {
-    return document.body.classList.contains("is-phone");
+    return activeDocument.body.classList.contains("is-phone");
   }
 
   private _effectivePageSize(): number {
@@ -445,7 +445,7 @@ export class SproutCardBrowserView extends ItemView {
     subtitle.textContent = this._tx("ui.view.browser.subtitle", "Search, edit, and manage your cards");
 
     const mkDensityBtn = (mode: BrowserDensityMode, token: string, fallback: string) => {
-      const btn = document.createElement("button");
+      const btn = activeDocument.createElement("button");
       btn.type = "button";
       btn.className = "h-9 px-3 text-sm inline-flex items-center justify-center lk-browser-density-btn";
       btn.textContent = this._tx(token, fallback);
@@ -531,12 +531,12 @@ export class SproutCardBrowserView extends ItemView {
     });
     const mode = allSuspended ? "unsuspend" : "suspend";
     this._suspendButton.setAttribute("data-mode", mode);
-    const icon = document.createElement("span");
+    const icon = activeDocument.createElement("span");
     icon.className = "inline-flex items-center justify-center [&_svg]:size-4";
     setIcon(icon, mode === "unsuspend" ? "circle-play" : "circle-pause");
     icon.classList.add("scale-[0.85]");
     this._suspendButton.appendChild(icon);
-    const text = document.createElement("span");
+    const text = activeDocument.createElement("span");
     text.textContent = mode === "unsuspend"
       ? this._tx("ui.browser.action.unsuspend.label", "Unsuspend")
       : this._tx("ui.browser.action.suspend.label", "Suspend");
@@ -806,7 +806,7 @@ export class SproutCardBrowserView extends ItemView {
 
     if (pageRows.length === 0) {
       // Empty page — show empty-state message
-      const emptyTbody = document.createElement("tbody");
+      const emptyTbody = activeDocument.createElement("tbody");
       emptyTbody.className = "";
       oldTbody.replaceWith(emptyTbody);
       this._tableBody = emptyTbody;
@@ -905,7 +905,7 @@ export class SproutCardBrowserView extends ItemView {
     this._header.install("library");
     this._applyWidthMode();
 
-    const contentShell = document.createElement("div");
+    const contentShell = activeDocument.createElement("div");
     contentShell.className = `${SPROUT_HOME_CONTENT_SHELL_CLASS} lk-browser-content-shell`;
     root.appendChild(contentShell);
 
@@ -1025,8 +1025,8 @@ export class SproutCardBrowserView extends ItemView {
 
     // Allow clicking the whole select-all header cell to toggle selection.
     refs.selectAllHeaderEl.addEventListener("click", (ev: MouseEvent) => {
-      if (!(ev.target instanceof HTMLElement)) return;
-      if (ev.target.closest("input.lk-browser-select-all")) return;
+      if (!ev.target || (ev.target as Node).nodeType !== 1) return;
+      if ((ev.target as HTMLElement).closest("input.lk-browser-select-all")) return;
       ev.preventDefault();
       const enabled = !(refs.selectAllCheckboxEl.checked && !refs.selectAllCheckboxEl.indeterminate);
       refs.selectAllCheckboxEl.checked = enabled;

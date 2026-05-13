@@ -80,8 +80,8 @@ function useCloseOnOutsideClick(
       if (popoverRef.current?.contains(target)) return;
       onClose();
     };
-    document.addEventListener("mousedown", onDocClick, true);
-    return () => document.removeEventListener("mousedown", onDocClick, true);
+    activeDocument.addEventListener("mousedown", onDocClick, true);
+    return () => activeDocument.removeEventListener("mousedown", onDocClick, true);
   }, [open, wrapRef, popoverRef, onClose]);
 }
 

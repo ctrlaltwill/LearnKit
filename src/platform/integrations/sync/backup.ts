@@ -128,9 +128,10 @@ function computeFNV1a32Hex(text: string): string {
 async function computeSha256Hex(text: string): Promise<string | null> {
   try {
     const src = String(text ?? "");
-    if (!globalThis.crypto?.subtle) return null;
+    const cryptoObj = typeof window !== "undefined" ? window.crypto : undefined;
+    if (!cryptoObj?.subtle) return null;
     const bytes = new TextEncoder().encode(src);
-    const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes);
+    const digest = await cryptoObj.subtle.digest("SHA-256", bytes);
     const out = Array.from(new Uint8Array(digest))
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");

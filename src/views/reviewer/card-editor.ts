@@ -400,13 +400,13 @@ export class CardEditModal extends Modal {
         row.draggable = true;
 
         // Grip handle
-        const grip = document.createElement("span");
+        const grip = activeDocument.createElement("span");
         grip.className = "inline-flex items-center justify-center text-muted-foreground cursor-grab learnkit-oq-grip";
         setIcon(grip, "grip-vertical");
         row.appendChild(grip);
 
         // Number badge
-        const badge = document.createElement("span");
+        const badge = activeDocument.createElement("span");
         badge.className = "inline-flex items-center justify-center text-xs font-medium text-muted-foreground w-5 shrink-0";
         badge.textContent = String(oqStepRows.length + 1);
         row.appendChild(badge);

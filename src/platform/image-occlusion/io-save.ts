@@ -103,8 +103,8 @@ function buildLearnKitImageBaseName(
  * a microtask so the other plugin's modal has time to render.
  */
 function dismissPasteImageRenameModal(): void {
-  setTimeout(() => {
-    const modal = document.querySelector<HTMLElement>(".image-rename-modal");
+  window.setTimeout(() => {
+    const modal = activeDocument.querySelector<HTMLElement>(".image-rename-modal");
     if (!modal) return;
     // Click the Cancel button to dismiss without renaming
     const buttons = modal.querySelectorAll("button");

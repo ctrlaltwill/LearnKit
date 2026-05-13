@@ -5,6 +5,7 @@
  * @exports
  *  - NoteReviewAnalyticsCard
  */
+import {  } from "obsidian";
 
 import * as React from "react";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -189,8 +190,8 @@ export function NoteReviewAnalyticsCard(props: {
       if (!target || !wrapRef.current) return;
       if (!wrapRef.current.contains(target)) setOpen(false);
     };
-    document.addEventListener("mousedown", onDocClick, true);
-    return () => document.removeEventListener("mousedown", onDocClick, true);
+    activeDocument.addEventListener("mousedown", onDocClick, true);
+    return () => activeDocument.removeEventListener("mousedown", onDocClick, true);
   }, [open]);
 
   const toggleDurationOpen = React.useCallback(() => {

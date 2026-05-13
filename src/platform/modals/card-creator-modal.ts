@@ -256,28 +256,28 @@ export class CardCreatorModal extends Modal {
     typeMenuBtn.setAttribute("aria-haspopup", "menu");
     typeMenuBtn.setAttribute("aria-expanded", "false");
 
-    const typeMenuBtnText = document.createElement("span");
+    const typeMenuBtnText = activeDocument.createElement("span");
     typeMenuBtnText.className = "truncate";
     typeMenuBtn.appendChild(typeMenuBtnText);
 
-    const typeMenuBtnIcon = document.createElement("span");
+    const typeMenuBtnIcon = activeDocument.createElement("span");
     typeMenuBtnIcon.className = "inline-flex items-center justify-center [&_svg]:size-3";
     setIcon(typeMenuBtnIcon, "chevron-down");
     typeMenuBtn.appendChild(typeMenuBtnIcon);
 
-    const typePopover = document.createElement("div");
-    const typeSproutWrapper = document.createElement("div");
+    const typePopover = activeDocument.createElement("div");
+    const typeSproutWrapper = activeDocument.createElement("div");
     typeSproutWrapper.className = "learnkit";
     typePopover.className = "";
     typePopover.setAttribute("aria-hidden", "true");
     typePopover.classList.add("learnkit-popover-overlay", "learnkit-popover-overlay", "learnkit-card-creator-type-popover", "learnkit-card-creator-type-popover");
     typeSproutWrapper.appendChild(typePopover);
 
-    const typePanel = document.createElement("div");
+    const typePanel = activeDocument.createElement("div");
     typePanel.className = "rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 learnkit-pointer-auto learnkit-card-creator-type-panel";
     typePopover.appendChild(typePanel);
 
-    const typeMenu = document.createElement("div");
+    const typeMenu = activeDocument.createElement("div");
     typeMenu.setAttribute("role", "menu");
     typeMenu.className = "flex flex-col";
     typePanel.appendChild(typeMenu);
@@ -319,23 +319,23 @@ export class CardCreatorModal extends Modal {
       while (typeMenu.firstChild) typeMenu.removeChild(typeMenu.firstChild);
 
       for (const opt of typeOptions) {
-        const item = document.createElement("div");
+        const item = activeDocument.createElement("div");
         item.setAttribute("role", "menuitemradio");
         item.setAttribute("aria-checked", opt.value === currentType ? "true" : "false");
         item.tabIndex = 0;
         item.className =
           "group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer select-none outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground learnkit-card-creator-type-item";
 
-        const dotWrap = document.createElement("div");
+        const dotWrap = activeDocument.createElement("div");
         dotWrap.className = "size-4 flex items-center justify-center";
         item.appendChild(dotWrap);
 
-        const dot = document.createElement("div");
+        const dot = activeDocument.createElement("div");
         dot.className = "size-2 rounded-full bg-foreground invisible group-aria-checked:visible";
         dot.setAttribute("aria-hidden", "true");
         dotWrap.appendChild(dot);
 
-        const txt = document.createElement("span");
+        const txt = activeDocument.createElement("span");
         txt.className = "";
         txt.textContent = opt.label;
         item.appendChild(txt);
@@ -375,8 +375,8 @@ export class CardCreatorModal extends Modal {
       typeMenuBtn.setAttribute("aria-expanded", "true");
       typePopover.setAttribute("aria-hidden", "false");
       typePopover.classList.add("is-open");
-      if (!typeSproutWrapper.parentElement) document.body.appendChild(typeSproutWrapper);
-      requestAnimationFrame(() => placeTypeMenu());
+      if (!typeSproutWrapper.parentElement) activeDocument.body.appendChild(typeSproutWrapper);
+      window.requestAnimationFrame(() => placeTypeMenu());
 
       const onDocPointerDown = (ev: PointerEvent) => {
         const t = ev.target as Node | null;
@@ -386,7 +386,7 @@ export class CardCreatorModal extends Modal {
       };
 
       window.setTimeout(() => {
-        document.addEventListener("pointerdown", onDocPointerDown, true);
+        activeDocument.addEventListener("pointerdown", onDocPointerDown, true);
       }, 0);
 
       typeMenuOpen = true;
@@ -429,12 +429,12 @@ export class CardCreatorModal extends Modal {
         };
 
         const addLocationField = (root: HTMLElement) => {
-          const wrapper = document.createElement("div");
+          const wrapper = activeDocument.createElement("div");
           wrapper.className = "flex flex-col gap-1";
-          const label = document.createElement("label");
+          const label = activeDocument.createElement("label");
           label.className = "text-sm font-medium";
           label.textContent = this.tx("ui.cardCreator.location", "Location");
-          const input = document.createElement("input");
+          const input = activeDocument.createElement("input");
           input.type = "text";
           input.className = "input w-full";
           input.disabled = true;
@@ -466,16 +466,16 @@ export class CardCreatorModal extends Modal {
           const answerInput = cardEditor.inputEls.answer;
           const infoInput = cardEditor.inputEls.info;
 
-          if (questionInput && questionInput instanceof HTMLTextAreaElement) {
+          if (questionInput && questionInput.tagName === "TEXTAREA") {
             questionInput.addEventListener("paste", (ev) => void this.handleImagePaste(ev, questionInput));
           }
 
           // MCQ answer field is handled by the options UI, not a plain textarea
-          if (answerInput && answerInput instanceof HTMLTextAreaElement && currentType !== "mcq") {
+          if (answerInput && answerInput.tagName === "TEXTAREA" && currentType !== "mcq") {
             answerInput.addEventListener("paste", (ev) => void this.handleImagePaste(ev, answerInput));
           }
 
-          if (infoInput && infoInput instanceof HTMLTextAreaElement) {
+          if (infoInput && infoInput.tagName === "TEXTAREA") {
             infoInput.addEventListener("paste", (ev) => void this.handleImagePaste(ev, infoInput));
           }
         }
@@ -576,7 +576,7 @@ export class CardCreatorModal extends Modal {
     };
 
     this._ioPasteHandler = (ev: ClipboardEvent) => { void handleIoPaste(ev); };
-    document.addEventListener("paste", this._ioPasteHandler);
+    activeDocument.addEventListener("paste", this._ioPasteHandler);
 
     const syncVisibility = () => {
       const showIo = currentType === "io";
@@ -777,7 +777,7 @@ export class CardCreatorModal extends Modal {
   onClose() {
     // Remove global IO paste listener
     if (this._ioPasteHandler) {
-      document.removeEventListener("paste", this._ioPasteHandler);
+      activeDocument.removeEventListener("paste", this._ioPasteHandler);
       this._ioPasteHandler = null;
     }
 

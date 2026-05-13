@@ -75,7 +75,7 @@ function calculateAdaptivePadding(keyboardHeight: number): number {
 function updateContentPadding() {
   if (!Platform.isMobileApp) return;
 
-  const viewContent = document.querySelector<HTMLElement>(
+  const viewContent = activeDocument.querySelector<HTMLElement>(
     ".learnkit .learnkit-view-content",
   );
 
@@ -160,7 +160,7 @@ export function initMobileKeyboardHandler(): void {
   // Debounce to avoid excessive updates
   let resizeTimeout: number | null = null;
   const debouncedUpdate = () => {
-    if (resizeTimeout) clearTimeout(resizeTimeout);
+      if (resizeTimeout) window.clearTimeout(resizeTimeout);
     resizeTimeout = window.setTimeout(() => {
       updateContentPadding();
       resizeTimeout = null;
@@ -179,7 +179,7 @@ export function initMobileKeyboardHandler(): void {
     () => window.removeEventListener("resize", handleWindowResize),
     () => window.removeEventListener("orientationchange", handleOrientationChange),
     () => {
-      if (resizeTimeout) clearTimeout(resizeTimeout);
+        if (resizeTimeout) window.clearTimeout(resizeTimeout);
     },
   ];
 
@@ -207,7 +207,7 @@ export function cleanupMobileKeyboardHandler(): void {
   cleanupFunctions = [];
 
   // Reset padding
-  const viewContent = document.querySelector<HTMLElement>(
+  const viewContent = activeDocument.querySelector<HTMLElement>(
     ".learnkit .learnkit-view-content",
   );
   if (viewContent) {

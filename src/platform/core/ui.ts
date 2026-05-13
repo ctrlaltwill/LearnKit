@@ -227,22 +227,8 @@ export function setCssProps(
   }
 }
 
-/**
- * Returns the correct document for the current context.
- * Handles both main window and Obsidian popout windows.
- * 
- * @param context Optional HTMLElement to extract document context from.
- *                 When provided, uses context.ownerDocument (popout-safe).
- *                 When omitted, falls back to window.document.
- * @returns Document object for the current context
- */
-export function activeDocument(context?: HTMLElement): Document {
-  if (context) return context.ownerDocument;
-  return window.document;
-}
-
 export function el(tag: string, cls?: string, text?: string): HTMLElement {
-  const e = document.createElement(tag);
+  const e = activeDocument.createElement(tag);
   if (cls) e.className = cls;
   if (text !== undefined) e.textContent = text;
   return e;
@@ -254,7 +240,7 @@ export function iconButton(
   title: string,
   onClick: () => void,
 ): HTMLButtonElement {
-  const b = document.createElement("button");
+  const b = activeDocument.createElement("button");
   b.className = "learnkit-btn";
   b.type = "button";
   if (title) {
@@ -277,7 +263,7 @@ export function iconButton(
 }
 
 export function smallToggleButton(isOpen: boolean, onClick: () => void): HTMLButtonElement {
-  const b = document.createElement("button");
+  const b = activeDocument.createElement("button");
   b.className = "learnkit-toggle";
   b.type = "button";
   b.setAttribute("aria-label", isOpen ? "Collapse" : "Expand");
@@ -292,19 +278,27 @@ export function smallToggleButton(isOpen: boolean, onClick: () => void): HTMLBut
 
 export function createFragmentFromHTML(html: string): DocumentFragment {
   const safeHtml = String(html ?? "");
-  if (!safeHtml) return hasDom ? document.createDocumentFragment() : ({} as DocumentFragment);
+  if (!safeHtml) return hasDom ? activeDocument.createDocumentFragment() : ({} as DocumentFragment);
 
   if (!hasDom) return {} as DocumentFragment;
 
   const sanitizer = getDomPurify();
-  if (!sanitizer) return document.createDocumentFragment();
+  if (!sanitizer) return activeDocument.createDocumentFragment();
 
   const sanitized = sanitizer.sanitize(safeHtml, { RETURN_DOM_FRAGMENT: true });
-  if (sanitized instanceof DocumentFragment) return sanitized;
+  if (
+    sanitized &&
+    typeof sanitized === "object" &&
+    "nodeType" in sanitized &&
+    (sanitized as { nodeType: number }).nodeType === Node.DOCUMENT_FRAGMENT_NODE
+  ) {
+    return sanitized;
+  }
 
-  const frag = document.createDocumentFragment();
+  const frag = activeDocument.createDocumentFragment();
   const parser = new DOMParser();
-  const doc = parser.parseFromString(String(sanitized ?? ""), "text/html");
+  const sanitizedHtml = typeof sanitized === "string" ? sanitized : "";
+  const doc = parser.parseFromString(sanitizedHtml, "text/html");
   const nodes = Array.from(doc.body.childNodes);
   for (const node of nodes) frag.appendChild(node);
   return frag;
@@ -326,18 +320,19 @@ function hasLatexMarkers(text: string): boolean {
 }
 
 function renderLatexInElement(container: HTMLElement): void {
-  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+  const walker = activeDocument.createTreeWalker(container, NodeFilter.SHOW_TEXT);
   const nodes: Text[] = [];
 
   let current: Node | null;
   while ((current = walker.nextNode())) {
-    if (!(current instanceof Text)) continue;
-    const parent = current.parentElement;
+    if (current.nodeType !== Node.TEXT_NODE) continue;
+    const textNode = current as Text;
+    const parent = textNode.parentElement;
     if (!parent) continue;
     if (parent.closest(".MathJax, mjx-container, .math")) continue;
-    const value = current.nodeValue ?? "";
+    const value = textNode.nodeValue ?? "";
     if (!value || !hasLatexMarkers(value)) continue;
-    nodes.push(current);
+    nodes.push(textNode);
   }
 
   let didRenderMath = false;
@@ -391,12 +386,12 @@ function renderLatexInElement(container: HTMLElement): void {
     }
     if (!nonOverlapping.length) continue;
 
-    const frag = document.createDocumentFragment();
+    const frag = activeDocument.createDocumentFragment();
     let pos = 0;
 
     for (const m of nonOverlapping) {
       if (m.start > pos) {
-        frag.appendChild(document.createTextNode(sourceText.slice(pos, m.start)));
+        frag.appendChild(activeDocument.createTextNode(sourceText.slice(pos, m.start)));
       }
 
       try {
@@ -405,14 +400,14 @@ function renderLatexInElement(container: HTMLElement): void {
         didRenderMath = true;
       } catch {
         // Preserve the original segment if rendering fails.
-        frag.appendChild(document.createTextNode(sourceText.slice(m.start, m.end)));
+        frag.appendChild(activeDocument.createTextNode(sourceText.slice(m.start, m.end)));
       }
 
       pos = m.end;
     }
 
     if (pos < sourceText.length) {
-      frag.appendChild(document.createTextNode(sourceText.slice(pos)));
+      frag.appendChild(activeDocument.createTextNode(sourceText.slice(pos)));
     }
 
     node.replaceWith(frag);

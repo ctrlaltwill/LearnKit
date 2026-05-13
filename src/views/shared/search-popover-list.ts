@@ -116,7 +116,7 @@ function renderScopeItemIcon(target: HTMLElement, type: SearchPopoverOption["typ
 
   target.empty();
   const ns = "http://www.w3.org/2000/svg";
-  const svg = document.createElementNS(ns, "svg");
+  const svg = activeDocument.createElementNS(ns, "svg");
   svg.setAttribute("xmlns", ns);
   svg.setAttribute("width", "24");
   svg.setAttribute("height", "24");
@@ -128,7 +128,7 @@ function renderScopeItemIcon(target: HTMLElement, type: SearchPopoverOption["typ
   svg.setAttribute("stroke-linejoin", "round");
   svg.setAttribute("class", "svg-icon lucide-folder");
 
-  const path = document.createElementNS(ns, "path");
+  const path = activeDocument.createElementNS(ns, "path");
   path.setAttribute("d", "M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z");
   svg.appendChild(path);
   target.appendChild(svg);
@@ -325,13 +325,13 @@ export function mountSearchPopoverList(args: SearchPopoverListArgs): SearchPopov
 
   const bindOutsideListener = (): void => {
     if (outsideListenerBound) return;
-    document.addEventListener("mousedown", handleOutsideTypeFilterClick, true);
+    activeDocument.addEventListener("mousedown", handleOutsideTypeFilterClick, true);
     outsideListenerBound = true;
   };
 
   const unbindOutsideListener = (): void => {
     if (!outsideListenerBound) return;
-    document.removeEventListener("mousedown", handleOutsideTypeFilterClick, true);
+    activeDocument.removeEventListener("mousedown", handleOutsideTypeFilterClick, true);
     outsideListenerBound = false;
   };
 
@@ -364,7 +364,7 @@ export function mountSearchPopoverList(args: SearchPopoverListArgs): SearchPopov
 
   const shouldOpen = (): boolean => {
     if (!args.getQuery().trim()) return false;
-    const active = document.activeElement as Node | null;
+    const active = activeDocument.activeElement as Node | null;
     return active === args.searchInput || (active ? args.popoverEl.contains(active) : false);
   };
 
@@ -421,8 +421,8 @@ export function mountSearchPopoverList(args: SearchPopoverListArgs): SearchPopov
         });
 
         item.addEventListener("mouseenter", () => {
-          const prev = args.listEl.querySelector(".learnkit-coach-scope-item.is-active");
-          if (prev instanceof HTMLElement) {
+          const prev = args.listEl.querySelector<HTMLElement>(".learnkit-coach-scope-item.is-active");
+          if (prev) {
             prev.classList.remove("is-active");
             prev.tabIndex = -1;
           }
@@ -465,8 +465,8 @@ export function mountSearchPopoverList(args: SearchPopoverListArgs): SearchPopov
       if (evt.key === "ArrowDown") activeIndex = (activeIndex + 1 + max) % max;
       else activeIndex = (activeIndex - 1 + max) % max;
       render();
-      const activeItem = args.listEl.querySelector(".learnkit-coach-scope-item.is-active");
-      if (activeItem instanceof HTMLElement) activeItem.focus();
+      const activeItem = args.listEl.querySelector<HTMLElement>(".learnkit-coach-scope-item.is-active");
+      if (activeItem) activeItem.focus();
       return;
     }
 

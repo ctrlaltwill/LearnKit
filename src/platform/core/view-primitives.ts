@@ -7,6 +7,7 @@
  *  - TitleStripFrame
  *  - createTitleStripFrame
  */
+import {  } from "obsidian";
 
 import { SPROUT_TITLE_STRIP_LABEL_CLASS } from "./ui-classes";
 
@@ -38,25 +39,25 @@ export function createTitleStripFrame(opts: TitleStripFrameOptions): TitleStripF
     prepend = true,
   } = opts;
 
-  const strip = document.createElement("div");
+  const strip = activeDocument.createElement("div");
   strip.className = stripClassName;
 
-  const row = document.createElement("div");
+  const row = activeDocument.createElement("div");
   row.className = rowClassName;
 
-  const left = document.createElement("div");
+  const left = activeDocument.createElement("div");
   left.className = leftClassName;
 
-  const title = document.createElement("div");
+  const title = activeDocument.createElement("div");
   title.className = SPROUT_TITLE_STRIP_LABEL_CLASS;
 
-  const subtitle = document.createElement("div");
+  const subtitle = activeDocument.createElement("div");
   subtitle.className = "text-[0.95rem] font-normal leading-[1.3] text-muted-foreground";
 
   left.appendChild(title);
   left.appendChild(subtitle);
 
-  const right = document.createElement("div");
+  const right = activeDocument.createElement("div");
   right.className = rightClassName;
 
   row.appendChild(left);

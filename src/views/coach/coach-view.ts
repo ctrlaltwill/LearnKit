@@ -262,7 +262,7 @@ export class SproutCoachView extends ItemView {
 
     const animationsEnabled = this.plugin.settings?.general?.enableAnimations ?? true;
     if (animationsEnabled) {
-      setTimeout(() => {
+      window.setTimeout(() => {
         initAOS({
           duration: AOS_DURATION,
           easing: "ease-out",
@@ -697,8 +697,9 @@ export class SproutCoachView extends ItemView {
       : "";
 
     // Build a temporary plan row so _computeHealthForPlan can derive status
+    const randomUuid = typeof window !== "undefined" ? window.crypto?.randomUUID?.() : undefined;
     const tempPlan: CoachPlanRow = {
-      plan_id: planId || (globalThis.crypto?.randomUUID?.() ?? `plan-${now}-${Math.random().toString(36).slice(2, 9)}`),
+      plan_id: planId || (randomUuid ?? `plan-${now}-${Math.random().toString(36).slice(2, 9)}`),
       scope_type: scope.type,
       scope_key: scope.key,
       scope_name: scope.name,
@@ -1019,7 +1020,7 @@ export class SproutCoachView extends ItemView {
       presetPopover.classList.add("hidden");
       presetBtn.setAttr("aria-expanded", "false");
       if (presetOutsideAttached) {
-        document.removeEventListener("pointerdown", handlePresetOutsidePointerDown, true);
+        activeDocument.removeEventListener("pointerdown", handlePresetOutsidePointerDown, true);
         presetOutsideAttached = false;
       }
     };
@@ -1028,7 +1029,7 @@ export class SproutCoachView extends ItemView {
       presetPopover.classList.remove("hidden");
       presetBtn.setAttr("aria-expanded", "true");
       if (!presetOutsideAttached) {
-        document.addEventListener("pointerdown", handlePresetOutsidePointerDown, true);
+        activeDocument.addEventListener("pointerdown", handlePresetOutsidePointerDown, true);
         presetOutsideAttached = true;
       }
     };
@@ -1197,7 +1198,8 @@ export class SproutCoachView extends ItemView {
         const suggestedName = this._tx("ui.view.coach.wizard.scope.presetSuggested", "Preset {index}", { index: presets.length + 1 });
         const name = String(nameInput?.value || "").trim() || suggestedName;
         const now = Date.now();
-        const presetId = globalThis.crypto?.randomUUID?.() ?? `preset-${now}-${Math.random().toString(36).slice(2, 8)}`;
+        const randomUuid = typeof window !== "undefined" ? window.crypto?.randomUUID?.() : undefined;
+        const presetId = randomUuid ?? `preset-${now}-${Math.random().toString(36).slice(2, 8)}`;
         this._coachDb.upsertSavedScopePreset({
           preset_id: presetId,
           name,
@@ -2292,7 +2294,7 @@ export class SproutCoachView extends ItemView {
         overwriteDelays: false,
       });
       const fallbackAfterMs = Math.max(600, Math.floor(maxDelay + AOS_DURATION + 250));
-      setTimeout(() => {
+      window.setTimeout(() => {
         const aosElements = root.querySelectorAll("[data-aos]");
         aosElements.forEach((el) => {
           if (!el.isConnected) return;

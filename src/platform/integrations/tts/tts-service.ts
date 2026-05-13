@@ -57,10 +57,13 @@ function getExternalPlaybackProfile(settings: SproutSettings["audio"]): External
 
 function getAudioContextConstructor(): AudioContextConstructor | null {
   if (typeof window === "undefined") return null;
-  const webkitWindow = window as Window & typeof globalThis & {
+  const standardCtor = (window as unknown as {
+    AudioContext?: AudioContextConstructor;
+  }).AudioContext;
+  const webkitWindow = window as Window & {
     webkitAudioContext?: AudioContextConstructor;
   };
-  return webkitWindow.AudioContext ?? webkitWindow.webkitAudioContext ?? null;
+  return standardCtor ?? webkitWindow.webkitAudioContext ?? null;
 }
 
 /**
@@ -111,7 +114,7 @@ function ensureVoicesLoaded(): Promise<SpeechSynthesisVoice[]> {
     };
     window.speechSynthesis.addEventListener("voiceschanged", onchange);
     // Safety timeout — some environments never fire the event
-    setTimeout(() => resolve(window.speechSynthesis.getVoices()), 2000);
+    window.setTimeout(() => resolve(window.speechSynthesis.getVoices()), 2000);
   });
 }
 
@@ -1265,7 +1268,7 @@ export class TtsService {
 
   private _clearResumeKeepAliveInterval(): void {
     if (this._resumeKeepAliveInterval) {
-      clearTimeout(this._resumeKeepAliveInterval);
+      window.clearTimeout(this._resumeKeepAliveInterval);
       this._resumeKeepAliveInterval = null;
     }
   }
@@ -1610,7 +1613,7 @@ export class TtsService {
         `speak() — segment ${index + 1}/${segments.length}, lang="${segmentLang}", fromFlag=${segment.fromFlag}, text="${spokenText.slice(0, 80)}…"`,
       );
 
-      setTimeout(() => {
+      window.setTimeout(() => {
         if (session !== this._speakSession) return;
         window.speechSynthesis.speak(utterance);
       }, 50);
@@ -2066,11 +2069,11 @@ export function bindTtsPlayingState(btn: HTMLElement): void {
   // Clear any existing icon content (e.g. from setIcon call before this)
   btn.empty();
 
-  const idleWrap = document.createElement("span");
+  const idleWrap = activeDocument.createElement("span");
   idleWrap.className = "tts-icon-idle";
   setIcon(idleWrap, "volume-2");
 
-  const playingWrap = document.createElement("span");
+  const playingWrap = activeDocument.createElement("span");
   playingWrap.className = "tts-icon-playing";
   setIcon(playingWrap, "volume-off");
 

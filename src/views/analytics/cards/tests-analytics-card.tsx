@@ -5,6 +5,7 @@
  * @exports
  *  - TestsAnalyticsCard
  */
+import {  } from "obsidian";
 
 import * as React from "react";
 import { ComposedChart, Line, ResponsiveContainer, Scatter, Tooltip, XAxis, YAxis } from "recharts";
@@ -316,8 +317,8 @@ export function TestsAnalyticsCard(props: {
       if (!target || !wrapRef.current) return;
       if (!wrapRef.current.contains(target)) setOpen(false);
     };
-    document.addEventListener("mousedown", onDocClick, true);
-    return () => document.removeEventListener("mousedown", onDocClick, true);
+    activeDocument.addEventListener("mousedown", onDocClick, true);
+    return () => activeDocument.removeEventListener("mousedown", onDocClick, true);
   }, [open]);
 
   const toggleDurationOpen = React.useCallback(() => {

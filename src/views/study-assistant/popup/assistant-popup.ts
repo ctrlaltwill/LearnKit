@@ -520,8 +520,8 @@ export class SproutAssistantPopup {
         reviewDepth: this.reviewDepth,
       },
     };
-    if (this._saveChatTimer != null) clearTimeout(this._saveChatTimer);
-    this._saveChatTimer = setTimeout(() => {
+    if (this._saveChatTimer != null) window.clearTimeout(this._saveChatTimer);
+    this._saveChatTimer = window.setTimeout(() => {
       this._saveChatTimer = null;
       void this._saveChatForFile(file, snapshot.hasData, snapshot.data);
     }, 300);
@@ -791,7 +791,7 @@ export class SproutAssistantPopup {
     if (!confirmed) return;
 
     if (this._saveChatTimer != null) {
-      clearTimeout(this._saveChatTimer);
+      window.clearTimeout(this._saveChatTimer);
       this._saveChatTimer = null;
     }
 
@@ -890,7 +890,7 @@ export class SproutAssistantPopup {
     this._registerEditProposalResolutionListener();
 
     // Trigger button
-    const btn = document.createElement("button");
+    const btn = activeDocument.createElement("button");
     btn.className = "learnkit-assistant-trigger";
     const openCompanionLabel = this._tx("ui.studyAssistant.chat.openCompanion", "Open LearnKit Companion");
     btn.setAttribute("aria-label", openCompanionLabel);
@@ -946,7 +946,7 @@ export class SproutAssistantPopup {
         this.render();
       }
     };
-    document.addEventListener("mousedown", this._onClickOutside, true);
+    activeDocument.addEventListener("mousedown", this._onClickOutside, true);
 
     // Escape handler
     this._onKeydown = (e: KeyboardEvent) => {
@@ -969,7 +969,7 @@ export class SproutAssistantPopup {
         // via the trigger button or header close button.
       }
     };
-    document.addEventListener("keydown", this._onKeydown, true);
+    activeDocument.addEventListener("keydown", this._onKeydown, true);
   }
 
   mountEmbedded(host: HTMLElement): void {
@@ -988,7 +988,7 @@ export class SproutAssistantPopup {
     this._isTriggerButtonHovered = false;
 
     if (!this.popupEl) {
-      const popup = document.createElement("div");
+      const popup = activeDocument.createElement("div");
       popup.className = "learnkit learnkit-assistant-popup learnkit-assistant-popup-embedded";
       host.appendChild(popup);
       this.popupEl = popup as unknown as HTMLDivElement;
@@ -1022,17 +1022,17 @@ export class SproutAssistantPopup {
   destroy(): void {
     // Flush any pending chat save
     if (this._saveChatTimer != null) {
-      clearTimeout(this._saveChatTimer);
+      window.clearTimeout(this._saveChatTimer);
       this._saveChatTimer = null;
     }
     void this._saveChatForActiveFile();
     this._shutdownTransientUiActivity();
     if (this._onClickOutside) {
-      document.removeEventListener("mousedown", this._onClickOutside, true);
+      activeDocument.removeEventListener("mousedown", this._onClickOutside, true);
       this._onClickOutside = null;
     }
     if (this._onKeydown) {
-      document.removeEventListener("keydown", this._onKeydown, true);
+      activeDocument.removeEventListener("keydown", this._onKeydown, true);
       this._onKeydown = null;
     }
     this._captureCurrentLeafSession();
@@ -1138,19 +1138,19 @@ export class SproutAssistantPopup {
       this._popupHeightFrame = null;
     }
     if (this._popupCloseTimer != null) {
-      clearTimeout(this._popupCloseTimer);
+      window.clearTimeout(this._popupCloseTimer);
       this._popupCloseTimer = null;
     }
     if (this._triggerReplyRevealTimer != null) {
-      clearTimeout(this._triggerReplyRevealTimer);
+      window.clearTimeout(this._triggerReplyRevealTimer);
       this._triggerReplyRevealTimer = null;
     }
     if (this._triggerReplyBounceTimer != null) {
-      clearTimeout(this._triggerReplyBounceTimer);
+      window.clearTimeout(this._triggerReplyBounceTimer);
       this._triggerReplyBounceTimer = null;
     }
     if (this._voiceSilenceTimer != null) {
-      clearTimeout(this._voiceSilenceTimer);
+      window.clearTimeout(this._voiceSilenceTimer);
       this._voiceSilenceTimer = null;
     }
 
@@ -1245,7 +1245,7 @@ export class SproutAssistantPopup {
     }
     this.isOpen = true;
     if (this._popupCloseTimer != null) {
-      clearTimeout(this._popupCloseTimer);
+      window.clearTimeout(this._popupCloseTimer);
       this._popupCloseTimer = null;
     }
     this.popupEl?.removeClass("is-closing");
@@ -1279,13 +1279,13 @@ export class SproutAssistantPopup {
     this.isOpen = false;
     this.triggerBtn?.removeClass("is-open");
     if (this._popupCloseTimer != null) {
-      clearTimeout(this._popupCloseTimer);
+      window.clearTimeout(this._popupCloseTimer);
       this._popupCloseTimer = null;
     }
     if (this.popupEl) {
       this.popupEl.removeClass("is-hidden");
       this.popupEl.addClass("is-closing");
-      this._popupCloseTimer = setTimeout(() => {
+      this._popupCloseTimer = window.setTimeout(() => {
         this._popupCloseTimer = null;
         this.popupEl?.removeClass("is-closing");
         this.popupEl?.addClass("is-hidden");
@@ -1507,8 +1507,8 @@ export class SproutAssistantPopup {
     trigger.removeClass("is-reply-bounce");
     void trigger.offsetWidth;
     trigger.addClass("is-reply-bounce");
-    if (this._triggerReplyBounceTimer != null) clearTimeout(this._triggerReplyBounceTimer);
-    this._triggerReplyBounceTimer = setTimeout(() => {
+    if (this._triggerReplyBounceTimer != null) window.clearTimeout(this._triggerReplyBounceTimer);
+    this._triggerReplyBounceTimer = window.setTimeout(() => {
       this._triggerReplyBounceTimer = null;
       this.triggerBtn?.removeClass("is-reply-bounce");
     }, 2050);
@@ -1795,8 +1795,8 @@ export class SproutAssistantPopup {
   }
 
   private _captureVisibleChatScrollTop(mode: AssistantMode): number | null {
-    const chatWrap = this.popupEl?.querySelector(".learnkit-assistant-popup-chat-wrap");
-    if (!(chatWrap instanceof HTMLElement)) return null;
+    const chatWrap = this.popupEl?.querySelector<HTMLElement>(".learnkit-assistant-popup-chat-wrap");
+    if (!chatWrap) return null;
     this._autoFollowChatByMode[mode] = this._isChatWrapNearBottom(chatWrap);
     return chatWrap.scrollTop;
   }
@@ -1922,14 +1922,14 @@ export class SproutAssistantPopup {
     // Apply immediately so rapid back-to-back renders don't snapshot scrollTop at 0.
     applyScrollPosition();
     // Re-apply on next frame for late layout changes (e.g. markdown/image sizing).
-    requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
       applyScrollPosition();
     });
   }
 
   private _scheduleStreamRender(): void {
     if (this._streamRenderTimer != null) return;
-    this._streamRenderTimer = requestAnimationFrame(() => {
+    this._streamRenderTimer = window.requestAnimationFrame(() => {
       this._streamRenderTimer = null;
       if (!this._isStreaming) return;
       this._updateStreamingBubble();
@@ -1946,9 +1946,9 @@ export class SproutAssistantPopup {
     ) as HTMLElement | null;
     if (bubbleEl) {
       this.renderMarkdownMessage(bubbleEl, this._streamingReplyText);
-      const chatWrap = bubbleEl.closest(".learnkit-assistant-popup-chat-wrap");
+      const chatWrap = bubbleEl.closest<HTMLElement>(".learnkit-assistant-popup-chat-wrap");
       const streamingMode = this._activeStreamingMode ?? this.mode;
-      if (chatWrap instanceof HTMLElement && this._shouldAutoFollowChat(streamingMode)) {
+      if (chatWrap && this._shouldAutoFollowChat(streamingMode)) {
         chatWrap.scrollTop = chatWrap.scrollHeight;
       }
     }
@@ -2162,7 +2162,7 @@ export class SproutAssistantPopup {
     if (!nextLeaf) return;
     if (nextLeaf === this._activeSessionLeaf) return;
     if (this._saveChatTimer != null) {
-      clearTimeout(this._saveChatTimer);
+      window.clearTimeout(this._saveChatTimer);
       this._saveChatTimer = null;
     }
     void this._saveChatForActiveFile();
@@ -2224,7 +2224,7 @@ export class SproutAssistantPopup {
   }
 
   private _buildTriggerHotzone(): HTMLDivElement {
-    const zone = document.createElement("div");
+    const zone = activeDocument.createElement("div");
     zone.className = "learnkit-assistant-trigger-hotzone";
     zone.setAttribute("aria-hidden", "true");
     // Hover detection is handled via host-level pointermove (see _attachHostProximityHover)
@@ -2788,7 +2788,7 @@ export class SproutAssistantPopup {
     const level = Math.max(0, Math.min(1, rms * 3));
     this._applyVoiceMeterLevel(level);
 
-    this._voiceMeterFrame = requestAnimationFrame(() => this._tickVoiceMeter());
+    this._voiceMeterFrame = window.requestAnimationFrame(() => this._tickVoiceMeter());
   }
 
   private _applyVoiceMeterLevel(level: number): void {
@@ -2821,7 +2821,7 @@ export class SproutAssistantPopup {
 
   private _armVoiceAutoStopTimer(): void {
     this._clearVoiceAutoStopTimer();
-    this._voiceAutoStopTimer = setTimeout(() => {
+    this._voiceAutoStopTimer = window.setTimeout(() => {
       if (!this._isListening) return;
       this._voiceStopRequested = true;
       this._stopVoiceInput();
@@ -2830,7 +2830,7 @@ export class SproutAssistantPopup {
 
   private _clearVoiceAutoStopTimer(): void {
     if (this._voiceAutoStopTimer != null) {
-      clearTimeout(this._voiceAutoStopTimer);
+      window.clearTimeout(this._voiceAutoStopTimer);
       this._voiceAutoStopTimer = null;
     }
   }
@@ -2864,7 +2864,7 @@ export class SproutAssistantPopup {
         || target === shell
         || !!target.closest(".learnkit-assistant-popup-composer-shell");
       if (!isInputTarget && !isComposerTarget) return;
-      requestAnimationFrame(() => input.focus());
+      window.requestAnimationFrame(() => input.focus());
     });
   }
 
@@ -2923,7 +2923,7 @@ export class SproutAssistantPopup {
     // Second click during delay cancels pending start.
     if (this._pendingTtsMessageIndex === messageIndex) {
       if (this._ttsStartDelayTimer != null) {
-        clearTimeout(this._ttsStartDelayTimer);
+        window.clearTimeout(this._ttsStartDelayTimer);
         this._ttsStartDelayTimer = null;
       }
       this._pendingTtsMessageIndex = null;
@@ -2936,12 +2936,12 @@ export class SproutAssistantPopup {
     }
 
     if (this._ttsStartDelayTimer != null) {
-      clearTimeout(this._ttsStartDelayTimer);
+      window.clearTimeout(this._ttsStartDelayTimer);
       this._ttsStartDelayTimer = null;
     }
 
     this._pendingTtsMessageIndex = messageIndex;
-    this._ttsStartDelayTimer = setTimeout(() => {
+    this._ttsStartDelayTimer = window.setTimeout(() => {
       this._ttsStartDelayTimer = null;
       if (this._pendingTtsMessageIndex !== messageIndex) return;
       this._pendingTtsMessageIndex = null;
@@ -3000,16 +3000,16 @@ export class SproutAssistantPopup {
     this._pendingTtsMessageIndex = null;
     this._ttsStartGraceUntil = 0;
     if (this._ttsPollTimer != null) {
-      clearTimeout(this._ttsPollTimer);
+      window.clearTimeout(this._ttsPollTimer);
       this._ttsPollTimer = null;
     }
     if (this._ttsStartDelayTimer != null) {
-      clearTimeout(this._ttsStartDelayTimer);
+      window.clearTimeout(this._ttsStartDelayTimer);
       this._ttsStartDelayTimer = null;
     }
     if (!preserveFinishTransition) {
       if (this._ttsCollapseTimer != null) {
-        clearTimeout(this._ttsCollapseTimer);
+        window.clearTimeout(this._ttsCollapseTimer);
         this._ttsCollapseTimer = null;
       }
       this._teardownTtsFinishInteraction();
@@ -3054,7 +3054,7 @@ export class SproutAssistantPopup {
 
     this._teardownTtsFinishInteraction();
     if (this._ttsCollapseTimer != null) {
-      clearTimeout(this._ttsCollapseTimer);
+      window.clearTimeout(this._ttsCollapseTimer);
       this._ttsCollapseTimer = null;
     }
 
@@ -3071,7 +3071,7 @@ export class SproutAssistantPopup {
 
     const isHovering = row.matches(":hover") || audioBar.matches(":hover");
     if (!isHovering) {
-      this._ttsCollapseTimer = setTimeout(() => {
+      this._ttsCollapseTimer = window.setTimeout(() => {
         this._ttsCollapseTimer = null;
         releaseFinishClass();
       }, 230);
@@ -3101,7 +3101,7 @@ export class SproutAssistantPopup {
     if (!speaking && !pending) {
       // Ignore transient startup window before synthesis engine flips to speaking/pending.
       if (Date.now() < this._ttsStartGraceUntil) {
-        this._ttsPollTimer = setTimeout(() => this._pollTtsEnd(), 120);
+        this._ttsPollTimer = window.setTimeout(() => this._pollTtsEnd(), 120);
         return;
       }
       this._startReplyAudioFinishTransition();
@@ -3110,7 +3110,7 @@ export class SproutAssistantPopup {
     }
     // Once we see active synthesis, grace no longer needed.
     this._ttsStartGraceUntil = 0;
-    this._ttsPollTimer = setTimeout(() => this._pollTtsEnd(), 250);
+    this._ttsPollTimer = window.setTimeout(() => this._pollTtsEnd(), 250);
   }
 
   /** Animate waveform bars for the currently playing assistant reply. */
@@ -3136,9 +3136,9 @@ export class SproutAssistantPopup {
         const h = 3 + Math.round(level * heights[i] * 10);
         setCssProps(bar as HTMLElement, "height", `${h}px`);
       });
-      this._ttsWaveformFrame = requestAnimationFrame(tick);
+      this._ttsWaveformFrame = window.requestAnimationFrame(tick);
     };
-    this._ttsWaveformFrame = requestAnimationFrame(tick);
+    this._ttsWaveformFrame = window.requestAnimationFrame(tick);
   }
 
   /** Render solid play/pause icon for the assistant reply audio button. */
@@ -3578,7 +3578,7 @@ export class SproutAssistantPopup {
   private _dispatchEditDecorationsToEditor(edits: Array<{ original: string; replacement: string }>, noteContent: string): void {
     const view = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
     if (!view) {
-      new Notice(this._tx("ui.studyAssistant.edit.switchToEdit", "Switch to editing mode to review changes in the document."));
+      new Notice(this._tx("ui.studyAssistant.edit.switchToEdit", "Switch to editing mode to review changes in the activeDocument."));
       return;
     }
 
@@ -3594,7 +3594,7 @@ export class SproutAssistantPopup {
         );
       }
       // Delay dispatch to let CM6 editor initialise after mode switch
-      setTimeout(() => this._dispatchEditDecorationsToEditorInner(edits), 200);
+      window.setTimeout(() => this._dispatchEditDecorationsToEditorInner(edits), 200);
       return;
     }
 
@@ -5285,7 +5285,7 @@ export class SproutAssistantPopup {
       for (let i = 0; i < 30; i++) {
         const editor = view.editor;
         if (editor) return editor;
-        await new Promise((resolve) => setTimeout(resolve, 25));
+        await new Promise((resolve) => window.setTimeout(resolve, 25));
       }
       return null;
     };
@@ -5441,7 +5441,7 @@ export class SproutAssistantPopup {
 
   private ensurePopup(): void {
     if (this.popupEl) return;
-    const popup = document.createElement("div");
+    const popup = activeDocument.createElement("div");
     popup.className = "learnkit learnkit-assistant-popup is-hidden";
     this._attachToBestHost(popup);
     this.popupEl = popup as unknown as HTMLDivElement;
@@ -5461,7 +5461,7 @@ export class SproutAssistantPopup {
     if (this._userResizedHeight != null) return;
     if (this._popupHeightFrame != null) cancelAnimationFrame(this._popupHeightFrame);
 
-    this._popupHeightFrame = requestAnimationFrame(() => {
+    this._popupHeightFrame = window.requestAnimationFrame(() => {
       this._popupHeightFrame = null;
       if (!this.popupEl || this.popupEl.hasClass("is-hidden")) return;
       if (this._userResizedHeight != null) return;
@@ -5534,7 +5534,7 @@ export class SproutAssistantPopup {
       const startWidth = startRect.width;
       const startHeight = startRect.height;
 
-      const remPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      const remPx = parseFloat(getComputedStyle(activeDocument.documentElement).fontSize) || 16;
       const insetXPx = EDGE_INSET_X_REM * remPx;
       const insetYPx = EDGE_INSET_Y_REM * remPx;
 
@@ -5562,19 +5562,19 @@ export class SproutAssistantPopup {
       };
 
       const onUp = () => {
-        document.removeEventListener("pointermove", onMove);
-        document.removeEventListener("pointerup", onUp);
-        document.body.style.removeProperty("cursor");
-        document.body.style.removeProperty("user-select");
+        activeDocument.removeEventListener("pointermove", onMove);
+        activeDocument.removeEventListener("pointerup", onUp);
+        activeDocument.body.style.removeProperty("cursor");
+        activeDocument.body.style.removeProperty("user-select");
         this._persistUserResize();
       };
 
-      document.body.style.cursor =
+      activeDocument.body.style.cursor =
         axis === "both" ? "nwse-resize" : axis === "width" ? "ew-resize" : "ns-resize";
-      setCssProps(document.body, "user-select", "none");
+      setCssProps(activeDocument.body, "user-select", "none");
 
-      document.addEventListener("pointermove", onMove);
-      document.addEventListener("pointerup", onUp);
+      activeDocument.addEventListener("pointermove", onMove);
+      activeDocument.addEventListener("pointerup", onUp);
     };
 
     const onTopDown = (e: PointerEvent) => startDrag(e, "height");
@@ -5676,7 +5676,7 @@ export class SproutAssistantPopup {
     const menuWrap = headerActions.createDiv({ cls: "learnkit-assistant-popup-header-menu learnkit-assistant-popup-header-menu" });
 
     const menuBtn = menuWrap.createEl("button", { cls: "learnkit-assistant-popup-overflow learnkit-assistant-popup-overflow" });
-    const isMobileHeaderNav = document.body.classList.contains("is-mobile");
+    const isMobileHeaderNav = activeDocument.body.classList.contains("is-mobile");
     const menuActionsLabel = isMobileHeaderNav
       ? this._tx("ui.common.navigationMenu", "Navigation menu")
       : this._tx("ui.studyAssistant.chat.actionsMenu", "Actions");
@@ -5694,9 +5694,9 @@ export class SproutAssistantPopup {
       this.render();
     });
 
-    const menuPortalRoot = document.createElement("div");
+    const menuPortalRoot = activeDocument.createElement("div");
     menuPortalRoot.className = "learnkit";
-    const menuPopover = document.createElement("div");
+    const menuPopover = activeDocument.createElement("div");
     menuPopover.className = "learnkit-assistant-popup-header-popover learnkit-popover-overlay dropdown-menu min-w-56 rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 learnkit-pointer-auto learnkit-header-menu-panel";
     menuPortalRoot.appendChild(menuPopover);
     this._headerMenuPortalRoot = menuPortalRoot;
@@ -5705,7 +5705,7 @@ export class SproutAssistantPopup {
     menuPopover.setAttribute("aria-hidden", this._headerMenuOpen ? "false" : "true");
     menuPopover.classList.toggle("is-open", this._headerMenuOpen);
     if (this._headerMenuOpen) {
-      document.body.appendChild(menuPortalRoot);
+      activeDocument.body.appendChild(menuPortalRoot);
     }
     const menuList = menuPopover.createDiv({ cls: "learnkit-assistant-popup-header-menu-list learnkit-assistant-popup-header-menu-list" });
 
@@ -5907,11 +5907,11 @@ export class SproutAssistantPopup {
           gap: 6,
         });
       };
-      requestAnimationFrame(() => placeHeaderMenu());
+      window.requestAnimationFrame(() => placeHeaderMenu());
 
       const controller = new AbortController();
       this._headerMenuAbort = controller;
-      document.addEventListener("mousedown", (e) => {
+      activeDocument.addEventListener("mousedown", (e) => {
         const target = e.target as Node;
         // Keep clicks on header actions (menu and close button) intact.
         // Rendering here would remove the close button before its click event fires.
@@ -5920,7 +5920,7 @@ export class SproutAssistantPopup {
           this.render();
         }
       }, { signal: controller.signal });
-      document.addEventListener("keydown", (e) => {
+      activeDocument.addEventListener("keydown", (e) => {
         if (e.key === "Escape") {
           this._headerMenuOpen = false;
           this.render();
@@ -6083,7 +6083,7 @@ export class SproutAssistantPopup {
           if (isNoteBased) {
             item.addClass("is-clickable");
             item.addEventListener("click", (evt) => {
-              const target = evt.target instanceof HTMLElement ? evt.target : null;
+              const target = evt.target && (evt.target as Node).nodeType === 1 ? evt.target as HTMLElement : null;
               if (target?.closest(".learnkit-assistant-popup-insert-btn")) return;
               void this.focusSuggestionSource(suggestion);
             });
@@ -6446,7 +6446,7 @@ export class SproutAssistantPopup {
             if (isNoteBased) {
               item.addClass("is-clickable");
               item.addEventListener("click", (evt) => {
-                const target = evt.target instanceof HTMLElement ? evt.target : null;
+                const target = evt.target && (evt.target as Node).nodeType === 1 ? evt.target as HTMLElement : null;
                 if (target?.closest(".learnkit-assistant-popup-insert-btn")) return;
                 void this.focusSuggestionSource(suggestion);
               });
@@ -6595,7 +6595,7 @@ class AttachmentPickerModal extends Modal {
   }
 
   private _pickSystemFile(): void {
-    const input = document.createElement("input");
+    const input = activeDocument.createElement("input");
     input.type = "file";
     input.multiple = true;
     input.accept = SUPPORTED_FILE_ACCEPT;
@@ -6632,7 +6632,7 @@ class AttachmentPickerModal extends Modal {
         this.close();
       })();
     });
-    document.body.appendChild(input);
+    activeDocument.body.appendChild(input);
     input.click();
     input.remove();
   }

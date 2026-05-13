@@ -34,6 +34,7 @@
  *  - checkForNonCardContent      — checks whether an element contains non-card content after a pipe
  *  - containsNonCardContent      — returns true if an element has any non-card content
  */
+import {  } from "obsidian";
 
 import { log } from "../../platform/core/logger";
 import { queryFirst } from "../../platform/core/ui";
@@ -285,12 +286,12 @@ export function extractRawTextFromParagraph(el: HTMLElement): string {
   // Replace math elements with LaTeX delimiters
   temp.querySelectorAll('.math.math-inline').forEach((mathEl) => {
     const latexSource = extractLaTeXFromMathJax(mathEl);
-    mathEl.replaceWith(document.createTextNode(`$${latexSource}$`));
+    mathEl.replaceWith(activeDocument.createTextNode(`$${latexSource}$`));
   });
   
   temp.querySelectorAll('.math.math-block').forEach((mathEl) => {
     const latexSource = extractLaTeXFromMathJax(mathEl);
-    mathEl.replaceWith(document.createTextNode(`$$${latexSource}$$`));
+    mathEl.replaceWith(activeDocument.createTextNode(`$$${latexSource}$$`));
   });
   
   // Convert any remaining HTML entities and tags to text
@@ -310,14 +311,14 @@ export function extractTextWithLaTeX(el: HTMLElement): string {
   // Replace inline math spans with $ delimiters
   clone.querySelectorAll('.math.math-inline').forEach((mathEl) => {
     const latexSource = extractLaTeXFromMathJax(mathEl);
-    const textNode = document.createTextNode(`$${latexSource}$`);
+    const textNode = activeDocument.createTextNode(`$${latexSource}$`);
     mathEl.replaceWith(textNode);
   });
   
   // Replace block math divs with $$ delimiters
   clone.querySelectorAll('.math.math-block').forEach((mathEl) => {
     const latexSource = extractLaTeXFromMathJax(mathEl);
-    const textNode = document.createTextNode(`$$${latexSource}$$`);
+    const textNode = activeDocument.createTextNode(`$$${latexSource}$$`);
     mathEl.replaceWith(textNode);
   });
   
@@ -572,11 +573,12 @@ export function parseLearnKitCard(text: string): LearnKitCard | null {
   Object.keys(fields).forEach(k => {
     const fieldValue = fields[k];
     if (Array.isArray(fieldValue)) {
-      if (fieldValue.length === 1) {
-        fields[k] = unescapePipeText(fieldValue[0]);
+      const fieldLines = fieldValue.map((line) => String(line));
+      if (fieldLines.length === 1) {
+        fields[k] = unescapePipeText(fieldLines[0]);
       } else {
         // Join with newlines to preserve multi-line content like LaTeX blocks
-        fields[k] = unescapePipeText(fieldValue.join('\n'));
+        fields[k] = unescapePipeText(fieldLines.join('\n'));
       }
     }
   });
@@ -1002,11 +1004,11 @@ export function parseMarkdownToElements(text: string): ParsedMarkdownElement[] {
  */
 export function createMarkdownElement(data: ParsedMarkdownElement): HTMLElement | null {
   if (data.type === 'header' && data.level) {
-    const wrapper = document.createElement('div');
+    const wrapper = activeDocument.createElement('div');
     wrapper.className = `el-h${data.level}`;
     wrapper.setAttribute('data-learnkit-extracted', 'true');
     
-    const header = document.createElement(`h${data.level}`);
+    const header = activeDocument.createElement(`h${data.level}`);
     header.setAttribute('data-heading', data.content);
     header.setAttribute('dir', 'auto');
     header.textContent = data.content;
@@ -1016,15 +1018,15 @@ export function createMarkdownElement(data: ParsedMarkdownElement): HTMLElement 
   }
   
   if (data.type === 'ordered-list' && data.items) {
-    const wrapper = document.createElement('div');
+    const wrapper = activeDocument.createElement('div');
     wrapper.className = 'el-ol';
     wrapper.setAttribute('data-learnkit-extracted', 'true');
     
-    const ol = document.createElement('ol');
+    const ol = activeDocument.createElement('ol');
     ol.className = 'has-list-bullet';
     
     for (const item of data.items) {
-      const li = document.createElement('li');
+      const li = activeDocument.createElement('li');
       li.setAttribute('data-line', '0');
       li.setAttribute('dir', 'auto');
       
@@ -1034,11 +1036,11 @@ export function createMarkdownElement(data: ParsedMarkdownElement): HTMLElement 
         const linkText = linkMatch[1];
         const linkUrl = linkMatch[2];
         
-        const span = document.createElement('span');
+        const span = activeDocument.createElement('span');
         span.className = 'list-bullet';
         li.appendChild(span);
         
-        const link = document.createElement('a');
+        const link = activeDocument.createElement('a');
         link.href = linkUrl;
         link.className = 'external-link';
         link.setAttribute('rel', 'noopener');
@@ -1046,10 +1048,10 @@ export function createMarkdownElement(data: ParsedMarkdownElement): HTMLElement 
         link.textContent = linkText;
         li.appendChild(link);
       } else {
-        const span = document.createElement('span');
+        const span = activeDocument.createElement('span');
         span.className = 'list-bullet';
         li.appendChild(span);
-        li.appendChild(document.createTextNode(item));
+        li.appendChild(activeDocument.createTextNode(item));
       }
       
       ol.appendChild(li);
@@ -1060,22 +1062,22 @@ export function createMarkdownElement(data: ParsedMarkdownElement): HTMLElement 
   }
   
   if (data.type === 'unordered-list' && data.items) {
-    const wrapper = document.createElement('div');
+    const wrapper = activeDocument.createElement('div');
     wrapper.className = 'el-ul';
     wrapper.setAttribute('data-learnkit-extracted', 'true');
     
-    const ul = document.createElement('ul');
+    const ul = activeDocument.createElement('ul');
     ul.className = 'has-list-bullet';
     
     for (const item of data.items) {
-      const li = document.createElement('li');
+      const li = activeDocument.createElement('li');
       li.setAttribute('data-line', '0');
       li.setAttribute('dir', 'auto');
       
-      const span = document.createElement('span');
+      const span = activeDocument.createElement('span');
       span.className = 'list-bullet';
       li.appendChild(span);
-      li.appendChild(document.createTextNode(item));
+      li.appendChild(activeDocument.createTextNode(item));
       
       ul.appendChild(li);
     }
@@ -1085,11 +1087,11 @@ export function createMarkdownElement(data: ParsedMarkdownElement): HTMLElement 
   }
   
   if (data.type === 'paragraph') {
-    const wrapper = document.createElement('div');
+    const wrapper = activeDocument.createElement('div');
     wrapper.className = 'el-p';
     wrapper.setAttribute('data-learnkit-extracted', 'true');
     
-    const p = document.createElement('p');
+    const p = activeDocument.createElement('p');
     p.setAttribute('dir', 'auto');
     p.textContent = data.content;
     wrapper.appendChild(p);

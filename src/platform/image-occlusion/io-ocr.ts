@@ -8,6 +8,7 @@
  *   - AutoMaskOptions — options controlling OCR and post-processing behaviour
  *   - autoDetectTextMasks — detect and return IO masks from image text regions
  */
+import {  } from "obsidian";
 
 import type { ClipboardImage, IORect } from "./io-types";
 
@@ -92,7 +93,7 @@ async function preprocessForOcr(imageData: ClipboardImage): Promise<Blob | HTMLC
     return blob;
   }
 
-  const canvas = document.createElement("canvas");
+  const canvas = activeDocument.createElement("canvas");
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) return blob;
 

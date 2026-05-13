@@ -156,7 +156,7 @@ export class SproutWidgetView extends ItemView {
     if (this.containerEl.offsetParent === null) return false;
     // Make sure focus is within the widget's leaf (avoids stealing keys from
     // the main editing area or other sidebar panels).
-    const active = document.activeElement;
+    const active = activeDocument.activeElement;
     return !!active && this.containerEl.contains(active);
   }
 
@@ -688,8 +688,8 @@ export class SproutWidgetView extends ItemView {
   /*  Delegated session actions                                        */
   /* ---------------------------------------------------------------- */
 
-  async gradeCurrentRating(rating: "again" | "hard" | "good" | "easy", meta: ReviewMeta | null) {
-    return _gradeCurrentRating(this, rating, meta);
+  async gradeCurrentRating(rating: "again" | "hard" | "good" | "easy", meta: ReviewMeta | null): Promise<void> {
+    await _gradeCurrentRating(this, rating, meta);
   }
   canUndo(): boolean {
     return _canUndo(this);
@@ -923,7 +923,7 @@ export class SproutWidgetView extends ItemView {
               submitBtnEl.setAttribute("aria-label", this._tx("ui.reviewer.mcq.chooseOne", "Choose at least one answer to proceed"));
               submitBtnEl.setAttribute("data-tooltip-position", "top");
               submitBtnEl.classList.add("learnkit-mcq-submit-tooltip-visible", "learnkit-mcq-submit-tooltip-visible");
-              setTimeout(() => {
+              window.setTimeout(() => {
                 submitBtnEl.classList.remove("learnkit-mcq-submit-tooltip-visible", "learnkit-mcq-submit-tooltip-visible");
               }, 2500);
             }
@@ -1037,7 +1037,10 @@ export class SproutWidgetView extends ItemView {
           };
           const rating = ratingMap[ev.key];
           if (rating) {
-            void this.gradeCurrentRating(rating, {}).then(() => void this.nextCard());
+            void (async () => {
+              await this.gradeCurrentRating(rating, {});
+              await this.nextCard();
+            })();
           }
           return;
         }
@@ -1056,7 +1059,7 @@ export class SproutWidgetView extends ItemView {
 
   render() {
     const root = this.containerEl;
-    const hadFocusWithin = !!document.activeElement && root.contains(document.activeElement);
+    const hadFocusWithin = !!activeDocument.activeElement && root.contains(activeDocument.activeElement);
     root.empty();
     root.removeClass("learnkit");
 
@@ -1067,7 +1070,7 @@ export class SproutWidgetView extends ItemView {
     if (hadFocusWithin) {
       queueMicrotask(() => {
         if (!root.isConnected || root.offsetParent === null) return;
-        const active = document.activeElement as HTMLElement | null;
+        const active = activeDocument.activeElement as HTMLElement | null;
         if (
           active &&
           (active.tagName === "INPUT" ||

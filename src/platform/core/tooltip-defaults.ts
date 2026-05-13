@@ -5,6 +5,7 @@
  * @exports
  *  - initButtonTooltipDefaults
  */
+import {  } from "obsidian";
 
 type TooltipTarget = HTMLElement & {
   textContent: string | null;
@@ -73,13 +74,14 @@ function ensureTooltip(el: TooltipTarget): void {
 }
 
 function processNode(node: Node): void {
-  if (!(node instanceof HTMLElement)) return;
+  if (node.nodeType !== Node.ELEMENT_NODE) return;
+  const elementNode = node as HTMLElement;
 
   // Process the node itself
-  if (node.matches("button,[role='button']")) ensureTooltip(node as TooltipTarget);
+  if (elementNode.matches("button,[role='button']")) ensureTooltip(elementNode as TooltipTarget);
 
   // Process descendants
-  const descendants = node.querySelectorAll<HTMLElement>("button,[role='button']");
+  const descendants = elementNode.querySelectorAll<HTMLElement>("button,[role='button']");
   descendants.forEach((el) => ensureTooltip(el as TooltipTarget));
 }
 
@@ -89,7 +91,7 @@ function processNode(node: Node): void {
  */
 export function initButtonTooltipDefaults(): () => void {
   if (typeof document === "undefined") return () => {};
-  const root = document.body;
+  const root = activeDocument.body;
   if (!root) return () => {};
 
   // Initial pass (Obsidian loads views long after DOMContentLoaded)

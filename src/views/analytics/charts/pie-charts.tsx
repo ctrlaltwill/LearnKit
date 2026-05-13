@@ -10,6 +10,7 @@
  *   - StagePieCard — React component rendering a donut chart of card stage distribution with filter controls
  *   - AnswerButtonsPieCard — React component rendering a donut chart of answer button usage over time
  */
+import {  } from "obsidian";
 
 import * as React from "react";
 import { Label, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
@@ -317,8 +318,8 @@ export function StagePieCard(props: {
       if (!target || !wrapRef.current) return;
       if (!wrapRef.current.contains(target)) setOpen(false);
     };
-    document.addEventListener("mousedown", onDocClick, true);
-    return () => document.removeEventListener("mousedown", onDocClick, true);
+    activeDocument.addEventListener("mousedown", onDocClick, true);
+    return () => activeDocument.removeEventListener("mousedown", onDocClick, true);
   }, [open]);
 
   React.useEffect(() => {
@@ -662,8 +663,8 @@ export function AnswerButtonsPieCard(props: { events: Record<string, unknown>[];
       if (!target || !wrapRef.current) return;
       if (!wrapRef.current.contains(target)) setOpen(false);
     };
-    document.addEventListener("mousedown", onDocClick, true);
-    return () => document.removeEventListener("mousedown", onDocClick, true);
+    activeDocument.addEventListener("mousedown", onDocClick, true);
+    return () => activeDocument.removeEventListener("mousedown", onDocClick, true);
   }, [open]);
 
   React.useEffect(() => {

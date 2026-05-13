@@ -350,7 +350,7 @@ export class SproutAnalyticsView extends ItemView {
       "See trends, forecast due cards, and tune your study plan.",
     );
 
-    const filtersWrap = document.createElement("div");
+    const filtersWrap = activeDocument.createElement("div");
     filtersWrap.className = "flex flex-wrap items-center gap-2 ml-auto max-md:ml-0 learnkit-analytics-filter-buttons";
 
     const mkFilterBtn = (
@@ -359,7 +359,7 @@ export class SproutAnalyticsView extends ItemView {
       iconName: string,
     ) => {
       const active = this._isSectionVisible(section);
-      const btn = document.createElement("button");
+      const btn = activeDocument.createElement("button");
       btn.type = "button";
       btn.className = "learnkit-btn-toolbar inline-flex items-center gap-2 h-8 px-3 text-sm learnkit-analytics-filter-btn";
       btn.classList.toggle("is-active", active);
@@ -367,12 +367,12 @@ export class SproutAnalyticsView extends ItemView {
       btn.setAttribute("aria-pressed", active ? "true" : "false");
       btn.setAttribute("data-tooltip-position", "top");
 
-      const icon = document.createElement("span");
+      const icon = activeDocument.createElement("span");
       icon.className = "inline-flex items-center justify-center [&_svg]:size-3.5 learnkit-analytics-filter-icon";
       setIcon(icon, iconName);
       btn.appendChild(icon);
 
-      const text = document.createElement("span");
+      const text = activeDocument.createElement("span");
       text.className = "learnkit-analytics-filter-text";
       text.textContent = label;
       btn.appendChild(text);
@@ -386,14 +386,14 @@ export class SproutAnalyticsView extends ItemView {
     filtersWrap.appendChild(mkFilterBtn("tests", tx("ui.analytics.filter.tests", "Tests"), "clipboard-check"));
     titleRight.appendChild(filtersWrap);
 
-    const contentShell = document.createElement("div");
+    const contentShell = activeDocument.createElement("div");
     contentShell.className = `${SPROUT_HOME_CONTENT_SHELL_CLASS} learnkit-analytics-content-shell`;
     root.appendChild(contentShell);
 
     applyRootAos(titleStrip, 0);
     applyRootAos(contentShell, titleDelay);
 
-    const body = document.createElement("div");
+    const body = activeDocument.createElement("div");
     body.className = "w-full space-y-4";
     contentShell.appendChild(body);
 
@@ -579,23 +579,23 @@ export class SproutAnalyticsView extends ItemView {
     dayMap: Map<number, { count: number; totalMs: number }>,
     tx: (token: string, fallback: string, vars?: Record<string, string | number>) => string,
   ): void {
-    const kpiRow = document.createElement("div");
+    const kpiRow = activeDocument.createElement("div");
     kpiRow.className = "learnkit-ana-grid grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4";
     body.appendChild(kpiRow);
 
     const makeBadge = (opts: { text: string; bg?: string; color?: string; border?: string; live?: boolean; className?: string }) => {
-      const badge = document.createElement("span");
+      const badge = activeDocument.createElement("span");
       badge.className = `learnkit-badge learnkit-analytics-badge inline-flex items-center gap-1${opts.className ? ` ${opts.className}` : ""}`;
       if (opts.bg) setCssProps(badge, "--learnkit-badge-bg", opts.bg);
       else if (!opts.className) setCssProps(badge, "--learnkit-badge-bg", "var(--theme-accent)");
       if (opts.color) setCssProps(badge, "--learnkit-badge-color", opts.color);
       if (opts.border) setCssProps(badge, "--learnkit-badge-border", opts.border);
       if (opts.live) {
-        const circle = document.createElement("span");
+        const circle = activeDocument.createElement("span");
         circle.className = "inline-block w-1.5 h-1.5 rounded-full bg-white learnkit-analytics-live-pulse";
         badge.appendChild(circle);
       }
-      badge.appendChild(document.createTextNode(opts.text));
+      badge.appendChild(activeDocument.createTextNode(opts.text));
       return badge;
     };
 
@@ -608,10 +608,10 @@ export class SproutAnalyticsView extends ItemView {
     };
 
     const buildTrendBadge = (trend: { value: number; text: string; dir: number }) => {
-      const badge = document.createElement("span");
+      const badge = activeDocument.createElement("span");
       badge.className = "learnkit-trend-badge learnkit-analytics-rotatable";
 
-      const icon = document.createElement("span");
+      const icon = activeDocument.createElement("span");
       icon.className = "inline-flex items-center justify-center";
       const iconName = trend.dir > 0 ? "trending-up" : trend.dir < 0 ? "trending-down" : "minus";
       setIcon(icon, iconName);
@@ -621,7 +621,7 @@ export class SproutAnalyticsView extends ItemView {
       }
       badge.appendChild(icon);
 
-      const valueEl = document.createElement("span");
+      const valueEl = activeDocument.createElement("span");
       valueEl.textContent = trend.dir === 0 ? "0%" : `${trend.dir > 0 ? "+" : ""}0%`;
       badge.appendChild(valueEl);
 
@@ -636,16 +636,16 @@ export class SproutAnalyticsView extends ItemView {
         const eased = p < 0.5 ? 2 * p * p : -1 + (4 - 2 * p) * p; // easeInOut
         const currentVal = (trend.dir === 0 ? 0 : eased * Math.abs(target)) * (trend.dir >= 0 ? 1 : -1);
         valueEl.textContent = `${currentVal >= 0 ? "+" : ""}${currentVal.toFixed(0)}%`;
-        if (p < 1) requestAnimationFrame(animate);
+        if (p < 1) window.requestAnimationFrame(animate);
         else valueEl.textContent = trend.text;
       };
 
-      requestAnimationFrame(animate);
+      window.requestAnimationFrame(animate);
       return badge;
     };
 
     const makeCard = (title: string, value: string, badge: HTMLElement | null, note: string) => {
-      const card = document.createElement("div");
+      const card = activeDocument.createElement("div");
       card.className = "card learnkit-ana-card small-card flex flex-col gap-2";
       // Find which card this is (order: longest, current, daily time, daily cards)
       let cardIndex = kpiRow.childElementCount;
@@ -653,18 +653,18 @@ export class SproutAnalyticsView extends ItemView {
       applyAos(card, kpiBaseDelay + cardIndex * kpiStep);
       kpiRow.appendChild(card);
 
-      const top = document.createElement("div");
+      const top = activeDocument.createElement("div");
       top.className = "flex items-center justify-between text-sm text-muted-foreground";
       card.appendChild(top);
-      top.appendChild(Object.assign(document.createElement("div"), { textContent: title }));
+      top.appendChild(Object.assign(activeDocument.createElement("div"), { textContent: title }));
       if (badge) top.appendChild(badge);
 
-      const big = document.createElement("div");
+      const big = activeDocument.createElement("div");
       big.className = "mt-2 text-2xl font-semibold";
       big.textContent = value;
       card.appendChild(big);
 
-      const sub = document.createElement("div");
+      const sub = activeDocument.createElement("div");
       sub.className = "mt-2 text-xs text-muted-foreground text-right";
       sub.textContent = note;
       card.appendChild(sub);
@@ -673,7 +673,7 @@ export class SproutAnalyticsView extends ItemView {
     const longestBadge = streakMatches
       ? makeBadge({ text: tx("ui.analytics.badge.live", "Live"), live: true, className: "learnkit-trend-badge learnkit-live-badge learnkit-live-badge-orange" })
       : (() => {
-          const badge = document.createElement("span");
+          const badge = activeDocument.createElement("span");
           badge.className = "learnkit-trend-badge inline-flex items-center gap-1 px-2 py-0";
           badge.textContent = tx("ui.analytics.badge.allTime", "All time");
           return badge;
@@ -738,7 +738,7 @@ export class SproutAnalyticsView extends ItemView {
     todayIndex: number,
     tx: (token: string, fallback: string, vars?: Record<string, string | number>) => string,
   ): void {
-    const kpiRow = document.createElement("div");
+    const kpiRow = activeDocument.createElement("div");
     kpiRow.className = "learnkit-ana-grid grid grid-cols-1 md:grid-cols-3 gap-4";
     body.appendChild(kpiRow);
 
@@ -799,15 +799,15 @@ export class SproutAnalyticsView extends ItemView {
     };
 
     const buildTrendBadge = (trend: { value: number; text: string; dir: number }) => {
-      const badge = document.createElement("span");
+      const badge = activeDocument.createElement("span");
       badge.className = "learnkit-trend-badge learnkit-analytics-rotatable";
-      const icon = document.createElement("span");
+      const icon = activeDocument.createElement("span");
       icon.className = "inline-flex items-center justify-center";
       setIcon(icon, trend.dir > 0 ? "trending-up" : trend.dir < 0 ? "trending-down" : "minus");
       const svg = queryFirst(icon, "svg");
       if (svg) (svg as SVGElement).setAttribute("stroke", "currentColor");
       badge.appendChild(icon);
-      const valueEl = document.createElement("span");
+      const valueEl = activeDocument.createElement("span");
       valueEl.textContent = "0%";
       badge.appendChild(valueEl);
       const durationMs = 800;
@@ -819,27 +819,27 @@ export class SproutAnalyticsView extends ItemView {
         const eased = p < 0.5 ? 2 * p * p : -1 + (4 - 2 * p) * p;
         const cur = (trend.dir === 0 ? 0 : eased * Math.abs(target)) * (trend.dir >= 0 ? 1 : -1);
         valueEl.textContent = `${cur >= 0 ? "+" : ""}${cur.toFixed(0)}%`;
-        if (p < 1) requestAnimationFrame(animate);
+        if (p < 1) window.requestAnimationFrame(animate);
         else valueEl.textContent = trend.text;
       };
-      requestAnimationFrame(animate);
+      window.requestAnimationFrame(animate);
       return badge;
     };
 
     const makeCard = (title: string, value: string, badge: HTMLElement | null, note: string) => {
-      const card = document.createElement("div");
+      const card = activeDocument.createElement("div");
       card.className = "card learnkit-ana-card small-card flex flex-col gap-2";
       kpiRow.appendChild(card);
-      const top = document.createElement("div");
+      const top = activeDocument.createElement("div");
       top.className = "flex items-center justify-between text-sm text-muted-foreground";
       card.appendChild(top);
-      top.appendChild(Object.assign(document.createElement("div"), { textContent: title }));
+      top.appendChild(Object.assign(activeDocument.createElement("div"), { textContent: title }));
       if (badge) top.appendChild(badge);
-      const big = document.createElement("div");
+      const big = activeDocument.createElement("div");
       big.className = "mt-2 text-2xl font-semibold";
       big.textContent = value;
       card.appendChild(big);
-      const sub = document.createElement("div");
+      const sub = activeDocument.createElement("div");
       sub.className = "mt-2 text-xs text-muted-foreground text-right";
       sub.textContent = note;
       card.appendChild(sub);
@@ -872,7 +872,7 @@ export class SproutAnalyticsView extends ItemView {
     todayIndex: number,
     tx: (token: string, fallback: string, vars?: Record<string, string | number>) => string,
   ): Promise<void> {
-    const kpiRow = document.createElement("div");
+    const kpiRow = activeDocument.createElement("div");
     kpiRow.className = "learnkit-ana-grid grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4";
     body.appendChild(kpiRow);
 
@@ -957,15 +957,15 @@ export class SproutAnalyticsView extends ItemView {
     };
 
     const buildTrendBadge = (trend: { value: number; text: string; dir: number }) => {
-      const badge = document.createElement("span");
+      const badge = activeDocument.createElement("span");
       badge.className = "learnkit-trend-badge learnkit-analytics-rotatable";
-      const icon = document.createElement("span");
+      const icon = activeDocument.createElement("span");
       icon.className = "inline-flex items-center justify-center";
       setIcon(icon, trend.dir > 0 ? "trending-up" : trend.dir < 0 ? "trending-down" : "minus");
       const svg = queryFirst(icon, "svg");
       if (svg) (svg as SVGElement).setAttribute("stroke", "currentColor");
       badge.appendChild(icon);
-      const valueEl = document.createElement("span");
+      const valueEl = activeDocument.createElement("span");
       valueEl.textContent = "0%";
       badge.appendChild(valueEl);
       const durationMs = 800;
@@ -977,43 +977,43 @@ export class SproutAnalyticsView extends ItemView {
         const eased = p < 0.5 ? 2 * p * p : -1 + (4 - 2 * p) * p;
         const cur = (trend.dir === 0 ? 0 : eased * Math.abs(target)) * (trend.dir >= 0 ? 1 : -1);
         valueEl.textContent = `${cur >= 0 ? "+" : ""}${cur.toFixed(0)}%`;
-        if (p < 1) requestAnimationFrame(animate);
+        if (p < 1) window.requestAnimationFrame(animate);
         else valueEl.textContent = trend.text;
       };
-      requestAnimationFrame(animate);
+      window.requestAnimationFrame(animate);
       return badge;
     };
 
     const makeBadge = (opts: { text: string; bg?: string; color?: string; border?: string; live?: boolean; className?: string }) => {
-      const badge = document.createElement("span");
+      const badge = activeDocument.createElement("span");
       badge.className = `learnkit-badge learnkit-analytics-badge inline-flex items-center gap-1${opts.className ? ` ${opts.className}` : ""}`;
       if (opts.bg) setCssProps(badge, "--learnkit-badge-bg", opts.bg);
       else if (!opts.className) setCssProps(badge, "--learnkit-badge-bg", "var(--theme-accent)");
       if (opts.color) setCssProps(badge, "--learnkit-badge-color", opts.color);
       if (opts.border) setCssProps(badge, "--learnkit-badge-border", opts.border);
       if (opts.live) {
-        const circle = document.createElement("span");
+        const circle = activeDocument.createElement("span");
         circle.className = "inline-block w-1.5 h-1.5 rounded-full bg-white learnkit-analytics-live-pulse";
         badge.appendChild(circle);
       }
-      badge.appendChild(document.createTextNode(opts.text));
+      badge.appendChild(activeDocument.createTextNode(opts.text));
       return badge;
     };
 
     const makeCard = (title: string, value: string, badge: HTMLElement | null, note: string) => {
-      const card = document.createElement("div");
+      const card = activeDocument.createElement("div");
       card.className = "card learnkit-ana-card small-card flex flex-col gap-2";
       kpiRow.appendChild(card);
-      const top = document.createElement("div");
+      const top = activeDocument.createElement("div");
       top.className = "flex items-center justify-between text-sm text-muted-foreground";
       card.appendChild(top);
-      top.appendChild(Object.assign(document.createElement("div"), { textContent: title }));
+      top.appendChild(Object.assign(activeDocument.createElement("div"), { textContent: title }));
       if (badge) top.appendChild(badge);
-      const big = document.createElement("div");
+      const big = activeDocument.createElement("div");
       big.className = "mt-2 text-2xl font-semibold";
       big.textContent = value;
       card.appendChild(big);
-      const sub = document.createElement("div");
+      const sub = activeDocument.createElement("div");
       sub.className = "mt-2 text-xs text-muted-foreground text-right";
       sub.textContent = note;
       card.appendChild(sub);
@@ -1023,7 +1023,7 @@ export class SproutAnalyticsView extends ItemView {
     const longestBadge = streakMatches
       ? makeBadge({ text: tx("ui.analytics.badge.live", "Live"), live: true, className: "learnkit-trend-badge learnkit-live-badge learnkit-live-badge-orange" })
       : (() => {
-          const badge = document.createElement("span");
+          const badge = activeDocument.createElement("span");
           badge.className = "learnkit-trend-badge inline-flex items-center gap-1 px-2 py-0";
           badge.textContent = tx("ui.analytics.badge.allTime", "All time");
           return badge;
@@ -1099,12 +1099,12 @@ export class SproutAnalyticsView extends ItemView {
     const renderChartMountFallback = (host: HTMLElement, chartName: string, error: unknown) => {
       log.error(`failed to mount analytics chart (${chartName})`, error);
       host.replaceChildren();
-      const card = document.createElement("div");
+      const card = activeDocument.createElement("div");
       card.className = "card learnkit-ana-card p-6 flex flex-col items-center justify-center gap-2 text-center";
-      const titleEl = document.createElement("div");
+      const titleEl = activeDocument.createElement("div");
       titleEl.className = "font-semibold lk-home-section-title text-foreground";
       titleEl.textContent = tx("ui.analytics.chart.unavailable", "{chart} unavailable", { chart: chartName });
-      const hintEl = document.createElement("div");
+      const hintEl = activeDocument.createElement("div");
       hintEl.className = "text-sm text-muted-foreground";
       hintEl.textContent = tx("ui.analytics.chart.unavailableHint", "Unable to render this chart in this environment.");
       card.appendChild(titleEl);
@@ -1124,11 +1124,11 @@ export class SproutAnalyticsView extends ItemView {
     };
 
     if (showFlashcards) {
-      const heroRow = document.createElement("div");
+      const heroRow = activeDocument.createElement("div");
       heroRow.className = "grid grid-cols-1 xl:grid-cols-2 gap-4";
       body.appendChild(heroRow);
 
-      const heatmapHost = document.createElement("div");
+      const heatmapHost = activeDocument.createElement("div");
       heatmapHost.className = "xl:col-span-2 min-h-[200px]";
       applyAos(heatmapHost, heatmapDelay);
       heroRow.appendChild(heatmapHost);
@@ -1148,12 +1148,12 @@ export class SproutAnalyticsView extends ItemView {
         );
       });
 
-      const graphsGrid = document.createElement("div");
+      const graphsGrid = activeDocument.createElement("div");
       graphsGrid.className = "grid grid-cols-1 auto-rows-fr gap-4 lg:grid-cols-2";
       applyAos(graphsGrid, graphsGridDelay);
       body.appendChild(graphsGrid);
 
-      const stagePieHost = document.createElement("div");
+      const stagePieHost = activeDocument.createElement("div");
       stagePieHost.className = "h-full";
       graphsGrid.appendChild(stagePieHost);
       this._stagePieRoot = mountChartRoot(stagePieHost, tx("ui.analytics.chart.cardStageDistribution", "Card Stage Distribution"), (rootNode) => {
@@ -1164,7 +1164,7 @@ export class SproutAnalyticsView extends ItemView {
         );
       });
 
-      const futureDueHost = document.createElement("div");
+      const futureDueHost = activeDocument.createElement("div");
       futureDueHost.className = "h-full";
       graphsGrid.appendChild(futureDueHost);
 
@@ -1198,7 +1198,7 @@ export class SproutAnalyticsView extends ItemView {
         );
       });
 
-      const stackedButtonsHost = document.createElement("div");
+      const stackedButtonsHost = activeDocument.createElement("div");
       stackedButtonsHost.className = "h-full";
       graphsGrid.appendChild(stackedButtonsHost);
       this._stackedButtonsRoot = mountChartRoot(stackedButtonsHost, tx("ui.analytics.chart.answerButtons", "Answer Buttons"), (rootNode) => {
@@ -1216,7 +1216,7 @@ export class SproutAnalyticsView extends ItemView {
         );
       });
 
-      const newCardsHost = document.createElement("div");
+      const newCardsHost = activeDocument.createElement("div");
       newCardsHost.className = "h-full";
       graphsGrid.appendChild(newCardsHost);
       this._newCardsRoot = mountChartRoot(newCardsHost, tx("ui.analytics.chart.newCardsPerDay", "New Cards Per Day"), (rootNode) => {
@@ -1233,12 +1233,12 @@ export class SproutAnalyticsView extends ItemView {
         );
       });
 
-      const stabilityRow = document.createElement("div");
+      const stabilityRow = activeDocument.createElement("div");
       stabilityRow.className = "grid grid-cols-1 auto-rows-fr gap-4 lg:grid-cols-2";
       applyAos(stabilityRow, stabilityRowDelay);
       body.appendChild(stabilityRow);
 
-      const stabilityDistributionHost = document.createElement("div");
+      const stabilityDistributionHost = activeDocument.createElement("div");
       stabilityDistributionHost.className = "h-full";
       stabilityRow.appendChild(stabilityDistributionHost);
       this._stabilityDistributionRoot = mountChartRoot(stabilityDistributionHost, tx("ui.analytics.chart.stabilityDistribution", "Stability Distribution"), (rootNode) => {
@@ -1254,7 +1254,7 @@ export class SproutAnalyticsView extends ItemView {
         );
       });
 
-      const forgettingCurveHost = document.createElement("div");
+      const forgettingCurveHost = activeDocument.createElement("div");
       forgettingCurveHost.className = "h-full";
       stabilityRow.appendChild(forgettingCurveHost);
       this._forgettingCurveRoot = mountChartRoot(forgettingCurveHost, tx("ui.analytics.chart.forgettingCurve", "Forgetting Curve"), (rootNode) => {
@@ -1275,11 +1275,11 @@ export class SproutAnalyticsView extends ItemView {
     }
 
     if (showTests) {
-      const testsRow = document.createElement("div");
+      const testsRow = activeDocument.createElement("div");
       testsRow.className = "grid grid-cols-1 gap-4";
       body.appendChild(testsRow);
 
-      const testsHost = document.createElement("div");
+      const testsHost = activeDocument.createElement("div");
       testsHost.className = "h-full";
       testsRow.appendChild(testsHost);
       this._testsAnalyticsRoot = mountChartRoot(testsHost, tx("ui.analytics.chart.testsPerformance", "Tests Performance"), (rootNode) => {
@@ -1297,11 +1297,11 @@ export class SproutAnalyticsView extends ItemView {
     }
 
     if (showNotes) {
-      const noteReviewRow = document.createElement("div");
+      const noteReviewRow = activeDocument.createElement("div");
       noteReviewRow.className = "grid grid-cols-1 gap-4";
       body.appendChild(noteReviewRow);
 
-      const noteReviewHost = document.createElement("div");
+      const noteReviewHost = activeDocument.createElement("div");
       noteReviewHost.className = "h-full";
       noteReviewRow.appendChild(noteReviewHost);
       this._noteReviewAnalyticsRoot = mountChartRoot(noteReviewHost, tx("ui.analytics.chart.noteReviewActivity", "Note Review Activity"), (rootNode) => {
@@ -1338,12 +1338,12 @@ export class SproutAnalyticsView extends ItemView {
     tx: (token: string, fallback: string, vars?: Record<string, string | number>) => string,
   ): void {
     // Daily stats table card
-    const statsCard = document.createElement("div");
+    const statsCard = activeDocument.createElement("div");
     statsCard.className = "card learnkit-ana-card learnkit-analytics-stats-card mt-2.5 hidden flex-col gap-3 p-4 md:flex";
     applyAos(statsCard, statsCardDelay);
     body.appendChild(statsCard);
 
-    const statsTitle = document.createElement("div");
+    const statsTitle = activeDocument.createElement("div");
     statsTitle.className = "font-semibold lk-home-section-title";
     statsTitle.textContent = tx("ui.analytics.table.dailyStats", "Daily stats");
     statsCard.appendChild(statsTitle);
@@ -1425,23 +1425,23 @@ export class SproutAnalyticsView extends ItemView {
     let currentPage = 0;
 
     // Bottom controls need summary declared before first renderTable() call.
-    const bottom = document.createElement("div");
+    const bottom = activeDocument.createElement("div");
     bottom.className = "learnkit-analytics-stats-bottom mt-2.5 flex flex-row items-center gap-2";
     statsCard.appendChild(bottom);
 
-    const summaryWrap = document.createElement("div");
+    const summaryWrap = activeDocument.createElement("div");
     summaryWrap.className = "learnkit-analytics-stats-summary flex flex-col gap-1 shrink-0";
-    const summary = document.createElement("div");
+    const summary = activeDocument.createElement("div");
     summary.className = "text-sm text-muted-foreground";
     summary.textContent = "";
     summaryWrap.appendChild(summary);
     bottom.appendChild(summaryWrap);
 
-    const center = document.createElement("div");
+    const center = activeDocument.createElement("div");
     center.className = "learnkit-analytics-stats-center flex-1 min-w-0 flex items-center justify-center";
     bottom.appendChild(center);
 
-    const right = document.createElement("div");
+    const right = activeDocument.createElement("div");
     right.className = "learnkit-analytics-stats-actions ml-auto shrink-0 flex flex-row flex-nowrap items-center gap-2";
     bottom.appendChild(right);
 
@@ -1487,14 +1487,14 @@ export class SproutAnalyticsView extends ItemView {
       return [headers, ...rows].map((r) => r.map(escapeCsv).join(",")).join("\n");
     };
 
-    const exportBtn = document.createElement("button");
+    const exportBtn = activeDocument.createElement("button");
     exportBtn.type = "button";
     exportBtn.className = "learnkit-analytics-export-btn inline-flex cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-[var(--learnkit-font-2xs)] font-semibold text-muted-foreground shadow-none hover:text-foreground focus:text-foreground focus-visible:text-foreground";
-    const exportIcon = document.createElement("span");
+    const exportIcon = activeDocument.createElement("span");
     exportIcon.className = "inline-flex items-center justify-center [&_svg]:size-3";
     setIcon(exportIcon, "download");
     exportIcon.classList.add("scale-[0.9]");
-    const exportText = document.createElement("span");
+    const exportText = activeDocument.createElement("span");
     exportText.textContent = tx("ui.analytics.export.csv", "Export as CSV");
     exportBtn.appendChild(exportIcon);
     exportBtn.appendChild(exportText);
@@ -1504,10 +1504,10 @@ export class SproutAnalyticsView extends ItemView {
       const csv = buildCsv();
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
+      const link = activeDocument.createElement("a");
       link.href = url;
       link.download = `daily-stats-${new Date().toISOString().slice(0, 10)}.csv`;
-      document.body.appendChild(link);
+      activeDocument.body.appendChild(link);
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
@@ -1579,30 +1579,30 @@ export class SproutAnalyticsView extends ItemView {
     rowsBtn.setAttribute("aria-expanded", "false");
     rowsBtn.setAttribute("aria-label", tx("ui.analytics.table.rowsPerPage", "Rows per page"));
 
-    const rowsBtnText = document.createElement("span");
+    const rowsBtnText = activeDocument.createElement("span");
     rowsBtnText.className = "truncate";
     rowsBtnText.textContent = String(pageSize);
     rowsBtn.appendChild(rowsBtnText);
 
-    const rowsChevron = document.createElement("span");
+    const rowsChevron = activeDocument.createElement("span");
     rowsChevron.className = "inline-flex items-center justify-center [&_svg]:size-4 transition-transform duration-150 ease-out";
     rowsChevron.setAttribute("aria-hidden", "true");
     setIcon(rowsChevron, "chevron-down");
     rowsBtn.appendChild(rowsChevron);
 
-    const rowsPopover = document.createElement("div");
-    const sproutWrapper = document.createElement("div");
+    const rowsPopover = activeDocument.createElement("div");
+    const sproutWrapper = activeDocument.createElement("div");
     sproutWrapper.className = "learnkit";
     rowsPopover.className = "";
     rowsPopover.setAttribute("aria-hidden", "true");
     rowsPopover.classList.add("learnkit-popover-overlay", "learnkit-popover-overlay");
     sproutWrapper.appendChild(rowsPopover);
 
-    const rowsPanel = document.createElement("div");
+    const rowsPanel = activeDocument.createElement("div");
     rowsPanel.className = "rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 learnkit-pointer-auto";
     rowsPopover.appendChild(rowsPanel);
 
-    const rowsMenu = document.createElement("div");
+    const rowsMenu = activeDocument.createElement("div");
     rowsMenu.setAttribute("role", "menu");
     rowsMenu.className = "flex flex-col";
     rowsPanel.appendChild(rowsMenu);
@@ -1615,12 +1615,12 @@ export class SproutAnalyticsView extends ItemView {
     const closeRowsMenu = () => {
       // Cancel any pending deferred listener registration
       if (pointerListenerTimer !== null) {
-        clearTimeout(pointerListenerTimer);
+          window.clearTimeout(pointerListenerTimer);
         pointerListenerTimer = null;
       }
       // Remove the outside-click listener
       if (activePointerHandler) {
-        document.removeEventListener("pointerdown", activePointerHandler, true);
+        activeDocument.removeEventListener("pointerdown", activePointerHandler, true);
         activePointerHandler = null;
       }
       rowsBtn.setAttribute("aria-expanded", "false");
@@ -1642,23 +1642,23 @@ export class SproutAnalyticsView extends ItemView {
       while (rowsMenu.firstChild) rowsMenu.removeChild(rowsMenu.firstChild);
 
       for (const opt of pageSizeOptions) {
-        const item = document.createElement("div");
+        const item = activeDocument.createElement("div");
         item.setAttribute("role", "menuitemradio");
         item.setAttribute("aria-checked", opt === String(pageSize) ? "true" : "false");
         item.tabIndex = 0;
         item.className =
           "group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer select-none outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground";
 
-        const dotWrap = document.createElement("div");
+        const dotWrap = activeDocument.createElement("div");
         dotWrap.className = "size-4 flex items-center justify-center";
         item.appendChild(dotWrap);
 
-        const dot = document.createElement("div");
+        const dot = activeDocument.createElement("div");
         dot.className = "size-2 rounded-full bg-foreground invisible group-aria-checked:visible";
         dot.setAttribute("aria-hidden", "true");
         dotWrap.appendChild(dot);
 
-        const txt = document.createElement("span");
+        const txt = activeDocument.createElement("span");
         txt.className = "";
         txt.textContent = opt;
         item.appendChild(txt);
@@ -1702,8 +1702,8 @@ export class SproutAnalyticsView extends ItemView {
       rowsChevron.classList.add("rotate-180");
       rowsPopover.setAttribute("aria-hidden", "false");
       rowsPopover.classList.add("is-open");
-      if (!sproutWrapper.parentElement) document.body.appendChild(sproutWrapper);
-      requestAnimationFrame(() => placeRowsMenu());
+      if (!sproutWrapper.parentElement) activeDocument.body.appendChild(sproutWrapper);
+      window.requestAnimationFrame(() => placeRowsMenu());
 
       const onDocPointerDown = (ev: PointerEvent) => {
         const t = ev.target as Node | null;
@@ -1717,7 +1717,7 @@ export class SproutAnalyticsView extends ItemView {
 
       pointerListenerTimer = window.setTimeout(() => {
         pointerListenerTimer = null;
-        document.addEventListener("pointerdown", onDocPointerDown, true);
+        activeDocument.addEventListener("pointerdown", onDocPointerDown, true);
       }, 0);
 
       rowsOpen = true;
@@ -1743,10 +1743,10 @@ export class SproutAnalyticsView extends ItemView {
       if (!Number.isFinite(currentPage) || currentPage < 0) currentPage = 0;
       if (currentPage > totalPages - 1) currentPage = totalPages - 1;
 
-      const isMobile = document.body.classList.contains("is-mobile");
+      const isMobile = activeDocument.body.classList.contains("is-mobile");
 
       if (totalRows <= size) {
-        const small = document.createElement("div");
+        const small = activeDocument.createElement("div");
         small.className = "text-sm text-muted-foreground";
         small.textContent = totalRows === 0
           ? tx("ui.analytics.table.pageXofY", "Page {page} / {total}", { page: 0, total: 0 })
@@ -1756,7 +1756,7 @@ export class SproutAnalyticsView extends ItemView {
       }
 
       if (isMobile) {
-        const nav = document.createElement("nav");
+        const nav = activeDocument.createElement("nav");
         nav.setAttribute("role", "navigation");
         nav.className = "learnkit-analytics-stats-pager-nav flex items-center gap-1";
         pagerHost.appendChild(nav);
@@ -1764,7 +1764,7 @@ export class SproutAnalyticsView extends ItemView {
         const current = currentPage + 1;
         const totalPagesLocal = totalPages;
 
-        const prev = document.createElement("button");
+        const prev = activeDocument.createElement("button");
         prev.type = "button";
         prev.className = "learnkit-btn-toolbar h-8 px-2";
         prev.setAttribute("aria-label", tx("ui.analytics.table.prevPage", "Previous page"));
@@ -1777,14 +1777,14 @@ export class SproutAnalyticsView extends ItemView {
           renderTable();
           renderPager();
         });
-        const prevIcon = document.createElement("span");
+        const prevIcon = activeDocument.createElement("span");
         prevIcon.setAttribute("aria-hidden", "true");
         prevIcon.className = "inline-flex items-center justify-center [&_svg]:size-4";
         setIcon(prevIcon, "chevron-left");
         prev.appendChild(prevIcon);
         nav.appendChild(prev);
 
-        const pageState = document.createElement("div");
+        const pageState = activeDocument.createElement("div");
         pageState.className = "text-sm text-muted-foreground px-1";
         pageState.textContent = tx("ui.analytics.table.pageXofY", "Page {page} / {total}", {
           page: current,
@@ -1792,7 +1792,7 @@ export class SproutAnalyticsView extends ItemView {
         });
         nav.appendChild(pageState);
 
-        const next = document.createElement("button");
+        const next = activeDocument.createElement("button");
         next.type = "button";
         next.className = "learnkit-btn-toolbar h-8 px-2";
         next.setAttribute("aria-label", tx("ui.analytics.table.nextPage", "Next page"));
@@ -1805,7 +1805,7 @@ export class SproutAnalyticsView extends ItemView {
           renderTable();
           renderPager();
         });
-        const nextIcon = document.createElement("span");
+        const nextIcon = activeDocument.createElement("span");
         nextIcon.setAttribute("aria-hidden", "true");
         nextIcon.className = "inline-flex items-center justify-center [&_svg]:size-4";
         setIcon(nextIcon, "chevron-right");
@@ -1814,13 +1814,13 @@ export class SproutAnalyticsView extends ItemView {
         return;
       }
 
-      const nav = document.createElement("nav");
+      const nav = activeDocument.createElement("nav");
       nav.setAttribute("role", "navigation");
       nav.className = "learnkit-analytics-stats-pager-nav flex items-center gap-2";
       pagerHost.appendChild(nav);
 
       const mkBtn = (label: string, tooltip: string, disabled: boolean, active: boolean, onClick: () => void) => {
-        const b = document.createElement("button");
+        const b = activeDocument.createElement("button");
         b.type = "button";
         b.className = `bc learnkit-btn-toolbar h-8 px-2${active ? " learnkit-btn-control" : ""}`;
         b.textContent = label;
@@ -1838,7 +1838,7 @@ export class SproutAnalyticsView extends ItemView {
       };
 
       const mkEllipsisBtn = (targetPage: number) => {
-        const b = document.createElement("button");
+        const b = activeDocument.createElement("button");
         b.type = "button";
         b.className = "learnkit-btn-toolbar h-8 px-2";
         b.textContent = "…";
@@ -1864,7 +1864,7 @@ export class SproutAnalyticsView extends ItemView {
         start = Math.max(1, end - maxBtns + 1);
       }
 
-      const prev = document.createElement("button");
+      const prev = activeDocument.createElement("button");
       prev.type = "button";
       prev.className = "learnkit-btn-toolbar h-8 px-2";
       prev.setAttribute("aria-label", tx("ui.analytics.table.prevPage", "Previous page"));
@@ -1879,13 +1879,13 @@ export class SproutAnalyticsView extends ItemView {
         renderPager();
       });
 
-      const prevIcon = document.createElement("span");
+      const prevIcon = activeDocument.createElement("span");
       prevIcon.setAttribute("aria-hidden", "true");
       prevIcon.className = "inline-flex items-center justify-center [&_svg]:size-4";
       setIcon(prevIcon, "chevron-left");
       prev.appendChild(prevIcon);
 
-      const prevTxt = document.createElement("span");
+      const prevTxt = activeDocument.createElement("span");
       prevTxt.className = "ml-1";
       prevTxt.textContent = tx("ui.analytics.table.prev", "Prev");
       prev.appendChild(prevTxt);
@@ -1931,7 +1931,7 @@ export class SproutAnalyticsView extends ItemView {
         );
       }
 
-      const next = document.createElement("button");
+      const next = activeDocument.createElement("button");
       next.type = "button";
       next.className = "learnkit-btn-toolbar h-8 px-2";
       next.setAttribute("aria-label", tx("ui.analytics.table.nextPage", "Next page"));
@@ -1946,12 +1946,12 @@ export class SproutAnalyticsView extends ItemView {
         renderPager();
       });
 
-      const nextTxt = document.createElement("span");
+      const nextTxt = activeDocument.createElement("span");
       nextTxt.className = "mr-1";
       nextTxt.textContent = tx("ui.analytics.table.next", "Next");
       next.appendChild(nextTxt);
 
-      const nextIcon = document.createElement("span");
+      const nextIcon = activeDocument.createElement("span");
       nextIcon.setAttribute("aria-hidden", "true");
       nextIcon.className = "inline-flex items-center justify-center [&_svg]:size-4";
       setIcon(nextIcon, "chevron-right");

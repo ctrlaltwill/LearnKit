@@ -17,7 +17,6 @@
  */
 
 import { App, setIcon, type WorkspaceLeaf } from "obsidian";
-import { activeDocument } from "./ui";
 import { createBodyPortalPopover, type BodyPortalPopoverHandle } from "./popover";
 import type LearnKitPlugin from "../../main";
 import type { Scope } from "../../views/reviewer/types";
@@ -137,16 +136,16 @@ export class LearnKitCommandPalette {
       t(this.deps.plugin.settings?.general?.interfaceLanguage, token, fallback, vars);
 
     // ── Input ──
-    const inputWrap = activeDocument(panel).createElement("div");
+    const inputWrap = panel.ownerDocument.createElement("div");
     inputWrap.className = "flex items-center gap-2 border-b border-border px-3";
 
-    const searchIcon = activeDocument(panel).createElement("span");
+    const searchIcon = panel.ownerDocument.createElement("span");
     searchIcon.className = "inline-flex items-center justify-center [&_svg]:size-4 text-muted-foreground shrink-0";
     searchIcon.setAttribute("aria-hidden", "true");
     setIcon(searchIcon, "search");
     inputWrap.appendChild(searchIcon);
 
-    const input = activeDocument(panel).createElement("input");
+    const input = panel.ownerDocument.createElement("input");
     input.type = "text";
     input.className = "learnkit-cmd-input flex-1 bg-transparent text-sm placeholder:text-muted-foreground outline-none border-none py-2.5 h-10";
     input.placeholder = tx("ui.commandPalette.search.placeholder", "Type a command...");
@@ -158,13 +157,13 @@ export class LearnKitCommandPalette {
     panel.appendChild(inputWrap);
 
     // ── List ──
-    const listWrap = activeDocument(panel).createElement("div");
+    const listWrap = panel.ownerDocument.createElement("div");
     listWrap.className = "learnkit-cmd-list overflow-y-auto flex-1 p-1";
     listWrap.setAttribute("role", "listbox");
     panel.appendChild(listWrap);
 
     // ── Empty ──
-    const emptyEl = activeDocument(panel).createElement("div");
+    const emptyEl = panel.ownerDocument.createElement("div");
     emptyEl.className = "learnkit-cmd-empty py-6 text-center text-sm text-muted-foreground hidden";
     emptyEl.textContent = tx("ui.commandPalette.empty.results", "No results found.");
     panel.appendChild(emptyEl);
@@ -225,7 +224,7 @@ export class LearnKitCommandPalette {
 
       // Pinned group
       if (matchingPinned.length > 0) {
-        const heading = activeDocument(panel).createElement("div");
+        const heading = panel.ownerDocument.createElement("div");
         heading.className = "learnkit-cmd-group-heading px-2 py-1.5 text-xs font-medium text-muted-foreground";
         heading.textContent = tx("ui.home.deck.pinned", "Pinned decks");
         heading.setAttribute("role", "presentation");
@@ -238,12 +237,12 @@ export class LearnKitCommandPalette {
           const group = entry.cmd.group;
           if (group !== lastGroup) {
             if (itemIdx > 0) {
-              const sep = activeDocument(panel).createElement("div");
+              const sep = panel.ownerDocument.createElement("div");
               sep.className = "my-1 h-px bg-border";
               sep.setAttribute("role", "separator");
               listWrap.appendChild(sep);
             }
-            const heading = activeDocument(panel).createElement("div");
+            const heading = panel.ownerDocument.createElement("div");
             heading.className = "learnkit-cmd-group-heading px-2 py-1.5 text-xs font-medium text-muted-foreground";
             heading.textContent = group;
             heading.setAttribute("role", "presentation");
@@ -253,26 +252,26 @@ export class LearnKitCommandPalette {
         }
 
         const idx = itemIdx;
-        const item = activeDocument(panel).createElement("div");
+        const item = panel.ownerDocument.createElement("div");
         item.className = "learnkit-cmd-item group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer select-none outline-none";
         item.setAttribute("role", "option");
         item.setAttribute("aria-selected", idx === activeIndex ? "true" : "false");
 
         if (idx === activeIndex) item.classList.add("is-active");
 
-        const ic = activeDocument(panel).createElement("span");
+        const ic = panel.ownerDocument.createElement("span");
         ic.className = "inline-flex items-center justify-center [&_svg]:size-4 text-muted-foreground";
         ic.setAttribute("aria-hidden", "true");
 
         if (entry.type === "pinned") {
           setIcon(ic, iconForScopeType(entry.scope.type));
           item.appendChild(ic);
-          const txt = activeDocument(panel).createElement("span");
+          const txt = panel.ownerDocument.createElement("span");
           txt.className = "truncate";
           txt.textContent = entry.scope.name;
           item.appendChild(txt);
 
-          const badge = activeDocument(panel).createElement("span");
+          const badge = panel.ownerDocument.createElement("span");
           badge.className = "ml-auto text-xs text-muted-foreground";
           badge.textContent = tx("ui.commandPalette.study", "Study");
           item.appendChild(badge);
@@ -286,13 +285,13 @@ export class LearnKitCommandPalette {
           const cmd = entry.cmd;
           setIcon(ic, cmd.icon);
           item.appendChild(ic);
-          const txt = activeDocument(panel).createElement("span");
+          const txt = panel.ownerDocument.createElement("span");
           txt.className = "truncate";
           txt.textContent = cmd.label;
           item.appendChild(txt);
 
           if (cmd.needsScope) {
-            const chevron = activeDocument(panel).createElement("span");
+            const chevron = panel.ownerDocument.createElement("span");
             chevron.className = "ml-auto inline-flex items-center justify-center [&_svg]:size-3 text-muted-foreground";
             chevron.setAttribute("aria-hidden", "true");
             setIcon(chevron, "chevron-right");
@@ -368,15 +367,15 @@ export class LearnKitCommandPalette {
         : allScopes;
 
       // Back hint
-      const backItem = activeDocument(panel).createElement("div");
+      const backItem = panel.ownerDocument.createElement("div");
       backItem.className = "learnkit-cmd-item learnkit-cmd-back group flex items-center gap-2 rounded-md px-2 py-1.5 text-xs cursor-pointer select-none outline-none text-muted-foreground";
       backItem.setAttribute("role", "option");
-      const backIcon = activeDocument(panel).createElement("span");
+      const backIcon = panel.ownerDocument.createElement("span");
       backIcon.className = "inline-flex items-center justify-center [&_svg]:size-3";
       backIcon.setAttribute("aria-hidden", "true");
       setIcon(backIcon, "arrow-left");
       backItem.appendChild(backIcon);
-      const backTxt = activeDocument(panel).createElement("span");
+      const backTxt = panel.ownerDocument.createElement("span");
       backTxt.textContent = tx("ui.commandPalette.back", "Back to commands");
       backItem.appendChild(backTxt);
       backItem.addEventListener("click", () => {
@@ -406,24 +405,24 @@ export class LearnKitCommandPalette {
 
       for (let idx = 0; idx < Math.min(filtered.length, 100); idx++) {
         const scope = filtered[idx];
-        const item = activeDocument(panel).createElement("div");
+        const item = panel.ownerDocument.createElement("div");
         item.className = "learnkit-cmd-item group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer select-none outline-none";
         item.setAttribute("role", "option");
         item.setAttribute("aria-selected", idx === activeIndex ? "true" : "false");
         if (idx === activeIndex) item.classList.add("is-active");
 
-        const ic = activeDocument(panel).createElement("span");
+        const ic = panel.ownerDocument.createElement("span");
         ic.className = "inline-flex items-center justify-center [&_svg]:size-4 text-muted-foreground";
         ic.setAttribute("aria-hidden", "true");
         setIcon(ic, iconForScopeType(scope.type));
         item.appendChild(ic);
 
-        const txt = activeDocument(panel).createElement("span");
+        const txt = panel.ownerDocument.createElement("span");
         txt.className = "truncate";
         txt.textContent = scope.name;
         item.appendChild(txt);
 
-        const typeBadge = activeDocument(panel).createElement("span");
+        const typeBadge = panel.ownerDocument.createElement("span");
         typeBadge.className = "ml-auto text-xs text-muted-foreground capitalize";
         typeBadge.textContent = scope.type;
         item.appendChild(typeBadge);

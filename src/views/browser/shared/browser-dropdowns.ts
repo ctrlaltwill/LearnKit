@@ -37,11 +37,11 @@ export function makeDropdownMenu<T extends string>(
 ): { root: HTMLElement; setValue: (v: T) => void; dispose: () => void } {
   const id = `sprout-dd-${Math.random().toString(36).slice(2, 9)}`;
 
-  const root = document.createElement("div");
+  const root = activeDocument.createElement("div");
   root.id = id;
   root.className = "relative inline-flex learnkit-overflow-visible";
 
-  const trigger = document.createElement("button");
+  const trigger = activeDocument.createElement("button");
   trigger.type = "button";
   trigger.id = `${id}-trigger`;
   trigger.className = `learnkit-btn-toolbar h-9 px-3 text-sm inline-flex items-center gap-2${args.triggerClassName ? ` ${args.triggerClassName}` : ""}`;
@@ -52,11 +52,11 @@ export function makeDropdownMenu<T extends string>(
   trigger.classList.add("learnkit-pointer-auto", "learnkit-pointer-auto");
   root.appendChild(trigger);
 
-  const trigText = document.createElement("span");
+  const trigText = activeDocument.createElement("span");
   trigText.className = "truncate";
   trigger.appendChild(trigText);
 
-  const chevron = document.createElement("span");
+  const chevron = activeDocument.createElement("span");
   chevron.className = "inline-flex items-center justify-center [&_svg]:size-4 transition-transform duration-150 ease-out";
   chevron.setAttribute("aria-hidden", "true");
   setIcon(chevron, "chevron-down");
@@ -67,19 +67,19 @@ export function makeDropdownMenu<T extends string>(
   const labelFor = (v: T) => args.options.find((o) => o.v === v)?.label ?? String(v);
 
   // Body-portal popover (fixed) avoids clipping/z-index issues in Obsidian panes.
-  const sproutWrapper = document.createElement("div");
+  const sproutWrapper = activeDocument.createElement("div");
   sproutWrapper.className = "learnkit";
-  const popover = document.createElement("div");
+  const popover = activeDocument.createElement("div");
   popover.id = `${id}-popover`;
   popover.setAttribute("aria-hidden", "true");
   popover.classList.add("learnkit-popover-overlay", "learnkit-popover-overlay", "learnkit-dd-popover", "learnkit-dd-popover");
 
-  const panel = document.createElement("div");
+  const panel = activeDocument.createElement("div");
   panel.className = "rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 learnkit-pointer-auto learnkit-dd-panel";
   popover.appendChild(panel);
   sproutWrapper.appendChild(popover);
 
-  const menu = document.createElement("div");
+  const menu = activeDocument.createElement("div");
   menu.setAttribute("role", "menu");
   menu.id = `${id}-menu`;
 
@@ -97,7 +97,7 @@ export function makeDropdownMenu<T extends string>(
     items.length = 0;
 
     for (const opt of args.options) {
-      const item = document.createElement("div");
+      const item = activeDocument.createElement("div");
       item.setAttribute("role", "menuitemradio");
       item.setAttribute("aria-checked", opt.v === current ? "true" : "false");
       item.tabIndex = 0;
@@ -106,21 +106,21 @@ export function makeDropdownMenu<T extends string>(
         "group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer select-none outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
       );
 
-      const dotWrap = document.createElement("div");
+      const dotWrap = activeDocument.createElement("div");
       dotWrap.className = "size-4 flex items-center justify-center";
       item.appendChild(dotWrap);
 
-      const dot = document.createElement("div");
+      const dot = activeDocument.createElement("div");
       dot.className = "size-2 rounded-full bg-foreground invisible group-aria-checked:visible";
       dot.setAttribute("aria-hidden", "true");
       dotWrap.appendChild(dot);
 
-      const txt = document.createElement("span");
+      const txt = activeDocument.createElement("span");
       txt.textContent = opt.label;
       item.appendChild(txt);
 
       if (opt.hint) {
-        const hint = document.createElement("span");
+        const hint = activeDocument.createElement("span");
         hint.className = "text-muted-foreground ml-auto text-sm tracking-wide";
         hint.textContent = opt.hint;
         item.appendChild(hint);
@@ -165,7 +165,7 @@ export function makeDropdownMenu<T extends string>(
 
   const place = () => placePopover({
     trigger, panel, popoverEl: popover,
-    width: document.body.classList.contains("is-mobile")
+    width: activeDocument.body.classList.contains("is-mobile")
       ? Math.max(0, Math.round(trigger.getBoundingClientRect().width))
       : Math.max(220, args.widthPx ?? 240),
     dropUp: args.dropUp,
@@ -185,8 +185,8 @@ export function makeDropdownMenu<T extends string>(
     cleanup = null;
 
     // Instead of removing popover, detach sproutWrapper from body if present
-    if (sproutWrapper.parentNode === document.body) {
-      document.body.removeChild(sproutWrapper);
+    if (sproutWrapper.parentNode === activeDocument.body) {
+      activeDocument.body.removeChild(sproutWrapper);
     }
   };
 
@@ -198,10 +198,10 @@ export function makeDropdownMenu<T extends string>(
     popover.setAttribute("aria-hidden", "false");
     popover.classList.add("is-open");
 
-    document.body.appendChild(sproutWrapper);
+    activeDocument.body.appendChild(sproutWrapper);
 
     // place after attach (more reliable)
-    requestAnimationFrame(() => place());
+    window.requestAnimationFrame(() => place());
 
     const onResizeOrScroll = () => place();
 
@@ -225,16 +225,16 @@ export function makeDropdownMenu<T extends string>(
 
     // attach outside listeners next tick (avoid self-close on opening event)
     const tid = window.setTimeout(() => {
-      document.addEventListener("pointerdown", onDocPointerDown, true);
-      document.addEventListener("keydown", onDocKeydown, true);
+      activeDocument.addEventListener("pointerdown", onDocPointerDown, true);
+      activeDocument.addEventListener("keydown", onDocKeydown, true);
     }, 0);
 
     cleanup = () => {
       window.clearTimeout(tid);
       window.removeEventListener("resize", onResizeOrScroll, true);
       window.removeEventListener("scroll", onResizeOrScroll, true);
-      document.removeEventListener("pointerdown", onDocPointerDown, true);
-      document.removeEventListener("keydown", onDocKeydown, true);
+      activeDocument.removeEventListener("pointerdown", onDocPointerDown, true);
+      activeDocument.removeEventListener("keydown", onDocKeydown, true);
     };
   };
 
@@ -284,11 +284,11 @@ export function makeColumnsDropdown(
   const id = `sprout-cols-${Math.random().toString(36).slice(2, 9)}`;
   const autoCloseMs = Math.max(0, Math.floor(args.autoCloseMs ?? 10000));
 
-  const root = document.createElement("div");
+  const root = activeDocument.createElement("div");
   root.id = id;
   root.className = "relative inline-flex learnkit-overflow-visible";
 
-  const trigger = document.createElement("button");
+  const trigger = activeDocument.createElement("button");
   trigger.type = "button";
   trigger.id = `${id}-trigger`;
   trigger.className = "learnkit-btn-toolbar h-9 px-3 text-sm inline-flex items-center gap-2";
@@ -298,32 +298,32 @@ export function makeColumnsDropdown(
   trigger.setAttribute("data-tooltip-position", "top");
   root.appendChild(trigger);
 
-  const trigIcon = document.createElement("span");
+  const trigIcon = activeDocument.createElement("span");
   trigIcon.className = "inline-flex items-center justify-center [&_svg]:size-4";
   trigIcon.setAttribute("aria-hidden", "true");
   setIcon(trigIcon, "columns-2");
   trigger.appendChild(trigIcon);
 
-  const trigText = document.createElement("span");
+  const trigText = activeDocument.createElement("span");
   trigText.className = "truncate";
   trigText.textContent = args.label;
   trigger.appendChild(trigText);
 
   // Create a single .learnkit wrapper around the popover menu
-  const sproutWrapper = document.createElement("div");
+  const sproutWrapper = activeDocument.createElement("div");
   sproutWrapper.className = "learnkit";
 
-  const popover = document.createElement("div");
+  const popover = activeDocument.createElement("div");
   popover.id = `${id}-popover`;
   popover.className = "";
   popover.setAttribute("aria-hidden", "true");
   popover.classList.add("learnkit-popover-overlay", "learnkit-dd-popover");
 
-  const panel = document.createElement("div");
+  const panel = activeDocument.createElement("div");
   panel.className = "rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-0 learnkit-pointer-auto learnkit-columns-panel learnkit-dd-panel";
   popover.appendChild(panel);
 
-  const menu = document.createElement("div");
+  const menu = activeDocument.createElement("div");
   menu.setAttribute("role", "menu");
   menu.id = `${id}-menu`;
   menu.setAttribute("aria-label", trigger.id);
@@ -347,22 +347,22 @@ export function makeColumnsDropdown(
     for (const opt of args.options) {
       const checked = ctx.getVisibleCols().has(opt.v);
 
-      const item = document.createElement("div");
+      const item = activeDocument.createElement("div");
       item.setAttribute("role", "menuitemcheckbox");
       item.setAttribute("aria-checked", checked ? "true" : "false");
       item.tabIndex = 0;
       item.className = "learnkit-cols-item";
 
-      const dotWrap = document.createElement("div");
+      const dotWrap = activeDocument.createElement("div");
       dotWrap.className = "learnkit-ss-dot-wrap";
       item.appendChild(dotWrap);
 
-      const dot = document.createElement("div");
+      const dot = activeDocument.createElement("div");
       dot.className = "learnkit-ss-dot";
       if (checked) dot.classList.add("is-selected");
       dotWrap.appendChild(dot);
 
-      const txt = document.createElement("span");
+      const txt = activeDocument.createElement("span");
       txt.className = "learnkit-cols-item-label";
       txt.textContent = opt.label;
       item.appendChild(txt);
@@ -407,7 +407,7 @@ export function makeColumnsDropdown(
 
   const place = () => placePopover({
     trigger, panel, popoverEl: popover,
-    width: document.body.classList.contains("is-mobile")
+    width: activeDocument.body.classList.contains("is-mobile")
       ? Math.max(0, Math.round(trigger.getBoundingClientRect().width))
       : Math.max(220, args.widthPx ?? 260),
   });
@@ -446,8 +446,8 @@ export function makeColumnsDropdown(
     popover.setAttribute("aria-hidden", "false");
     popover.classList.add("is-open");
 
-    document.body.appendChild(sproutWrapper);
-    requestAnimationFrame(() => place());
+    activeDocument.body.appendChild(sproutWrapper);
+    window.requestAnimationFrame(() => place());
     armAutoClose();
 
     const onResizeOrScroll = () => place();
@@ -469,16 +469,16 @@ export function makeColumnsDropdown(
     window.addEventListener("scroll", onResizeOrScroll, true);
 
     const tid = window.setTimeout(() => {
-      document.addEventListener("pointerdown", onDocPointerDown, true);
-      document.addEventListener("keydown", onDocKeydown, true);
+      activeDocument.addEventListener("pointerdown", onDocPointerDown, true);
+      activeDocument.addEventListener("keydown", onDocKeydown, true);
     }, 0);
 
     cleanup = () => {
       window.clearTimeout(tid);
       window.removeEventListener("resize", onResizeOrScroll, true);
       window.removeEventListener("scroll", onResizeOrScroll, true);
-      document.removeEventListener("pointerdown", onDocPointerDown, true);
-      document.removeEventListener("keydown", onDocKeydown, true);
+      activeDocument.removeEventListener("pointerdown", onDocPointerDown, true);
+      activeDocument.removeEventListener("keydown", onDocKeydown, true);
     };
   };
 

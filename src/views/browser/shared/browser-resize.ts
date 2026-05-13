@@ -10,6 +10,7 @@
  *   - ResizeContext — interface providing column width state, DOM references, and min/max constraints
  *   - makeResizableTh — attaches a drag-to-resize handle to a table header cell
  */
+import {  } from "obsidian";
 
 import type { ColKey } from "../browser-helpers";
 import { setCssProps } from "../../../platform/core/ui";
@@ -36,7 +37,7 @@ export function makeResizableTh(
 
   const RESIZE_ZONE_PX = 14;
 
-  const handle = document.createElement("div");
+  const handle = activeDocument.createElement("div");
   handle.className = "learnkit-col-resize learnkit-col-resize-handle";
   handle.setAttribute("aria-label", t(undefined, "ui.browser.resize.drag", "Drag to resize"));
   setCssProps(handle, "--learnkit-resize-zone", `${RESIZE_ZONE_PX}px`);
@@ -68,13 +69,13 @@ export function makeResizableTh(
     };
 
     const onUp = () => {
-      document.removeEventListener("mousemove", onMove, true);
-      document.removeEventListener("mouseup", onUp, true);
+      activeDocument.removeEventListener("mousemove", onMove, true);
+      activeDocument.removeEventListener("mouseup", onUp, true);
       ctx.setSuppressHeaderClickUntil(Date.now() + (moved ? 500 : 250));
     };
 
-    document.addEventListener("mousemove", onMove, true);
-    document.addEventListener("mouseup", onUp, true);
+    activeDocument.addEventListener("mousemove", onMove, true);
+    activeDocument.addEventListener("mouseup", onUp, true);
   };
 
   handle.addEventListener("mousedown", onMouseDown);

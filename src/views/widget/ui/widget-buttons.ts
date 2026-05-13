@@ -48,7 +48,7 @@ export function makeIconButton(opts: {
   className: string;
   onClick: () => void;
 }): HTMLButtonElement {
-  const btn = document.createElement("button");
+  const btn = activeDocument.createElement("button");
   btn.type = "button";
   btn.className = opts.className;
   btn.setAttribute("aria-label", opts.title || opts.label);
@@ -84,7 +84,7 @@ export function makeTextButton(opts: {
   onClick: () => void;
   kbd?: string;
 }): HTMLButtonElement {
-  const btn = document.createElement("button");
+  const btn = activeDocument.createElement("button");
   btn.type = "button";
   btn.className = opts.className;
   btn.setAttribute("aria-label", opts.title || opts.label);
@@ -92,14 +92,14 @@ export function makeTextButton(opts: {
 
   if (opts.subtitle) {
     btn.classList.add("sprout-widget-btn-with-subtitle");
-    const labelWrap = document.createElement("span");
+    const labelWrap = activeDocument.createElement("span");
     labelWrap.className = "sprout-widget-btn-label-wrap";
 
-    const labelLine = document.createElement("span");
+    const labelLine = activeDocument.createElement("span");
     labelLine.className = "learnkit-grade-btn-label";
     labelLine.textContent = opts.label;
 
-    const subtitleLine = document.createElement("span");
+    const subtitleLine = activeDocument.createElement("span");
     subtitleLine.className = "sprout-widget-btn-subtitle";
     subtitleLine.textContent = opts.subtitle;
 
@@ -107,13 +107,13 @@ export function makeTextButton(opts: {
     labelWrap.appendChild(subtitleLine);
     btn.appendChild(labelWrap);
   } else {
-    const content = document.createElement("span");
+    const content = activeDocument.createElement("span");
     content.textContent = opts.label;
     btn.appendChild(content);
   }
 
   if (opts.kbd) {
-    const kbd = document.createElement("kbd");
+    const kbd = activeDocument.createElement("kbd");
     kbd.className = "kbd sprout-widget-kbd";
     kbd.textContent = opts.kbd;
     btn.appendChild(kbd);
@@ -167,24 +167,24 @@ export function attachWidgetMoreMenu(opts: {
   trigger.setAttribute("aria-controls", `${id}-menu`);
   trigger.setAttribute("aria-expanded", "false");
 
-  const popover = document.createElement("div");
+  const popover = activeDocument.createElement("div");
   popover.id = `${id}-popover`;
   popover.className = "learnkit";
   popover.setAttribute("aria-hidden", "true");
   popover.classList.add("learnkit-popover-overlay", "learnkit-popover-overlay");
 
-  const panel = document.createElement("div");
+  const panel = activeDocument.createElement("div");
   panel.className = "learnkit rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 pointer-events-auto";
   popover.appendChild(panel);
 
-  const menu = document.createElement("div");
+  const menu = activeDocument.createElement("div");
   menu.className = "learnkit flex flex-col";
   menu.setAttribute("role", "menu");
   menu.id = `${id}-menu`;
   panel.appendChild(menu);
 
   const addItem = (label: string, hotkey: string | null, onClick: () => void, disabled = false, ariaLabel?: string) => {
-    const item = document.createElement("div");
+    const item = activeDocument.createElement("div");
     item.className =
       "group flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer select-none outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground";
     item.setAttribute("role", "menuitem");
@@ -195,13 +195,13 @@ export function attachWidgetMoreMenu(opts: {
       item.setAttribute("aria-disabled", "true");
     }
 
-    const labelSpan = document.createElement("span");
+    const labelSpan = activeDocument.createElement("span");
     labelSpan.className = "";
     labelSpan.textContent = label;
     item.appendChild(labelSpan);
 
     if (hotkey) {
-      const key = document.createElement("kbd");
+      const key = activeDocument.createElement("kbd");
       key.className = "kbd ml-auto text-xs text-muted-foreground tracking-widest";
       key.textContent = hotkey;
       item.appendChild(key);
@@ -300,8 +300,8 @@ export function attachWidgetMoreMenu(opts: {
     popover.setAttribute("aria-hidden", "false");
     popover.classList.add("is-open");
 
-    document.body.appendChild(popover);
-    requestAnimationFrame(() => place());
+    activeDocument.body.appendChild(popover);
+    window.requestAnimationFrame(() => place());
 
     const onResizeOrScroll = () => place();
     const onDocPointerDown = (ev: PointerEvent) => {
@@ -322,16 +322,16 @@ export function attachWidgetMoreMenu(opts: {
     window.addEventListener("scroll", onResizeOrScroll, true);
 
     const tid = window.setTimeout(() => {
-      document.addEventListener("pointerdown", onDocPointerDown, true);
-      document.addEventListener("keydown", onDocKeydown, true);
+      activeDocument.addEventListener("pointerdown", onDocPointerDown, true);
+      activeDocument.addEventListener("keydown", onDocKeydown, true);
     }, 0);
 
     cleanup = () => {
       window.clearTimeout(tid);
       window.removeEventListener("resize", onResizeOrScroll, true);
       window.removeEventListener("scroll", onResizeOrScroll, true);
-      document.removeEventListener("pointerdown", onDocPointerDown, true);
-      document.removeEventListener("keydown", onDocKeydown, true);
+      activeDocument.removeEventListener("pointerdown", onDocPointerDown, true);
+      activeDocument.removeEventListener("keydown", onDocKeydown, true);
     };
   };
 

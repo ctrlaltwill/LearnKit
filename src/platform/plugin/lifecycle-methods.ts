@@ -150,7 +150,7 @@ export function WithLifecycleMethods<T extends Constructor<LearnKitPluginBase>>(
 
         initMobileKeyboardHandler();
 
-        if (Platform.isPhone) document.body.classList.add("is-phone");
+        if (Platform.isPhone) activeDocument.body.classList.add("is-phone");
 
         this._bc = {
           VIEW_TYPE_REVIEWER,
@@ -374,10 +374,10 @@ export function WithLifecycleMethods<T extends Constructor<LearnKitPluginBase>>(
 
       this._bc = null;
       this._destroyRibbonIcons();
-      document.body.classList.remove("learnkit-hide-status-bar", "learnkit-hide-status-bar");
-      document.body.classList.remove("is-phone");
-      document.body.style.removeProperty("--learnkit-theme-accent-override");
-      document.body.style.removeProperty("--learnkit-leaf-zoom");
+      activeDocument.body.classList.remove("learnkit-hide-status-bar", "learnkit-hide-status-bar");
+      activeDocument.body.classList.remove("is-phone");
+      activeDocument.body.style.removeProperty("--learnkit-theme-accent-override");
+      activeDocument.body.style.removeProperty("--learnkit-leaf-zoom");
       if (this._sproutZoomSaveTimer != null) {
         window.clearTimeout(this._sproutZoomSaveTimer);
         this._sproutZoomSaveTimer = null;

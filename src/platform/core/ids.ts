@@ -14,7 +14,7 @@ const UINT32_MAX = 0xffffffff;
 const REJECTION_THRESHOLD = UINT32_MAX - (UINT32_MAX % ID_RANGE);
 
 function random9(): string {
-  const cryptoObj = globalThis.crypto;
+  const cryptoObj = typeof window !== "undefined" ? window.crypto : crypto;
   if (!cryptoObj?.getRandomValues) {
     throw new Error("Secure random generator unavailable.");
   }

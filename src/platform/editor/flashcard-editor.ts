@@ -149,7 +149,7 @@ export function registerEditorContextMenu(params: {
       };
 
       positionAfterExternalLink();
-      setTimeout(positionAfterExternalLink, 0);
+      window.setTimeout(positionAfterExternalLink, 0);
     }),
   );
 }

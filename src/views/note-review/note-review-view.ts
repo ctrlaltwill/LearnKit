@@ -86,7 +86,7 @@ export class SproutNoteReviewView extends ItemView {
     this.render();
     if ((this.plugin.settings?.general?.enableAnimations ?? true) &&
         (this.plugin.settings?.noteReview?.enableSessionAnimations ?? true)) {
-      setTimeout(() => {
+      window.setTimeout(() => {
         initAOS({ duration: AOS_DURATION, easing: "ease-out", once: true, offset: 50 });
       }, 100);
     }
@@ -519,7 +519,7 @@ export class SproutNoteReviewView extends ItemView {
     const lang = this.plugin.settings?.general?.interfaceLanguage;
     const isPracticeComplete = this._practiceMode && this._practiceQueueCompleted;
     const isCoachSession = !!this._coachScope;
-    const isPhoneMobile = document.body.classList.contains("is-phone");
+    const isPhoneMobile = activeDocument.body.classList.contains("is-phone");
     const coachLabel = "Coach";
     const backToCoachLabel = `${t(lang, "ui.reviewer.session.backTo", "Back to")} ${coachLabel}`;
     const exitToHomeLabel = `${t(lang, "ui.reviewer.session.exitTo", "Exit to")} ${t(lang, "ui.reviewer.session.scope.home", "Home")}`;
@@ -608,7 +608,7 @@ export class SproutNoteReviewView extends ItemView {
     const footerCenter = footer.createDiv({ cls: "flex flex-wrap gap-2 items-center justify-center learnkit-session-study-dock-center learnkit-session-study-dock-center" });
     const footerRight = footer.createDiv({ cls: "flex items-center gap-2 learnkit-session-study-dock-right learnkit-session-study-dock-right" });
 
-    const homeBtn = document.createElement("button");
+    const homeBtn = activeDocument.createElement("button");
     homeBtn.className = "learnkit-btn-toolbar learnkit-btn-filter";
     homeBtn.setAttr("type", "button");
     homeBtn.setAttr("aria-label", isCoachSession
@@ -627,7 +627,7 @@ export class SproutNoteReviewView extends ItemView {
 
     const canShowPractice = !isCoachSession && !this._practiceMode && this._filteredNotes.length > 0;
     if (canShowPractice) {
-      const practiceBtn = document.createElement("button");
+      const practiceBtn = activeDocument.createElement("button");
       practiceBtn.className = "learnkit-btn-toolbar learnkit-btn-filter";
       practiceBtn.setAttr("type", "button");
       practiceBtn.setAttr("aria-label", t(lang, "ui.reviewer.session.startPractice", "Start Practice"));
@@ -972,18 +972,18 @@ export class SproutNoteReviewView extends ItemView {
 
     const coachShellMode = !!this._coachScope || this._returnToCoach;
 
-    const strip = document.createElement("div");
+    const strip = activeDocument.createElement("div");
     strip.className = coachShellMode
       ? "lk-home-title-strip sprout-coach-title-strip"
       : "lk-home-title-strip learnkit-note-review-title-strip";
 
-    const row = document.createElement("div");
+    const row = activeDocument.createElement("div");
     row.className = "learnkit-inline-sentence w-full flex items-center justify-between gap-[10px] learnkit-note-review-title-row";
 
-    const left = document.createElement("div");
+    const left = activeDocument.createElement("div");
     left.className = "min-w-0 flex-1 flex flex-col gap-[2px]";
 
-    const title = document.createElement("div");
+    const title = activeDocument.createElement("div");
     title.className = SPROUT_TITLE_STRIP_LABEL_CLASS;
     title.textContent = coachShellMode
       ? t(this.plugin.settings?.general?.interfaceLanguage, "ui.view.coach.title", "Coach")
@@ -991,7 +991,7 @@ export class SproutNoteReviewView extends ItemView {
 
     const total = Math.max(this._queueSessionTotal, this._queue.length);
     const remaining = Math.max(0, total - this._queueSessionDone);
-    const subtitle = document.createElement("div");
+    const subtitle = activeDocument.createElement("div");
     subtitle.className = "text-[0.95rem] font-normal leading-[1.3] text-muted-foreground";
     if (coachShellMode) {
       subtitle.textContent = t(
@@ -1025,7 +1025,7 @@ export class SproutNoteReviewView extends ItemView {
     left.appendChild(subtitle);
     row.appendChild(left);
 
-    const timerHost = document.createElement("div");
+    const timerHost = activeDocument.createElement("div");
     timerHost.className = "learnkit-note-review-title-timer-host";
     row.appendChild(timerHost);
 
@@ -1058,7 +1058,7 @@ export class SproutNoteReviewView extends ItemView {
     const root = this._rootEl;
     if (!root || !panel.isConnected) return;
 
-    requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
       if (!root.isConnected || !panel.isConnected) return;
       const rootRect = root.getBoundingClientRect();
       const panelRect = panel.getBoundingClientRect();
@@ -1068,7 +1068,7 @@ export class SproutNoteReviewView extends ItemView {
   }
 
   private async _renderCurrentNoteContent(host: HTMLElement, note: TFile, token: number): Promise<void> {
-    const article = document.createElement("div");
+    const article = activeDocument.createElement("div");
     article.className = "learnkit-note-review-article card";
     const body = article.createDiv({ cls: "learnkit-note-review-note-body learnkit-note-review-note-body markdown-rendered" });
     this._renderNoteReviewSessionHeader(body, note);
@@ -1104,7 +1104,7 @@ export class SproutNoteReviewView extends ItemView {
 
     host.replaceChildren(article);
     article.classList.add("learnkit-note-review-article-enter", "learnkit-note-review-article-enter");
-    requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
       if (!article.isConnected) return;
       article.classList.add("is-visible");
     });
@@ -1170,11 +1170,11 @@ export class SproutNoteReviewView extends ItemView {
     const backToCoachLabel = `Back to ${coachLabel}`;
     const lang = this.plugin.settings?.general?.interfaceLanguage;
 
-    const popover = document.createElement("div");
+    const popover = activeDocument.createElement("div");
     popover.className =
       "learnkit rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 pointer-events-auto learnkit-note-review-more-popover learnkit-header-menu-panel";
 
-    const menu = document.createElement("div");
+    const menu = activeDocument.createElement("div");
     menu.className = "learnkit flex flex-col";
     menu.setAttribute("role", "menu");
     popover.appendChild(menu);
@@ -1183,15 +1183,15 @@ export class SproutNoteReviewView extends ItemView {
       "group flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer select-none outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground";
 
     const addItem = (label: string, hotkey: string, onClick: () => void) => {
-      const item = document.createElement("div");
+      const item = activeDocument.createElement("div");
       item.className = itemClass;
       item.setAttribute("role", "menuitem");
       item.tabIndex = 0;
-      const span = document.createElement("span");
+      const span = activeDocument.createElement("span");
       span.className = "";
       span.textContent = label;
       item.appendChild(span);
-      const kbd = document.createElement("kbd");
+      const kbd = activeDocument.createElement("kbd");
       kbd.className = "kbd ml-auto text-xs text-muted-foreground tracking-widest";
       kbd.textContent = hotkey;
       item.appendChild(kbd);
@@ -1220,16 +1220,16 @@ export class SproutNoteReviewView extends ItemView {
       () => void this._suspendCurrentNote().then(() => new Notice(t(lang, "ui.noteReview.notice.suspended", "Note suspended."))),
     );
 
-    const undoItem = document.createElement("div");
+    const undoItem = activeDocument.createElement("div");
     undoItem.className = `${itemClass} learnkit-menu-item--disabled`;
     undoItem.setAttribute("role", "menuitem");
     undoItem.tabIndex = -1;
     undoItem.setAttribute("aria-disabled", "true");
-    const undoSpan = document.createElement("span");
+    const undoSpan = activeDocument.createElement("span");
     undoSpan.className = "";
     undoSpan.textContent = t(lang, "ui.noteReview.menu.undo", "Undo last grade");
     undoItem.appendChild(undoSpan);
-    const undoKbd = document.createElement("kbd");
+    const undoKbd = activeDocument.createElement("kbd");
     undoKbd.className = "kbd ml-auto text-xs text-muted-foreground tracking-widest";
     undoKbd.textContent = t(lang, "ui.noteReview.menu.undoHotkey", "U");
     undoItem.appendChild(undoKbd);
@@ -1263,15 +1263,15 @@ export class SproutNoteReviewView extends ItemView {
     };
 
     const tid = window.setTimeout(() => {
-      document.addEventListener("pointerdown", onDocPointerDown, true);
-      document.addEventListener("keydown", onDocKeydown, true);
+      activeDocument.addEventListener("pointerdown", onDocPointerDown, true);
+      activeDocument.addEventListener("keydown", onDocKeydown, true);
       window.addEventListener("resize", onWindowResize);
     }, 0);
     this._moreCleanup = () => {
       window.clearTimeout(tid);
       window.cancelAnimationFrame(rafId);
-      document.removeEventListener("pointerdown", onDocPointerDown, true);
-      document.removeEventListener("keydown", onDocKeydown, true);
+      activeDocument.removeEventListener("pointerdown", onDocPointerDown, true);
+      activeDocument.removeEventListener("keydown", onDocKeydown, true);
       window.removeEventListener("resize", onWindowResize);
     };
 
@@ -1401,7 +1401,7 @@ export class SproutNoteReviewView extends ItemView {
 
     const panel = contentShell.createDiv({ cls: "learnkit-note-review-panel learnkit-note-review-panel" });
     const lang = this.plugin.settings?.general?.interfaceLanguage;
-    const isMobile = document.body.classList.contains("is-mobile");
+    const isMobile = activeDocument.body.classList.contains("is-mobile");
     const coachLabel = "Coach";
     const backToCoachLabel = `Back to ${coachLabel}`;
     const exitToHomeLabel = `${t(lang, "ui.reviewer.session.exitTo", "Exit to")} ${t(lang, "ui.reviewer.session.scope.home", "Home")}`;

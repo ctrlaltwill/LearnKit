@@ -28,7 +28,7 @@ export function isMainWorkspaceMarkdownLeaf(leaf: WorkspaceLeaf): boolean {
   if (!(view instanceof MarkdownView)) return false;
 
   const container = view.containerEl;
-  if (!(container instanceof HTMLElement)) return false;
+  if (!container || container.nodeType !== Node.ELEMENT_NODE) return false;
 
   const inSidebar = !!container.closest(
     ".workspace-split.mod-left-split, .workspace-split.mod-right-split",
@@ -82,13 +82,13 @@ export async function refreshReadingViewMarkdownLeaves(app: App): Promise<void> 
 
   await Promise.all(leaves.map(async (leaf) => {
     const container = leaf.view?.containerEl ?? null;
-    if (!(container instanceof HTMLElement)) return;
+    if (!container || container.nodeType !== Node.ELEMENT_NODE) return;
 
     const content = queryFirst(
       container,
       ".markdown-reading-view, .markdown-preview-view, .markdown-rendered, .markdown-preview-sizer, .markdown-preview-section",
     );
-    if (!(content instanceof HTMLElement)) return;
+    if (!content || content.nodeType !== Node.ELEMENT_NODE) return;
 
     const scrollHost =
       content.closest(".markdown-reading-view, .markdown-preview-view, .markdown-rendered") ??

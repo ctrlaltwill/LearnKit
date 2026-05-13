@@ -6,15 +6,7 @@
  *  - WithCoreMethods
  */
 
-import {
-  Notice,
-  TFile,
-  MarkdownView,
-  Platform,
-  type Editor,
-  type ItemView,
-  type WorkspaceLeaf,
-} from "obsidian";
+import { Notice, TFile, MarkdownView, Platform, type Editor, type ItemView, type WorkspaceLeaf } from "obsidian";
 
 import { LearnKitPluginBase, type Constructor } from "./plugin-base";
 import type { FlashcardType } from "../core/utils";
@@ -144,7 +136,7 @@ export function WithCoreMethods<T extends Constructor<LearnKitPluginBase>>(Base:
       const hide = viewType
         ? this._hideStatusBarViewTypes.has(viewType)
         : this._isActiveHiddenViewType();
-      document.body.classList.toggle("learnkit-hide-status-bar", hide);
+      activeDocument.body.classList.toggle("learnkit-hide-status-bar", hide);
     }
 
     _migrateSettingsInPlace(): void {
@@ -159,21 +151,21 @@ export function WithCoreMethods<T extends Constructor<LearnKitPluginBase>>(Base:
       const raw = String(this.settings?.general?.themeAccentOverride ?? "").trim();
       const isHex = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(raw);
       if (isHex) {
-        document.body.style.setProperty("--learnkit-theme-accent-override", raw);
+        activeDocument.body.style.setProperty("--learnkit-theme-accent-override", raw);
         return;
       }
-      document.body.style.removeProperty("--learnkit-theme-accent-override");
+      activeDocument.body.style.removeProperty("--learnkit-theme-accent-override");
     }
 
     _applySproutThemePreset(): void {
       const preset = String(this.settings?.general?.themePreset ?? "glass").trim() || "glass";
-      document.body.setAttribute("data-learnkit-theme-preset", preset);
+      activeDocument.body.setAttribute("data-learnkit-theme-preset", preset);
     }
 
     _applySproutZoom(value: number): void {
       const next = clamp(Number(value || 1), 0.8, 1.8);
       this._sproutZoomValue = next;
-      document.body.style.setProperty("--learnkit-leaf-zoom", next.toFixed(3));
+      activeDocument.body.style.setProperty("--learnkit-leaf-zoom", next.toFixed(3));
     }
 
     _queueSproutZoomSave(): void {

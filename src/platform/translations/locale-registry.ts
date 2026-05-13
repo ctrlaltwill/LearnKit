@@ -14,6 +14,7 @@
  *  - interfaceLocaleToIntlLocale
  *  - getInterfaceLocaleLabel
  */
+import {  } from "obsidian";
 
 export type InterfaceLocaleDefinition = {
   code: string;
@@ -120,15 +121,14 @@ function toSupportedManualLocale(value: unknown, fallback: string): string {
 }
 
 function readObsidianLocalePreference(): string {
-  const root = globalThis as unknown as {
-    app?: { vault?: { getConfig?: (key: string) => unknown }; i18n?: { locale?: unknown } };
-    window?: { app?: { vault?: { getConfig?: (key: string) => unknown }; i18n?: { locale?: unknown } } };
-  };
-
-  const app = root.app ?? root.window?.app;
+  type AppHost = { app?: { vault?: { getConfig?: (key: string) => unknown }; i18n?: { locale?: unknown } } };
+  const host: AppHost = typeof window !== "undefined"
+    ? (window as Window & AppHost)
+    : {} as AppHost;
+  const app = host.app;
   const fromConfig = app?.vault?.getConfig?.("locale");
   const fromI18n = app?.i18n?.locale;
-  const fromDoc = typeof document !== "undefined" ? document.documentElement?.lang : "";
+  const fromDoc = typeof document !== "undefined" ? activeDocument.documentElement?.lang : "";
   const fromNavigator = typeof navigator !== "undefined" ? navigator.language : "";
 
   return (

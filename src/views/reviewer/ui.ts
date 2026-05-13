@@ -8,6 +8,7 @@
  *   - appendKeyboxRight — Appends a right-aligned keyboard badge to a button element
  *   - makePlainButton — Creates a plain button element with a label and click handler
  */
+import {  } from "obsidian";
 
 import { el } from "../../platform/core/ui";
 
@@ -35,7 +36,7 @@ export function makePlainButton(
   onClick: () => void,
   className = "learnkit-btn",
 ): HTMLButtonElement {
-  const b = document.createElement("button");
+  const b = activeDocument.createElement("button");
   b.type = "button";
   b.className = className;
   b.setAttribute("aria-label", label);

@@ -186,7 +186,7 @@ export class ImageOcclusionCreatorModal extends Modal {
 
     // Escape key behavior: first exits focused input, second closes the modal.
     this.scope.register([], "Escape", () => {
-      const activeEl = document.activeElement as HTMLElement | null;
+      const activeEl = activeDocument.activeElement as HTMLElement | null;
       const isInsideModal = !!activeEl && this.modalEl.contains(activeEl);
       const isEditable =
         !!activeEl &&
@@ -353,7 +353,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     };
 
     this.onDocPaste = (ev: ClipboardEvent) => { void handlePaste(ev); };
-    document.addEventListener("paste", this.onDocPaste, true);
+    activeDocument.addEventListener("paste", this.onDocPaste, true);
 
     // Setup canvas mouse/keyboard interactions
     this.setupCanvasEvents();
@@ -526,7 +526,7 @@ export class ImageOcclusionCreatorModal extends Modal {
       footerButtonRow.remove();
     }
 
-    requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
       (this.canvasContainerEl ?? this.viewportEl)?.focus();
     });
   }
@@ -752,7 +752,7 @@ export class ImageOcclusionCreatorModal extends Modal {
         this.fitRetryRaf = null;
         return;
       }
-      this.fitRetryRaf = requestAnimationFrame(() => attemptFit(attempt + 1));
+      this.fitRetryRaf = window.requestAnimationFrame(() => attemptFit(attempt + 1));
     };
 
     attemptFit(0);
@@ -801,7 +801,7 @@ export class ImageOcclusionCreatorModal extends Modal {
         return;
       }
 
-      const activeEl = document.activeElement as HTMLElement | null;
+      const activeEl = activeDocument.activeElement as HTMLElement | null;
       if (activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA")) return;
 
       if (e.key === "Delete" || e.key === "Backspace") {
@@ -822,7 +822,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     };
 
     this.onDocKeyDown = handleKeyDown;
-    document.addEventListener("keydown", handleKeyDown);
+    activeDocument.addEventListener("keydown", handleKeyDown);
 
     this.viewportEl.addEventListener("mousedown", (e: MouseEvent) => {
       const targetEl = e.target as HTMLElement | null;
@@ -1034,12 +1034,12 @@ export class ImageOcclusionCreatorModal extends Modal {
     const useX = box ? box.normX * this.stageW : stageX;
     const useY = box ? box.normY * this.stageH : stageY;
 
-    const wrap = document.createElement("div");
+    const wrap = activeDocument.createElement("div");
     wrap.className = "learnkit-io-text-wrap";
     setCssProps(wrap, "--learnkit-io-text-x", `${useX * this.t.scale + this.t.tx}px`);
     setCssProps(wrap, "--learnkit-io-text-y", `${useY * this.t.scale + this.t.ty}px`);
 
-    const input = document.createElement("textarea");
+    const input = activeDocument.createElement("textarea");
     input.className = "textarea learnkit-io-text-input";
     input.rows = 1;
     input.placeholder = this._tx("ui.io.creator.text.placeholder", "Type text");
@@ -1151,7 +1151,7 @@ export class ImageOcclusionCreatorModal extends Modal {
   private updateTextPreview(x1: number, y1: number, x2: number, y2: number) {
     if (!this.overlayEl) return;
     if (!this.textPreviewEl) {
-      this.textPreviewEl = document.createElement("div");
+      this.textPreviewEl = activeDocument.createElement("div");
       this.textPreviewEl.className = "learnkit-io-text-preview";
       this.overlayEl.appendChild(this.textPreviewEl);
     }
@@ -1177,7 +1177,7 @@ export class ImageOcclusionCreatorModal extends Modal {
   private updateCropPreview(x1: number, y1: number, x2: number, y2: number) {
     if (!this.overlayEl) return;
     if (!this.cropPreviewEl) {
-      this.cropPreviewEl = document.createElement("div");
+      this.cropPreviewEl = activeDocument.createElement("div");
       this.cropPreviewEl.className = "learnkit-io-crop-preview";
       this.overlayEl.appendChild(this.cropPreviewEl);
     }
@@ -1213,7 +1213,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     if (!this.overlayEl) return;
 
     if (!this.previewEl) {
-      this.previewEl = document.createElement("div");
+      this.previewEl = activeDocument.createElement("div");
       this.previewEl.className = "learnkit-io-mask-preview";
       this.overlayEl.appendChild(this.previewEl);
     }
@@ -1241,7 +1241,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     if (!this.overlayEl || points.length === 0) return;
 
     if (!this.previewEl) {
-      this.previewEl = document.createElement("div");
+      this.previewEl = activeDocument.createElement("div");
       this.previewEl.className = "learnkit-io-mask-preview";
       this.overlayEl.appendChild(this.previewEl);
     }
@@ -1270,7 +1270,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     this.previewEl.style.clipPath = polygonClipPath(relativePoints);
 
     if (!this.previewStrokeEl) {
-      this.previewStrokeEl = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      this.previewStrokeEl = activeDocument.createElementNS("http://www.w3.org/2000/svg", "svg");
       this.previewStrokeEl.classList.add("learnkit-io-mask-preview-stroke");
       this.overlayEl.appendChild(this.previewStrokeEl);
     }
@@ -1281,7 +1281,7 @@ export class ImageOcclusionCreatorModal extends Modal {
     this.previewStrokeEl.style.top = `${top}px`;
     this.previewStrokeEl.replaceChildren();
 
-    const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    const polygon = activeDocument.createElementNS("http://www.w3.org/2000/svg", "polygon");
     polygon.setAttribute(
       "points",
       points
@@ -1392,7 +1392,7 @@ export class ImageOcclusionCreatorModal extends Modal {
       sampled.push(rawPoints[rawPoints.length - 1]);
     }
 
-    const canvas = document.createElement("canvas");
+    const canvas = activeDocument.createElement("canvas");
     canvas.width = imgEl.naturalWidth;
     canvas.height = imgEl.naturalHeight;
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
@@ -1657,7 +1657,7 @@ export class ImageOcclusionCreatorModal extends Modal {
         } else {
           const sw = Math.max(24, Math.round(imageW * scale));
           const sh = Math.max(24, Math.round(imageH * scale));
-          const scaledCanvas = document.createElement("canvas");
+          const scaledCanvas = activeDocument.createElement("canvas");
           scaledCanvas.width = sw;
           scaledCanvas.height = sh;
           const sctx = scaledCanvas.getContext("2d", { willReadFrequently: true });
@@ -2433,11 +2433,11 @@ export class ImageOcclusionCreatorModal extends Modal {
       this.onCloseCallback?.();
     } catch (e) { log.swallow("IO modal onClose callback", e); }
     if (this.onDocPaste) {
-      document.removeEventListener("paste", this.onDocPaste, true);
+      activeDocument.removeEventListener("paste", this.onDocPaste, true);
       this.onDocPaste = undefined;
     }
     if (this.onDocKeyDown) {
-      document.removeEventListener("keydown", this.onDocKeyDown);
+      activeDocument.removeEventListener("keydown", this.onDocKeyDown);
       this.onDocKeyDown = undefined;
     }
     if (this.fitRetryRaf != null) {

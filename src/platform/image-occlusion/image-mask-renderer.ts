@@ -479,9 +479,9 @@ export class ImageOcclusionEditorModal extends Modal {
       modeMenu.classList.add("hidden");
       trigger.setAttribute("aria-expanded", "false");
     };
-    document.addEventListener("click", onDocClick);
+    activeDocument.addEventListener("click", onDocClick);
     this.cleanupModeMenuListener = () => {
-      document.removeEventListener("click", onDocClick);
+      activeDocument.removeEventListener("click", onDocClick);
     };
 
     // Button row
@@ -527,7 +527,7 @@ export class ImageOcclusionEditorModal extends Modal {
     setCssProps(this.stageEl, "--learnkit-io-stage-w", `${this.stageW}px`);
     setCssProps(this.stageEl, "--learnkit-io-stage-h", `${this.stageH}px`);
 
-    requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
       this.fitAndSizeViewport();
       this.renderAllRects();
       this.syncCursor();
@@ -546,7 +546,7 @@ export class ImageOcclusionEditorModal extends Modal {
       }
 
       if (e.key === "Delete" || e.key === "Backspace") {
-        if (isEditableTarget(document.activeElement)) return;
+        if (isEditableTarget(activeDocument.activeElement)) return;
         if (this.selectedRectId) {
           e.preventDefault();
           this.deleteSelected();
@@ -555,7 +555,7 @@ export class ImageOcclusionEditorModal extends Modal {
       }
 
       if (e.key.startsWith("Arrow")) {
-        if (isEditableTarget(document.activeElement)) return;
+        if (isEditableTarget(activeDocument.activeElement)) return;
         if (!this.selectedRectId) return;
 
         const stepScreen = e.shiftKey ? 10 : 1;
@@ -622,7 +622,7 @@ export class ImageOcclusionEditorModal extends Modal {
       const p = clientToStage(this.stageEl, this.t, e.clientX, e.clientY);
       this.drawStart = p;
 
-      this.previewEl = document.createElement("div");
+      this.previewEl = activeDocument.createElement("div");
       this.previewEl.className = "learnkit-io-preview";
       this.overlayEl.appendChild(this.previewEl);
 
@@ -775,8 +775,8 @@ export class ImageOcclusionEditorModal extends Modal {
   }
 
   private updateRectLabel(rectId: string) {
-    const el = queryFirst(this.overlayEl, `.learnkit-io-rect[data-rect-id="${CSS.escape(rectId)}"]`);
-    if (!(el instanceof HTMLElement)) return;
+    const el = queryFirst<HTMLElement>(this.overlayEl, `.learnkit-io-rect[data-rect-id="${CSS.escape(rectId)}"]`);
+    if (!el) return;
 
     const r = this.rects.find((x) => x.rectId === rectId);
     if (!r) return;
@@ -786,8 +786,8 @@ export class ImageOcclusionEditorModal extends Modal {
   }
 
   private updateRectElement(rectId: string) {
-    const el = queryFirst(this.overlayEl, `.learnkit-io-rect[data-rect-id="${CSS.escape(rectId)}"]`);
-    if (!(el instanceof HTMLElement)) return;
+    const el = queryFirst<HTMLElement>(this.overlayEl, `.learnkit-io-rect[data-rect-id="${CSS.escape(rectId)}"]`);
+    if (!el) return;
 
     const r = this.rects.find((x) => x.rectId === rectId);
     if (!r) return;

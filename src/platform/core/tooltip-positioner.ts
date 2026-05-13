@@ -6,6 +6,7 @@
  * @exports
  *   - TooltipPositioner — class that observes tooltip-bearing elements and adjusts placement
  */
+import {  } from "obsidian";
 export function initTooltipPositioner(): () => void {
   if (typeof document === "undefined") return () => {};
   if (typeof window === "undefined") return () => {};
@@ -24,9 +25,9 @@ export function initTooltipPositioner(): () => void {
 
   const getMeasureEl = (): HTMLDivElement => {
     if (measureEl && measureEl.isConnected) return measureEl;
-    const el = document.createElement("div");
+    const el = activeDocument.createElement("div");
     el.className = "learnkit-tooltip-measure";
-    document.body.appendChild(el);
+    activeDocument.body.appendChild(el);
     measureEl = el;
     return el;
   };
@@ -87,7 +88,7 @@ export function initTooltipPositioner(): () => void {
       el.closest(WORKSPACE_DARK_LEARNKIT_SELECTOR)
       ?? el.closest(WORKSPACE_LEARNKIT_SELECTOR)
       ?? el.closest(WORKSPACE_SELECTOR);
-    const boundsRect = (boundsEl ?? document.documentElement).getBoundingClientRect();
+    const boundsRect = (boundsEl ?? activeDocument.documentElement).getBoundingClientRect();
     const boundsWidth = boundsRect.width;
     if (!Number.isFinite(boundsWidth) || boundsWidth <= 0) {
       clearVars(el);
@@ -164,10 +165,10 @@ export function initTooltipPositioner(): () => void {
   };
 
   const findTooltipTarget = (start: EventTarget | null): HTMLElement | null => {
-    const node = start instanceof Element ? start : null;
+    const node = (start as Node | null)?.nodeType === 1 ? start as Element : null;
     if (!node) return null;
-    const el = node.closest(TOOLTIP_SELECTOR);
-    return el instanceof HTMLElement ? el : null;
+    const el = node.closest<HTMLElement>(TOOLTIP_SELECTOR);
+    return el ?? null;
   };
 
   const onPointerOver = (ev: PointerEvent) => {
@@ -177,8 +178,10 @@ export function initTooltipPositioner(): () => void {
   };
 
   const onPointerOut = (ev: PointerEvent) => {
-    const leavingCandidate = ev.target instanceof Element ? ev.target.closest(TOOLTIP_SELECTOR) : null;
-    const leaving = leavingCandidate instanceof HTMLElement ? leavingCandidate : null;
+    const leavingCandidate = (ev.target as Node | null)?.nodeType === 1
+      ? (ev.target as Element).closest<HTMLElement>(TOOLTIP_SELECTOR)
+      : null;
+    const leaving = leavingCandidate;
     if (!leaving) return;
 
     const next = ev.relatedTarget instanceof Node ? ev.relatedTarget : null;
@@ -199,8 +202,10 @@ export function initTooltipPositioner(): () => void {
   };
 
   const onFocusOut = (ev: FocusEvent) => {
-    const leavingCandidate = ev.target instanceof Element ? ev.target.closest(TOOLTIP_SELECTOR) : null;
-    const leaving = leavingCandidate instanceof HTMLElement ? leavingCandidate : null;
+    const leavingCandidate = (ev.target as Node | null)?.nodeType === 1
+      ? (ev.target as Element).closest<HTMLElement>(TOOLTIP_SELECTOR)
+      : null;
+    const leaving = leavingCandidate;
     if (!leaving) return;
     const next = ev.relatedTarget instanceof Node ? ev.relatedTarget : null;
     if (next && leaving.contains(next)) return;
@@ -216,18 +221,18 @@ export function initTooltipPositioner(): () => void {
     update(activeTarget);
   };
 
-  document.addEventListener("pointerover", onPointerOver, true);
-  document.addEventListener("pointerout", onPointerOut, true);
-  document.addEventListener("focusin", onFocusIn, true);
-  document.addEventListener("focusout", onFocusOut, true);
+  activeDocument.addEventListener("pointerover", onPointerOver, true);
+  activeDocument.addEventListener("pointerout", onPointerOut, true);
+  activeDocument.addEventListener("focusin", onFocusIn, true);
+  activeDocument.addEventListener("focusout", onFocusOut, true);
   window.addEventListener("scroll", onScrollOrResize, true);
   window.addEventListener("resize", onScrollOrResize, true);
 
   return () => {
-    document.removeEventListener("pointerover", onPointerOver, true);
-    document.removeEventListener("pointerout", onPointerOut, true);
-    document.removeEventListener("focusin", onFocusIn, true);
-    document.removeEventListener("focusout", onFocusOut, true);
+    activeDocument.removeEventListener("pointerover", onPointerOver, true);
+    activeDocument.removeEventListener("pointerout", onPointerOut, true);
+    activeDocument.removeEventListener("focusin", onFocusIn, true);
+    activeDocument.removeEventListener("focusout", onFocusOut, true);
     window.removeEventListener("scroll", onScrollOrResize, true);
     window.removeEventListener("resize", onScrollOrResize, true);
     activeTarget = null;

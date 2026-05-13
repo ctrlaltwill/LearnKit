@@ -104,7 +104,7 @@ export class AnkiImportModal extends Modal {
 
     const fileRow = body.createDiv({ cls: "flex items-center gap-3" });
 
-    const fileInput = document.createElement("input");
+    const fileInput = activeDocument.createElement("input");
     fileInput.type = "file";
     fileInput.accept = ".apkg";
     fileInput.classList.add("learnkit-hidden-important", "learnkit-hidden-important");
@@ -448,7 +448,7 @@ export class AnkiImportModal extends Modal {
       setCssProps(fill, "--learnkit-anki-import-progress", `${Math.min(pct, 100)}%`);
       statusText.textContent = phase;
       // Yield so the browser can repaint the bar
-      await new Promise((r) => requestAnimationFrame(r));
+      await new Promise((r) => window.requestAnimationFrame(r));
     };
 
     try {

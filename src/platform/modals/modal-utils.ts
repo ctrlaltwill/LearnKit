@@ -41,12 +41,10 @@
 import { type Modal, Platform, TFile, setIcon, type App } from "obsidian";
 import type LearnKitPlugin from "../../main";
 import {
-  type CardType,
-  createCardEditor,
-} from "../card-editor/card-editor";
+  type CardType, createCardEditor, } from "../card-editor/card-editor";
 import type { CardRecord } from "../core/store";
 import type { CardRecordType } from "../types/card";
-import { activeDocument, setCssProps } from "../core/ui";
+import { setCssProps } from "../core/ui";
 import { t } from "../translations/translator";
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -70,7 +68,7 @@ export function isStringArray(x: unknown): x is string[] {
 
 /** Returns a promise that resolves after the next animation frame. */
 export function nextFrame(): Promise<void> {
-  return new Promise((r) => requestAnimationFrame(() => r()));
+  return new Promise((r) => window.requestAnimationFrame(() => r()));
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -486,13 +484,13 @@ export function hasClozeToken(s: string): boolean {
  * Returns the container element and a `getOptions()` accessor.
  */
 export function createModalMcqSection() {
-  const container = document.createElement("div");
+  const container = activeDocument.createElement("div");
   container.className = "flex flex-col gap-2";
 
-  const label = document.createElement("label");
+  const label = activeDocument.createElement("label");
   label.className = "text-sm font-medium inline-flex items-center gap-1";
   label.textContent = "Answers and options";
-  const mcqInfoIcon = document.createElement("span");
+  const mcqInfoIcon = activeDocument.createElement("span");
   mcqInfoIcon.className = "inline-flex items-center justify-center [&_svg]:size-3 text-muted-foreground learnkit-info-icon-elevated";
   mcqInfoIcon.setAttribute("aria-label", t(undefined, "ui.modal.mcq.description", "Check the box next to each correct answer. At least one correct and one incorrect option required."));
   mcqInfoIcon.setAttribute("data-tooltip-position", "top");
@@ -500,7 +498,7 @@ export function createModalMcqSection() {
   label.appendChild(mcqInfoIcon);
   container.appendChild(label);
 
-  const optionsContainer = document.createElement("div");
+  const optionsContainer = activeDocument.createElement("div");
   optionsContainer.className = "flex flex-col gap-2";
   container.appendChild(optionsContainer);
 
@@ -517,10 +515,10 @@ export function createModalMcqSection() {
   };
 
   const addOptionRow = (value: string, isCorrect: boolean) => {
-    const row = document.createElement("div");
+    const row = activeDocument.createElement("div");
     row.className = "flex items-center gap-2 learnkit-edit-mcq-option-row";
 
-    const checkbox = document.createElement("input");
+    const checkbox = activeDocument.createElement("input");
     checkbox.type = "checkbox";
     checkbox.checked = isCorrect;
     checkbox.className = "learnkit-mcq-correct-checkbox";
@@ -528,19 +526,19 @@ export function createModalMcqSection() {
     checkbox.setAttribute("data-tooltip-position", "top");
     row.appendChild(checkbox);
 
-    const input = document.createElement("input");
+    const input = activeDocument.createElement("input");
     input.type = "text";
     input.className = "input flex-1 text-sm learnkit-input-fixed";
     input.placeholder = "Enter an answer option";
     input.value = value;
     row.appendChild(input);
 
-    const removeBtn = document.createElement("button");
+    const removeBtn = activeDocument.createElement("button");
     removeBtn.type = "button";
     removeBtn.className = "inline-flex items-center justify-center h-9 w-9 p-0 learnkit-remove-btn-ghost";
     removeBtn.setAttribute("aria-label", t(undefined, "ui.modal.mcq.removeOption", "Remove option"));
     removeBtn.setAttribute("data-tooltip-position", "top");
-    const xIcon = document.createElement("span");
+    const xIcon = activeDocument.createElement("span");
     xIcon.className = "inline-flex items-center justify-center [&_svg]:size-4";
     setIcon(xIcon, "x");
     removeBtn.appendChild(xIcon);
@@ -561,7 +559,7 @@ export function createModalMcqSection() {
     updateRemoveButtons();
   };
 
-  const addInput = document.createElement("input");
+  const addInput = activeDocument.createElement("input");
   addInput.type = "text";
   addInput.className = "input flex-1 text-sm learnkit-input-fixed";
   addInput.placeholder = "Add another option (press enter)";
@@ -582,7 +580,7 @@ export function createModalMcqSection() {
     addInput.value = "";
   });
 
-  const addInputWrap = document.createElement("div");
+  const addInputWrap = activeDocument.createElement("div");
   addInputWrap.className = "flex items-center gap-2";
   addInputWrap.appendChild(addInput);
   container.appendChild(addInputWrap);
@@ -659,7 +657,7 @@ export function createThemedDropdown(
   const buttonSize = config?.buttonSize ?? "md";
   const buttonJustify = config?.buttonJustify ?? (fullWidth ? "between" : "start");
 
-  const container = document.createElement("div");
+  const container = activeDocument.createElement("div");
   container.className = [
     "sprout relative inline-flex",
     fullWidth ? "w-full" : "",
@@ -668,7 +666,7 @@ export function createThemedDropdown(
   ].filter(Boolean).join(" ");
 
   // Trigger button
-  const btn = document.createElement("button");
+  const btn = activeDocument.createElement("button");
   btn.type = "button";
   btn.className = [
     "learnkit-btn-toolbar text-sm inline-flex items-center gap-2",
@@ -683,26 +681,26 @@ export function createThemedDropdown(
   btn.setAttribute("aria-expanded", "false");
   container.appendChild(btn);
 
-  const btnText = document.createElement("span");
+  const btnText = activeDocument.createElement("span");
   btnText.className = "truncate";
   btn.appendChild(btnText);
 
-  const btnIcon = document.createElement("span");
+  const btnIcon = activeDocument.createElement("span");
   btnIcon.className = "inline-flex items-center justify-center [&_svg]:size-3";
   setIcon(btnIcon, "chevron-down");
   btn.appendChild(btnIcon);
 
   // Popover dropdown
-  const popover = document.createElement("div");
+  const popover = activeDocument.createElement("div");
   popover.className = "learnkit-popover-dropdown learnkit-popover-dropdown-below";
   popover.setAttribute("aria-hidden", "true");
   container.appendChild(popover);
 
-  const panel = document.createElement("div");
+  const panel = activeDocument.createElement("div");
   panel.className = "rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 learnkit-pointer-auto";
   popover.appendChild(panel);
 
-  const menu = document.createElement("div");
+  const menu = activeDocument.createElement("div");
   menu.setAttribute("role", "menu");
   menu.className = "flex flex-col";
   panel.appendChild(menu);
@@ -724,23 +722,23 @@ export function createThemedDropdown(
   const buildMenu = () => {
     while (menu.firstChild) menu.removeChild(menu.firstChild);
     for (const opt of options) {
-      const item = document.createElement("div");
+      const item = activeDocument.createElement("div");
       item.setAttribute("role", "menuitemradio");
       item.setAttribute("aria-checked", opt.value === currentValue ? "true" : "false");
       item.tabIndex = 0;
       item.className =
         "group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer select-none outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground";
 
-      const dotWrap = document.createElement("div");
+      const dotWrap = activeDocument.createElement("div");
       dotWrap.className = "size-4 flex items-center justify-center";
       item.appendChild(dotWrap);
 
-      const dot = document.createElement("div");
+      const dot = activeDocument.createElement("div");
       dot.className = "size-2 rounded-full bg-foreground invisible group-aria-checked:visible";
       dot.setAttribute("aria-hidden", "true");
       dotWrap.appendChild(dot);
 
-      const txt = document.createElement("span");
+      const txt = activeDocument.createElement("span");
       txt.className = "";
       txt.textContent = opt.label;
       item.appendChild(txt);
@@ -788,11 +786,11 @@ export function createThemedDropdown(
       if (!t) return;
       if (container.contains(t)) return;
       close();
-      document.removeEventListener("pointerdown", onDocPointerDown, true);
+      activeDocument.removeEventListener("pointerdown", onDocPointerDown, true);
     };
 
     window.setTimeout(() => {
-      document.addEventListener("pointerdown", onDocPointerDown, true);
+      activeDocument.addEventListener("pointerdown", onDocPointerDown, true);
     }, 0);
   };
 
@@ -836,9 +834,9 @@ export function scopeModalToWorkspace(modal: Modal) {
   //   2. Any visible leaf inside the main workspace root
   //   3. Whatever leaf happens to be active (sidedock fallback)
   const activeLeaf =
-    document.querySelector(".mod-root .workspace-leaf.mod-active") ??
-    document.querySelector(".mod-root .workspace-leaf:not([style*='display: none'])") ??
-    document.querySelector(".workspace-leaf.mod-active");
+    activeDocument.querySelector(".mod-root .workspace-leaf.mod-active") ??
+    activeDocument.querySelector(".mod-root .workspace-leaf:not([style*='display: none'])") ??
+    activeDocument.querySelector(".workspace-leaf.mod-active");
   const leafContent = activeLeaf?.querySelector(".workspace-leaf-content");
   
   if (!leafContent || !modal.containerEl) {
@@ -847,7 +845,7 @@ export function scopeModalToWorkspace(modal: Modal) {
 
   const el = modal.containerEl;
 
-  // Reparenting from document.body into the workspace leaf during a
+  // Reparenting from activeDocument.body into the workspace leaf during a
   // button-click handler causes Chromium to defer painting the element
   // in its new stacking context until the next user interaction (mouse
   // move / key press).  Keyboard shortcuts don't have this problem
@@ -855,11 +853,11 @@ export function scopeModalToWorkspace(modal: Modal) {
   //
   // Fix: defer the reparent to a requestAnimationFrame callback so it
   // happens AFTER the click handler's paint cycle.  The modal is already
-  // visible at document.body (placed there by Obsidian's Modal.open()),
+  // visible at activeDocument.body (placed there by Obsidian's Modal.open()),
   // so the user sees it immediately.  On the next frame we move it into
   // the leaf, and Chromium paints the move normally because we're no
   // longer inside the click handler's synchronous callstack.
-  requestAnimationFrame(() => {
+  window.requestAnimationFrame(() => {
     try {
       leafContent.appendChild(el);
     } catch {

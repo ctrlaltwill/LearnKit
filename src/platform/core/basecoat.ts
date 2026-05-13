@@ -7,6 +7,7 @@
  *   - BasecoatApi    — shape of the global basecoat runtime
  *   - getBasecoatApi — returns the global Basecoat API or null if unavailable
  */
+import {  } from "obsidian";
 export type BasecoatApi = {
   register?: (group: string, selector: string, init: (el: Element) => void) => void;
   init?: (group: string) => void;
@@ -77,7 +78,7 @@ export function patchBasecoatNullGuards(api: BasecoatApi): void {
     };
 
     const openPopover = (initialSelection: false | "first" | "last" = false) => {
-      document.dispatchEvent(new CustomEvent("basecoat:popover", { detail: { source: dropdownMenuComponent } }));
+      activeDocument.dispatchEvent(new CustomEvent("basecoat:popover", { detail: { source: dropdownMenuComponent } }));
       trigger.setAttribute("aria-expanded", "true");
       popover.setAttribute("aria-hidden", "false");
       menuItems = Array.from(menu.querySelectorAll<HTMLElement>("[role^=\"menuitem\"]")).filter(
@@ -161,12 +162,12 @@ export function patchBasecoatNullGuards(api: BasecoatApi): void {
       if (target?.closest("[role^=\"menuitem\"]")) closePopover();
     });
 
-    document.addEventListener("click", (event: MouseEvent) => {
+    activeDocument.addEventListener("click", (event: MouseEvent) => {
       const target = event.target as Node | null;
       if (!target || !dropdownMenuComponent.contains(target)) closePopover();
     });
 
-    document.addEventListener("basecoat:popover", (event: Event) => {
+    activeDocument.addEventListener("basecoat:popover", (event: Event) => {
       const source = (event as CustomEvent<{ source?: unknown }>).detail?.source;
       if (source !== dropdownMenuComponent) closePopover(false);
     });

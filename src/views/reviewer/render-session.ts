@@ -252,14 +252,14 @@ function extractInfoField(card: CardRecord): string | null {
  *   so the presence of class `bc` is required for those rules to match.
  */
 function h(tag: string, className?: string, text?: string) {
-  const node = document.createElement(tag);
+  const node = activeDocument.createElement(tag);
   node.className = className && className.trim() ? `bc ${className}` : "bc";
   if (typeof text === "string") node.textContent = text;
   return node;
 }
 
 function makeKbd(label: string) {
-  const k = document.createElement("kbd");
+  const k = activeDocument.createElement("kbd");
   k.className = "kbd ml-2";
   k.textContent = label;
   return k;
@@ -277,7 +277,7 @@ function makeTextButton(opts: {
   onClick: () => void;
   kbd?: string;
 }) {
-  const btn = document.createElement("button");
+  const btn = activeDocument.createElement("button");
   btn.type = "button";
   btn.className = opts.className.split(/\s+/).includes("bc") ? opts.className : `bc ${opts.className}`;
   if (btn.classList.contains("learnkit-btn-toolbar")) {
@@ -285,14 +285,14 @@ function makeTextButton(opts: {
   }
   if (opts.subtitle) {
     btn.classList.add("learnkit-grade-btn-with-interval", "learnkit-grade-btn-with-interval");
-    const labelWrap = document.createElement("span");
+    const labelWrap = activeDocument.createElement("span");
     labelWrap.className = "learnkit-grade-btn-label-wrap";
 
-    const labelLine = document.createElement("span");
+    const labelLine = activeDocument.createElement("span");
     labelLine.className = "learnkit-grade-btn-label";
     labelLine.textContent = opts.label;
 
-    const subtitleLine = document.createElement("span");
+    const subtitleLine = activeDocument.createElement("span");
     subtitleLine.className = "learnkit-grade-btn-subtitle";
     subtitleLine.textContent = opts.subtitle;
 
@@ -530,11 +530,11 @@ function makeHeaderMenu(opts: {
     t(opts.interfaceLanguage, token, fallback, vars);
   const id = `learnkit-menu-${Math.random().toString(36).slice(2, 8)}`;
 
-  const root = document.createElement("div");
+  const root = activeDocument.createElement("div");
   root.id = id;
   root.className = "relative inline-flex";
 
-  const trigger = document.createElement("button");
+  const trigger = activeDocument.createElement("button");
   trigger.type = "button";
   trigger.id = `${id}-trigger`;
   trigger.className = "learnkit-btn-toolbar learnkit-btn-filter";
@@ -546,27 +546,27 @@ function makeHeaderMenu(opts: {
   if (opts.compactTrigger) {
     trigger.classList.add("lk-review-more-icon-btn");
     trigger.setAttribute("aria-label", tx("ui.reviewer.more.tooltip", "Open menu"));
-    const iconWrap = document.createElement("span");
+    const iconWrap = activeDocument.createElement("span");
     iconWrap.className = "inline-flex items-center justify-center";
     setIcon(iconWrap, "menu");
     trigger.appendChild(iconWrap);
   } else {
-    trigger.appendChild(document.createTextNode(tx("ui.reviewer.more.label", "More")));
+    trigger.appendChild(activeDocument.createTextNode(tx("ui.reviewer.more.label", "More")));
     trigger.appendChild(makeKbd("M"));
   }
   root.appendChild(trigger);
 
-  const popover = document.createElement("div");
+  const popover = activeDocument.createElement("div");
   popover.id = `${id}-popover`;
   popover.className = "learnkit";
   popover.setAttribute("aria-hidden", "true");
   popover.classList.add("learnkit-popover-overlay", "learnkit-popover-overlay");
 
-  const panel = document.createElement("div");
+  const panel = activeDocument.createElement("div");
   panel.className = "learnkit rounded-md border border-border bg-popover text-popover-foreground shadow-lg p-1 pointer-events-auto learnkit-header-menu-panel learnkit-session-more-popover";
   popover.appendChild(panel);
 
-  const menu = document.createElement("div");
+  const menu = activeDocument.createElement("div");
   menu.className = "learnkit flex flex-col";
   menu.setAttribute("role", "menu");
   menu.id = `${id}-menu`;
@@ -574,7 +574,7 @@ function makeHeaderMenu(opts: {
   panel.appendChild(menu);
 
   const addItem = (label: string, hotkey: string | null, onClick: () => void, disabled = false, ariaLabel?: string) => {
-    const item = document.createElement("div");
+    const item = activeDocument.createElement("div");
     item.className =
       "group learnkit-session-more-item flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer select-none outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground";
     item.setAttribute("role", "menuitem");
@@ -585,13 +585,13 @@ function makeHeaderMenu(opts: {
       item.setAttribute("aria-disabled", "true");
     }
 
-    const labelSpan = document.createElement("span");
+    const labelSpan = activeDocument.createElement("span");
     labelSpan.className = "";
     labelSpan.textContent = label;
     item.appendChild(labelSpan);
 
     if (hotkey && !opts.compactTrigger) {
-      const key = document.createElement("kbd");
+      const key = activeDocument.createElement("kbd");
       key.className = "kbd ml-auto text-xs text-muted-foreground tracking-widest";
       key.textContent = hotkey;
       item.appendChild(key);
@@ -708,8 +708,8 @@ function makeHeaderMenu(opts: {
     popover.setAttribute("aria-hidden", "false");
     popover.classList.add("is-open");
 
-    document.body.appendChild(popover);
-    requestAnimationFrame(() => place());
+    activeDocument.body.appendChild(popover);
+    window.requestAnimationFrame(() => place());
 
     const onResizeOrScroll = () => place();
     const onDocPointerDown = (ev: PointerEvent) => {
@@ -730,16 +730,16 @@ function makeHeaderMenu(opts: {
     window.addEventListener("scroll", onResizeOrScroll, true);
 
     const tid = window.setTimeout(() => {
-      document.addEventListener("pointerdown", onDocPointerDown, true);
-      document.addEventListener("keydown", onDocKeydown, true);
+      activeDocument.addEventListener("pointerdown", onDocPointerDown, true);
+      activeDocument.addEventListener("keydown", onDocKeydown, true);
     }, 0);
 
     cleanup = () => {
       window.clearTimeout(tid);
       window.removeEventListener("resize", onResizeOrScroll, true);
       window.removeEventListener("scroll", onResizeOrScroll, true);
-      document.removeEventListener("pointerdown", onDocPointerDown, true);
-      document.removeEventListener("keydown", onDocKeydown, true);
+      activeDocument.removeEventListener("pointerdown", onDocPointerDown, true);
+      activeDocument.removeEventListener("keydown", onDocKeydown, true);
     };
   };
 
@@ -788,7 +788,7 @@ function renderMcqContent(ctx: CardRenderCtx): void {
     ? args.mcqMultiSelected
     : new Set<number>();
 
-  const optionList = document.createElement("div");
+  const optionList = activeDocument.createElement("div");
   optionList.className = "flex flex-col gap-2 learnkit-mcq-options";
   section.appendChild(optionList);
 
@@ -800,7 +800,7 @@ function renderMcqContent(ctx: CardRenderCtx): void {
     const opt = opts[origIdx] ?? "";
     const text = typeof opt === "string" ? opt : "";
 
-    const btn = document.createElement("button");
+    const btn = activeDocument.createElement("button");
     btn.type = "button";
     btn.className = "learnkit-btn-toolbar w-full justify-start text-left h-auto py-1 mb-2";
 
@@ -835,16 +835,16 @@ function renderMcqContent(ctx: CardRenderCtx): void {
       }
     }
 
-    const left = document.createElement("span");
+    const left = activeDocument.createElement("span");
     left.className = "inline-flex items-center gap-2 min-w-0";
 
-    const key = document.createElement("kbd");
+    const key = activeDocument.createElement("kbd");
     key.className = "kbd";
     key.textContent = String(displayIdx + 1);
     left.appendChild(key);
 
     // Render option text with markdown support for wiki links and LaTeX
-    const textEl = document.createElement("span");
+    const textEl = activeDocument.createElement("span");
     textEl.className = "min-w-0 whitespace-pre-wrap break-words learnkit-mcq-option-text";
 
     // Use markdown rendering if text contains wiki links or LaTeX
@@ -852,7 +852,7 @@ function renderMcqContent(ctx: CardRenderCtx): void {
       void args.renderMarkdownInto(textEl, forceSingleLineDisplayMathInline(text), sourcePath).then(() => setupLinkHandlers(textEl, sourcePath));
     } else if (text && text.includes("\n")) {
       text.split(/\n+/).forEach((line: string) => {
-        const p = document.createElement("div");
+        const p = activeDocument.createElement("div");
         applyInlineMarkdownWithFlags(p, line);
         p.classList.add("learnkit-mcq-option-line", "learnkit-mcq-option-line");
         textEl.appendChild(p);
@@ -923,7 +923,7 @@ function renderMcqContent(ctx: CardRenderCtx): void {
             submitBtn.setAttribute("aria-label", t(args.interfaceLanguage, "ui.reviewer.mcq.chooseOne", "Choose at least one answer to proceed"));
             submitBtn.setAttribute("data-tooltip-position", "top");
             submitBtn.classList.add("learnkit-mcq-submit-tooltip-visible", "learnkit-mcq-submit-tooltip-visible");
-            setTimeout(() => {
+            window.setTimeout(() => {
               submitBtn!.classList.remove("learnkit-mcq-submit-tooltip-visible", "learnkit-mcq-submit-tooltip-visible");
             }, 2500);
           }
@@ -963,7 +963,7 @@ function renderOqContent(ctx: CardRenderCtx): void {
     const shuffled = getOqShuffledOrder(args.session, card, !!args.randomizeOqOrder);
     const currentOrder = shuffled.slice();
 
-    const listWrap = document.createElement("div");
+    const listWrap = activeDocument.createElement("div");
     listWrap.className = "flex flex-col gap-2 learnkit-oq-step-list";
     section.appendChild(listWrap);
 
@@ -998,26 +998,26 @@ function renderOqContent(ctx: CardRenderCtx): void {
       listWrap.innerHTML = "";
       currentOrder.forEach((origIdx, displayIdx) => {
         const stepText = steps[origIdx] || "";
-        const row = document.createElement("div");
+        const row = activeDocument.createElement("div");
         row.className = "flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1 learnkit-oq-step-row";
         row.draggable = true;
         row.dataset.oqIdx = String(displayIdx);
 
         // Grip handle
-        const grip = document.createElement("span");
+        const grip = activeDocument.createElement("span");
         grip.className = "learnkit-oq-grip inline-flex items-center justify-center text-muted-foreground cursor-grab";
         grip.draggable = false;
         setIcon(grip, "grip-vertical");
         row.appendChild(grip);
 
         // Step number badge
-        const badge = document.createElement("kbd");
+        const badge = activeDocument.createElement("kbd");
         badge.className = "kbd";
         badge.textContent = String(displayIdx + 1);
         row.appendChild(badge);
 
         // Step text
-        const textEl = document.createElement("span");
+        const textEl = activeDocument.createElement("span");
         textEl.className = "min-w-0 whitespace-pre-wrap break-words flex-1 learnkit-oq-step-text";
         if (stepText.includes("[[") || stepText.includes("$") || stepText.includes("\\(") || stepText.includes("\\[")) {
           void args.renderMarkdownInto(textEl, forceSingleLineDisplayMathInline(stepText), sourcePath).then(() => setupLinkHandlers(textEl, sourcePath));
@@ -1079,7 +1079,7 @@ function renderOqContent(ctx: CardRenderCtx): void {
     // ── Back: show user order with correctness highlighting ──
     section.appendChild(labelRow(t(args.interfaceLanguage, "ui.reviewer.label.yourOrder", "Your Order"), args.ttsReplayOqAnswer, "oq-answer"));
 
-    const answerList = document.createElement("div");
+    const answerList = activeDocument.createElement("div");
     answerList.className = "flex flex-col gap-2 learnkit-oq-answer-list";
     section.appendChild(answerList);
 
@@ -1090,7 +1090,7 @@ function renderOqContent(ctx: CardRenderCtx): void {
       const stepText = steps[origIdx] || "";
       const wasInCorrectPosition = origIdx === displayIdx;
 
-      const row = document.createElement("div");
+      const row = activeDocument.createElement("div");
       row.className = "flex items-center gap-2 rounded-lg border px-3 py-1 learnkit-oq-answer-row";
       if (wasInCorrectPosition) {
         row.classList.add("learnkit-oq-correct", "learnkit-oq-correct", "learnkit-oq-correct-highlight", "learnkit-oq-correct-highlight");
@@ -1098,12 +1098,12 @@ function renderOqContent(ctx: CardRenderCtx): void {
         row.classList.add("learnkit-oq-wrong", "learnkit-oq-wrong", "learnkit-oq-wrong-highlight", "learnkit-oq-wrong-highlight");
       }
 
-      const badge = document.createElement("kbd");
+      const badge = activeDocument.createElement("kbd");
       badge.className = "kbd";
       badge.textContent = String(origIdx + 1);
       row.appendChild(badge);
 
-      const textEl = document.createElement("span");
+      const textEl = activeDocument.createElement("span");
       textEl.className = "min-w-0 whitespace-pre-wrap break-words flex-1 learnkit-oq-step-text";
       if (stepText.includes("[[") || stepText.includes("$") || stepText.includes("\\(") || stepText.includes("\\[")) {
         void args.renderMarkdownInto(textEl, forceSingleLineDisplayMathInline(stepText), sourcePath).then(() => setupLinkHandlers(textEl, sourcePath));
@@ -1123,7 +1123,7 @@ export function renderSessionMode(args: Args) {
   const skipEnabled = !!(args.enableSkipButton ?? args.skipEnabled);
   const practiceMode = !!args.practiceMode;
   const four = !!args.fourButtonMode;
-  const isPhoneMobile = document.body.classList.contains("is-phone");
+  const isPhoneMobile = activeDocument.body.classList.contains("is-phone");
   const applyAOS = !!args.applyAOS;
   const delayMs = Number.isFinite(args.aosDelayMs) ? Number(args.aosDelayMs) : applyAOS ? 100 : 0;
   
@@ -1139,7 +1139,7 @@ export function renderSessionMode(args: Args) {
 
   // ===== Target element: reuse existing card wrapper for lightweight refreshes =====
   const reusableTarget = args.targetEl;
-  const wrap = reusableTarget ?? document.createElement("div");
+  const wrap = reusableTarget ?? activeDocument.createElement("div");
 
   if (reusableTarget) {
     // Lightweight refresh: clear the existing card element and re-render into it.
@@ -1176,7 +1176,7 @@ export function renderSessionMode(args: Args) {
   }
 
   // Fallback: force visible if AOS fails or never initializes
-  setTimeout(() => {
+  window.setTimeout(() => {
     if (!wrap) return;
     const style = getComputedStyle(wrap);
     if (style.opacity === "0") {
@@ -1190,7 +1190,7 @@ export function renderSessionMode(args: Args) {
   }
 
   // Create section once for both empty and card-present states
-  const section = document.createElement("section");
+  const section = activeDocument.createElement("section");
   section.className = "flex flex-col gap-3";
 
   // ===== Empty state rendered like a normal card =====
@@ -1200,11 +1200,11 @@ export function renderSessionMode(args: Args) {
     args.clearCountdown();
 
     // Header
-    const header = document.createElement("header");
+    const header = activeDocument.createElement("header");
     header.className = "learnkit-session-topbar";
     wrap.appendChild(header);
 
-    const titleWrap = document.createElement("div");
+    const titleWrap = activeDocument.createElement("div");
     titleWrap.className = "learnkit-session-topbar-title learnkit-question-title";
     titleWrap.textContent = practiceMode
       ? tx("ui.reviewer.session.practiceComplete", "Practice complete")
@@ -1215,10 +1215,10 @@ export function renderSessionMode(args: Args) {
 
     // Section: Practice session message (centered, no alert wrapper)
     if (practiceMode) {
-      const d1 = document.createElement("div");
+      const d1 = activeDocument.createElement("div");
       d1.className = "text-base text-center";
       d1.textContent = tx("ui.reviewer.session.practiceSessionComplete", "Practice session complete");
-      const d2 = document.createElement("div");
+      const d2 = activeDocument.createElement("div");
       d2.className = "text-sm text-center learnkit-session-practice-prompt-subtext";
       d2.textContent = tx(
         "ui.reviewer.session.practiceCompleteDescription",
@@ -1227,14 +1227,14 @@ export function renderSessionMode(args: Args) {
       section.appendChild(d1);
       section.appendChild(d2);
     } else {
-      const d1 = document.createElement("div");
+      const d1 = activeDocument.createElement("div");
       d1.className = "text-base text-center";
       d1.textContent = hasCardsInScope
         ? tx("ui.reviewer.session.askStartPractice", "Would you like to start a practice session?")
         : tx("ui.reviewer.session.noCardsInScopeHint", "Add a card in this deck to start reviewing.");
       section.appendChild(d1);
       if (hasCardsInScope) {
-        const d2 = document.createElement("div");
+        const d2 = activeDocument.createElement("div");
         d2.className = "text-sm text-center learnkit-session-practice-prompt-subtext";
         d2.textContent = tx(
           "ui.reviewer.session.practiceModeDescription",
@@ -1246,19 +1246,19 @@ export function renderSessionMode(args: Args) {
     wrap.appendChild(section);
 
     // Footer: practice/return actions centered in the study dock layout
-    const footer = document.createElement("footer");
+    const footer = activeDocument.createElement("footer");
     footer.className = "learnkit-session-study-dock";
     wrap.appendChild(footer);
 
-    const footerLeft = document.createElement("div");
+    const footerLeft = activeDocument.createElement("div");
     footerLeft.className = "flex items-center gap-2 learnkit-session-study-dock-left";
     footer.appendChild(footerLeft);
 
-    const footerCenter = document.createElement("div");
+    const footerCenter = activeDocument.createElement("div");
     footerCenter.className = "flex flex-wrap gap-2 items-center justify-center learnkit-session-study-dock-center";
     footer.appendChild(footerCenter);
 
-    const footerRight = document.createElement("div");
+    const footerRight = activeDocument.createElement("div");
     footerRight.className = "flex items-center gap-2 learnkit-session-study-dock-right";
     footer.appendChild(footerRight);
 
@@ -1287,8 +1287,8 @@ export function renderSessionMode(args: Args) {
     }
 
     if (!reusableTarget) args.container.appendChild(wrap);
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
         try {
           refreshAOS();
         } catch (e) { log.swallow("render-session refreshAOS empty", e); }
@@ -1304,7 +1304,7 @@ export function renderSessionMode(args: Args) {
   const sourcePath = card.sourceNotePath || "";
 
   // ===== Header =====
-  const header = document.createElement("header");
+  const header = activeDocument.createElement("header");
   header.className = "learnkit-session-topbar";
   if (args.hideSessionTopbar) header.classList.add("learnkit-session-topbar-hidden", "learnkit-session-topbar-hidden");
   wrap.appendChild(header);
@@ -1328,7 +1328,7 @@ export function renderSessionMode(args: Args) {
   if (TYPE_LABELS.has(displayTitle.toLowerCase())) displayTitle = "";
 
   const titleText = displayTitle || fallbackQuestionTitle(args.session, card);
-  const titleWrap = document.createElement("div");
+  const titleWrap = activeDocument.createElement("div");
   titleWrap.className = "learnkit-session-topbar-title learnkit-question-title";
   header.appendChild(titleWrap);
 
@@ -1346,11 +1346,11 @@ export function renderSessionMode(args: Args) {
 
   /** Build a "Question" or "Answer" label row with an optional TTS replay button. */
   const labelRow = (text: string, replayFn?: () => void, ttsField?: string) => {
-    const row = document.createElement("div");
+    const row = activeDocument.createElement("div");
     row.className = "flex items-center justify-between learnkit-label-row";
     row.appendChild(mutedLabel(text));
     if (args.ttsEnabled && replayFn) {
-      const btn = document.createElement("button");
+      const btn = activeDocument.createElement("button");
       btn.type = "button";
       btn.className = "btn-icon learnkit-tts-replay-btn";
       btn.setAttribute("aria-label", t(args.interfaceLanguage, "ui.reviewer.tts.readAloud", "Read {text} aloud", { text: text.toLowerCase() }));
@@ -1424,7 +1424,7 @@ export function renderSessionMode(args: Args) {
   };
 
   const renderMdBlock = (cls: string, md: string) => {
-    const block = document.createElement("div");
+    const block = activeDocument.createElement("div");
     block.className = `bc ${cls} whitespace-pre-wrap break-words learnkit-md-block`;
     const escaped = escapeAngleBracketsOutsideCode(String(md ?? ""));
     void args.renderMarkdownInto(block, escaped, sourcePath).then(() => setupLinkHandlers(block, sourcePath));
@@ -1453,7 +1453,7 @@ export function renderSessionMode(args: Args) {
     const targetIndex = card.type === "cloze-child" ? Number(card.clozeIndex) : null;
 
     section.appendChild(labelRow(reveal ? t(args.interfaceLanguage, "ui.common.answer", "Answer") : t(args.interfaceLanguage, "ui.common.question", "Question"), reveal ? args.ttsReplayBack : args.ttsReplayFront));
-    const clozContainer = document.createElement("div");
+    const clozContainer = activeDocument.createElement("div");
     clozContainer.className = "learnkit-cloze whitespace-pre-wrap break-words learnkit-md-block";
 
     const clozeOpts = args.getClozeRenderOptions();
@@ -1478,7 +1478,7 @@ export function renderSessionMode(args: Args) {
     if (hotspotCard && !reveal) {
       section.appendChild(labelRow(t(args.interfaceLanguage, "ui.reviewer.label.hotspotQuestion", "Hotspot Question")));
       if (hotspotPromptLabel) {
-        const hotspotPrompt = document.createElement("p");
+        const hotspotPrompt = activeDocument.createElement("p");
         hotspotPrompt.setAttribute("dir", "auto");
         hotspotPrompt.className = "bc text-sm font-medium";
         hotspotPrompt.textContent = hotspotPromptLabel;
@@ -1487,7 +1487,7 @@ export function renderSessionMode(args: Args) {
     } else if (hotspotCard && reveal) {
       section.appendChild(labelRow(t(args.interfaceLanguage, "ui.reviewer.label.hotspotAnswer", "Hotspot Answer")));
       if (hotspotPromptLabel) {
-        const hotspotAnswer = document.createElement("p");
+        const hotspotAnswer = activeDocument.createElement("p");
         hotspotAnswer.setAttribute("dir", "auto");
         hotspotAnswer.className = "bc text-sm font-medium";
         hotspotAnswer.textContent = hotspotPromptLabel;
@@ -1495,7 +1495,7 @@ export function renderSessionMode(args: Args) {
       }
     }
 
-    const ioHost = document.createElement("div");
+    const ioHost = activeDocument.createElement("div");
     ioHost.className = "learnkit-io-host";
     ioHost.dataset.sproutIoWidget = "1";
     section.appendChild(ioHost);
@@ -1523,12 +1523,12 @@ export function renderSessionMode(args: Args) {
   wrap.appendChild(section);
 
   // ===== Footer (actions) =====
-  const footer = document.createElement("footer");
+  const footer = activeDocument.createElement("footer");
   footer.className = "learnkit-session-study-dock";
   wrap.appendChild(footer);
 
   // Left: Edit button
-  const footerLeft = document.createElement("div");
+  const footerLeft = activeDocument.createElement("div");
   footerLeft.className = "flex items-center gap-2 learnkit-session-study-dock-left";
 
   const editBtn = isPhoneMobile
@@ -1551,12 +1551,12 @@ export function renderSessionMode(args: Args) {
     });
   if (isPhoneMobile) {
     editBtn.setAttribute("aria-label", t(undefined, "ui.reviewer.editFlashcard", "Edit flashcard"));
-    const iconWrap = document.createElement("span");
+    const iconWrap = activeDocument.createElement("span");
     iconWrap.className = "inline-flex items-center justify-center";
     setIcon(iconWrap, "pencil");
     editBtn.appendChild(iconWrap);
 
-    const editLabel = document.createElement("span");
+    const editLabel = activeDocument.createElement("span");
     editLabel.className = "";
     editLabel.setAttribute("data-learnkit-mobile-label", "true");
     editLabel.textContent = t(args.interfaceLanguage, "ui.reviewer.edit", "Edit");
@@ -1566,7 +1566,7 @@ export function renderSessionMode(args: Args) {
   footer.appendChild(footerLeft);
 
   // Center: Reveal/Grade/Next buttons
-  const footerCenter = document.createElement("div");
+  const footerCenter = activeDocument.createElement("div");
   footerCenter.className = "flex flex-wrap gap-2 items-center justify-center learnkit-session-study-dock-center";
   footer.appendChild(footerCenter);
 
@@ -1577,7 +1577,7 @@ export function renderSessionMode(args: Args) {
       (card.type === "oq" && args.autoGradeOq === false && !!args.showAnswer));
 
   // Grading / next buttons (in center)
-  const mainRow = document.createElement("div");
+  const mainRow = activeDocument.createElement("div");
   mainRow.className = "flex flex-wrap items-center justify-center gap-2 learnkit-session-study-dock-buttons";
   let hasMainRowContent = false;
 
@@ -1645,7 +1645,7 @@ export function renderSessionMode(args: Args) {
         hasMainRowContent = true;
       } else {
         // Normal mode: grading buttons
-        const group = document.createElement("div");
+        const group = activeDocument.createElement("div");
         group.className = "flex flex-wrap justify-center gap-2 learnkit-session-study-dock-grade-group";
         mainRow.appendChild(group);
         hasMainRowContent = true;
@@ -1792,7 +1792,7 @@ export function renderSessionMode(args: Args) {
   }
 
   // Right: More menu
-  const footerRight = document.createElement("div");
+  const footerRight = activeDocument.createElement("div");
   footerRight.className = "flex items-center gap-2 learnkit-session-study-dock-right";
 
   // Provide open note handler globally for menu
@@ -1823,7 +1823,7 @@ export function renderSessionMode(args: Args) {
   if (isPhoneMobile) {
     const moreBtn = footerRight.querySelector<HTMLButtonElement>(".lk-review-more-icon-btn");
     if (moreBtn && !moreBtn.querySelector("[data-learnkit-mobile-label]")) {
-      const menuLabel = document.createElement("span");
+      const menuLabel = activeDocument.createElement("span");
       menuLabel.className = "";
       menuLabel.setAttribute("data-learnkit-mobile-label", "true");
       menuLabel.textContent = t(args.interfaceLanguage, "ui.reviewer.more.label", "Menu");
@@ -1834,8 +1834,8 @@ export function renderSessionMode(args: Args) {
 
   if (!reusableTarget) args.container.appendChild(wrap);
   // Always refresh AOS to ensure animations work across the page
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
       try {
         refreshAOS();
       } catch (e) { log.swallow("render-session refreshAOS card", e); }

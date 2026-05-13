@@ -12,6 +12,7 @@
  *  - ankiCardToCardState   — AnkiCardRow → Sprout CardState (import)
  *  - cleanHtmlToMarkdown   — basic HTML → markdown text conversion
  */
+import {  } from "obsidian";
 
 import {
   ANKI_FIELD_SEPARATOR,
@@ -474,7 +475,7 @@ export function applyInlineMarkdown(el: HTMLElement, text: string): void {
 
   const appendText = (parent: HTMLElement, value: string) => {
     if (!value) return;
-    parent.appendChild(document.createTextNode(value));
+    parent.appendChild(activeDocument.createTextNode(value));
   };
 
   const appendInline = (parent: HTMLElement, value: string) => {
@@ -506,19 +507,19 @@ export function applyInlineMarkdown(el: HTMLElement, text: string): void {
       let wrapper: HTMLElement;
       switch (nextToken.type) {
         case "code":
-          wrapper = document.createElement("code");
+          wrapper = activeDocument.createElement("code");
           break;
         case "bold":
-          wrapper = document.createElement("strong");
+          wrapper = activeDocument.createElement("strong");
           break;
         case "italic":
-          wrapper = document.createElement("em");
+          wrapper = activeDocument.createElement("em");
           break;
         case "strike":
-          wrapper = document.createElement("s");
+          wrapper = activeDocument.createElement("s");
           break;
         case "mark":
-          wrapper = document.createElement("mark");
+          wrapper = activeDocument.createElement("mark");
           break;
       }
       // Code content is literal — do not recursively process inline formatting
@@ -537,7 +538,7 @@ export function applyInlineMarkdown(el: HTMLElement, text: string): void {
   for (let i = 0; i < lines.length; i += 1) {
     appendInline(el, lines[i]);
     if (i < lines.length - 1) {
-      el.appendChild(document.createElement("br"));
+      el.appendChild(activeDocument.createElement("br"));
     }
   }
 }

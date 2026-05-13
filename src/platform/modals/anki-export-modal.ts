@@ -134,26 +134,26 @@ export class AnkiExportModal extends Modal {
 
     let selectedDeck = "";
 
-    const container = document.createElement("div");
+    const container = activeDocument.createElement("div");
     container.className = "relative learnkit-deck-picker";
 
-    const input = document.createElement("input");
+    const input = activeDocument.createElement("input");
     input.type = "text";
     input.className = "input w-full";
     input.placeholder = "Search decks…";
     container.appendChild(input);
 
     // Popover
-    const popover = document.createElement("div");
+    const popover = activeDocument.createElement("div");
     popover.className = "learnkit-popover-dropdown";
     popover.setAttribute("aria-hidden", "true");
     container.appendChild(popover);
 
-    const panel = document.createElement("div");
+    const panel = activeDocument.createElement("div");
     panel.className = "rounded-md border border-border bg-popover text-popover-foreground p-0 flex flex-col learnkit-pointer-auto";
     popover.appendChild(panel);
 
-    const list = document.createElement("div");
+    const list = activeDocument.createElement("div");
     list.className = "flex flex-col max-h-60 overflow-auto p-1";
     panel.appendChild(list);
 
@@ -163,7 +163,7 @@ export class AnkiExportModal extends Modal {
       const filtered = deckPaths.filter((d) => d.path.toLowerCase().includes(q) || d.label.toLowerCase().includes(q));
 
       if (filtered.length === 0) {
-        const empty = document.createElement("div");
+        const empty = activeDocument.createElement("div");
         empty.className = "px-2 py-2 text-sm text-muted-foreground";
         empty.textContent = this.tx("ui.anki.export.noDecksFound", "No decks found");
         list.appendChild(empty);
@@ -171,24 +171,24 @@ export class AnkiExportModal extends Modal {
       }
 
       for (const deck of filtered) {
-        const row = document.createElement("div");
+        const row = activeDocument.createElement("div");
         row.setAttribute("role", "menuitem");
         row.setAttribute("aria-checked", deck.path === selectedDeck ? "true" : "false");
         row.tabIndex = 0;
         row.className =
           "group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer select-none outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground justify-between";
 
-        const txt = document.createElement("span");
+        const txt = activeDocument.createElement("span");
         txt.textContent = deck.label;
         row.appendChild(txt);
 
         if (deck.path === selectedDeck) {
-          const check = document.createElement("span");
+          const check = activeDocument.createElement("span");
           check.className = "inline-flex items-center justify-center [&_svg]:size-3 text-muted-foreground";
           setIcon(check, "check");
           row.appendChild(check);
         } else {
-          const spacer = document.createElement("span");
+          const spacer = activeDocument.createElement("span");
           spacer.className = "inline-flex items-center justify-center [&_svg]:size-3 opacity-0";
           setIcon(spacer, "check");
           row.appendChild(spacer);
@@ -233,8 +233,8 @@ export class AnkiExportModal extends Modal {
     const onDocPointerDown = (ev: PointerEvent) => {
       if (!container.contains(ev.target as Node)) closePopover();
     };
-    document.addEventListener("pointerdown", onDocPointerDown);
-    this.disposers.push(() => document.removeEventListener("pointerdown", onDocPointerDown));
+    activeDocument.addEventListener("pointerdown", onDocPointerDown);
+    this.disposers.push(() => activeDocument.removeEventListener("pointerdown", onDocPointerDown));
 
     return { element: container, getSelectedDeck: () => selectedDeck || input.value.trim() };
   }
@@ -249,61 +249,61 @@ export class AnkiExportModal extends Modal {
 
     let selected: string[] = [];
 
-    const container = document.createElement("div");
+    const container = activeDocument.createElement("div");
     container.className = "relative learnkit-group-picker";
 
-    const tagBox = document.createElement("div");
+    const tagBox = activeDocument.createElement("div");
     tagBox.className = "textarea w-full learnkit-tag-box learnkit-export-tag-box";
     container.appendChild(tagBox);
 
     // Popover
-    const popover = document.createElement("div");
+    const popover = activeDocument.createElement("div");
     popover.className = "learnkit-popover-dropdown";
     popover.setAttribute("aria-hidden", "true");
     container.appendChild(popover);
 
-    const panel = document.createElement("div");
+    const panel = activeDocument.createElement("div");
     panel.className = "rounded-md border border-border bg-popover text-popover-foreground p-0 flex flex-col learnkit-pointer-auto";
     popover.appendChild(panel);
 
-    const searchWrap = document.createElement("div");
+    const searchWrap = activeDocument.createElement("div");
     searchWrap.className = "flex items-center gap-1 border-b border-border pl-1 pr-0 w-full lk-browser-search-wrap min-h-[38px]";
     panel.appendChild(searchWrap);
 
-    const searchIcon = document.createElement("span");
+    const searchIcon = activeDocument.createElement("span");
     searchIcon.className = "inline-flex items-center justify-center [&_svg]:size-3 text-muted-foreground learnkit-search-icon";
     searchIcon.setAttribute("aria-hidden", "true");
     setIcon(searchIcon, "search");
     searchWrap.appendChild(searchIcon);
 
-    const search = document.createElement("input");
+    const search = activeDocument.createElement("input");
     search.type = "text";
     search.className = "bg-transparent text-sm flex-1 h-9 min-w-0 w-full learnkit-search-naked";
     search.placeholder = "Search groups";
     searchWrap.appendChild(search);
 
-    const listEl = document.createElement("div");
+    const listEl = activeDocument.createElement("div");
     listEl.className = "flex flex-col max-h-60 overflow-auto p-1 learnkit-group-picker-results";
     panel.appendChild(listEl);
 
     const renderBadges = () => {
       clearNode(tagBox);
       if (!selected.length) {
-        const placeholder = document.createElement("span");
+        const placeholder = activeDocument.createElement("span");
         placeholder.className = "badge inline-flex items-center gap-1 px-2 py-0.5 text-xs whitespace-nowrap group h-6 learnkit-badge-placeholder";
         placeholder.textContent = this.tx("ui.anki.export.noGroupsSelected", "No groups selected");
         tagBox.appendChild(placeholder);
         return;
       }
       for (const tag of selected) {
-        const badge = document.createElement("span");
+        const badge = activeDocument.createElement("span");
         badge.className = "badge inline-flex items-center gap-1 px-2 py-0.5 text-xs whitespace-nowrap group h-6 learnkit-badge-inline lk-browser-tag-badge";
 
-        const txt = document.createElement("span");
+        const txt = activeDocument.createElement("span");
         txt.textContent = formatGroupDisplay(tag);
         badge.appendChild(txt);
 
-        const removeBtn = document.createElement("span");
+        const removeBtn = activeDocument.createElement("span");
         removeBtn.className = "ml-0 inline-flex items-center justify-center [&_svg]:size-[0.6rem] opacity-100 cursor-pointer text-white";
         setIcon(removeBtn, "x");
         removeBtn.addEventListener("pointerdown", (ev) => { ev.preventDefault(); ev.stopPropagation(); });
@@ -334,7 +334,7 @@ export class AnkiExportModal extends Modal {
       const options = allOptions.filter((t) => formatGroupDisplay(t).toLowerCase().includes(q));
 
       if (options.length === 0) {
-        const empty = document.createElement("div");
+        const empty = activeDocument.createElement("div");
         empty.className = "px-2 py-2 text-sm text-muted-foreground";
         empty.textContent = this.tx("ui.anki.export.noGroupsFound", "No groups found");
         listEl.appendChild(empty);
@@ -342,24 +342,24 @@ export class AnkiExportModal extends Modal {
       }
 
       for (const opt of options) {
-        const row = document.createElement("div");
+        const row = activeDocument.createElement("div");
         row.setAttribute("role", "menuitem");
         row.setAttribute("aria-checked", selected.includes(opt) ? "true" : "false");
         row.tabIndex = 0;
         row.className =
           "group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer select-none outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground justify-between";
 
-        const text = document.createElement("span");
+        const text = activeDocument.createElement("span");
         text.textContent = formatGroupDisplay(opt);
         row.appendChild(text);
 
         if (selected.includes(opt)) {
-          const check = document.createElement("span");
+          const check = activeDocument.createElement("span");
           check.className = "inline-flex items-center justify-center [&_svg]:size-3 text-muted-foreground";
           setIcon(check, "check");
           row.appendChild(check);
         } else {
-          const spacer = document.createElement("span");
+          const spacer = activeDocument.createElement("span");
           spacer.className = "inline-flex items-center justify-center [&_svg]:size-3 opacity-0";
           setIcon(spacer, "check");
           row.appendChild(spacer);
@@ -389,8 +389,8 @@ export class AnkiExportModal extends Modal {
     const onDocPointerDown = (ev: PointerEvent) => {
       if (!container.contains(ev.target as Node)) closePopover();
     };
-    document.addEventListener("pointerdown", onDocPointerDown);
-    this.disposers.push(() => document.removeEventListener("pointerdown", onDocPointerDown));
+    activeDocument.addEventListener("pointerdown", onDocPointerDown);
+    this.disposers.push(() => activeDocument.removeEventListener("pointerdown", onDocPointerDown));
 
     container.addEventListener("click", (ev) => {
       ev.stopPropagation();
@@ -598,7 +598,7 @@ export class AnkiExportModal extends Modal {
     const apkgBuffer = apkgBytes.buffer.slice(
       apkgBytes.byteOffset,
       apkgBytes.byteOffset + apkgBytes.byteLength,
-    ) as ArrayBuffer;
+    );
 
     // ── Stats ───────────────────────────────────────────────────────────────
     const body = root.createDiv({ cls: "flex flex-col gap-1" });
@@ -630,13 +630,13 @@ export class AnkiExportModal extends Modal {
     downloadBtn.onclick = () => {
       const blob = new Blob([apkgBuffer], { type: "application/octet-stream" });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
+      const a = activeDocument.createElement("a");
       const timestamp = new Date().toISOString().slice(0, 10);
       a.href = url;
       a.download = `LearnKit-Export-${timestamp}.apkg`;
-      document.body.appendChild(a);
+      activeDocument.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
+      activeDocument.body.removeChild(a);
       URL.revokeObjectURL(url);
       new Notice(this.tx("ui.anki.export.notice.downloadStarted", "Download started"));
     };

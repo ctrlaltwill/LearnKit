@@ -10,6 +10,7 @@
  */
 import { log } from "./logger";
 import { AOS_DURATION } from "./constants";
+import { activeDocument } from "obsidian";
 
 type AOSModule = {
   init: (config: Record<string, unknown>) => void;
@@ -29,7 +30,7 @@ function isMobileAOSDisabled(): boolean {
   // We distinguish phones from iPads via viewport width (phones < 768px).
   if (
     typeof document !== "undefined" &&
-    document.body?.classList.contains("is-mobile") &&
+    activeDocument.body?.classList.contains("is-mobile") &&
     typeof window !== "undefined" &&
     window.matchMedia("(max-width: 767px)").matches
   ) {
@@ -126,8 +127,8 @@ export function initAOS(config?: Record<string, unknown>): void {
     );
     AOS_INITIALIZED = true;
     // Force refresh after next frame(s) so newly-rendered nodes are measured.
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
         try {
           AOS?.refresh?.();
           AOS?.refreshHard?.();
@@ -223,8 +224,8 @@ export function cascadeAOSOnLoad(
   }
 
   // Add `aos-animate` after next paint so transitions run.
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
       for (const el of els) el.classList.add("aos-animate");
     });
   });
@@ -233,7 +234,7 @@ export function cascadeAOSOnLoad(
   // have completed (e.g. AOS CSS failed to load, or a mobile quirk hides
   // elements), force-reveal them via the fallback class.
   const safetyDelayMs = Math.max(600, Math.floor(maxDelay + durationMs + 300));
-  setTimeout(() => {
+  window.setTimeout(() => {
     for (const el of els) {
       if (!el.isConnected) continue;
       const cs = getComputedStyle(el);
@@ -258,7 +259,7 @@ export function resetAOS(): void {
   
   // Remove AOS classes from all elements to allow re-animation
   try {
-    const aosElements = document.querySelectorAll('[data-aos]');
+    const aosElements = activeDocument.querySelectorAll('[data-aos]');
     aosElements.forEach(el => {
       el.classList.remove('aos-init', 'aos-animate');
       el.removeAttribute('data-aos-id');

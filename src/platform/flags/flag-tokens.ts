@@ -174,7 +174,7 @@ function setCachedFlagDataUri(code: string, dataUri: string): void {
   map.delete(code);
   map.set(code, dataUri);
   while (cacheBytes(map) > FLAG_CACHE_MAX_BYTES && map.size > 0) {
-    const nextKey = map.keys().next();
+    const nextKey: IteratorResult<string, undefined> = map.keys().next();
     if (nextKey.done) break;
     const first = nextKey.value;
     map.delete(first);
@@ -220,7 +220,7 @@ async function resolveFlagDataUri(code: string): Promise<string | null> {
 function applyFlagSrcToDocument(code: string, src: string) {
   if (typeof document === "undefined") return;
   const selector = `img[data-learnkit-flag-code="${code}"]`;
-  const images = document.querySelectorAll<HTMLImageElement>(selector);
+  const images = activeDocument.querySelectorAll<HTMLImageElement>(selector);
   images.forEach((img) => {
     img.src = src;
   });
@@ -248,8 +248,14 @@ export function hydrateCircleFlagsInElement(root: ParentNode): void {
     const node = stack.pop();
     if (!node) continue;
 
-    if (node instanceof HTMLImageElement && (node.hasAttribute("data-learnkit-flag-code") || node.classList.contains("learnkit-inline-flag"))) {
-      images.push(node);
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const element = node as HTMLElement;
+      if (element.tagName === "IMG") {
+        const image = element as HTMLImageElement;
+        if (image.hasAttribute("data-learnkit-flag-code") || image.classList.contains("learnkit-inline-flag")) {
+          images.push(image);
+        }
+      }
     }
 
     const children = (node as ParentNode).childNodes;

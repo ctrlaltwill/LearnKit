@@ -44,7 +44,7 @@ export function renderPagination(
   ctx.setPageIndex(pageIndex);
 
   if (totalRows <= size) {
-    const small = document.createElement("div");
+    const small = activeDocument.createElement("div");
     small.className = "text-sm text-muted-foreground lk-browser-page-indicator";
     small.textContent = totalRows === 0
       ? tx("ui.browser.pagination.pageXofY", "Page {page} / {total}", { page: 0, total: 0 })
@@ -53,13 +53,13 @@ export function renderPagination(
     return;
   }
 
-  const nav = document.createElement("nav");
+  const nav = activeDocument.createElement("nav");
   nav.setAttribute("role", "navigation");
   nav.className = "flex items-center gap-2 lk-browser-pagination";
   host.appendChild(nav);
 
   const mkBtn = (label: string, tooltip: string, disabled: boolean, active: boolean, onClick: () => void) => {
-    const b = document.createElement("button");
+    const b = activeDocument.createElement("button");
     b.type = "button";
     b.className = `learnkit-btn-toolbar${active ? " learnkit-btn-control" : ""}`;
     b.classList.add(..."h-8 px-2".split(" "));
@@ -78,7 +78,7 @@ export function renderPagination(
   };
 
   const mkEllipsisBtn = (targetPage: number) => {
-    const b = document.createElement("button");
+    const b = activeDocument.createElement("button");
     b.type = "button";
     b.className = "learnkit-btn-toolbar h-8 px-2";
     b.textContent = "…";
@@ -104,7 +104,7 @@ export function renderPagination(
   }
 
   // Prev
-  const prev = document.createElement("button");
+  const prev = activeDocument.createElement("button");
   prev.type = "button";
   prev.className = "learnkit-btn-toolbar";
   prev.classList.add(..."h-8 px-2".split(" "));
@@ -118,12 +118,12 @@ export function renderPagination(
     ctx.setPageIndex(Math.max(0, pageIndex - 1));
     ctx.refreshTable();
   });
-  const prevIcon = document.createElement("span");
+  const prevIcon = activeDocument.createElement("span");
   prevIcon.setAttribute("aria-hidden", "true");
   prevIcon.className = "inline-flex items-center justify-center [&_svg]:size-4";
   setIcon(prevIcon, "chevron-left");
   prev.appendChild(prevIcon);
-  const prevTxt = document.createElement("span");
+  const prevTxt = activeDocument.createElement("span");
   prevTxt.className = "ml-1";
   prevTxt.textContent = tx("ui.browser.pagination.prev", "Prev");
   prev.appendChild(prevTxt);
@@ -165,7 +165,7 @@ export function renderPagination(
   }
 
   // Next
-  const next = document.createElement("button");
+  const next = activeDocument.createElement("button");
   next.type = "button";
   next.className = "learnkit-btn-toolbar";
   next.classList.add(..."h-8 px-2".split(" "));
@@ -179,11 +179,11 @@ export function renderPagination(
     ctx.setPageIndex(Math.min(totalPagesLocal - 1, pageIndex + 1));
     ctx.refreshTable();
   });
-  const nextTxt = document.createElement("span");
+  const nextTxt = activeDocument.createElement("span");
   nextTxt.className = "mr-1";
   nextTxt.textContent = tx("ui.browser.pagination.next", "Next");
   next.appendChild(nextTxt);
-  const nextIcon = document.createElement("span");
+  const nextIcon = activeDocument.createElement("span");
   nextIcon.setAttribute("aria-hidden", "true");
   nextIcon.className = "inline-flex items-center justify-center [&_svg]:size-4";
   setIcon(nextIcon, "chevron-right");

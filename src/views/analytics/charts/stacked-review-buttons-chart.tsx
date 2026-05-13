@@ -8,6 +8,7 @@
  * @exports
  *   - StackedReviewButtonsChart — React component rendering a stacked bar chart of daily answer button counts with filter controls
  */
+import {  } from "obsidian";
 
 import * as React from "react";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -177,8 +178,8 @@ function useCloseOnOutsideClick(
       if (popoverRef.current?.contains(target)) return;
       onClose();
     };
-    document.addEventListener("mousedown", onDocClick, true);
-    return () => document.removeEventListener("mousedown", onDocClick, true);
+    activeDocument.addEventListener("mousedown", onDocClick, true);
+    return () => activeDocument.removeEventListener("mousedown", onDocClick, true);
   }, [open, wrapRef, popoverRef, onClose]);
 }
 

@@ -9,6 +9,7 @@
  * @exports
  *   - ForgettingCurveChart — React component rendering a multi-card forgetting-curve line chart with card search and selection
  */
+import {  } from "obsidian";
 
 import * as React from "react";
 import { Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -296,8 +297,8 @@ export function ForgettingCurveChart(props: {
       if (popoverRef.current?.contains(target)) return;
       setOpen(false);
     };
-    document.addEventListener("mousedown", onDocClick, true);
-    return () => document.removeEventListener("mousedown", onDocClick, true);
+    activeDocument.addEventListener("mousedown", onDocClick, true);
+    return () => activeDocument.removeEventListener("mousedown", onDocClick, true);
   }, [open]);
 
   React.useEffect(() => {

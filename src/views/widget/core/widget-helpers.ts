@@ -105,10 +105,7 @@ export function filterReviewableCards(cards: CardRecord[]): CardRecord[] {
  * session state, preserving the completed prefix and current card.
  */
 export function mergeQueueOnSync(
-  previousQueue: CardRecord[],
-  previousIndex: number,
-  rebuiltQueue: CardRecord[],
-): { queue: CardRecord[]; index: number } {
+  previousQueue: CardRecord[], previousIndex: number, rebuiltQueue: CardRecord[], ): { queue: CardRecord[]; index: number } {
   const safeQueue = Array.isArray(previousQueue) ? previousQueue : [];
   const safeIndex = Math.max(0, Math.min(previousIndex, safeQueue.length));
   const completedPrefix = safeQueue.slice(0, safeIndex);
@@ -129,9 +126,7 @@ export function mergeQueueOnSync(
     : [...completedPrefix, ...upcoming];
 
   return {
-    queue: mergedQueue,
-    index: Math.min(safeIndex, mergedQueue.length),
-  };
+    queue: mergedQueue, index: Math.min(safeIndex, mergedQueue.length), };
 }
 
 /* ------------------------------------------------------------------ */
@@ -208,8 +203,7 @@ export function resolveWidgetKeyAction(ctx: WidgetKeyContext): WidgetKeyAction {
   if (isFlip) return "next";
 
   const ratingKeys: Record<string, WidgetKeyAction> = {
-    "1": "grade-again", "2": "grade-hard", "3": "grade-good", "4": "grade-easy",
-  };
+    "1": "grade-again", "2": "grade-hard", "3": "grade-good", "4": "grade-easy", };
   if (ratingKeys[key] && !isPractice && isBasicLike && showingAnswer && !isGraded) {
     return ratingKeys[key];
   }
@@ -248,10 +242,7 @@ function shuffleInPlace(a: number[]) {
 }
 
 export function getWidgetMcqDisplayOrder(
-  session: Session | null,
-  card: CardRecord,
-  enabled: boolean,
-): number[] {
+  session: Session | null, card: CardRecord, enabled: boolean, ): number[] {
   const opts = card?.options || [];
   const n = Array.isArray(opts) ? opts.length : 0;
   const identity = Array.from({ length: n }, (_, i) => i);
