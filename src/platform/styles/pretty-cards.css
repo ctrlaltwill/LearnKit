@@ -1169,7 +1169,7 @@ mjx-container[jax="CHTML"][display="true"] {
   margin-inline: auto;
   padding-inline-start: 1.35em;
   list-style-type: disc;
-  display: inline-block;
+  display: block;
   text-align: left;
   width: fit-content;
   max-width: 100%;

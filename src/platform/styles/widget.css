@@ -1087,13 +1087,25 @@
 .learnkit .learnkit-gatekeeper-body .whitespace-pre-wrap.break-words[data-bc-md-rid],
 .learnkit .learnkit-widget-text .whitespace-pre-wrap.break-words[data-bc-md-rid],
 .learnkit .learnkit-widget-info .whitespace-pre-wrap.break-words[data-bc-md-rid] {
-  white-space: normal;
+  white-space: normal !important;
+}
+
+.learnkit .learnkit-gatekeeper-body .whitespace-pre-wrap.break-words [data-bc-md-rid],
+.learnkit .learnkit-widget-text .whitespace-pre-wrap.break-words [data-bc-md-rid],
+.learnkit .learnkit-widget-info .whitespace-pre-wrap.break-words [data-bc-md-rid] {
+  white-space: normal !important;
 }
 
 .learnkit .learnkit-gatekeeper-body .whitespace-pre-wrap.break-words[data-bc-md-rid] :is(ul, ol, li),
 .learnkit .learnkit-widget-text .whitespace-pre-wrap.break-words[data-bc-md-rid] :is(ul, ol, li),
 .learnkit .learnkit-widget-info .whitespace-pre-wrap.break-words[data-bc-md-rid] :is(ul, ol, li) {
-  white-space: normal;
+  white-space: normal !important;
+}
+
+.learnkit .learnkit-gatekeeper-body .whitespace-pre-wrap.break-words [data-bc-md-rid] :is(ul, ol, li),
+.learnkit .learnkit-widget-text .whitespace-pre-wrap.break-words [data-bc-md-rid] :is(ul, ol, li),
+.learnkit .learnkit-widget-info .whitespace-pre-wrap.break-words [data-bc-md-rid] :is(ul, ol, li) {
+  white-space: normal !important;
 }
 
 /* ---- Markdown heading scale inside widget/gatekeeper blocks ---- */
@@ -1114,6 +1126,12 @@
 .learnkit .learnkit-widget-info .learnkit-md-block > p,
 .learnkit .learnkit-gatekeeper-body .learnkit-md-block > p {
   margin: 0.3rem 0;
+}
+
+.learnkit .learnkit-widget-text .whitespace-pre-wrap.break-words[data-bc-md-rid] > p + :is(ul, ol),
+.learnkit .learnkit-widget-info .whitespace-pre-wrap.break-words[data-bc-md-rid] > p + :is(ul, ol),
+.learnkit .learnkit-gatekeeper-body .whitespace-pre-wrap.break-words[data-bc-md-rid] > p + :is(ul, ol) {
+  margin-top: 0;
 }
 
 .learnkit .learnkit-widget-text h1,

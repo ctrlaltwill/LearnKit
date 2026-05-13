@@ -515,6 +515,19 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
   line-height: 1.75;
 }
 
+/* MarkdownRenderer roots sometimes sit inside a pre-wrap parent; force normal
+   white-space on rendered blocks so newline-only text nodes don't create gaps
+   before lists/headings. */
+.learnkit .lk-session-card .whitespace-pre-wrap.break-words[data-bc-md-rid],
+.learnkit .lk-session-card .whitespace-pre-wrap.break-words [data-bc-md-rid] {
+  white-space: normal !important;
+}
+
+.learnkit .lk-session-card .whitespace-pre-wrap.break-words[data-bc-md-rid] :is(ul, ol, li),
+.learnkit .lk-session-card .whitespace-pre-wrap.break-words [data-bc-md-rid] :is(ul, ol, li) {
+  white-space: normal !important;
+}
+
 /* OQ/MCQ choice copy uses a slightly smaller, consistent size on front and back. */
 .learnkit .lk-session-card :is(.learnkit-mcq-option-text, .learnkit-mcq-option-line, .learnkit-oq-step-text) {
   font-size: var(--lk-session-choice-font-size) !important;
@@ -622,6 +635,14 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
 /* Match paragraph rhythm with heading spacing inside study-session markdown blocks. */
 .lk-session-card .learnkit-md-block > p {
   margin: 0.3rem 0;
+}
+
+.lk-session-card .learnkit-md-block > p + :is(ul, ol) {
+  margin-top: 0;
+}
+
+.lk-session-card .whitespace-pre-wrap.break-words[data-bc-md-rid] > p + :is(ul, ol) {
+  margin-top: 0;
 }
 
 .lk-session-card h1 { font-size: 1.2rem; }
