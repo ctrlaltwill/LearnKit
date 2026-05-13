@@ -23,7 +23,7 @@ LearnKit is easiest to understand once you use it. Install it, create a flashcar
 - [Explore documentation](https://ctrlaltwill.github.io/LearnKit/)
 - [Download the latest release](https://github.com/ctrlaltwill/LearnKit/releases)
 
-### Install from Community Plugins (Recommended)
+### Install from Community Plugins 
 
 1. Open Obsidian → Settings → Community Plugins
 2. Browse Community Plugins and search for **LearnKit**
