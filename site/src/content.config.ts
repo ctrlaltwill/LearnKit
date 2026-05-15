@@ -1,4 +1,4 @@
-import { defineCollection } from "astro:content";
+import { defineCollection } from "astro/content/config";
 import { glob } from "astro/loaders";
 import { docsSchema } from "@astrojs/starlight/schema";
 
@@ -23,10 +23,10 @@ export const collections = {
     loader: glob({
       base: "./src/content/docs",
       pattern: "**/[^_]*.{markdown,mdown,mkdn,mkd,mdwn,md,mdx}",
-      generateId: ({ entry, data }: { entry: unknown; data: unknown }) => {
+      generateId: ({ entry, data }) => {
         const slug = readSlug(data);
         if (slug) return slug;
-        return preserveDocsPath(typeof entry === "string" ? entry : String(entry ?? ""));
+        return preserveDocsPath(entry);
       },
     }),
     schema: docsSchema(),

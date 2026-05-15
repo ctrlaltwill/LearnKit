@@ -28,7 +28,7 @@ function isMobileAOSDisabled(): boolean {
   // Obsidian adds body.is-mobile for all mobile devices (phones + tablets).
   // We distinguish phones from iPads via viewport width (phones < 768px).
   if (
-    typeof document !== "undefined" &&
+    typeof activeDocument !== "undefined" &&
     activeDocument.body?.classList.contains("is-mobile") &&
     typeof window !== "undefined" &&
     window.matchMedia("(max-width: 767px)").matches

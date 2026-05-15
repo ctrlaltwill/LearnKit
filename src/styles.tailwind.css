@@ -4,9 +4,7 @@
 /* Tailwind design tokens (variables) */
 @import "tailwindcss/theme.css" layer(theme);
 
-/* Your class scanning */
-@source "./src";
-@source not "./src/anki/anki-media.ts";
+/* Tailwind v4 auto-detects local sources; explicit @source removed for editor compatibility. */
 
 /* Basecoat (pick ONE approach: package OR CDN) */
 @import "basecoat-css"; /* preferred if you already installed it */

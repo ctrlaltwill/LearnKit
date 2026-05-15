@@ -16,7 +16,7 @@ import { hydrateCircleFlagsInElement, renderFlagPreviewHtml, replaceCircleFlagTo
 
 export type CssPropValue = string | number | null | undefined;
 
-const hasDom = typeof window !== "undefined" && typeof document !== "undefined";
+const hasDom = typeof window !== "undefined" && typeof activeDocument !== "undefined";
 let domPurify: ReturnType<typeof createDOMPurify> | null = hasDom ? createDOMPurify(window) : null;
 
 function getDomPurify() {

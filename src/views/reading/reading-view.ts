@@ -364,7 +364,7 @@ type AdoptedStyleSheetsDocument = Document & { adoptedStyleSheets?: CSSStyleShee
 let readingDynamicStyleSheet: CSSStyleSheet | null = null;
 
 function getReadingDynamicStyleSheet(): CSSStyleSheet | null {
-  if (typeof document === 'undefined' || typeof CSSStyleSheet === 'undefined') return null;
+  if (typeof activeDocument === 'undefined' || typeof CSSStyleSheet === 'undefined') return null;
 
   if (readingDynamicStyleSheet) return readingDynamicStyleSheet;
 
