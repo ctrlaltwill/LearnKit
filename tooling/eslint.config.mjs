@@ -30,11 +30,24 @@ export default defineConfig([
   },
   ...obsidianmd.configs.recommended,
   {
-    files: ["**/*.ts", "**/*.tsx"],
+    files: ["src/**/*.ts", "src/**/*.tsx"],
     languageOptions: {
       parser: tsparser,
       parserOptions: {
         project: path.join(rootDir, "tsconfig.json"),
+        tsconfigRootDir: rootDir,
+      },
+    },
+    rules: {
+      "@typescript-eslint/no-explicit-any": ["error", { ignoreRestArgs: true }],
+    },
+  },
+  {
+    files: ["site/src/**/*.ts", "site/src/**/*.tsx"],
+    languageOptions: {
+      parser: tsparser,
+      parserOptions: {
+        project: path.join(rootDir, "site/tsconfig.json"),
         tsconfigRootDir: rootDir,
       },
     },

@@ -25,8 +25,8 @@
     "translations:check": "node tooling/check-locales.mjs",
     "i18n:literals:check": "node tooling/check-i18n-literals.mjs",
     "i18n:literals:baseline": "node tooling/check-i18n-literals.mjs --update-baseline",
-    "lint": "eslint -c tooling/eslint.config.mjs src",
-    "lint:fix": "eslint -c tooling/eslint.config.mjs src --fix",
+    "lint": "eslint -c tooling/eslint.config.mjs src site/src",
+    "lint:fix": "eslint -c tooling/eslint.config.mjs src site/src --fix",
     "css:hex:expand": "node tooling/expand-css-hex.mjs ./src/platform/styles ./src/styles.tailwind.css ./dist/styles.css"
   },
   "devDependencies": {
