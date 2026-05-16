@@ -261,10 +261,10 @@ export class LearnKitSettingsTab extends PluginSettingTab {
       const createControl = createItem.createDiv({ cls: "setting-item-control" });
       const btnCreate = createControl.createEl("button", { text: this._tx("ui.settings.backups.createBackup.button", "Create manual backup") });
 
-      const tableItem = wrapper.createDiv({ cls: "setting-item" });
+      const tableItem = wrapper.createDiv({ cls: "setting-item learnkit-settings-item-backup" });
       const tableControl = tableItem.createDiv({ cls: "setting-item-control learnkit-settings-backup-control learnkit-settings-backup-control" });
 
-      const tableWrap = tableControl.createDiv({ cls: "learnkit-settings-table-wrap learnkit-settings-table-wrap" });
+      const tableWrap = tableControl.createDiv({ cls: "learnkit-settings-table-wrap learnkit-settings-table-wrap learnkit-settings-table-wrap-backup" });
       let backupPageIndex = 0;
       let backupRowsPerPage = 10;
       const backupRowsPerPageOptions = BACKUP_ROWS_PER_PAGE_OPTIONS;

@@ -6,10 +6,8 @@
 /* Workspace leaf / view containers: use Obsidian background variable */
 .view-content.learnkit,
 .view-content .learnkit,
-.view-content:has(.learnkit),
 .workspace-leaf.learnkit,
-.workspace-leaf .learnkit:not(.workspace-leaf-content),
-.workspace-leaf:has(.learnkit) {
+.workspace-leaf .learnkit:not(.workspace-leaf-content) {
   border-radius: none;
   background-color: rgba(0,0,0,0);
   box-shadow: none;
@@ -17,8 +15,7 @@
 
 /* Leaf-content: flex column so header takes natural height and view-content fills the rest */
 .workspace-leaf-content.learnkit,
-.workspace-leaf-content .learnkit,
-.workspace-leaf-content:has(.learnkit) {
+.workspace-leaf-content .learnkit {
   display: flex;
   flex-direction: column;
   position: relative;
@@ -47,12 +44,13 @@
 /* Sprout-scoped pinch zoom: only Sprout leaves, never other plugins */
 .workspace-leaf-content.learnkit {
   zoom: var(--learnkit-leaf-zoom, 1);
+  border-radius: 0px;
+  border: none;
 }
 
 /* View-header wrappers: transparent so header card margins are clean */
 .view-header.learnkit,
-.view-header .learnkit,
-.view-header:has(.learnkit) {
+.view-header .learnkit {
   background: transparent;
   background-color: transparent;
   border-radius: none;
@@ -101,8 +99,11 @@ body.is-phone .learnkit .learnkit-view-content {
   /* 40px base + 60px for Obsidian's mobile bottom toolbar (env() is 0 in webview) */
   padding-bottom: 100px;
   /* Let the shell gutter be the only horizontal spacing from the viewport. */
-  padding-left: 0 !important;
-  padding-right: 0 !important;
+  padding-left: 0;
+  padding-right: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 body.is-phone {
@@ -120,11 +121,11 @@ body.is-phone .learnkit :is(
   .learnkit-settings-content-shell,
   .learnkit-note-review-content-shell
 ) {
-  padding: 0 !important;
-  background: none !important;
-  border: none !important;
-  border-radius: 0px !important;
-  max-width: calc(100% - var(--lk-shell-gutter-desktop)) !important;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 0px;
+  max-width: calc(100% - var(--lk-shell-gutter-desktop));
 }
 
 /* Mobile card spacing inside shells: keep consistent 8px rhythm. */
@@ -146,17 +147,11 @@ body.is-phone .learnkit :is(
   .learnkit-settings-view-root,
   .learnkit-note-review-root
 ) {
-  gap: 8px !important;
+  gap: 8px;
 }
 
 body.is-phone .learnkit .learnkit-view-content > * + * {
   margin-top: 8px;
-}
-
-body.is-phone .learnkit .learnkit-view-content {
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  -webkit-overflow-scrolling: touch;
 }
 
 /* Prevent horizontal scrolling on mobile across all LearnKit views */
@@ -165,7 +160,7 @@ body.is-phone .learnkit .learnkit-view-content,
 body.is-phone .learnkit .lk-home-root,
 body.is-phone .learnkit .learnkit-analytics-root,
 body.is-phone .learnkit .lk-browser-view,
-body.is-phone .workspace-leaf-content:has(.learnkit) {
+body.is-phone .workspace-leaf-content.learnkit {
   overflow-x: hidden;
   max-width: 100vw;
 }
@@ -297,9 +292,9 @@ body.is-phone .learnkit :is(
   display: flex;
   width: 100%;
   flex-wrap: wrap;
-  justify-content: center !important;
+  justify-content: center;
   row-gap: 8px;
-  align-items: center !important;
+  align-items: center;
 }
 
 body.is-phone .learnkit :is(
@@ -310,7 +305,7 @@ body.is-phone .learnkit :is(
   .learnkit-review-title-timer-host
 ) {
   width: 100%;
-  justify-content: center !important;
+  justify-content: center;
   align-items: center;
   flex-wrap: wrap;
   row-gap: 8px;
@@ -339,7 +334,7 @@ body.is-phone .learnkit :is(
   .learnkit-exam-generator-setup-topline,
   .learnkit-coach-wizard-topline
 ) > :first-child > .text-muted-foreground {
-  display: none !important;
+  display: none;
 }
 
 body.is-phone .learnkit :is(
@@ -371,7 +366,7 @@ body.is-phone .learnkit :is(
   [class*="title-subtitle"],
   [class*="title-description"]
 ) {
-  display: none !important;
+  display: none;
 }
 
 body.is-phone .learnkit .learnkit-settings-view-tab-row {
@@ -384,7 +379,7 @@ body.is-phone .learnkit :is(
   select,
   textarea
 ) {
-  border-radius: var(--radius-md) !important;
+  border-radius: var(--radius-md);
 }
 
 
@@ -439,11 +434,6 @@ body.learnkit.learnkit-hide-status-bar .status-bar {
 .learnkit-header {
     border: none;
     border-radius: 0px;
-}
-
-.workspace-leaf-content.learnkit {
-    border-radius: 0px;
-    border: none;
 }
 
 /* ---- Fixed-height input ---- */

@@ -16,6 +16,12 @@
   --learnkit-widget-font-summary-count: 0.9rem;  /* summary-mode "0 Flashcards"           */
   --learnkit-widget-font-teaser-title:  0.9rem;  /* teaser card title                     */
   --learnkit-widget-font-kbd:           0.85rem; /* keyboard shortcut labels              */
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .learnkit .border-border,
@@ -36,28 +42,28 @@
 }
 
 .learnkit[id^="learnkit-widget-menu-"][id$="-popover"] > .learnkit {
-  background: color-mix(in srgb, var(--color-base-05) 95%, transparent 05%) !important;
-  border: 0.5px solid var(--color-base-35) !important;
+  background: color-mix(in srgb, var(--color-base-05) 95%, transparent 05%);
+  border: 0.5px solid var(--color-base-35);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
 }
 
 .learnkit[id^="learnkit-widget-menu-"][id$="-menu"] > .group {
   color: var(--text-color);
-  border: 0.5px solid transparent !important;
-  background-color: transparent !important;
+  border: 0.5px solid transparent;
+  background-color: transparent;
 }
 
 .learnkit[id^="learnkit-widget-menu-"][id$="-menu"] > .group:is(:hover, :focus, :focus-visible, :active) {
   color: var(--text-color);
-  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) !important;
-  border: 0.5px solid color-mix(in srgb, var(--color-base-70) 25%, transparent 75%) !important;
+  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%);
+  border: 0.5px solid color-mix(in srgb, var(--color-base-70) 25%, transparent 75%);
 }
 
 .learnkit[id^="learnkit-widget-menu-"][id$="-menu"] > .group.learnkit-menu-item--disabled {
   color: var(--text-faint);
-  background-color: transparent !important;
-  border-color: transparent !important;
+  background-color: transparent;
+  border-color: transparent;
 }
 
 .learnkit-widget.learnkit {
@@ -66,21 +72,11 @@
   zoom: var(--learnkit-leaf-zoom, 1);
 }
 
-/* Layout model: header/top controls fixed, card body adaptive + scrollable, footer pinned near bottom. */
-.learnkit.learnkit-widget {
-  display: flex;
-  flex-direction: column;
-  max-height: 100%;
-  min-height: 0;
-  overflow: hidden;
-  box-sizing: border-box;
-}
-
-.learnkit.learnkit-widget:has(> .sprout-widget-summary-header) {
+.learnkit.learnkit-widget.learnkit-widget-has-summary-header {
   gap: 14px;
 }
 
-.learnkit.learnkit-widget:has(> .sprout-widget-header) {
+.learnkit.learnkit-widget.learnkit-widget-has-session-header {
   gap: 14px;
 }
 
@@ -139,22 +135,17 @@
   height: 36px;
   padding: 0 12px;
   font-size: 0.9rem;
-  border-radius: 8px !important;
+  border-radius: 8px;
   border: none;
-  background-color: var(--color-base-00) !important;
-  color: var(--text-normal) !important;
+  background-color: var(--color-base-00);
+  color: var(--text-normal);
   box-shadow: none;
 }
 
 .learnkit.learnkit-widget :is(.learnkit-widget-action-btn, .learnkit-btn-toolbar):not(.learnkit-btn-again):not(.learnkit-btn-hard):not(.learnkit-btn-good):not(.learnkit-btn-easy):is(:hover, :focus-visible, :active) {
-  background-color: var(--color-base-10) !important;
-  border-color: var(--color-base-40) !important;
-  color: var(--color-base-100) !important;
-}
-
-/* Match study/gatekeeper spacing for label + keycap in widget grading buttons. */
-.learnkit.learnkit-widget .learnkit-widget-action-btn:is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy) {
-  column-gap: 0;
+  background-color: var(--color-base-10);
+  border-color: var(--color-base-40);
+  color: var(--color-base-100);
 }
 
 .learnkit.learnkit-widget kbd,
@@ -172,8 +163,8 @@
   min-width: 36px;
   min-height: 36px;
   padding: 0;
-  background-color: var(--color-base-00) !important;
-  border: none !important;
+  background-color: var(--color-base-00);
+  border: none;
   border-radius: var(--radius-md);
 }
 
@@ -181,8 +172,8 @@
 .learnkit.learnkit-widget .learnkit-widget-back-btn:focus-visible,
 .learnkit.learnkit-widget .learnkit-widget-back-btn:active,
 .learnkit.learnkit-widget .learnkit-widget-back-btn:focus {
-  background-color: var(--color-base-20) !important;
-  border: none !important;
+  background-color: var(--color-base-20);
+  border: none;
 }
 
 .learnkit.learnkit-widget button:hover,
@@ -240,323 +231,9 @@
   border: var(--learnkit-border-width) solid var(--learnkit-border-color);
 }
 
-/* Widget grading palette should follow theme-aware button tints */
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-again {
-  --learnkit-btn-tint: var(--destructive);
-}
-
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-hard {
-  --learnkit-btn-tint: var(--learnkit-hard-bg);
-  --learnkit-btn-bg-mix: 24%;
-  --learnkit-btn-border-mix: 60%;
-  --learnkit-btn-bg-hover-mix: 32%;
-  --learnkit-btn-border-hover-mix: 68%;
-}
-
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-good {
-  --learnkit-btn-tint: var(--learnkit-good-bg);
-}
-
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-easy {
-  --learnkit-btn-tint: rgb(var(--interactive-accent-rgb, 138, 92, 245));
-}
-
-.learnkit.learnkit-widget .learnkit-widget-action-btn:is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy) {
-  --learnkit-btn-bg-mix: 16%;
-  --learnkit-btn-fg-mix: 72%;
-  --learnkit-btn-border-mix: 45%;
-  --learnkit-kbd-tint: var(--learnkit-btn-tint);
-
-  background: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-bg-mix), var(--background));
-  color: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-fg-mix), var(--foreground));
-  border: var(--learnkit-border-width) solid color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-border-mix), transparent);
-}
-
-.learnkit.learnkit-widget .learnkit-widget-action-btn:is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy) :is(kbd, .kbd) {
-  background: color-mix(in srgb, var(--learnkit-kbd-tint) 50%, transparent);
-  border-color: color-mix(in srgb, var(--learnkit-kbd-tint) 48%, transparent);
-  color: color-mix(in srgb, rgb(255, 255, 255) 88%, var(--learnkit-kbd-tint) 12%);
-}
-
-.learnkit.learnkit-widget .learnkit-widget-action-btn:is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy):hover,
-.learnkit.learnkit-widget .learnkit-widget-action-btn:is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy):focus-visible {
-  background: color-mix(in srgb, var(--learnkit-btn-tint) 24%, var(--background));
-  border-color: color-mix(in srgb, var(--learnkit-btn-tint) 60%, transparent);
-}
-
-.theme-dark .learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-again {
-  --learnkit-btn-bg-mix: 26%;
-  --learnkit-btn-fg-mix: 82%;
-  --learnkit-btn-border-mix: 58%;
-}
-
-.theme-dark .learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-hard {
-  --learnkit-btn-bg-mix: 54%;
-  --learnkit-btn-fg-mix: 64%;
-  --learnkit-btn-border-mix: 58%;
-}
-
-.theme-dark .learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-good {
-  --learnkit-btn-bg-mix: 48%;
-  --learnkit-btn-fg-mix: 72%;
-  --learnkit-btn-border-mix: 58%;
-}
-
-.theme-dark .learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-easy {
-  --learnkit-btn-bg-mix: 42%;
-  --learnkit-btn-fg-mix: 82%;
-  --learnkit-btn-border-mix: 58%;
-}
-
-.theme-dark .learnkit.learnkit-widget .learnkit-widget-action-btn:is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy) :is(kbd, .kbd) {
-  background: color-mix(in srgb, var(--learnkit-kbd-tint) 38%, transparent);
-  border-color: color-mix(in srgb, var(--learnkit-kbd-tint) 58%, transparent);
-  color: rgb(255, 255, 255);
-}
-
-.theme-dark .learnkit.learnkit-widget .learnkit-widget-action-btn:is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy):hover,
-.theme-dark .learnkit.learnkit-widget .learnkit-widget-action-btn:is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy):focus-visible {
-  filter: brightness(1.08);
-}
-.learnkit.learnkit-widget .learnkit-btn-again {
-  --learnkit-widget-btn-tint: var(--destructive);
-}
-
-.learnkit.learnkit-widget .learnkit-btn-hard {
-  --learnkit-widget-btn-tint: var(--learnkit-hard-bg);
-}
-
-.learnkit.learnkit-widget .learnkit-btn-good {
-  --learnkit-widget-btn-tint: var(--learnkit-good-bg);
-}
-
-.learnkit.learnkit-widget .learnkit-btn-easy {
-  --learnkit-widget-btn-tint: rgb(var(--interactive-accent-rgb, 138, 92, 245));
-}
-
-.learnkit.learnkit-widget :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy) {
-  background: color-mix(in srgb, var(--learnkit-widget-btn-tint) 16%, var(--background));
-  color: color-mix(in srgb, var(--learnkit-widget-btn-tint) 72%, var(--foreground));
-  border: var(--learnkit-border-width) solid color-mix(in srgb, var(--learnkit-widget-btn-tint) 45%, transparent);
-}
-
-.learnkit.learnkit-widget :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy):hover,
-.learnkit.learnkit-widget :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy):focus-visible {
-  background: color-mix(in srgb, var(--learnkit-widget-btn-tint) 24%, var(--background));
-  border-color: color-mix(in srgb, var(--learnkit-widget-btn-tint) 60%, transparent);
-}
-
-.learnkit.learnkit-widget :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy) :is(kbd, .kbd) {
-  background: color-mix(in srgb, var(--learnkit-widget-btn-tint) 50%, transparent);
-  border-color: color-mix(in srgb, var(--learnkit-widget-btn-tint) 48%, transparent);
-}
-
-/* Ensure rating buttons keep tinted faces even with .learnkit-widget-hover-darken */
-.learnkit-widget-action-btn.learnkit-widget-hover-darken:is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy) {
-  background-color: color-mix(in srgb, var(--learnkit-widget-btn-tint) 16%, var(--background));
-  color: color-mix(in srgb, var(--learnkit-widget-btn-tint) 72%, var(--foreground));
-  border-color: color-mix(in srgb, var(--learnkit-widget-btn-tint) 45%, transparent);
-}
-
-.learnkit-widget-action-btn.learnkit-widget-hover-darken:is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy):hover,
-.learnkit-widget-action-btn.learnkit-widget-hover-darken:is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy):focus,
-.learnkit-widget-action-btn.learnkit-widget-hover-darken:is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy):focus-visible {
-  background-color: color-mix(in srgb, var(--learnkit-widget-btn-tint) 24%, var(--background));
-  border-color: color-mix(in srgb, var(--learnkit-widget-btn-tint) 60%, transparent);
-}
-
-/* Explicit per-rating rules to beat neutral widget button reset in all builds */
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-again {
-  background-color: color-mix(in srgb, var(--destructive) 16%, var(--background));
-  color: color-mix(in srgb, var(--destructive) 72%, var(--foreground));
-  border-color: color-mix(in srgb, var(--destructive) 45%, transparent);
-}
-
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-hard {
-  background-color: color-mix(in srgb, var(--learnkit-hard-bg) 22%, var(--background));
-  color: color-mix(in srgb, var(--learnkit-hard-bg) 72%, var(--foreground));
-  border-color: color-mix(in srgb, var(--learnkit-hard-bg) 50%, transparent);
-}
-
-.theme-dark .learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-hard {
-  background-color: color-mix(in srgb, var(--learnkit-hard-bg) 14%, var(--background));
-  border-color: color-mix(in srgb, var(--learnkit-hard-bg) 40%, transparent);
-}
-
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-good {
-  background-color: color-mix(in srgb, var(--learnkit-good-bg) 16%, var(--background));
-  color: color-mix(in srgb, var(--learnkit-good-bg) 72%, var(--foreground));
-  border-color: color-mix(in srgb, var(--learnkit-good-bg) 45%, transparent);
-}
-
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-easy {
-  background-color: color-mix(in srgb, rgb(var(--interactive-accent-rgb, 138, 92, 245)) 16%, var(--background));
-  color: color-mix(in srgb, rgb(var(--interactive-accent-rgb, 138, 92, 245)) 72%, var(--foreground));
-  border-color: color-mix(in srgb, rgb(var(--interactive-accent-rgb, 138, 92, 245)) 45%, transparent);
-}
-
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-again:hover,
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-hard:hover,
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-good:hover,
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-easy:hover,
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-again:focus,
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-hard:focus,
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-good:focus,
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-easy:focus,
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-again:focus-visible,
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-hard:focus-visible,
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-good:focus-visible,
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-easy:focus-visible {
-  --learnkit-widget-hover-tint: var(--destructive);
-}
-
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-hard:hover,
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-hard:focus,
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-hard:focus-visible {
-  --learnkit-widget-hover-tint: var(--learnkit-hard-bg);
-}
-
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-hard:is(:hover, :focus, :focus-visible) {
-  background-color: color-mix(in srgb, var(--learnkit-hard-bg) 30%, var(--background));
-  border-color: color-mix(in srgb, var(--learnkit-hard-bg) 60%, transparent);
-}
-
-.theme-dark .learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-hard:is(:hover, :focus, :focus-visible) {
-  background-color: color-mix(in srgb, var(--learnkit-hard-bg) 20%, var(--background));
-  border-color: color-mix(in srgb, var(--learnkit-hard-bg) 52%, transparent);
-}
-
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-good:hover,
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-good:focus,
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-good:focus-visible {
-  --learnkit-widget-hover-tint: var(--learnkit-good-bg);
-}
-
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-easy:hover,
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-easy:focus,
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-easy:focus-visible {
-  --learnkit-widget-hover-tint: rgb(var(--interactive-accent-rgb, 138, 92, 245));
-}
-
-.learnkit.learnkit-widget .learnkit-widget-action-btn:is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy):is(:hover, :focus, :focus-visible) {
-  background-color: color-mix(in srgb, var(--learnkit-widget-hover-tint) 24%, var(--background));
-  border-color: color-mix(in srgb, var(--learnkit-widget-hover-tint) 60%, transparent);
-}
-
-/* Final Hard tuning: light default uses prior hover intensity; dark default sits between prior default/hover */
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-hard {
-  background-color: color-mix(in srgb, var(--learnkit-hard-bg) 24%, var(--background));
-  border-color: color-mix(in srgb, var(--learnkit-hard-bg) 60%, transparent);
-  color: color-mix(in srgb, var(--learnkit-hard-bg) 72%, var(--foreground));
-}
-
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-hard:is(:hover, :focus, :focus-visible) {
-  background-color: color-mix(in srgb, var(--learnkit-hard-bg) 32%, var(--background));
-  border-color: color-mix(in srgb, var(--learnkit-hard-bg) 68%, transparent);
-}
-
-.theme-dark .learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-hard {
-  background-color: color-mix(in srgb, var(--learnkit-hard-bg) 17%, var(--background));
-  border-color: color-mix(in srgb, var(--learnkit-hard-bg) 46%, transparent);
-}
-
-.theme-dark .learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-hard:is(:hover, :focus, :focus-visible) {
-  background-color: color-mix(in srgb, var(--learnkit-hard-bg) 24%, var(--background));
-  border-color: color-mix(in srgb, var(--learnkit-hard-bg) 56%, transparent);
-}
-
-/* Canonical solid grading surfaces in widget (match study + gatekeeper) */
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-again {
-  --learnkit-btn-tint: var(--destructive);
-}
-
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-hard {
-  --learnkit-btn-tint: var(--learnkit-hard-bg);
-}
-
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-good {
-  --learnkit-btn-tint: var(--learnkit-good-bg);
-}
-
-.learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-easy {
-  --learnkit-btn-tint: rgb(var(--interactive-accent-rgb, 138, 92, 245));
-}
-
-.learnkit.learnkit-widget .learnkit-widget-action-btn:is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy) {
-  --learnkit-btn-bg-mix: 16%;
-  --learnkit-btn-fg-mix: 72%;
-  --learnkit-btn-border-mix: 45%;
-  --learnkit-btn-bg-hover-mix: 24%;
-  --learnkit-btn-border-hover-mix: 60%;
-
-  background-color: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-bg-mix), var(--background-primary));
-  color: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-fg-mix), var(--foreground));
-  border-color: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-border-mix), var(--background-primary));
-}
-
-.learnkit.learnkit-widget .learnkit-widget-action-btn:is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy):hover,
-.learnkit.learnkit-widget .learnkit-widget-action-btn:is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy):focus-visible {
-  background-color: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-bg-hover-mix), var(--background-primary));
-  border-color: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-border-hover-mix), var(--background-primary));
-}
-
-.theme-dark .learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-again {
-  --learnkit-btn-bg-mix: 26%;
-  --learnkit-btn-fg-mix: 82%;
-  --learnkit-btn-border-mix: 50%;
-  --learnkit-btn-bg-hover-mix: 34%;
-  --learnkit-btn-border-hover-mix: 58%;
-}
-
-.theme-dark .learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-hard {
-  --learnkit-btn-bg-mix: 54%;
-  --learnkit-btn-fg-mix: 64%;
-  --learnkit-btn-border-mix: 58%;
-  --learnkit-btn-bg-hover-mix: 62%;
-  --learnkit-btn-border-hover-mix: 66%;
-}
-
-.theme-dark .learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-good {
-  --learnkit-btn-bg-mix: 48%;
-  --learnkit-btn-fg-mix: 72%;
-  --learnkit-btn-border-mix: 58%;
-  --learnkit-btn-bg-hover-mix: 56%;
-  --learnkit-btn-border-hover-mix: 66%;
-}
-
-.theme-dark .learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-easy {
-  --learnkit-btn-bg-mix: 42%;
-  --learnkit-btn-fg-mix: 82%;
-  --learnkit-btn-border-mix: 58%;
-  --learnkit-btn-bg-hover-mix: 50%;
-  --learnkit-btn-border-hover-mix: 66%;
-}
-
-.theme-dark .learnkit.learnkit-widget .learnkit-widget-action-btn:is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy):hover,
-.theme-dark .learnkit.learnkit-widget .learnkit-widget-action-btn:is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy):focus-visible {
-  filter: none;
-}
-
-/* Final parity override: force widget dark Hard to match study-session values */
-.theme-dark .learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-hard {
-  background-color: color-mix(in srgb, var(--learnkit-hard-bg) 54%, var(--background-primary));
-  color: color-mix(in srgb, var(--learnkit-hard-bg) 64%, var(--foreground));
-  border-color: color-mix(in srgb, var(--learnkit-hard-bg) 58%, var(--background-primary));
-}
-
-.theme-dark .learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-hard:hover,
-.theme-dark .learnkit.learnkit-widget .learnkit-widget-action-btn.learnkit-btn-hard:focus-visible {
-  background-color: color-mix(in srgb, var(--learnkit-hard-bg) 62%, var(--background-primary));
-  border-color: color-mix(in srgb, var(--learnkit-hard-bg) 66%, var(--background-primary));
-}
-
-/* Keep grading kbd text aligned with button text color in both themes */
-.learnkit.learnkit-widget .learnkit-widget-action-btn:is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy) :is(kbd, .kbd) {
-  color: inherit;
-}
-
 /* Widget grading buttons: use neutral default widget styling (match Edit/More) */
 .learnkit.learnkit-widget .learnkit-widget-action-btn:is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy) {
+  column-gap: 0;
   background-color: var(--background);
   color: var(--foreground);
   border-color: var(--learnkit-border-color);
@@ -595,7 +272,7 @@
   max-width: 100%;
   min-height: 26px;
   height: auto;
-  max-height: none !important;
+  max-height: none;
   line-height: 1.5;
   box-sizing: border-box;
   display: inline-flex;
@@ -666,9 +343,9 @@
 .learnkit.learnkit-widget :is(.learnkit-widget-text, .learnkit-widget-info) > p.whitespace-pre-wrap.break-words,
 .learnkit.learnkit-widget :is(.learnkit-widget-text, .learnkit-widget-info) .whitespace-pre-wrap.break-words > p,
 .learnkit.learnkit-widget .learnkit-widget-cloze .whitespace-pre-wrap.break-words > p {
-  font-size: 0.95rem !important;
-  line-height: 2 !important;
-  margin: 0 !important;
+  font-size: 0.95rem;
+  line-height: 2;
+  margin: 0;
 }
 
 /* Widget section spacing (replaces applySectionStyles inline helper) */
@@ -712,7 +389,7 @@
   background-color: var(--color-base-00);
   margin: 0 14px;
   gap: 14px;
-  padding: 20px !important;
+  padding: 20px;
   /* Content-sized normally; shrinks and scrolls when viewport is tight. */
   flex: 0 1 auto;
   min-height: 0;
@@ -993,7 +670,7 @@
   background-color: var(--color-base-20);
   color: var(--color-base-70);
   border-radius: 4px;
-  border: 0.5px solid var(--color-base-30) !important;
+  border: 0.5px solid var(--color-base-30);
   padding: 0.2rem 0.4rem;
   font-size: 0.85em;
 }
@@ -1087,25 +764,25 @@
 .learnkit .learnkit-gatekeeper-body .whitespace-pre-wrap.break-words[data-bc-md-rid],
 .learnkit .learnkit-widget-text .whitespace-pre-wrap.break-words[data-bc-md-rid],
 .learnkit .learnkit-widget-info .whitespace-pre-wrap.break-words[data-bc-md-rid] {
-  white-space: normal !important;
+  white-space: normal;
 }
 
 .learnkit .learnkit-gatekeeper-body .whitespace-pre-wrap.break-words [data-bc-md-rid],
 .learnkit .learnkit-widget-text .whitespace-pre-wrap.break-words [data-bc-md-rid],
 .learnkit .learnkit-widget-info .whitespace-pre-wrap.break-words [data-bc-md-rid] {
-  white-space: normal !important;
+  white-space: normal;
 }
 
 .learnkit .learnkit-gatekeeper-body .whitespace-pre-wrap.break-words[data-bc-md-rid] :is(ul, ol, li),
 .learnkit .learnkit-widget-text .whitespace-pre-wrap.break-words[data-bc-md-rid] :is(ul, ol, li),
 .learnkit .learnkit-widget-info .whitespace-pre-wrap.break-words[data-bc-md-rid] :is(ul, ol, li) {
-  white-space: normal !important;
+  white-space: normal;
 }
 
 .learnkit .learnkit-gatekeeper-body .whitespace-pre-wrap.break-words [data-bc-md-rid] :is(ul, ol, li),
 .learnkit .learnkit-widget-text .whitespace-pre-wrap.break-words [data-bc-md-rid] :is(ul, ol, li),
 .learnkit .learnkit-widget-info .whitespace-pre-wrap.break-words [data-bc-md-rid] :is(ul, ol, li) {
-  white-space: normal !important;
+  white-space: normal;
 }
 
 /* ---- Markdown heading scale inside widget/gatekeeper blocks ---- */
@@ -1200,8 +877,8 @@
   display: flex;
   align-items: center;
   border-radius: var(--radius-md);
-  border: 0.5px solid var(--color-base-35) !important;
-  background-color: var(--color-base-20) !important;
+  border: 0.5px solid var(--color-base-35);
+  background-color: var(--color-base-20);
   cursor: pointer;
   padding: 4px 12px;
   transition: background-color .15s, border-color .15s;
@@ -1209,13 +886,13 @@
 
 .learnkit .sprout-widget-mcq-option:hover,
 .learnkit .sprout-widget-mcq-option:focus-visible {
-  background-color: var(--color-base-35) !important;
-  border-color: var(--color-base-40) !important;
+  background-color: var(--color-base-35);
+  border-color: var(--color-base-40);
 }
 
 .learnkit .sprout-widget-mcq-option:active {
-  background-color: var(--color-base-35) !important;
-  border-color: var(--color-base-40) !important;
+  background-color: var(--color-base-35);
+  border-color: var(--color-base-40);
 }
 
 .learnkit .sprout-widget-mcq-option-content {
@@ -1271,100 +948,100 @@
 
 /* MCQ correct */
 .learnkit.learnkit-widget .learnkit-mcq-correct-highlight {
-  border-color: var(--learnkit-good-bg) !important;
-  background-color: var(--learnkit-good-bg-light) !important;
-  border-width: 0.5px !important;
-  border-style: solid !important;
+  border-color: var(--learnkit-good-bg);
+  background-color: var(--learnkit-good-bg-light);
+  border-width: 0.5px;
+  border-style: solid;
 }
 
 .learnkit.learnkit-widget .learnkit-mcq-correct-highlight:is(:hover, :focus, :focus-visible, :active) {
-  border-color: var(--learnkit-good-bg) !important;
-  background-color: var(--learnkit-good-bg-light) !important;
+  border-color: var(--learnkit-good-bg);
+  background-color: var(--learnkit-good-bg-light);
 }
 
 /* MCQ wrong */
 .learnkit.learnkit-widget .learnkit-mcq-wrong-highlight {
-  border-color: var(--learnkit-again-bg) !important;
-  background-color: var(--learnkit-again-bg-light) !important;
-  border-width: 0.5px !important;
-  border-style: solid !important;
+  border-color: var(--learnkit-again-bg);
+  background-color: var(--learnkit-again-bg-light);
+  border-width: 0.5px;
+  border-style: solid;
 }
 
 .learnkit.learnkit-widget .learnkit-mcq-wrong-highlight:is(:hover, :focus, :focus-visible, :active) {
-  border-color: var(--learnkit-again-bg) !important;
-  background-color: var(--learnkit-again-bg-light) !important;
+  border-color: var(--learnkit-again-bg);
+  background-color: var(--learnkit-again-bg-light);
 }
 
 .learnkit.learnkit-widget .learnkit-mcq-options .learnkit-btn-toolbar:hover {
-  background-color: var(--color-base-30) !important;
-  color: var(--color-base-100) !important;
-  border-color: var(--color-base-50) !important;
+  background-color: var(--color-base-30);
+  color: var(--color-base-100);
+  border-color: var(--color-base-50);
 }
 
 /* MCQ multi-answer: selected toggle */
 .learnkit.learnkit-widget .learnkit-mcq-selected {
-  background-color: var(--color-base-30) !important;
-  color: var(--color-base-100) !important;
-  border-color: var(--color-base-50) !important;
-  box-shadow: none !important;
+  background-color: var(--color-base-30);
+  color: var(--color-base-100);
+  border-color: var(--color-base-50);
+  box-shadow: none;
 }
 
 /* MCQ multi-answer: missed correct on reveal */
 .learnkit.learnkit-widget .learnkit-mcq-missed-correct {
-  border-color: var(--learnkit-good-bg) !important;
-  border-width: 0.5px !important;
-  border-style: dashed !important;
+  border-color: var(--learnkit-good-bg);
+  border-width: 0.5px;
+  border-style: dashed;
   opacity: 0.75;
 }
 
 /* OQ correct placement */
 .learnkit.learnkit-widget .learnkit-oq-correct-highlight {
-  border-color: var(--learnkit-good-bg) !important;
-  background-color: var(--learnkit-good-bg-light) !important;
-  border-width: 0.5px !important;
-  border-style: solid !important;
+  border-color: var(--learnkit-good-bg);
+  background-color: var(--learnkit-good-bg-light);
+  border-width: 0.5px;
+  border-style: solid;
 }
 
 /* OQ wrong placement */
 .learnkit.learnkit-widget .learnkit-oq-wrong-highlight {
-  border-color: var(--learnkit-again-bg) !important;
-  background-color: var(--learnkit-again-bg-light) !important;
-  border-width: 0.5px !important;
-  border-style: solid !important;
+  border-color: var(--learnkit-again-bg);
+  background-color: var(--learnkit-again-bg-light);
+  border-width: 0.5px;
+  border-style: solid;
 }
 
 /* Dark mode: softer highlight backgrounds */
 .theme-dark .learnkit.learnkit-widget .learnkit-mcq-correct-highlight {
-  background-color: rgba(34, 197, 94, 0.15) !important;
+  background-color: rgba(34, 197, 94, 0.15);
 }
 
 .theme-dark .learnkit.learnkit-widget .learnkit-mcq-wrong-highlight {
-  background-color: rgba(239, 68, 68, 0.15) !important;
+  background-color: rgba(239, 68, 68, 0.15);
 }
 
 .theme-dark .learnkit.learnkit-widget .learnkit-mcq-missed-correct {
-  border-color: rgba(34, 197, 94, 0.6) !important;
+  border-color: rgba(34, 197, 94, 0.6);
 }
 
 .theme-dark .learnkit.learnkit-widget .learnkit-oq-correct-highlight {
-  background-color: rgba(34, 197, 94, 0.15) !important;
+  background-color: rgba(34, 197, 94, 0.15);
 }
 
 .theme-dark .learnkit.learnkit-widget .learnkit-oq-wrong-highlight {
-  background-color: rgba(239, 68, 68, 0.15) !important;
+  background-color: rgba(239, 68, 68, 0.15);
 }
 
 /* MCQ / OQ answer-row kbd badges: tint green for correct, red for wrong */
 .learnkit.learnkit-widget :is(.learnkit-mcq-correct-highlight, .learnkit-oq-correct-highlight) :is(kbd, .kbd) {
-  background: color-mix(in srgb, var(--learnkit-good-bg) 50%, transparent) !important;
-  border-color: color-mix(in srgb, var(--learnkit-good-bg) 48%, transparent) !important;
-  color: color-mix(in srgb, rgb(255, 255, 255) 88%, var(--learnkit-good-bg) 12%) !important;
+  background: color-mix(in srgb, var(--learnkit-good-bg) 50%, transparent);
+  border-color: color-mix(in srgb, var(--learnkit-good-bg) 48%, transparent);
+  color: color-mix(in srgb, rgb(255, 255, 255) 88%, var(--learnkit-good-bg) 12%);
 }
 
 .learnkit.learnkit-widget :is(.learnkit-mcq-wrong-highlight, .learnkit-oq-wrong-highlight) :is(kbd, .kbd) {
-  background: color-mix(in srgb, var(--destructive) 50%, transparent) !important;
-  border-color: color-mix(in srgb, var(--destructive) 48%, transparent) !important;
-  color: color-mix(in srgb, rgb(255, 255, 255) 88%, var(--destructive) 12%) !important;
+  background: color-mix(in srgb, var(--destructive) 50%, transparent);
+  border-color: color-mix(in srgb, var(--destructive) 48%, transparent);
+  color: color-mix(in srgb, rgb(255, 255, 255) 88%, var(--destructive) 12%);
 }
 
 /* OQ step rows + MCQ options: compact 32px in widget view (front + back) */
@@ -1377,8 +1054,8 @@
 /* Widget OQ step row hover — match session view */
 .learnkit.learnkit-widget .learnkit-oq-step-row:hover,
 .learnkit.learnkit-widget .learnkit-oq-step-row:focus-visible {
-  background-color: var(--color-base-35) !important;
-  border-color: var(--color-base-40) !important;
+  background-color: var(--color-base-35);
+  border-color: var(--color-base-40);
 }
 
 /* Widget progress fill — dynamic width via CSS custom property */

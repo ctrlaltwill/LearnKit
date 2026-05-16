@@ -36,27 +36,27 @@ body[data-learnkit-theme-preset="glass"] .learnkit,
    * This keeps in-between colors consistent when themes only expose 10-point
    * stops or ship non-uniform intermediate values.
    */
-  --color-base-00: var(--background) !important;
-  --color-base-05: color-mix(in srgb, var(--background) 95%, var(--foreground) 5%) !important;
-  --color-base-10: color-mix(in srgb, var(--background) 90%, var(--foreground) 10%) !important;
-  --color-base-15: color-mix(in srgb, var(--background) 85%, var(--foreground) 15%) !important;
-  --color-base-25: color-mix(in srgb, var(--background) 75%, var(--foreground) 25%) !important;
-  --color-base-20: color-mix(in srgb, var(--background) 80%, var(--foreground) 20%) !important;
-  --color-base-30: color-mix(in srgb, var(--background) 70%, var(--foreground) 30%) !important;
-  --color-base-35: color-mix(in srgb, var(--background) 65%, var(--foreground) 35%) !important;
-  --color-base-40: color-mix(in srgb, var(--background) 60%, var(--foreground) 40%) !important;
-  --color-base-45: color-mix(in srgb, var(--background) 55%, var(--foreground) 45%) !important;
-  --color-base-50: color-mix(in srgb, var(--background) 50%, var(--foreground) 50%) !important;
-  --color-base-55: color-mix(in srgb, var(--background) 45%, var(--foreground) 55%) !important;
-  --color-base-60: color-mix(in srgb, var(--background) 40%, var(--foreground) 60%) !important;
-  --color-base-65: color-mix(in srgb, var(--background) 35%, var(--foreground) 65%) !important;
-  --color-base-70: color-mix(in srgb, var(--background) 30%, var(--foreground) 70%) !important;
-  --color-base-75: color-mix(in srgb, var(--background) 25%, var(--foreground) 75%) !important;
-  --color-base-80: color-mix(in srgb, var(--background) 20%, var(--foreground) 80%) !important;
-  --color-base-85: color-mix(in srgb, var(--background) 15%, var(--foreground) 85%) !important;
-  --color-base-90: color-mix(in srgb, var(--background) 10%, var(--foreground) 90%) !important;
-  --color-base-95: color-mix(in srgb, var(--background) 5%, var(--foreground) 95%) !important;
-  --color-base-100: var(--foreground) !important;
+  --color-base-00: var(--background);
+  --color-base-05: color-mix(in srgb, var(--background) 95%, var(--foreground) 5%);
+  --color-base-10: color-mix(in srgb, var(--background) 90%, var(--foreground) 10%);
+  --color-base-15: color-mix(in srgb, var(--background) 85%, var(--foreground) 15%);
+  --color-base-25: color-mix(in srgb, var(--background) 75%, var(--foreground) 25%);
+  --color-base-20: color-mix(in srgb, var(--background) 80%, var(--foreground) 20%);
+  --color-base-30: color-mix(in srgb, var(--background) 70%, var(--foreground) 30%);
+  --color-base-35: color-mix(in srgb, var(--background) 65%, var(--foreground) 35%);
+  --color-base-40: color-mix(in srgb, var(--background) 60%, var(--foreground) 40%);
+  --color-base-45: color-mix(in srgb, var(--background) 55%, var(--foreground) 45%);
+  --color-base-50: color-mix(in srgb, var(--background) 50%, var(--foreground) 50%);
+  --color-base-55: color-mix(in srgb, var(--background) 45%, var(--foreground) 55%);
+  --color-base-60: color-mix(in srgb, var(--background) 40%, var(--foreground) 60%);
+  --color-base-65: color-mix(in srgb, var(--background) 35%, var(--foreground) 65%);
+  --color-base-70: color-mix(in srgb, var(--background) 30%, var(--foreground) 70%);
+  --color-base-75: color-mix(in srgb, var(--background) 25%, var(--foreground) 75%);
+  --color-base-80: color-mix(in srgb, var(--background) 20%, var(--foreground) 80%);
+  --color-base-85: color-mix(in srgb, var(--background) 15%, var(--foreground) 85%);
+  --color-base-90: color-mix(in srgb, var(--background) 10%, var(--foreground) 90%);
+  --color-base-95: color-mix(in srgb, var(--background) 5%, var(--foreground) 95%);
+  --color-base-100: var(--foreground);
 
   /* Primary brand */
   --primary: rgb(94, 165, 0);

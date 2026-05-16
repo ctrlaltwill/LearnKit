@@ -559,6 +559,8 @@ export class SproutCardBrowserView extends ItemView {
       const id = checkbox.getAttribute("data-card-id");
       if (!id) return;
       checkbox.checked = this._selectedIds.has(id);
+      const row = checkbox.closest("tr");
+      row?.classList.toggle("lk-browser-row-selected", checkbox.checked);
     });
   }
 

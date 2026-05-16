@@ -39,7 +39,8 @@
 .learnkit .learnkit-github-stars-star svg {
   width: 18px;
   height: 18px;
-  color: #f4b400;
+  fill: var(--theme-accent);
+  color: var(--theme-accent);
   transition: filter 0.18s;
 }
 
@@ -48,11 +49,6 @@
   letter-spacing: 0.01em;
 }
 
-/* Force GitHub star to use accent color for fill */
-.learnkit .learnkit-github-stars-star svg {
-  fill: var(--theme-accent);
-  color: var(--theme-accent);
-}
 /* Spin the GitHub star on hover */
 .learnkit .learnkit-github-stars:hover .learnkit-github-stars-star {
   transition: transform 0.6s cubic-bezier(0.4,0.2,0.2,1);
@@ -176,14 +172,14 @@
 }
 
 .learnkit input {
-  border-width: 0.5px !important;
+  border-width: 0.5px;
 }
 
 /* ---- Global keyboard keycap shape ---- */
 
 .learnkit kbd,
 .learnkit .kbd {
-  box-shadow: none !important;
+  box-shadow: none;
   border-radius: 6px;
   background-color: var(--color-base-40);
   padding: 0 8px;
@@ -309,7 +305,7 @@
 .learnkit .learnkit-io-no-zoom,
 .learnkit .learnkit-io-no-zoom img,
 .learnkit .learnkit-io-image.learnkit-io-no-zoom {
-  cursor: default !important;
+  cursor: default;
 }
 
 .learnkit .learnkit-io-overlay {
@@ -371,7 +367,7 @@
   border: 0.5px solid #111111;
   padding: 4px 8px;
   font-size: 0.67rem;
-  min-height: 0px !important;
+  min-height: 0px;
   font-weight: 600;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.24);
 }
@@ -473,7 +469,7 @@
   font-size: var(--learnkit-hq-chip-font-size);
   line-height: var(--learnkit-hq-chip-line-height);
   font-weight: 600;
-  min-height: 0px !important;
+  min-height: 0px;
   color: #ffffff;
   background: #333333;
   border: 0.5px solid #111111;
@@ -1107,8 +1103,8 @@
   input[type='password'],
   input[type='number']
 ):is(:active, :focus, :focus-visible) {
-  box-shadow: none !important;
-  outline: none !important;
+  box-shadow: none;
+  outline: none;
 }
 
 
@@ -1116,10 +1112,10 @@
 /* Keep browser editable textareas styled in comfortable/non-compact density. */
 .learnkit [data-lk-browser-density='comfortable'] :is(textarea.lk-browser-textarea, textarea.lk-browser-textarea--editable, textarea.lk-browser-flag-textarea),
 .learnkit [data-lk-browser-root='1']:not([data-lk-browser-density='compact']) :is(textarea.lk-browser-textarea, textarea.lk-browser-textarea--editable, textarea.lk-browser-flag-textarea) {
-  border: 0.5px solid var(--theme-accent) !important;
-  border-radius: var(--radius-md) !important;
-  font-size: 0.76rem !important;
-  background: var(--color-base-00) !important;
+  border: 0.5px solid var(--theme-accent);
+  border-radius: var(--radius-md);
+  font-size: 0.76rem;
+  background: var(--color-base-00);
 }
 
 
@@ -1140,17 +1136,17 @@
 }
 /* Focused state borders (full colour + glow) */
 .learnkit .learnkit-cloze-typed-input.learnkit-cloze-typed--partial:focus {
-  border-color: var(--learnkit-hard-bg) !important;
+  border-color: var(--learnkit-hard-bg);
 }
 .learnkit .learnkit-cloze-typed-input.learnkit-cloze-typed--correct:focus {
-  border-color: var(--learnkit-good-bg) !important;
+  border-color: var(--learnkit-good-bg);
 }
 .learnkit .learnkit-cloze-typed-input.learnkit-cloze-typed--wrong:focus {
-  border-color: var(--learnkit-again-bg) !important;
+  border-color: var(--learnkit-again-bg);
 }
 
 .learnkit .rounded-lg {
-    border-radius: var(--radius-md) !important;
+    border-radius: var(--radius-md);
 }
 
 .learnkit h1,

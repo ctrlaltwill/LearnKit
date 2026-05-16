@@ -23,6 +23,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install docs dependencies
+        run: npm ci --prefix site
+
       - name: Lint
         run: npm run lint
 

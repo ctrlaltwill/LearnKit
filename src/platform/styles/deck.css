@@ -44,14 +44,14 @@
 }
 
 .learnkit .learnkit-deck-disclosure-btn {
-  border: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-  width: 28px !important;
-  height: 28px !important;
-  min-width: 28px !important;
-  min-height: 28px !important;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
 }
 
 .learnkit .learnkit-deck-disclosure:hover {
@@ -88,20 +88,21 @@
   display: none;
   overflow: hidden;
   z-index: 10000;
-  background: var(--background) !important;
-  color: var(--foreground) !important;
-  border-color: var(--learnkit-border-color) !important;
-  box-shadow: none !important;
+  background: var(--background);
+  color: var(--foreground);
+  border-color: var(--learnkit-border-color);
+  box-shadow: none;
   pointer-events: auto;
+  border-radius: var(--radius-l);
 }
 
 .learnkit .learnkit-group-select-popover.is-open {
-  display: block !important;
+  display: block;
 }
 
 .learnkit .learnkit-group-select-header {
   padding: 0px 8px;
-  background: transparent !important;
+  background: transparent;
   pointer-events: auto;
 }
 
@@ -149,6 +150,8 @@ body.is-mobile .learnkit .learnkit-deck-controls-row {
 }
 
 body.is-mobile .learnkit .learnkit-deck-title-actions {
+  display: flex;
+  flex-wrap: wrap;
   width: 100%;
   justify-content: stretch;
 }
@@ -158,7 +161,7 @@ body.is-mobile .learnkit .learnkit-deck-group-combo {
 }
 
 body.is-mobile .learnkit .learnkit-deck-group-popover {
-  width: 100% !important;
+  width: 100%;
 }
 
 body.is-mobile .learnkit .lk-review-title-strip-deck .lk-review-title-row {
@@ -194,18 +197,13 @@ body.is-mobile .learnkit .lk-review-title-strip-deck .learnkit-deck-group-combo 
 body.is-mobile .learnkit .lk-review-title-strip-deck .learnkit-deck-study-all-btn,
 body.is-mobile .learnkit .lk-review-title-strip-deck .learnkit-deck-group-trigger,
 body.is-mobile .learnkit .lk-review-title-strip-deck .learnkit-deck-group-combo {
-  width: 100% !important;
+  width: 100%;
 }
 
 body.is-mobile .learnkit .learnkit-deck-left-actions {
   display: flex;
   flex-wrap: wrap;
   width: 100%;
-}
-
-body.is-mobile .learnkit .learnkit-deck-title-actions {
-  display: flex;
-  flex-wrap: wrap;
 }
 
 body.is-mobile .learnkit .learnkit-deck-study-all-btn,
@@ -215,7 +213,7 @@ body.is-mobile .learnkit .learnkit-deck-group-combo {
 
 body.is-mobile .learnkit .learnkit-deck-study-all-btn,
 body.is-mobile .learnkit .learnkit-deck-group-trigger {
-  width: 100% !important;
+  width: 100%;
   min-width: 0;
   justify-content: center;
 }
@@ -279,7 +277,7 @@ body.is-mobile .learnkit .learnkit-deck-expand-buttons .learnkit-btn-toolbar {
 
   .learnkit .learnkit-deck-study-all-btn,
   .learnkit .learnkit-deck-group-trigger {
-    width: 100% !important;
+    width: 100%;
     min-width: 0;
     justify-content: space-between;
   }
@@ -316,24 +314,24 @@ body.is-mobile .learnkit .learnkit-deck-expand-buttons .learnkit-btn-toolbar {
 }
 
 .learnkit .learnkit-deck-table-outer {
-  border: none !important;
-  height: 100% !important;
+  border: none;
+  height: 100%;
 }
 
 .learnkit .learnkit-deck-row {
-  border-radius: var(--radius-md, 8px) !important;
-  overflow: hidden !important;
-  cursor: pointer !important;
+  border-radius: var(--radius-md, 8px);
+  overflow: hidden;
+  cursor: pointer;
 }
 
 .learnkit .learnkit-deck-name-row {
-  padding-left: var(--learnkit-deck-indent, 0px) !important;
+  padding-left: var(--learnkit-deck-indent, 0px);
 }
 
 .learnkit .learnkit-deck-spacer {
-  display: inline-block !important;
-  width: var(--learnkit-deck-spacer-size, 28px) !important;
-  height: var(--learnkit-deck-spacer-size, 28px) !important;
+  display: inline-block;
+  width: var(--learnkit-deck-spacer-size, 28px);
+  height: var(--learnkit-deck-spacer-size, 28px);
 }
 
 .learnkit .learnkit-group-search-input:focus {
@@ -359,46 +357,40 @@ body.is-mobile .learnkit .learnkit-deck-expand-buttons .learnkit-btn-toolbar {
 /* Deck Browser: scale down plus/minus icons by 20% */
 .learnkit .learnkit-deck-expand-icon svg,
 .learnkit .learnkit-deck-disclosure svg {
-  width: 12.8px !important;
-  height: 12.8px !important;
+  width: 12.8px;
+  height: 12.8px;
 }
 
 .learnkit .learnkit-deck-control-icon svg {
-  width: 14px !important;
-  height: 14px !important;
-}
-
-/* Group select popover: clip inner borders to rounded corners */
-.learnkit .learnkit-group-select-popover {
-  border-radius: var(--radius-l);
-  overflow: hidden;
+  width: 14px;
+  height: 14px;
 }
 
 /* Ensure group select popover is never transparent */
 .learnkit-group-select-popover {
-  background: var(--background, #ffffff) !important;
-  background-color: var(--background, #ffffff) !important;
+  background: var(--background, #ffffff);
+  background-color: var(--background, #ffffff);
 }
 
 /* ---- RenderDeck table padding + rounded row edges on hover ---- */
 
 .learnkit .learnkit-deck-table-wrap {
-  padding: 20px !important;
+  padding: 20px;
   transition: background-color .2s;
-  border: var(--color-base-35) .5px solid !important;
-  background-color: var(--color-base-05) !important;
+  border: var(--color-base-35) .5px solid;
+  background-color: var(--color-base-05);
 }
 
 body.is-phone .learnkit .learnkit-deck-table-wrap {
-  padding: 0.8rem !important;
+  padding: 0.8rem;
 }
 
 .learnkit .learnkit-deck-table-wrap:hover {
-  background-color: var(--color-base-10) !important;
+  background-color: var(--color-base-10);
 }
 
 .learnkit .learnkit-review-root[data-learnkit-review-mode="deck"] .learnkit-review-content-shell {
-  padding: 20px !important;
+  padding: 20px;
 }
 
 /* Subtle hover on deck table header labels to hint at tooltips */
@@ -408,7 +400,7 @@ body.is-phone .learnkit .learnkit-deck-table-wrap {
 }
 
 .learnkit .learnkit-deck-header-label:hover {
-  color: var(--color-base-100) !important;
+  color: var(--color-base-100);
 }
 
 /* Deck rows: keep a hidden baseline border so hover border-color can render. */
@@ -434,22 +426,22 @@ body.is-phone .learnkit .learnkit-deck-table-wrap {
 
 @media (hover: hover) {
   .learnkit .learnkit-deck-table tbody tr:hover {
-    background-color: var(--theme-base-10) !important;
-    color: var(--theme-base-95) !important;
+    background-color: var(--theme-base-10);
+    color: var(--theme-base-95);
   }
 
   .learnkit .learnkit-deck-table tbody tr:hover td {
-    background-color: var(--theme-base-10) !important;
-    border-top-color: var(--theme-base-35) !important;
-    border-bottom-color: var(--theme-base-35) !important;
-    color: var(--theme-base-95) !important;
+    background-color: var(--theme-base-10);
+    border-top-color: var(--theme-base-35);
+    border-bottom-color: var(--theme-base-35);
+    color: var(--theme-base-95);
   }
 
   .learnkit .learnkit-deck-table tbody tr:hover td:first-child {
-    border-left-color: var(--theme-base-35) !important;
+    border-left-color: var(--theme-base-35);
   }
 
   .learnkit .learnkit-deck-table tbody tr:hover td:last-child {
-    border-right-color: var(--theme-base-35) !important;
+    border-right-color: var(--theme-base-35);
   }
 }

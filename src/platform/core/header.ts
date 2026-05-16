@@ -372,14 +372,41 @@ export class SproutHeader {
       this.themeObserver?.disconnect();
     } catch (e) { log.swallow("dispose: themeObserver disconnect", e); }
     this.themeObserver = null;
+
+    // Clear header state markers so selectors don't leak between view lifecycles.
+    this.deps.containerEl?.classList.remove("learnkit-has-header-wrap");
+    this.deps.containerEl?.removeAttribute("data-learnkit-active-view");
+
+    const workspaceLeaf = this.deps.containerEl?.closest<HTMLElement>(".workspace-leaf");
+    workspaceLeaf?.classList.remove("learnkit");
+
+    const viewContent =
+      queryFirst<HTMLElement>(this.deps.containerEl, ":scope > .view-content") ??
+      queryFirst<HTMLElement>(this.deps.containerEl, ".view-content");
+    viewContent?.classList.remove("learnkit");
+
+    const viewHeader =
+      queryFirst<HTMLElement>(this.deps.containerEl, ":scope > .view-header") ??
+      queryFirst<HTMLElement>(this.deps.containerEl, ".view-header");
+    viewHeader?.classList.remove("learnkit-header", "learnkit");
   }
 
   install(active: SproutHeaderPage) {
+    this.deps.containerEl?.setAttribute("data-learnkit-active-view", active);
+
+    const workspaceLeaf = this.deps.containerEl?.closest<HTMLElement>(".workspace-leaf");
+    workspaceLeaf?.classList.add("learnkit");
+
+    const viewContent =
+      queryFirst<HTMLElement>(this.deps.containerEl, ":scope > .view-content") ??
+      queryFirst<HTMLElement>(this.deps.containerEl, ".view-content");
+    viewContent?.classList.add("learnkit");
+
     const viewHeader =
       queryFirst<HTMLElement>(this.deps.containerEl, ":scope > .view-header") ??
       queryFirst<HTMLElement>(this.deps.containerEl, ".view-header");
     if (viewHeader) {
-      viewHeader.classList.add("learnkit-header", "learnkit-header");
+      viewHeader.classList.add("learnkit-header", "learnkit");
       // Wrap header in a transparent container if not already wrapped
       if (!viewHeader.parentElement?.classList.contains("learnkit-header-wrap")) {
         const wrap = this.deps.containerEl.ownerDocument.createElement("div");
@@ -390,6 +417,8 @@ export class SproutHeader {
 
       this.installCenterBrandLogo(viewHeader);
     }
+
+    this.deps.containerEl?.classList.toggle("learnkit-has-header-wrap", Boolean(viewHeader));
 
     this.installHeaderActionsButtonGroup(active);
     this.installHeaderDropdownNav(active);

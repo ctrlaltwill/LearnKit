@@ -201,6 +201,9 @@
 
 .learnkit .learnkit-changelog-table th:last-child,
 .learnkit .learnkit-changelog-table td:last-child {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   border-top-right-radius: var(--radius-l);
   border-bottom-right-radius: var(--radius-l);
 }
@@ -213,13 +216,6 @@
 .learnkit .learnkit-changelog-cell {
   color: var(--text-muted);
 }
-.learnkit .learnkit-changelog-table th:last-child,
-.learnkit .learnkit-changelog-table td:last-child {
-  white-space: normal;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-}
-
 /* Row hover: single rounded rectangle */
 .learnkit .learnkit-changelog-table tbody tr:hover {
   background-color: var(--color-background);

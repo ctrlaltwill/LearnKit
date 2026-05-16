@@ -31,7 +31,7 @@ export function renderWidgetSummary(view: WidgetViewLike, root: HTMLElement): vo
   const tx = (token: string, fallback: string, vars?: Record<string, string | number>) =>
     t(view.plugin.settings?.general?.interfaceLanguage, token, fallback, vars);
   const wrap = el("div", "bg-background");
-  wrap.classList.add("learnkit-widget", "learnkit-widget", "learnkit", "learnkit");
+  wrap.classList.add("learnkit-widget", "learnkit");
 
   const f = view.activeFile;
   const noteName = f ? f.basename : tx("ui.widget.summary.noNoteOpen", "No note open");
@@ -77,6 +77,7 @@ export function renderWidgetSummary(view: WidgetViewLike, root: HTMLElement): vo
   }
 
   wrap.appendChild(header);
+  wrap.classList.add("learnkit-widget-has-summary-header");
 
   if (!cards.length) {
     const body = el("div", "text-center rounded-none mx-[10px] px-[5px] py-[15px]");

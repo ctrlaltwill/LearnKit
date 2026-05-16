@@ -281,10 +281,7 @@ export class SproutAnalyticsView extends ItemView {
     }
     this._rootEl = root;
 
-    root.classList.add("learnkit-view-content", "learnkit-view-content",
-      "learnkit-analytics-root", "learnkit-analytics-root",
-      "w-full",
-    );
+    root.classList.add("learnkit-view-content", "learnkit-analytics-root", "w-full");
 
     this.containerEl.addClass("learnkit");
     const tx = (token: string, fallback: string, vars?: Record<string, string | number>) =>
@@ -327,7 +324,7 @@ export class SproutAnalyticsView extends ItemView {
       if (!shouldAnimateEntry) return;
       // Pre-seed AOS init state before first paint so elements do not flash at
       // final position and then snap to their animated start state.
-      el.classList.remove("aos-animate", "learnkit-aos-fallback", "learnkit-aos-fallback");
+      el.classList.remove("aos-animate", "learnkit-aos-fallback");
       el.classList.add("aos-init");
       el.setAttribute("data-aos", animation);
       el.setAttribute("data-aos-anchor-placement", "top-top");
@@ -540,6 +537,10 @@ export class SproutAnalyticsView extends ItemView {
       );
     }
 
+    root.querySelectorAll<HTMLElement>("[data-tooltip]").forEach((el) => {
+      el.classList.toggle("learnkit-analytics-info-trigger", Boolean(el.querySelector(".lucide-info")));
+    });
+
     if (shouldAnimateEntry) {
       titleStrip.classList.remove("aos-animate");
       contentShell.classList.remove("aos-animate");
@@ -555,7 +556,7 @@ export class SproutAnalyticsView extends ItemView {
         el.removeAttribute("data-aos-anchor-placement");
         el.removeAttribute("data-aos-duration");
         el.removeAttribute("data-aos-delay");
-        el.classList.add("aos-animate", "learnkit-aos-fallback", "learnkit-aos-fallback");
+        el.classList.add("aos-animate", "learnkit-aos-fallback");
       }
     }
   }

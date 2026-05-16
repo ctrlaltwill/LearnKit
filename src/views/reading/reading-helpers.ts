@@ -714,6 +714,22 @@ export function buildCardContentHTML(card: LearnKitCard): string {
   return contentHTML;
 }
 
+export function isImageOnlyRichHtml(html: string): boolean {
+  const compact = String(html ?? "").trim().replace(/\n/g, "").trim();
+  if (!compact) return false;
+  return /^<(?:p\b[^>]*>)?\s*<img\b[^>]*>\s*(?:<\/p>)?$/.test(compact);
+}
+
+function clozeImageOnlyClasses(html: string): { cloze: string; text: string } {
+  const isImageOnly = isImageOnlyRichHtml(html);
+  return {
+    cloze: isImageOnly
+      ? "learnkit-reading-view-cloze learnkit-reading-view-cloze--img-only"
+      : "learnkit-reading-view-cloze",
+    text: isImageOnly ? "learnkit-cloze-text learnkit-cloze-text--img-only" : "learnkit-cloze-text",
+  };
+}
+
 export function buildClozeSectionHTML(clozeContent: string): string {
   function renderNestedReadingViewClozeHtml(answer: string): string {
     const source = String(answer ?? "").trim();
@@ -733,8 +749,9 @@ export function buildClozeSectionHTML(clozeContent: string): string {
       }
 
       const nestedHtml = renderNestedReadingViewClozeHtml(match.answer);
+      const classes = clozeImageOnlyClasses(nestedHtml);
       out += nestedHtml
-        ? `<span class="learnkit-reading-view-cloze"><span class="learnkit-cloze-text">${nestedHtml}</span></span>`
+        ? `<span class="${classes.cloze}"><span class="${classes.text}">${nestedHtml}</span></span>`
         : `<span class="learnkit-cloze-blank"></span>`;
       last = match.end;
     }
@@ -756,7 +773,8 @@ export function buildClozeSectionHTML(clozeContent: string): string {
     }
     const answer = renderNestedReadingViewClozeHtml(cm.answer);
     if (answer && answer.trim().length > 0) {
-      processedHtml += `<span class="learnkit-reading-view-cloze"><span class="learnkit-cloze-text">${answer}</span></span>`;
+      const classes = clozeImageOnlyClasses(answer);
+      processedHtml += `<span class="${classes.cloze}"><span class="${classes.text}">${answer}</span></span>`;
     } else {
       processedHtml += `<span class="learnkit-cloze-blank"></span>`;
     }
@@ -810,11 +828,13 @@ export function buildMCQSectionHTML(question: string, options: string[], answers
   const optionsHTML = allOptions.map((opt, idx) => {
     const letter = String.fromCharCode(65 + idx);
     const isAnswer = answerIdxs.has(idx);
+    const optionHtml = processMarkdownFeatures(opt);
+    const classes = clozeImageOnlyClasses(optionHtml);
     return `<div class="learnkit-option">
       <span class="learnkit-option-bullet">${letter}.</span>
       ${isAnswer
-        ? `<span class="learnkit-reading-view-cloze"><span class="learnkit-cloze-text">${processMarkdownFeatures(opt)}</span></span>`
-        : `<span class="learnkit-option-text">${processMarkdownFeatures(opt)}</span>`}
+        ? `<span class="${classes.cloze}"><span class="${classes.text}">${optionHtml}</span></span>`
+        : `<span class="learnkit-option-text">${optionHtml}</span>`}
     </div>`;
   }).join('');
 

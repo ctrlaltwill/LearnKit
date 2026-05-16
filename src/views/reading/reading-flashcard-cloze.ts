@@ -1,5 +1,5 @@
 import { parseClozeTokens, processClozeForMath, resolveNestedClozeAnswers } from "../../platform/core/shared-utils";
-import { escapeHtml, processMarkdownFeatures } from "./reading-helpers";
+import { escapeHtml, isImageOnlyRichHtml, processMarkdownFeatures } from "./reading-helpers";
 
 /** Replace HTML tags with opaque placeholders so processMarkdownFeatures
  *  (which HTML-escapes its input) doesn't destroy already-generated HTML. */
@@ -64,8 +64,13 @@ function renderNestedReadingViewClozeHtml(answer: string): string {
     }
 
     const nestedHtml = renderNestedReadingViewClozeHtml(match.answer);
+    const isImageOnly = isImageOnlyRichHtml(nestedHtml);
+    const clozeClass = isImageOnly
+      ? "learnkit-reading-view-cloze learnkit-reading-view-cloze--img-only"
+      : "learnkit-reading-view-cloze";
+    const textClass = isImageOnly ? "learnkit-cloze-text learnkit-cloze-text--img-only" : "learnkit-cloze-text";
     out += nestedHtml
-      ? `<span class="learnkit-reading-view-cloze"><span class="learnkit-cloze-text">${nestedHtml}</span></span>`
+      ? `<span class="${clozeClass}"><span class="${textClass}">${nestedHtml}</span></span>`
       : `<span class="learnkit-flashcard-blank">&nbsp;</span>`;
     last = match.end;
   }
@@ -83,8 +88,15 @@ export function buildReadingFlashcardCloze(text: string, mode: "front" | "back")
     const reveal = mode === "back";
     const clozeHtml = processClozeForMath(source, reveal, null, {
       blankClassName: "learnkit-flashcard-blank",
-      revealWrapper: (answer) =>
-        `<span class="learnkit-reading-view-cloze"><span class="learnkit-cloze-text">${processMarkdownFeatures(answer)}</span></span>`,
+      revealWrapper: (answer) => {
+        const rendered = processMarkdownFeatures(answer);
+        const isImageOnly = isImageOnlyRichHtml(rendered);
+        const clozeClass = isImageOnly
+          ? "learnkit-reading-view-cloze learnkit-reading-view-cloze--img-only"
+          : "learnkit-reading-view-cloze";
+        const textClass = isImageOnly ? "learnkit-cloze-text learnkit-cloze-text--img-only" : "learnkit-cloze-text";
+        return `<span class="${clozeClass}"><span class="${textClass}">${rendered}</span></span>`;
+      },
     });
     // processClozeForMath generates HTML (blank spans, hint spans) that
     // would be destroyed by processMarkdownFeatures' HTML escaping.
@@ -111,8 +123,13 @@ export function buildReadingFlashcardCloze(text: string, mode: "front" | "back")
         : `<span class="learnkit-flashcard-blank">&nbsp;</span>`;
     } else {
       const nestedHtml = renderNestedReadingViewClozeHtml(match.answer);
+      const isImageOnly = isImageOnlyRichHtml(nestedHtml);
+      const clozeClass = isImageOnly
+        ? "learnkit-reading-view-cloze learnkit-reading-view-cloze--img-only"
+        : "learnkit-reading-view-cloze";
+      const textClass = isImageOnly ? "learnkit-cloze-text learnkit-cloze-text--img-only" : "learnkit-cloze-text";
       out += nestedHtml
-        ? `<span class="learnkit-reading-view-cloze"><span class="learnkit-cloze-text">${nestedHtml}</span></span>`
+        ? `<span class="${clozeClass}"><span class="${textClass}">${nestedHtml}</span></span>`
         : `<span class="learnkit-flashcard-blank">&nbsp;</span>`;
     }
 

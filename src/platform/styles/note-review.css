@@ -23,19 +23,19 @@
 }
 
 .workspace-leaf-content.learnkit[data-type="learnkit-note-review"] {
-  background-color: var(--background-primary) !important;
+  background-color: var(--background-primary);
 }
 
 .learnkit .learnkit-note-review-root {
-  width: 100% !important;
-  max-width: var(--learnkit-note-review-max-width, 1280px) !important;
+  width: 100%;
+  max-width: var(--learnkit-note-review-max-width, 1280px);
   margin-top: 0;
-  margin-left: auto !important;
-  margin-right: auto !important;
-  gap: 0px !important;
-  background-color: transparent !important;
-  border: none !important;
-  border-radius: 0 !important;
+  margin-left: auto;
+  margin-right: auto;
+  gap: 0px;
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
 
   /* Flexed root: title strip top, scrolling content middle, dock bottom */
   display: flex;
@@ -75,7 +75,7 @@
 }
 
 .learnkit .learnkit-note-review-root [data-study-session-header].learnkit-note-review-session-header-hidden {
-  display: none !important;
+  display: none;
 }
 
 
@@ -91,25 +91,36 @@
   overflow: hidden;
   margin-left: 0;
   margin-right: 0;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  border: none !important;
+  padding-left: 0;
+  padding-right: 0;
+  border-radius: 0;
+  background: transparent;
+  border: none;
   flex: 1 1 auto;
 }
 
 .learnkit .learnkit-note-review-stage {
   border-radius: var(--radius-md);
-  border: var(--color-base-35) .5px solid !important;
-  background-color: var(--color-base-05) !important;
+  border: transparent .5px solid;
+  background-color: var(--color-base-05);
   flex-direction: column;
   flex: auto;
   min-height: 0;
   margin-top: 0;
   display: flex;
   position: relative;
+  isolation: isolate;
   overflow: hidden;
+}
+
+.learnkit .learnkit-note-review-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: var(--color-base-35) .5px solid;
+  pointer-events: none;
+  z-index: 6;
 }
 
 .learnkit .learnkit-note-review-topbar {
@@ -157,9 +168,10 @@
   position: relative;
   min-height: 0;
   overflow: auto;
+  border-radius: inherit;
   padding: 0;
-  border: none !important;
-  background: transparent !important;
+  border: none;
+  background: transparent;
   flex: 1 1 auto;
 }
 
@@ -167,11 +179,13 @@
 .learnkit .learnkit-note-review-content::after {
   content: "";
   position: sticky;
-  left: 5px;
-  right: 5px;
+  left: 0;
+  right: 0;
   z-index: 3;
   display: block;
   height: 40px;
+  border-radius: inherit;
+  clip-path: inset(0 round inherit);
   pointer-events: none;
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
@@ -199,7 +213,7 @@
   );
 }
 
-.learnkit .learnkit-note-review-content:has(.learnkit-note-review-empty) {
+.learnkit .learnkit-note-review-content.learnkit-note-review-content-has-empty {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -208,13 +222,13 @@
 }
 
 .learnkit .learnkit-note-review-content > .learnkit-note-review-empty {
-  flex: 1 1 0 !important;
-  min-height: 0 !important;
-  height: auto !important;
-  max-height: none !important;
-  flex-grow: 1 !important;
-  flex-shrink: 1 !important;
-  align-self: stretch !important;
+  flex: 1 1 0;
+  min-height: 0;
+  height: auto;
+  max-height: none;
+  flex-grow: 1;
+  flex-shrink: 1;
+  align-self: stretch;
 }
 
 .learnkit .learnkit-note-review-root.learnkit-note-review-overflow .learnkit-note-review-panel {
@@ -278,12 +292,12 @@
 
 .learnkit .learnkit-note-review-note-body > .learnkit-note-review-session-header {
   display: block;
-  padding: 0 !important;
-  margin: 0 !important;
+  padding: 0;
+  margin: 0;
 }
 
 .learnkit .learnkit-note-review-note-body .learnkit-session-location-text {
-  display: none !important;
+  display: none;
 }
 
 
@@ -295,7 +309,7 @@
 }
 
 .learnkit .learnkit-note-review-note-body > *:first-child {
-  margin-top: 1rem !important;
+  margin-top: 1rem;
 }
 
 /* Keep first note heading compact in Note Review, even when global markdown rules
@@ -306,7 +320,7 @@
 .learnkit .learnkit-note-review-note-body.markdown-preview-view :is(p, pre, table, ul, ol) + h1:first-of-type,
 .learnkit .learnkit-note-review-note-body.markdown-rendered div:is(.el-p, .el-pre, .el-table, .el-ul, .el-ol) + div > h1:first-of-type,
 .learnkit .learnkit-note-review-note-body.markdown-preview-view div:is(.el-p, .el-pre, .el-table, .el-ul, .el-ol) + div > h1:first-of-type {
-  margin-top: 1rem !important;
+  margin-top: 1rem;
 }
 
 .learnkit .learnkit-note-review-empty {
@@ -314,10 +328,10 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  border: none !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .learnkit .learnkit-note-review-empty > .learnkit-note-review-topbar {
@@ -425,24 +439,24 @@
   font-size: 0.9rem;
   font-weight: 400;
   line-height: 1;
-  border: 0.5px solid var(--color-base-35) !important;
+  border: 0.5px solid var(--color-base-35);
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-  background-color: var(--color-base-20) !important;
-  color: var(--text-normal) !important;
+  background-color: var(--color-base-20);
+  color: var(--text-normal);
 }
 
 .learnkit .learnkit-note-review-queue-count:is(:hover, :focus-visible, :focus-within),
 .learnkit .learnkit-note-review-more-trigger:is(:hover, :focus-visible, :focus-within, [aria-expanded="true"]):not(:disabled) {
-  border-color: var(--color-base-40) !important;
-  background-color: var(--color-base-30) !important;
-  color: var(--color-base-100) !important;
+  border-color: var(--color-base-40);
+  background-color: var(--color-base-30);
+  color: var(--color-base-100);
 }
 
 .learnkit .learnkit-note-review-queue-count:active,
 .learnkit .learnkit-note-review-more-trigger:active:not(:disabled) {
-  border-color: var(--color-base-40) !important;
-  background-color: var(--color-base-30) !important;
-  color: var(--color-base-100) !important;
+  border-color: var(--color-base-40);
+  background-color: var(--color-base-30);
+  color: var(--color-base-100);
 }
 
 .learnkit .learnkit-note-review-dock-buttons {
@@ -469,9 +483,9 @@
   justify-content: center;
   gap: 8px;
   border-radius: calc(var(--radius-md) + 2px);
-  border: 0.5px solid var(--learnkit-border-color) !important;
-  background: var(--background-secondary) !important;
-  color: var(--text-normal) !important;
+  border: 0.5px solid var(--learnkit-border-color);
+  background: var(--background-secondary);
+  color: var(--text-normal);
   font-size: var(--learnkit-font-xs);
   font-weight: 600;
   line-height: 1;
@@ -510,48 +524,35 @@
 .learnkit .learnkit-note-review-dock-buttons > :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy) {
   --learnkit-btn-bg-mix: 16%;
   --learnkit-btn-fg-mix: 72%;
-  --learnkit-btn-border-mix: 45%;
+  --learnkit-btn-border-mix: 34%;
   --learnkit-btn-bg-hover-mix: 24%;
-  --learnkit-btn-border-hover-mix: 60%;
+  --learnkit-btn-border-hover-mix: 48%;
   --learnkit-kbd-tint: var(--learnkit-btn-tint);
   --learnkit-kbd-bg-mix: 50%;
   --learnkit-kbd-bg-hover-mix: 60%;
   --learnkit-kbd-border-mix: 48%;
 
-  background: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-bg-mix), var(--background)) !important;
-  color: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-fg-mix), var(--foreground)) !important;
-  border: 0.5px solid color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-border-mix), transparent) !important;
+  background: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-bg-mix), var(--background));
+  color: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-fg-mix), var(--foreground));
+  border: 0.5px solid color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-border-mix), transparent);
 }
 
 .learnkit .learnkit-note-review-dock-buttons > :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy):hover:not(:disabled),
 .learnkit .learnkit-note-review-dock-buttons > :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy):focus-visible {
-  background: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-bg-hover-mix), var(--background)) !important;
-  border-color: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-border-hover-mix), transparent) !important;
+  background: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-bg-hover-mix), var(--background));
+  border-color: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-border-hover-mix), transparent);
 }
 
 .learnkit .learnkit-note-review-dock-buttons > :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy) :is(kbd, .kbd) {
   background: color-mix(in srgb, var(--learnkit-kbd-tint) var(--learnkit-kbd-bg-mix), transparent);
-  border-color: color-mix(in srgb, var(--learnkit-kbd-tint) var(--learnkit-kbd-border-mix), transparent);
+  border: none;
+  border-color: transparent;
   color: color-mix(in srgb, rgb(255, 255, 255) 88%, var(--learnkit-kbd-tint) 12%);
   transition: border-color .12s, background-color .12s, color .12s;
 }
 
 .learnkit .learnkit-note-review-dock-buttons > :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy):is(:hover, :focus-visible, :active):not(:disabled) :is(kbd, .kbd) {
   background: color-mix(in srgb, var(--learnkit-kbd-tint) var(--learnkit-kbd-bg-hover-mix), transparent);
-}
-
-/* Subtle bordered grading controls (note review dock) */
-.learnkit .learnkit-note-review-dock-buttons > :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy) {
-  border: 0.5px solid color-mix(in srgb, var(--learnkit-btn-tint) 34%, transparent) !important;
-}
-
-.learnkit .learnkit-note-review-dock-buttons > :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy):is(:hover:not(:disabled), :focus-visible) {
-  border-color: color-mix(in srgb, var(--learnkit-btn-tint) 48%, transparent) !important;
-}
-
-.learnkit .learnkit-note-review-dock-buttons > :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy) :is(kbd, .kbd) {
-  border: none !important;
-  border-color: transparent !important;
 }
 
 .learnkit .learnkit-note-review-more {
@@ -574,14 +575,14 @@
 }
 
 .learnkit .learnkit-note-review-more-trigger :is(kbd, .kbd) {
-  background-color: var(--color-base-25) !important;
-  color: var(--text-normal) !important;
+  background-color: var(--color-base-25);
+  color: var(--text-normal);
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .learnkit .learnkit-note-review-more-trigger:is(:hover, :focus-visible, :active):not(:disabled) :is(kbd, .kbd) {
-  background-color: var(--color-base-30) !important;
-  color: var(--color-base-100) !important;
+  background-color: var(--color-base-30);
+  color: var(--color-base-100);
 }
 
 @media (min-width: 768px) {
@@ -611,10 +612,10 @@
   font-size: var(--learnkit-font-sm);
   text-align: left;
   border-radius: var(--radius-s, var(--radius-md));
-  border: 0.5px solid transparent !important;
-  background: transparent !important;
+  border: 0.5px solid transparent;
+  background: transparent;
   padding: 6px 8px;
-  margin: 1px 0 !important;
+  margin: 1px 0;
   cursor: pointer;
   user-select: none;
   outline: none;
@@ -625,9 +626,9 @@
 .learnkit .learnkit-note-review-more-item:active,
 .learnkit .learnkit-note-review-more-item[aria-current="true"],
 .learnkit .learnkit-note-review-more-item[aria-selected="true"] {
-  background-color: var(--color-base-40) !important;
-  border: 0.5px solid color-mix(in srgb, var(--color-base-70) 25%, transparent 75%) !important;
-  color: var(--color-base-100, var(--text-normal)) !important;
+  background-color: var(--color-base-40);
+  border: 0.5px solid color-mix(in srgb, var(--color-base-70) 25%, transparent 75%);
+  color: var(--color-base-100, var(--text-normal));
 }
 
 .learnkit .learnkit-note-review-more-item :is(kbd, .kbd) {
@@ -652,7 +653,7 @@
   gap: 0;
   width: 32px;
   min-width: 32px;
-  min-height: 32px !important;
+  min-height: 32px;
   max-height: 32px;
   padding-left: 8px;
   padding-right: 8px;
@@ -672,30 +673,30 @@ body.is-phone .learnkit .learnkit-note-review-topbar-title {
 }
 
 body.is-phone .learnkit .learnkit-note-review-topbar-actions {
-  display: none !important;
+  display: none;
 }
 
 body.is-phone .learnkit .learnkit-note-review-root > .learnkit-note-review-title-strip {
-  display: none !important;
+  display: none;
 }
 
 /* Flexed note-review root: reduced bottom padding for Obsidian mobile toolbar */
 body.is-phone .learnkit .learnkit-note-review-root {
   margin-top: 16px;
   padding-bottom: 100px;
-  overflow: hidden !important;
+  overflow: hidden;
 }
 
 body.is-phone .learnkit .learnkit-note-review-content-shell {
   margin-top: 40px;
   /* Reduced from 100px: flexed root padding-bottom handles Obsidian toolbar offset */
-  padding-bottom: 8px !important;
+  padding-bottom: 8px;
 }
 
 /* Neutralize inherited home-shell sibling spacing (lk-home-content-shell > * + *).
    In note review this adds extra top gap above the panel. */
 body.is-phone .learnkit .learnkit-note-review-content-shell > * + * {
-  margin-top: 0 !important;
+  margin-top: 0;
 }
 
 body.is-phone .learnkit .learnkit-note-review-panel {
@@ -703,11 +704,15 @@ body.is-phone .learnkit .learnkit-note-review-panel {
   --learnkit-note-review-edge-fade: 32px;
   --learnkit-note-review-topbar-inset: 8px;
   --learnkit-note-review-topbar-clearance: 118px;
+  margin-top: 0;
+  padding-top: 0;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 body.is-phone .learnkit .learnkit-note-review-content {
   padding: 0 0 var(--learnkit-note-review-dock-space);
-  background: var(--color-base-00) !important;
+  background: var(--color-base-00);
 }
 
 body.is-phone .learnkit .learnkit-note-review-topbar {
@@ -721,18 +726,11 @@ body.is-phone .learnkit .learnkit-note-review-article {
 }
 
 body.is-phone .learnkit .learnkit-note-review-note-body {
-  padding: 0 8px !important;
-}
-
-body.is-phone .learnkit .learnkit-note-review-panel {
-  margin-top: 0 !important;
-  padding-top: 0 !important;
-  margin-left: 0;
-  margin-right: 0;
+  padding: 0 8px;
 }
 
 body.is-phone .learnkit .learnkit-note-review-stage {
-  border-radius: 0 !important;
+  border-radius: 0;
 }
 
 /* Note review dock on phone: only Deferred + Completed buttons, 50% each */

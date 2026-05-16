@@ -6178,6 +6178,7 @@ export class SproutAssistantPopup {
     const composer = parent.createDiv({ cls: "learnkit-assistant-popup-composer learnkit-assistant-popup-composer" });
     this._renderAttachmentChips(composer);
     const shell = composer.createDiv({ cls: "learnkit-assistant-popup-composer-shell learnkit-assistant-popup-composer-shell" });
+    shell.classList.add("learnkit-assistant-popup-composer-shell--has-attach");
 
     const attachBtn = shell.createEl("button", { cls: "learnkit-assistant-popup-attach-btn learnkit-assistant-popup-attach-btn" });
     attachBtn.type = "button";

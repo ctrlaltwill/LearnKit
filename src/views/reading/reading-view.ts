@@ -31,6 +31,7 @@ import {
   extractRawTextFromParagraph,
   extractTextWithLaTeX,
   extractCardFromSource,
+  isImageOnlyRichHtml,
   parseLearnKitCard,
   normalizeMathSignature,
   processMarkdownFeatures,
@@ -3125,8 +3126,15 @@ function buildFlashcardContentHTML(card: LearnKitCard, options: { includeSpeaker
       ? `<ul class="learnkit-flashcard-options learnkit-flashcard-options-list">${allOptions.map((opt) => {
           const rendered = renderMarkdownLineWithClozeSpans(String(opt));
           const isCorrect = answersLower.has(opt.toLowerCase());
+          const isImageOnly = isImageOnlyRichHtml(rendered);
+          const clozeClass = isImageOnly
+            ? "learnkit-reading-view-cloze learnkit-reading-view-cloze--img-only"
+            : "learnkit-reading-view-cloze";
+          const textClass = isImageOnly
+            ? "learnkit-cloze-text learnkit-cloze-text--img-only"
+            : "learnkit-cloze-text";
           return isCorrect
-            ? `<li><span class="learnkit-reading-view-cloze"><span class="learnkit-cloze-text"${mdSourceAttr(opt)}>${rendered}</span></span></li>`
+            ? `<li><span class="${clozeClass}"><span class="${textClass}"${mdSourceAttr(opt)}>${rendered}</span></span></li>`
             : `<li><span${mdSourceAttr(opt)}>${rendered}</span></li>`;
         }).join('')}</ul>`
       : '';

@@ -2,7 +2,6 @@
    HEADER — Brand link, brand icon/text reveal animation.
    ========================================================================== */
 
-.learnkit .learnkit-header-wrap,
 .learnkit .learnkit-header-wrap {
   --learnkit-app-header-inset: 10px;
   --learnkit-app-header-top: 8px;
@@ -21,13 +20,9 @@
 }
 
 .learnkit .learnkit-header-wrap + .learnkit-view-content,
-.learnkit .learnkit-header-wrap + .learnkit-view-content,
 .learnkit .learnkit-header-wrap + .view-content,
-.learnkit .learnkit-header-wrap + .view-content,
-.workspace-leaf-content.learnkit:has(> .learnkit-header-wrap) > .view-content,
-.workspace-leaf-content.learnkit:has(> .learnkit-header-wrap) > .view-content,
-.workspace-leaf-content:has(> .learnkit-header-wrap) > .learnkit-view-content,
-.workspace-leaf-content:has(> .learnkit-header-wrap) > .learnkit-view-content {
+.workspace-leaf-content.learnkit.learnkit-has-header-wrap > .view-content,
+.workspace-leaf-content.learnkit.learnkit-has-header-wrap > .learnkit-view-content {
   margin-top: 16px;
 }
 
@@ -35,8 +30,7 @@
    z-index kept below tooltip z-index (9999999) so tooltips always render on top. */
 
 /* Settings, Guide, and Release Notes should scroll freely without sticky header. */
-.learnkit:has(.learnkit-settings-view-root) .learnkit-header-wrap,
-.learnkit:has(.learnkit-settings-view-root) .learnkit-header-wrap {
+.learnkit[data-learnkit-active-view="settings"] .learnkit-header-wrap {
   position: static;
   left: auto;
   right: auto;
@@ -44,49 +38,46 @@
   padding: var(--learnkit-app-header-top) var(--learnkit-app-header-inset) 0;
 }
 
-.learnkit:has(.learnkit-settings-view-root) .learnkit-header-wrap + .learnkit-view-content,
-.learnkit:has(.learnkit-settings-view-root) .learnkit-header-wrap + .learnkit-view-content,
-.learnkit:has(.learnkit-settings-view-root) .learnkit-header-wrap + .view-content,
-.learnkit:has(.learnkit-settings-view-root) .learnkit-header-wrap + .view-content,
-.workspace-leaf-content.learnkit:has(.learnkit-settings-view-root):has(> .learnkit-header-wrap) > .view-content,
-.workspace-leaf-content.learnkit:has(.learnkit-settings-view-root):has(> .learnkit-header-wrap) > .view-content,
-.workspace-leaf-content:has(.learnkit-settings-view-root):has(> .learnkit-header-wrap) > .learnkit-view-content,
-.workspace-leaf-content:has(.learnkit-settings-view-root):has(> .learnkit-header-wrap) > .learnkit-view-content {
+.learnkit[data-learnkit-active-view="settings"] .learnkit-header-wrap + .learnkit-view-content,
+.learnkit[data-learnkit-active-view="settings"] .learnkit-header-wrap + .view-content,
+.workspace-leaf-content.learnkit[data-learnkit-active-view="settings"] > .view-content,
+.workspace-leaf-content.learnkit[data-learnkit-active-view="settings"] > .learnkit-view-content {
   margin-top: 0;
 }
 
-.learnkit:has(.learnkit-settings-view-root) .learnkit-header-wrap::after,
-.learnkit:has(.learnkit-settings-view-root) .learnkit-header-wrap::after {
+.learnkit[data-learnkit-active-view="settings"] .learnkit-header-wrap::after {
   display: none;
 }
 
 .learnkit .view-header.learnkit-header {
   --learnkit-header-surface-bg: color-mix(in srgb, var(--color-base-00) 100%, transparent 30%);
-    border-radius: var(--radius-md);
+  border-radius: var(--radius-md);
   background: var(--learnkit-header-surface-bg);
   border: 0.5px solid var(--color-base-30);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
-    height: auto;
-    box-shadow: none;
-    align-items: center;
-    column-gap: 6px;
-    margin: 0;
-    padding: 1.0rem 1.2rem;
-    display: flex;
-    position: relative;
+  height: auto;
+  box-shadow: none;
+  align-items: center;
+  column-gap: 6px;
+  margin: 0;
+  padding: 1.0rem 1.2rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto;
+  position: relative;
 }
 
 /* Keep desktop header surface locked even when workspace/app focus classes flip. */
 body:not(.is-phone) .learnkit .view-header.learnkit-header {
-  background: var(--learnkit-header-surface-bg) !important;
-  background-color: var(--learnkit-header-surface-bg) !important;
-  background-image: none !important;
-  border: transparent !important;
-  opacity: 1 !important;
-  filter: none !important;
-  -webkit-backdrop-filter: blur(14px) !important;
-  backdrop-filter: blur(14px) !important;
+  background: var(--learnkit-header-surface-bg);
+  background-color: var(--learnkit-header-surface-bg);
+  background-image: none;
+  border: transparent;
+  opacity: 1;
+  filter: none;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
 }
 
 /* Keep desktop header surface identical across focused/unfocused host states. */
@@ -94,37 +85,39 @@ body:not(.is-phone):not(.is-focused) .learnkit .view-header.learnkit-header,
 body:not(.is-phone) .workspace-leaf:not(.mod-active) .learnkit .view-header.learnkit-header,
 body:not(.is-phone) .workspace-leaf.mod-fade .learnkit .view-header.learnkit-header,
 body:not(.is-phone) .workspace-leaf-content.mod-fade .learnkit .view-header.learnkit-header {
-  background: var(--learnkit-header-surface-bg) !important;
-  background-color: var(--learnkit-header-surface-bg) !important;
-  background-image: none !important;
-  border: transparent !important;
-  opacity: 1 !important;
-  filter: none !important;
-  -webkit-backdrop-filter: blur(14px) !important;
-  backdrop-filter: blur(14px) !important;
+  background: var(--learnkit-header-surface-bg);
+  background-color: var(--learnkit-header-surface-bg);
+  background-image: none;
+  border: transparent;
+  opacity: 1;
+  filter: none;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
 }
 
 .learnkit .view-header.learnkit-header .view-header-left {
+  grid-column: 1;
+  grid-row: 1;
   margin-left: 0;
   margin-right: 0;
   display: flex;
   align-items: center;
   justify-content: flex-start;
   min-width: 0;
-  flex: 1 1 0;
-  order: 1;
+  width: 100%;
 }
 
 .learnkit .view-header.learnkit-header .view-actions {
+  grid-column: 3;
+  grid-row: 1;
   margin-left: 0;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   flex-wrap: nowrap;
-  gap: 0.5rem !important;
+  gap: 0.5rem;
   min-width: 0;
-  flex: 1 1 0;
-  order: 3;
+  width: 100%;
 }
 
 .learnkit .view-header.learnkit-header .view-header-title-container {
@@ -133,17 +126,18 @@ body:not(.is-phone) .workspace-leaf-content.mod-fade .learnkit .view-header.lear
 
 /* Center slot for horizontal brand logo in Sprout headers. */
 .learnkit .view-header.learnkit-header .learnkit-header-center-brand {
+  grid-column: 2;
+  grid-row: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   pointer-events: auto;
-  flex: 0 0 auto;
-  order: 2;
   margin: 0;
   min-width: 0;
   z-index: 2;
   overflow: visible;
+  width: 100%;
 }
 
 .learnkit .view-header.learnkit-header .learnkit-header-center-brand .learnkit-header-center-brand-icon {
@@ -312,11 +306,11 @@ a.learnkit-header-center-brand-link:hover {
 .learnkit .learnkit-header .learnkit-actions-host .learnkit-btn-toolbar[aria-haspopup="menu"]:focus-within,
 .learnkit .learnkit-header .learnkit-actions-host .learnkit-btn-toolbar[aria-haspopup="menu"][aria-expanded="true"],
 .learnkit .learnkit-header .learnkit-actions-host .learnkit-btn-toolbar[aria-haspopup="menu"]:active {
-  border-color: var(--color-base-35) !important;
+  border-color: var(--color-base-35);
 }
 
 .learnkit .learnkit-header .learnkit-actions-host .learnkit-btn-toolbar [data-learnkit-label="true"] {
-  display: none !important;
+  display: none;
 }
 
 .learnkit-attachment-picker {
@@ -340,39 +334,39 @@ a.learnkit-header-center-brand-link:hover {
 
 @supports (color:color-mix(in lab, red, red)) {
   .learnkit .learnkit-header .learnkit-btn-toolbar:hover {
-    background-color: color-mix(in srgb, var(--color-base-35) 20%, transparent 75%) !important;
-    color: var(--color-base-100) !important;
-    border-color: var(--color-base-35) !important;
+    background-color: color-mix(in srgb, var(--color-base-35) 20%, transparent 75%);
+    color: var(--color-base-100);
+    border-color: var(--color-base-35);
   }
 }
 .learnkit .learnkit-header .learnkit-btn-toolbar[aria-expanded="true"] {
-  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) !important;
-  color: var(--color-base-100) !important;
-  border-color: var(--color-base-35) !important;
+  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%);
+  color: var(--color-base-100);
+  border-color: var(--color-base-35);
 }
 .learnkit .learnkit-header .learnkit-btn-toolbar:focus-visible {
-  background-color: color-mix(in srgb, var(--color-base-45) 17%, transparent 83%) !important;
-  color: var(--color-base-100) !important;
-  border-color: var(--color-base-35) !important;
+  background-color: color-mix(in srgb, var(--color-base-45) 17%, transparent 83%);
+  color: var(--color-base-100);
+  border-color: var(--color-base-35);
 }
 .learnkit .learnkit-header .learnkit-btn-toolbar:active {
-  background-color: color-mix(in srgb, var(--color-base-50) 19%, transparent 81%) !important;
-  color: var(--color-base-100) !important;
-  border-color: var(--color-base-35) !important;
+  background-color: color-mix(in srgb, var(--color-base-50) 19%, transparent 81%);
+  color: var(--color-base-100);
+  border-color: var(--color-base-35);
 }
 
 /* Revert icon-only header actions to base after click release if not hovered/open. */
 .learnkit .learnkit-header .learnkit-actions-host .learnkit-btn-toolbar:is(:focus, :focus-visible, :focus-within):not(:hover):not([aria-expanded="true"]) {
-  background-color: transparent !important;
-  color: var(--text-normal) !important;
-  border-color: transparent !important;
+  background-color: transparent;
+  color: var(--text-normal);
+  border-color: transparent;
 }
 
 /* Keep topnav trigger on transparent base border; show border only on interaction. */
 .learnkit .learnkit-header .learnkit-btn-toolbar[aria-label="Open menu"] {
   border: 0.5px solid transparent;
-  outline: none !important;
-  box-shadow: none !important;
+  outline: none;
+  box-shadow: none;
 }
 
 .learnkit .learnkit-header .learnkit-btn-toolbar[aria-label="Open menu"]:hover,
@@ -381,13 +375,12 @@ a.learnkit-header-center-brand-link:hover {
 .learnkit .learnkit-header .learnkit-btn-toolbar[aria-label="Open menu"]:focus-within,
 .learnkit .learnkit-header .learnkit-btn-toolbar[aria-label="Open menu"]:active,
 .learnkit .learnkit-header .learnkit-btn-toolbar[aria-label="Open menu"][aria-expanded="true"] {
-  border-color: var(--color-base-35) !important;
-  outline: none !important;
-  box-shadow: none !important;
+  border-color: var(--color-base-35);
+  outline: none;
+  box-shadow: none;
 }
 
 /* --- Mobile header layout --- */
-body.is-phone .learnkit .learnkit-header-wrap,
 body.is-phone .learnkit .learnkit-header-wrap {
   --learnkit-app-header-top: 10px;
 }
@@ -413,7 +406,6 @@ body.is-phone .learnkit .view-header.learnkit-header .view-actions::after {
 }
 
 @media (max-width: 820px) {
-  .learnkit .learnkit-header-wrap,
   .learnkit .learnkit-header-wrap {
     --learnkit-app-header-inset: 0;
     --learnkit-app-header-top: 6px;
@@ -486,13 +478,13 @@ body.is-phone .learnkit .view-header.learnkit-header .view-actions::after {
     margin: 0;
     padding: 0;
     height: 36px;
-    position: static !important;
-    inset: auto !important;
-    top: auto !important;
-    right: auto !important;
-    left: auto !important;
-    bottom: auto !important;
-    transform: none !important;
+    position: static;
+    inset: auto;
+    top: auto;
+    right: auto;
+    left: auto;
+    bottom: auto;
+    transform: none;
     background: transparent;
     background-color: transparent;
     border: none;
@@ -500,10 +492,6 @@ body.is-phone .learnkit .view-header.learnkit-header .view-actions::after {
   }
   .learnkit .learnkit-actions-host {
     display: none;
-  }
-  .learnkit .learnkit-header .dropdown-menu.learnkit-dropdown-root {
-    margin-left: auto;
-    margin-right: 0;
   }
   .learnkit .learnkit-header .learnkit-nav-host {
     justify-content: flex-end;
@@ -536,18 +524,18 @@ body.is-phone .learnkit .view-header.learnkit-header .view-actions::after {
   .learnkit .learnkit-header .learnkit-mobile-nav-trigger:focus-visible,
   .learnkit .learnkit-header .learnkit-mobile-nav-trigger:focus-within,
   .learnkit .learnkit-header .learnkit-mobile-nav-trigger[aria-expanded="true"] {
-    width: 36px !important;
-    min-width: 36px !important;
-    max-width: 36px !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+    width: 36px;
+    min-width: 36px;
+    max-width: 36px;
+    padding-left: 0;
+    padding-right: 0;
   }
   .learnkit .learnkit-header .learnkit-mobile-nav-trigger [data-learnkit-label="true"] {
-    display: none !important;
-    max-width: 0 !important;
-    opacity: 0 !important;
-    margin-left: 0 !important;
-    transform: translateX(0) !important;
+    display: none;
+    max-width: 0;
+    opacity: 0;
+    margin-left: 0;
+    transform: translateX(0);
   }
   .learnkit .view-header.learnkit-header .view-actions .view-action.mod-bookmark,
   .learnkit .view-header.learnkit-header [data-learnkit-expand-collapse="true"] {

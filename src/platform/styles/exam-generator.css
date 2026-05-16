@@ -1,7 +1,7 @@
 /* Exam Generator (beta) — isolated MVP styles */
 
 .workspace-leaf-content.learnkit[data-type$="exam-generator"] {
-  background: var(--background-primary) !important;
+  background: var(--background-primary);
 }
 
 .learnkit .learnkit-view-content.learnkit-exam-generator-root {
@@ -99,7 +99,7 @@
 }
 
 .learnkit .learnkit-exam-generator-saved-tests-empty-message {
-  padding: 1rem !important;
+  padding: 1rem;
   max-width: 250px;
   margin: 0 auto;
   text-align: center;
@@ -215,7 +215,7 @@
 }
 
 .learnkit .learnkit-exam-generator-runner-card .learnkit-exam-generator-option-button {
-  margin-bottom: 0 !important;
+  margin-bottom: 0;
   min-height: 44px;
   padding: 0.7rem 0.85rem;
   align-items: flex-start;
@@ -543,7 +543,7 @@
   .learnkit .learnkit-exam-generator-loading-atom,
   .learnkit .learnkit-exam-generator-loading-atom-dot,
   .learnkit .learnkit-exam-generator-loading-word {
-    animation: none !important;
+    animation: none;
   }
 
   .learnkit .learnkit-exam-generator-loading-word-slot {
@@ -601,11 +601,11 @@
 }
 
 .learnkit .learnkit-exam-generator-setup-topline-right .learnkit-scope-clear-btn [data-learnkit-label="true"] {
-  display: none !important;
+  display: none;
 }
 
 .learnkit .learnkit-exam-generator-setup-topline-right .learnkit-scope-clear-btn:is(:hover, :focus-visible, :focus-within, [aria-expanded="true"]) [data-learnkit-label="true"] {
-  display: none !important;
+  display: none;
 }
 
 .learnkit .learnkit-exam-generator-setup-card h3 {
@@ -765,7 +765,7 @@
 }
 
 .learnkit .learnkit-exam-generator-hidden {
-  display: none !important;
+  display: none;
 }
 
 .learnkit .learnkit-exam-generator-select-wrap {
@@ -776,9 +776,9 @@
 .learnkit .learnkit-exam-generator-select-trigger {
   width: 100%;
   justify-content: space-between;
-  border: 0.5px solid var(--color-base-35) !important;
-  background-color: color-mix(in srgb, var(--color-base-40) 8%, transparent 92%) !important;
-  color: var(--text-normal) !important;
+  border: 0.5px solid var(--color-base-35);
+  background-color: color-mix(in srgb, var(--color-base-40) 8%, transparent 92%);
+  color: var(--text-normal);
   box-shadow: none;
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
@@ -786,15 +786,15 @@
 }
 
 .learnkit .learnkit-exam-generator-select-trigger:is(:hover, :focus-visible, [aria-expanded="true"]) {
-  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) !important;
-  border-color: color-mix(in srgb, var(--color-base-70) 25%, transparent 75%) !important;
-  color: var(--color-base-100) !important;
+  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%);
+  border-color: color-mix(in srgb, var(--color-base-70) 25%, transparent 75%);
+  color: var(--color-base-100);
 }
 
 .learnkit .learnkit-exam-generator-select-trigger:active {
-  background-color: color-mix(in srgb, var(--color-base-50) 19%, transparent 81%) !important;
-  border-color: color-mix(in srgb, var(--color-base-75) 30%, transparent 70%) !important;
-  color: var(--color-base-100) !important;
+  background-color: color-mix(in srgb, var(--color-base-50) 19%, transparent 81%);
+  border-color: color-mix(in srgb, var(--color-base-75) 30%, transparent 70%);
+  color: var(--color-base-100);
 }
 
 .learnkit .learnkit-exam-generator-select-popover {
@@ -808,8 +808,8 @@
 .learnkit .learnkit-exam-generator-select-panel {
   width: 100%;
   box-sizing: border-box;
-  background: color-mix(in srgb, var(--color-base-05) 95%, transparent 05%) !important;
-  border: 0.5px solid var(--color-base-35) !important;
+  background: color-mix(in srgb, var(--color-base-05) 95%, transparent 05%);
+  border: 0.5px solid var(--color-base-35);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
 }
@@ -1049,18 +1049,18 @@
 }
 
 .learnkit .learnkit-exam-generator-topline-right .learnkit-scope-clear-btn [data-learnkit-label="true"] {
-  display: none !important;
+  display: none;
 }
 
 .learnkit .learnkit-exam-generator-topline-right .learnkit-scope-clear-btn:is(:hover, :focus-visible, :focus-within, [aria-expanded="true"]) [data-learnkit-label="true"] {
-  display: none !important;
+  display: none;
 }
 
 .learnkit .learnkit-exam-generator-question-prompt,
 .learnkit .learnkit-exam-generator-card .learnkit-mcq-option-text {
   -webkit-user-select: text;
   user-select: text;
-  margin: 0 0 0 0 !important;
+  margin: 0 0 0 0;
 }
 
 body.is-phone .learnkit .learnkit-exam-generator-runner-card {
@@ -1134,11 +1134,11 @@ body.is-phone .learnkit .learnkit-exam-generator-runner-footer .learnkit-exam-ge
 }
 
 .learnkit .learnkit-exam-generator-title-strip .learnkit-scope-clear-btn > span:last-child {
-  display: none !important;
+  display: none;
 }
 
 .learnkit .learnkit-exam-generator-title-strip .learnkit-scope-clear-btn:is(:hover, :focus-visible, :focus-within, [aria-expanded="true"]) > span:last-child {
-  display: none !important;
+  display: none;
 }
 
 .learnkit .learnkit-exam-generator-option {

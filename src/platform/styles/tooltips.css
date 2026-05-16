@@ -47,13 +47,13 @@
 
 /* Escalate stacking only for row-like contexts where sibling clipping is common.
   Avoid global ancestor lifting, which can accidentally overlay sticky headers. */
-.learnkit :is(.learnkit-deck-row, tr, td):has([data-tooltip]:hover):not(.lk-browser-table-wrap) {
+.learnkit :is(.learnkit-deck-row, tr, td):hover:not(.lk-browser-table-wrap) {
   z-index: 949;
 }
 
 /* Only allow overflow:visible on table cells and rows, not on scroll containers */
-.learnkit tr:has([data-tooltip]:hover),
-.learnkit td:has([data-tooltip]:hover) {
+.learnkit tr:hover,
+.learnkit td:hover {
   overflow: visible;
 }
 

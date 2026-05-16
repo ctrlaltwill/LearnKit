@@ -19,7 +19,7 @@
   background-color: var(--color-base-20);
   color: var(--color-base-70);
   border-radius: 4px;
-  border: 0.5px solid var(--color-base-30) !important;
+  border: 0.5px solid var(--color-base-30);
   padding: 0.2rem 0.4rem;
   font-size: 0.85em;
 }
@@ -220,7 +220,7 @@ body.is-phone .small-card {
 }
 
 .learnkit-group-picker .learnkit-badge-inline .svg-icon.lucide-x {
-  color: var(--theme-base-95) !important;
+  color: var(--theme-base-95);
   stroke: currentColor;
 }
 
@@ -231,8 +231,8 @@ body.is-phone .small-card {
   height: 36px;
   min-height: 38px;
   border: none;
-  border-color: transparent !important;
-  background: transparent !important;
+  border-color: transparent;
+  background: transparent;
   box-shadow: none;
   outline: none;
 }
@@ -241,15 +241,15 @@ body.is-phone .small-card {
 .learnkit-search-naked:focus,
 .learnkit-search-naked:focus-visible {
   border: none;
-  border-color: transparent !important;
-  background: transparent !important;
+  border-color: transparent;
+  background: transparent;
   box-shadow: none;
   outline: none;
 }
 
 .learnkit-search-naked:is(:hover, :active) {
-  border-color: transparent !important;
-  background: transparent !important;
+  border-color: transparent;
+  background: transparent;
 }
 
 /* Search icon padding and sizing */
@@ -531,12 +531,12 @@ body.is-phone .small-card {
 }
 
 /* Allow floating popovers to escape card bounds in Tests setup flow. */
-.learnkit .learnkit-view-content:has(.learnkit-exam-generator-content-shell) {
+.workspace-leaf-content.learnkit[data-learnkit-active-view="exam"] .learnkit-view-content {
   overflow: visible;
 }
 
 /* Coach view needs vertical scroll for tall dashboards, while still allowing horizontal popover overflow. */
-.learnkit .learnkit-view-content:has(.learnkit-coach-shell) {
+.workspace-leaf-content.learnkit[data-learnkit-active-view="coach"] .learnkit-view-content {
   overflow-x: visible;
   overflow-y: auto;
 }
@@ -732,18 +732,18 @@ body.is-phone .small-card {
 .learnkit .learnkit-coach-switcher-delete {
   position: static;
   margin-left: auto;
-  flex: 0 0 auto !important;
-  inline-size: 18px !important;
-  block-size: 18px !important;
-  width: 18px !important;
-  height: 18px !important;
-  min-width: 18px !important;
-  min-height: 18px !important;
-  max-width: 18px !important;
-  max-height: 18px !important;
+  flex: 0 0 auto;
+  inline-size: 18px;
+  block-size: 18px;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
+  max-width: 18px;
+  max-height: 18px;
   border-radius: var(--radius-md);
-  padding: 0 !important;
-  line-height: 1 !important;
+  padding: 0;
+  line-height: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -785,15 +785,15 @@ body.is-phone .small-card {
 
 .learnkit .learnkit-coach-switcher-delete:hover,
 .learnkit .learnkit-coach-switcher-delete:focus-visible {
-  inline-size: auto !important;
-  width: auto !important;
-  max-width: 128px !important;
-  padding: 0 7px !important;
+  inline-size: auto;
+  width: auto;
+  max-width: 128px;
+  padding: 0 7px;
   gap: 5px;
   justify-content: flex-start;
   border-radius: var(--radius-md);
-  border-color: var(--color-base-35) !important;
-  background: var(--color-base-20) !important;
+  border-color: var(--color-base-35);
+  background: var(--color-base-20);
   color: var(--color-base-100);
 }
 
@@ -1018,7 +1018,7 @@ body.is-phone .small-card {
 }
 
 .learnkit .learnkit-coach-wizard-page h3 {
-  margin: 0 !important;
+  margin: 0;
 }
 
 @keyframes sproutCoachSlideNext {
@@ -1158,7 +1158,7 @@ body.is-phone .small-card {
   letter-spacing: -0.01rem;
 }
 
-.learnkit .learnkit-coach-step-item:has(.learnkit-coach-step-dot.is-active) .learnkit-coach-step-label {
+.learnkit .learnkit-coach-step-item .learnkit-coach-step-dot.is-active + .learnkit-coach-step-label {
   color: var(--theme-accent);
     font-weight: 500;
 }
@@ -1262,19 +1262,19 @@ margin: 0.1rem 0 0;
 .learnkit .learnkit-coach-scope-list.learnkit-header-menu-panel .learnkit-coach-scope-row {
   margin: 0;
   border: 0.5px solid transparent;
-  background: transparent !important;
+  background: transparent;
 }
 
 .learnkit .learnkit-coach-scope-list.learnkit-header-menu-panel .learnkit-coach-scope-row:is(:hover, :focus-within) {
-  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) !important;
-  border-color: color-mix(in srgb, var(--color-base-70) 25%, transparent 75%) !important;
-  color: var(--color-base-100, var(--text-normal)) !important;
+  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%);
+  border-color: color-mix(in srgb, var(--color-base-70) 25%, transparent 75%);
+  color: var(--color-base-100, var(--text-normal));
 }
 
 .learnkit .learnkit-coach-scope-list.learnkit-header-menu-panel .learnkit-coach-scope-row:is(.is-selected, [aria-selected="true"]) {
-  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) !important;
-  border-color: color-mix(in srgb, var(--color-base-70) 25%, transparent 75%) !important;
-  color: var(--color-base-100, var(--text-normal)) !important;
+  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%);
+  border-color: color-mix(in srgb, var(--color-base-70) 25%, transparent 75%);
+  color: var(--color-base-100, var(--text-normal));
 }
 
 .learnkit .learnkit-coach-scope-list.learnkit-header-menu-panel .learnkit-scope-preset-apply {
@@ -1288,8 +1288,8 @@ margin: 0.1rem 0 0;
 }
 
 .learnkit .learnkit-coach-scope-list.learnkit-header-menu-panel .learnkit-scope-preset-remove:is(:hover, :focus-visible) {
-  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) !important;
-  border-color: color-mix(in srgb, var(--color-base-70) 25%, transparent 75%) !important;
+  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%);
+  border-color: color-mix(in srgb, var(--color-base-70) 25%, transparent 75%);
   color: var(--color-base-100, var(--text-normal));
 }
 
@@ -1478,15 +1478,15 @@ margin: 0.1rem 0 0;
 
 .learnkit .learnkit-coach-scope-row:hover,
 .learnkit .learnkit-coach-scope-row:focus-within {
-  background: var(--color-base-20) !important;
-  border-color: var(--color-base-35) !important;
-  color: var(--text-normal) !important;
+  background: var(--color-base-20);
+  border-color: var(--color-base-35);
+  color: var(--text-normal);
 }
 
 .learnkit .learnkit-coach-scope-row.is-selected,
 .learnkit .learnkit-coach-scope-row[aria-selected="true"] {
-  background: var(--color-base-35) !important;
-  border-color: var(--color-base-40) !important;
+  background: var(--color-base-35);
+  border-color: var(--color-base-40);
 }
 
 .learnkit .learnkit-scope-preset-apply {
@@ -1506,12 +1506,12 @@ margin: 0.1rem 0 0;
 .learnkit .learnkit-coach-scope-row .learnkit-scope-preset-apply:hover,
 .learnkit .learnkit-coach-scope-row .learnkit-scope-preset-apply:focus,
 .learnkit .learnkit-coach-scope-row .learnkit-scope-preset-apply:focus-visible {
-  background: transparent !important;
-  color: inherit !important;
+  background: transparent;
+  color: inherit;
 }
 
 .learnkit .learnkit-scope-preset-apply.is-selected {
-  color: var(--text-normal) !important;
+  color: var(--text-normal);
 }
 
 .learnkit .learnkit-scope-preset-item-text {
@@ -1534,11 +1534,11 @@ margin: 0.1rem 0 0;
 }
 
 .learnkit .learnkit-scope-preset-remove:hover {
-    background: none !important;
+    background: none;
 }
 
 .learnkit .learnkit-scope-preset-add:hover {
-    background: none !important;
+    background: none;
 }
 
 
@@ -1604,7 +1604,7 @@ margin: 0.1rem 0 0;
 }
 
 .learnkit .text-sm {
-  font-size: 0.9rem !important;
+  font-size: 0.9rem;
 }
 
 .learnkit .learnkit-scope-preset-delete {
@@ -1654,9 +1654,9 @@ body.is-mobile .learnkit .learnkit-coach-scope-actions-grid {
   width: 16px;
   height: 16px;
   min-width: 16px;
-  min-height: 16px !important;
+  min-height: 16px;
   line-height: 1;
-  padding: 0 !important;
+  padding: 0;
 }
 
 .learnkit .learnkit-coach-chip .learnkit-coach-chip-remove .svg-icon {
@@ -1730,9 +1730,9 @@ body.is-mobile .learnkit .learnkit-coach-scope-actions-grid {
 
 .learnkit .learnkit-coach-intensity-btn.is-active:hover,
 .learnkit .learnkit-coach-intensity-btn.is-active:focus-visible {
-  border: 0.5px solid var(--theme-base-45) !important;
-  color: var(--theme-base-95) !important;
-  background-color: var(--theme-base-25) !important;
+  border: 0.5px solid var(--theme-base-45);
+  color: var(--theme-base-95);
+  background-color: var(--theme-base-25);
 }
 
 .learnkit .learnkit-coach-intensity-header {
@@ -2271,7 +2271,7 @@ body.is-mobile .learnkit .learnkit-coach-scope-actions-grid {
   justify-content: center;
 }
 
-.learnkit .learnkit-coach-gauge-score {
+.learnkit .learnkit-coach-gauge-card .learnkit-coach-gauge-score {
   font-size: 1.4rem;
   font-weight: 700;
   line-height: 1;
@@ -2283,12 +2283,12 @@ body.is-mobile .learnkit .learnkit-coach-scope-actions-grid {
   margin-left: 2px;
 }
 
-.learnkit .learnkit-coach-gauge-title {
+.learnkit .learnkit-coach-gauge-card .learnkit-coach-gauge-title {
   font-size: var(--learnkit-font-xs);
   font-weight: 600;
 }
 
-.learnkit .learnkit-coach-gauge-status {
+.learnkit .learnkit-coach-gauge-card .learnkit-coach-gauge-status {
   font-size: var(--learnkit-font-2xs);
   text-transform: capitalize;
 }

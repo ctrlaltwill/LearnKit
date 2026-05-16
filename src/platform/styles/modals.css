@@ -6,24 +6,15 @@
 /* ---- Workspace positioning for modal containers ---- */
 
 /* Make the workspace leaf content a positioning context for modals */
-.workspace-leaf-content:has(.lk-modal-container.modal-container),
-.workspace-leaf-content:has(.lk-modal-dim.modal-container) {
+.workspace-leaf-content.learnkit {
   position: relative;
 }
 
 /* Ensure view content is layered below modals but creates stacking context */
-.workspace-leaf-content:has(.lk-modal-container.modal-container) > .view-header,
-.workspace-leaf-content:has(.lk-modal-container.modal-container) > .view-content,
-.workspace-leaf-content:has(.lk-modal-dim.modal-container) > .view-header,
-.workspace-leaf-content:has(.lk-modal-dim.modal-container) > .view-content {
+.workspace-leaf-content.learnkit > .view-header,
+.workspace-leaf-content.learnkit > .view-content {
   position: relative;
   z-index: 1;
-}
-
-/* Make the workspace root area a positioning context for modals (fallback) */
-.workspace-split.mod-root:has(.lk-modal-container.modal-container),
-.workspace-split.mod-root:has(.lk-modal-dim.modal-container) {
-  position: relative;
 }
 
 /* Scope modal containers to workspace area only */
@@ -58,18 +49,18 @@
 .modal-container .modal-bg,
 .modal-container.lk-modal-container.lk-modal-dim.mod-dim > .modal-bg,
 .modal-container.lk-modal-container.lk-modal-dim.learnkit.mod-dim > .modal-bg {
-  position: absolute !important;
-  inset: 0 !important;
-  top: 0 !important;
-  left: 0 !important;
-  inset-inline-start: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  -webkit-backdrop-filter: none !important;
-  backdrop-filter: none !important;
-  opacity: 0.6 !important;
-  background: var(--background) !important;
-  background-color: var(--background) !important;
+  position: absolute;
+  inset: 0;
+  top: 0;
+  left: 0;
+  inset-inline-start: 0;
+  width: 100%;
+  height: 100%;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  opacity: 0.6;
+  background: var(--background);
+  background-color: var(--background);
 }
 
 /* ---- Panel ---- */
@@ -79,7 +70,7 @@
   backdrop-filter: blur(16px) saturate(125%);
   border-radius: var(--radius-lg);
   outline: none;
-  max-width: min(550px, 95%) !important;
+  max-width: min(550px, 95%);
   height: auto;
   max-height: 80vh;
   padding: 1.2rem 0;
@@ -111,8 +102,8 @@
 }
 
 .learnkit-confirm-modal .modal-title {
-    font-size: 1.2rem !important;
-    font-weight: 600;
+  font-size: var(--font-ui-medium);
+  font-weight: 700;
     letter-spacing: normal;
 }
 /* ---- Header + content spacing ---- */
@@ -135,7 +126,6 @@
 }
 
 .learnkit .lk-modals.modal .modal-content {
-  padding: 0 !important;
   background: transparent;
   border: none;
   box-shadow: none;
@@ -143,7 +133,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   text-align: left;
-  padding: 0 1.2rem 0 !important;
+  padding: 0 1.2rem 0;
 }
 
 .learnkit .modal-container .modal-content {
@@ -207,13 +197,13 @@
   .learnkit-card-meta-type-btn
 ) {
   background: color-mix(in srgb, var(--color-base-05) 95%, transparent 05%);
-  border-color: color-mix(in srgb, var(--color-base-70) 20%, transparent 80%) !important;
+  border-color: color-mix(in srgb, var(--color-base-70) 20%, transparent 80%);
   -webkit-backdrop-filter: blur(10px) saturate(120%);
   backdrop-filter: blur(10px) saturate(120%);
 }
 
 .learnkit .lk-modals.modal .learnkit-btn-toolbar {
-  max-height: 36px !important;
+  max-height: 36px;
   background-color: var(--color-base-20);
     border: 0.5px solid var(--color-base-30);
 }
@@ -225,11 +215,11 @@
   .learnkit-card-creator-footer .learnkit-btn-toolbar,
   .learnkit-attachment-picker-footer .learnkit-btn-toolbar
 ) {
-  padding: 4px 12px !important;
+  padding: 4px 12px;
 }
 
 .learnkit .lk-modals.modal.learnkit-card-creator-modal .modal-header .learnkit-btn-toolbar.learnkit-card-creator-close-btn {
-  padding: 4px 8px !important;
+  padding: 4px 8px;
 }
 
 .learnkit :is(.learnkit-card-creator-modal, .learnkit-bulk-edit-panel, .learnkit-edit-modal, .learnkit-io-creator-modal) .learnkit-card-creator-close-btn {
@@ -239,11 +229,11 @@
 }
 
 .learnkit :is(.learnkit-card-creator-modal, .learnkit-bulk-edit-panel, .learnkit-edit-modal, .learnkit-io-creator-modal) .learnkit-card-creator-close-btn [data-learnkit-label="true"] {
-  display: none !important;
+  display: none;
 }
 
 .learnkit :is(.learnkit-card-creator-modal, .learnkit-bulk-edit-panel, .learnkit-edit-modal, .learnkit-io-creator-modal) .learnkit-card-creator-close-btn:is(:hover, :focus-visible) [data-learnkit-label="true"] {
-  display: none !important;
+  display: none;
 }
 
 /* Modal close buttons: fixed icon-only 32x32, no hover expansion. */
@@ -252,14 +242,14 @@
   .learnkit-bulk-edit-close-btn,
   .learnkit-attachment-picker-close-btn
 ) {
-  width: 32px !important;
-  height: 32px !important;
-  min-width: 32px !important;
-  min-height: 32px !important;
-  max-width: 32px !important;
-  max-height: 32px !important;
-  padding: 0 !important;
-  gap: 0 !important;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  max-width: 32px;
+  max-height: 32px;
+  padding: 0;
+  gap: 0;
   overflow: hidden;
   justify-content: center;
 }
@@ -269,12 +259,12 @@
   .learnkit-bulk-edit-close-btn,
   .learnkit-attachment-picker-close-btn
 ) [data-learnkit-label="true"] {
-  display: none !important;
-  max-width: 0 !important;
-  opacity: 0 !important;
-  margin-left: 0 !important;
-  transform: none !important;
-  transition: none !important;
+  display: none;
+  max-width: 0;
+  opacity: 0;
+  margin-left: 0;
+  transform: none;
+  transition: none;
 }
 
 .learnkit .lk-modals.modal :is(
@@ -282,7 +272,7 @@
   .learnkit-bulk-edit-close-btn,
   .learnkit-attachment-picker-close-btn
 ):is(:hover, :focus, :focus-visible, :focus-within, :active, [aria-expanded="true"]) [data-learnkit-label="true"] {
-  display: none !important;
+  display: none;
 }
 
 .learnkit .learnkit-card-creator-type-popover .learnkit-card-creator-type-panel {
@@ -311,9 +301,9 @@
 
 .learnkit .learnkit-card-creator-type-popover .learnkit-card-creator-type-item:is(:hover, :focus, :focus-visible, :active),
 .learnkit .learnkit-card-creator-type-popover .learnkit-card-creator-type-item[aria-checked="true"] {
-  background: var(--color-base-20) !important;
-  border-color: var(--color-base-35) !important;
-  color: var(--color-base-100) !important;
+  background: var(--color-base-20);
+  border-color: var(--color-base-35);
+  color: var(--color-base-100);
 }
 
 .learnkit .lk-modals.modal .learnkit-tag-box {
@@ -329,16 +319,16 @@
 
 /* Keep inline flags in modal markdown previews sized to the current text size. */
 .learnkit .lk-modals :is(.learnkit-flag-editor-overlay, .learnkit-single-edit-markdown-preview) img.learnkit-inline-flag {
-  width: 1em !important;
-  height: 1em !important;
-  min-width: 1em !important;
-  min-height: 1em !important;
-  max-width: 1em !important;
-  max-height: 1em !important;
-  display: inline-block !important;
+  width: 1em;
+  height: 1em;
+  min-width: 1em;
+  min-height: 1em;
+  max-width: 1em;
+  max-height: 1em;
+  display: inline-block;
   object-fit: cover;
   vertical-align: text-bottom;
-  padding: 0px !important;
+  padding: 0px;
   margin: 0 0.3em;
 }
 
@@ -356,15 +346,15 @@
 
 /* MCQ/OQ option rows should stay compact (fixed 36px) in add/edit modals. */
 .learnkit .lk-modals.modal :is(.learnkit-edit-mcq-option-row, .learnkit-mcq-add-row, .learnkit-oq-editor-row, .learnkit-oq-add-row) .learnkit-flag-editor-wrap {
-  --learnkit-flag-preview-height: 36px !important;
-  --learnkit-flag-preview-max-height: 36px !important;
+  --learnkit-flag-preview-height: 36px;
+  --learnkit-flag-preview-max-height: 36px;
   min-height: 36px;
 }
 
 .learnkit .lk-modals.modal :is(.learnkit-edit-mcq-option-row, .learnkit-mcq-add-row, .learnkit-oq-editor-row, .learnkit-oq-add-row) :is(.learnkit-flag-editor-control, .learnkit-flag-editor-overlay) {
-  min-height: 36px !important;
-  height: 36px !important;
-  max-height: 36px !important;
+  min-height: 36px;
+  height: 36px;
+  max-height: 36px;
   tab-size: 2;
   -moz-tab-size: 2;
 }
@@ -373,8 +363,8 @@
 .learnkit .lk-modals.modal :is(.learnkit-edit-mcq-option-row, .learnkit-mcq-add-row, .learnkit-oq-editor-row, .learnkit-oq-add-row) .learnkit-flag-editor-control {
   line-height: 1.2;
   /* Keep typed text centered in the fixed 36px compact editor lane. */
-  padding-top: 6px !important;
-  padding-bottom: 6px !important;
+  padding-top: 6px;
+  padding-bottom: 6px;
 }
 
 .learnkit .lk-modals.modal :is(.learnkit-edit-mcq-option-row, .learnkit-mcq-add-row, .learnkit-oq-editor-row, .learnkit-oq-add-row) .learnkit-flag-editor-overlay {
@@ -382,14 +372,14 @@
   align-items: center;
   justify-content: flex-start;
   line-height: 1.2;
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .learnkit .lk-modals.modal :is(.learnkit-edit-mcq-option-row, .learnkit-mcq-add-row, .learnkit-oq-editor-row, .learnkit-oq-add-row)
   .learnkit-flag-editor-overlay.learnkit-flag-editor-overlay--multiline {
-  display: flex !important;
-  align-items: center !important;
+  display: flex;
+  align-items: center;
   justify-content: flex-start;
   overflow-y: hidden;
 }
@@ -402,9 +392,9 @@
 
 .learnkit .lk-modals.modal :is(.learnkit-edit-mcq-option-row, .learnkit-mcq-add-row, .learnkit-oq-editor-row, .learnkit-oq-add-row) .learnkit-input-fixed,
 .learnkit .lk-modals.modal :is(.learnkit-edit-mcq-option-row, .learnkit-mcq-add-row, .learnkit-oq-editor-row, .learnkit-oq-add-row) .learnkit-oq-step-input {
-  min-height: 36px !important;
-  height: 36px !important;
-  max-height: 36px !important;
+  min-height: 36px;
+  height: 36px;
+  max-height: 36px;
 }
 
 /* OQ row chrome (grip + index + delete) should align to the same 36px centerline as the input. */
@@ -413,13 +403,13 @@
 }
 
 .learnkit .lk-modals.modal .learnkit-oq-editor-row :is(.learnkit-oq-grip, .learnkit-oq-step-index, .learnkit-oq-del-btn) {
-  min-height: 36px !important;
-  height: 36px !important;
-  max-height: 36px !important;
+  min-height: 36px;
+  height: 36px;
+  max-height: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  line-height: 1 !important;
+  line-height: 1;
   margin: 0;
   align-self: center;
 }
@@ -562,8 +552,8 @@
   display: block;
 }
 
-/* Show focus effect on tag box when popover is open */
-.learnkit .learnkit-group-picker:has(.learnkit-popover-dropdown.is-open) .learnkit-tag-box {
+/* Show focus effect on tag box while picker or popover content is focused. */
+.learnkit .learnkit-group-picker:focus-within .learnkit-tag-box {
   border: 1.5px solid var(--theme-accent);
   box-shadow: none;
   outline: none;
@@ -898,8 +888,8 @@ width: min(720px, 100%);
   select.input,
   input[type="text"].input
 ) {
-  background: color-mix(in srgb, var(--color-base-00) 42%, transparent 58%) !important;
-  border-color: color-mix(in srgb, var(--color-base-70) 20%, transparent 80%) !important;
+  background: color-mix(in srgb, var(--color-base-00) 42%, transparent 58%);
+  border-color: color-mix(in srgb, var(--color-base-70) 20%, transparent 80%);
   -webkit-backdrop-filter: blur(10px) saturate(120%);
   backdrop-filter: blur(10px) saturate(120%);
 }
@@ -911,7 +901,7 @@ width: min(720px, 100%);
   .learnkit-flag-editor-overlay,
   .learnkit-search-naked
 ) {
-  background: transparent !important;
+  background: transparent;
 }
 
 /* Card creator controls: match header toolbar button language. */
@@ -920,9 +910,9 @@ width: min(720px, 100%);
   .learnkit-card-creator-root .learnkit-btn-toolbar[aria-haspopup="menu"],
   .learnkit-card-creator-footer .learnkit-btn-filter
 ) {
-  background-color: color-mix(in srgb, var(--color-base-40) 8%, transparent 92%) !important;
-  color: var(--text-normal) !important;
-  border: 0.5px solid color-mix(in srgb, var(--color-base-70) 14%, transparent 86%) !important;
+  background-color: color-mix(in srgb, var(--color-base-40) 8%, transparent 92%);
+  color: var(--text-normal);
+  border: 0.5px solid color-mix(in srgb, var(--color-base-70) 14%, transparent 86%);
 }
 
 .learnkit .learnkit-card-creator-modal :is(
@@ -930,9 +920,9 @@ width: min(720px, 100%);
   .learnkit-card-creator-root .learnkit-btn-toolbar[aria-haspopup="menu"],
   .learnkit-card-creator-footer .learnkit-btn-filter
 ):is(:hover, :focus-visible, :focus-within, [aria-expanded="true"]) {
-  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) !important;
-  color: var(--color-base-100) !important;
-  border-color: color-mix(in srgb, var(--color-base-70) 25%, transparent 75%) !important;
+  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%);
+  color: var(--color-base-100);
+  border-color: color-mix(in srgb, var(--color-base-70) 25%, transparent 75%);
 }
 
 .learnkit .learnkit-card-creator-modal :is(
@@ -940,9 +930,9 @@ width: min(720px, 100%);
   .learnkit-card-creator-root .learnkit-btn-toolbar[aria-haspopup="menu"],
   .learnkit-card-creator-footer .learnkit-btn-filter
 ):active {
-  background-color: color-mix(in srgb, var(--color-base-50) 19%, transparent 81%) !important;
-  color: var(--color-base-100) !important;
-  border-color: color-mix(in srgb, var(--color-base-75) 30%, transparent 70%) !important;
+  background-color: color-mix(in srgb, var(--color-base-50) 19%, transparent 81%);
+  color: var(--color-base-100);
+  border-color: color-mix(in srgb, var(--color-base-75) 30%, transparent 70%);
 }
 
 .learnkit .lk-modals.modal .learnkit-location-input,
@@ -951,7 +941,7 @@ width: min(720px, 100%);
   max-height: 40px;
   height: 40px;
   border-radius: var(--radius-md);
-  box-shadow: none !important;
+  box-shadow: none;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -960,7 +950,7 @@ width: min(720px, 100%);
   opacity: 1;
   color: var(--text-muted);
   background: color-mix(in srgb, var(--color-base-05) 95%, transparent 05%);
-  border: 0.5px solid color-mix(in srgb, var(--color-base-70) 20%, transparent 80%) !important;
+  border: 0.5px solid color-mix(in srgb, var(--color-base-70) 20%, transparent 80%);
   cursor: default;
 }
 
@@ -975,39 +965,39 @@ width: min(720px, 100%);
 }
 
 .learnkit .lk-modals.modal .learnkit-card-meta-type-btn {
-  min-height: 40px !important;
+  min-height: 40px;
   max-height: 40px;
   height: 40px;
   border-radius: var(--radius-md);
-  box-shadow: none !important;
+  box-shadow: none;
   color: var(--text-muted);
   background: color-mix(in srgb, var(--color-base-05) 95%, transparent 05%);
-  border: 0.5px solid color-mix(in srgb, var(--color-base-70) 20%, transparent 80%) !important;
+  border: 0.5px solid color-mix(in srgb, var(--color-base-70) 20%, transparent 80%);
   justify-content: space-between;
   width: 100%;
 }
 
 .learnkit :is(.learnkit-btn-primary-action, .learnkit-card-creator-add-btn, .learnkit-bulk-edit-save-btn, .learnkit-io-save-btn) {
-  border: 0.5px solid var(--theme-black-95) !important;
+  border: 0.5px solid var(--theme-black-95);
   border-radius: 8px;
-  background: var(--theme-base-95) !important;
-  color: #ffffff !important;
-  box-shadow: none !important;
+  background: var(--theme-base-95);
+  color: #ffffff;
+  box-shadow: none;
   transition: transform 140ms ease, background-color 140ms ease, border-color 140ms ease;
 }
 
 .learnkit :is(.learnkit-btn-primary-action, .learnkit-card-creator-add-btn, .learnkit-bulk-edit-save-btn, .learnkit-io-save-btn):hover,
 .learnkit :is(.learnkit-btn-primary-action, .learnkit-card-creator-add-btn, .learnkit-bulk-edit-save-btn, .learnkit-io-save-btn):focus-visible {
-  border-color: var(--theme-black-85) !important;
-  background: var(--theme-black-95) !important;
-  color: #ffffff !important;
+  border-color: var(--theme-black-85);
+  background: var(--theme-black-95);
+  color: #ffffff;
   transform: translateY(-1px);
 }
 
 .learnkit :is(.learnkit-btn-primary-action, .learnkit-card-creator-add-btn, .learnkit-bulk-edit-save-btn, .learnkit-io-save-btn):active {
-  border-color: var(--theme-black-75) !important;
-  background: var(--theme-black-85) !important;
-  color: #ffffff !important;
+  border-color: var(--theme-black-75);
+  background: var(--theme-black-85);
+  color: #ffffff;
   transform: translateY(0);
 }
 
@@ -1125,25 +1115,25 @@ body.is-mobile .learnkit .learnkit-cloze-mobile-actions {
 .learnkit .learnkit-bulk-edit-panel .learnkit-bulk-edit-form--multi .learnkit-flag-editor-wrap--multiline {
   --learnkit-flag-preview-height: 50px;
   --learnkit-flag-preview-max-height: 150px;
-  min-height: 50px !important;
-  max-height: 150px !important;
+  min-height: 50px;
+  max-height: 150px;
 }
 
 .learnkit .learnkit-bulk-edit-panel .learnkit-bulk-edit-form--multi .learnkit-flag-editor-wrap--multiline .learnkit-flag-editor-control {
-  min-height: 50px !important;
-  max-height: 150px !important;
+  min-height: 50px;
+  max-height: 150px;
 }
 
 .learnkit .learnkit-bulk-edit-panel .learnkit-bulk-edit-form--multi .learnkit-flag-editor-wrap--multiline .learnkit-flag-editor-overlay {
-  min-height: 50px !important;
-  height: var(--learnkit-flag-preview-height, 50px) !important;
-  max-height: var(--learnkit-flag-preview-max-height, 150px) !important;
+  min-height: 50px;
+  height: var(--learnkit-flag-preview-height, 50px);
+  max-height: var(--learnkit-flag-preview-max-height, 150px);
 }
 
 .learnkit .learnkit-bulk-edit-panel .learnkit-single-edit-markdown-field {
   position: relative;
   width: 100%;
-  border: 0.5px solid color-mix(in srgb, var(--color-base-70) 20%, transparent 80%) !important;
+  border: 0.5px solid color-mix(in srgb, var(--color-base-70) 20%, transparent 80%);
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--color-base-05) 95%, transparent 05%);
   -webkit-backdrop-filter: blur(10px) saturate(120%);
@@ -1160,8 +1150,8 @@ body.is-mobile .learnkit .learnkit-cloze-mobile-actions {
 .learnkit .learnkit-bulk-edit-panel .learnkit-single-edit-markdown-field textarea {
   box-sizing: border-box;
   padding: 6px 8px;
-  border: 0 !important;
-  background: transparent !important;
+  border: 0;
+  background: transparent;
   min-height: var(--learnkit-single-edit-height, 80px);
   max-height: var(--learnkit-single-edit-max-height, 80px);
   resize: none;
@@ -1179,7 +1169,7 @@ body.is-mobile .learnkit .learnkit-cloze-mobile-actions {
   display: none;
   border: 0;
   border-radius: 0;
-  background: transparent !important;
+  background: transparent;
   color: var(--text-normal);
   font-size: 1rem;
   padding: 6px 8px;
@@ -1310,9 +1300,9 @@ body.is-mobile .learnkit .learnkit-edit-modal {
 /* ---- Image occlusion creator modal ---- */
 
 .learnkit .learnkit-io-creator-modal {
-  width: min(1080px, 95%) !important;
-  min-width: 0 !important;
-  max-width: min(1080px, 95%) !important;
+  width: min(1080px, 95%);
+  min-width: 0;
+  max-width: min(1080px, 95%);
   height: auto;
   max-height: min(80vh, 720px);
   overflow: hidden;
@@ -1368,8 +1358,8 @@ body.is-mobile .learnkit .learnkit-edit-modal {
 .learnkit .lk-modals.learnkit-io-creator-modal .learnkit-flag-editor-wrap--multiline {
   --learnkit-flag-preview-height: 60px;
   --learnkit-flag-preview-max-height: 150px;
-  min-height: 60px !important;
-  max-height: 150px !important;
+  min-height: 60px;
+  max-height: 150px;
 }
 
 .learnkit .lk-modals.learnkit-io-creator-modal .learnkit-flag-editor-wrap--multiline .learnkit-flag-editor-control {
@@ -1379,9 +1369,9 @@ body.is-mobile .learnkit .learnkit-edit-modal {
 }
 
 .learnkit .lk-modals.learnkit-io-creator-modal .learnkit-flag-editor-wrap--multiline .learnkit-flag-editor-overlay {
-  min-height: 60px !important;
-  height: var(--learnkit-flag-preview-height, 60px) !important;
-  max-height: var(--learnkit-flag-preview-max-height, 150px) !important;
+  min-height: 60px;
+  height: var(--learnkit-flag-preview-height, 60px);
+  max-height: var(--learnkit-flag-preview-max-height, 150px);
 }
 
 .learnkit .learnkit-io-canvas {
@@ -1412,11 +1402,9 @@ body.is-mobile .learnkit .learnkit-edit-modal {
   max-width: 1500px;
   overflow: hidden;
   flex-shrink: 0;
-  background-color: var(--background-secondary);
-  border: var(--learnkit-border-width) solid var(--learnkit-border-color);
   border-radius: var(--radius-md, var(--radius-md));
-  background-color: var(--color-base-10) !important;
-    border: 0.5px solid var(--color-base-40) !important;
+  background-color: var(--color-base-10);
+  border: 0.5px solid var(--color-base-40);
 }
 
 .learnkit .learnkit-io-canvas-placeholder {
@@ -1438,8 +1426,8 @@ body.is-mobile .learnkit .learnkit-edit-modal {
   overflow: hidden;
 }
 
-.learnkit .learnkit-io-canvas-container:has(.learnkit-io-viewport:not(.learnkit-is-hidden)) .learnkit-io-canvas-placeholder {
-  display: none !important;
+.learnkit .learnkit-io-canvas-placeholder.learnkit-is-hidden {
+  display: none;
 }
 
 .learnkit .learnkit-io-stage {
@@ -1490,17 +1478,17 @@ body.is-mobile .learnkit .learnkit-edit-modal {
 }
 
 .learnkit .learnkit-io-creator-modal .learnkit-io-creator-close-btn [data-learnkit-label="true"] {
-  display: none !important;
+  display: none;
 }
 
 .learnkit .learnkit-io-creator-modal .learnkit-io-creator-close-btn:is(:hover, :focus-visible, :focus-within, [aria-expanded="true"]) [data-learnkit-label="true"] {
-  display: none !important;
+  display: none;
 }
 
 /* Ensure modal widths are based on workspace container width, not viewport width. */
 .workspace-tab-container .learnkit .lk-modals.modal,
 .workspace-tab-container .learnkit .modal-container .modal {
-  max-width: min(1080px, 95%) !important;
+  max-width: min(1080px, 95%);
 }
 
 .learnkit .learnkit-io-mode-trigger {
@@ -1721,12 +1709,12 @@ z-index: 11;
     border-radius: 50%;
     justify-content: center;
     align-items: center;
-    width: 24px !important;
-    min-width: 24px !important;
-    max-width: 24px !important;
-    max-height: 24px !important;
-    min-height: 24px !important;
-    padding: 0 !important;
+    width: 24px;
+    min-width: 24px;
+    max-width: 24px;
+    max-height: 24px;
+    min-height: 24px;
+    padding: 0;
     line-height: 1;
     display: inline-flex
 ;
@@ -1915,7 +1903,7 @@ z-index: 11;
 
 /* IO modal uses a custom Add-style close button in header; hide Obsidian root close control. */
 .learnkit .learnkit-io-creator-modal > .modal-close-button {
-  display: none !important;
+  display: none;
 }
 
 /* Tag-box: ensure visible border inside modals */
@@ -1927,7 +1915,7 @@ z-index: 11;
 /* Optional: tighten default modal title spacing if Obsidian inserts one */
 .learnkit .lk-modals.modal .modal-title {
   margin: 0;
-      font-size: 1.2rem !important;
+      font-size: 1.2rem;
     font-weight: 600;
 }
 
@@ -1969,12 +1957,12 @@ z-index: 11;
 
 /* ---- Anki export / import: popover z-index ---- */
 /* When a popover is open its wrapper needs a stacking context above siblings */
-.learnkit-anki-export-modal .relative:has(.learnkit-popover-dropdown.is-open),
-.learnkit-anki-import-modal .relative:has(.learnkit-popover-dropdown.is-open),
-.learnkit-anki-export-modal .learnkit-deck-picker:has(.learnkit-popover-dropdown.is-open),
-.learnkit-anki-export-modal .learnkit-group-picker:has(.learnkit-popover-dropdown.is-open),
-.learnkit-anki-import-modal .learnkit-deck-picker:has(.learnkit-popover-dropdown.is-open),
-.learnkit-anki-import-modal .learnkit-group-picker:has(.learnkit-popover-dropdown.is-open) {
+.learnkit-anki-export-modal .relative,
+.learnkit-anki-import-modal .relative,
+.learnkit-anki-export-modal .learnkit-deck-picker,
+.learnkit-anki-export-modal .learnkit-group-picker,
+.learnkit-anki-import-modal .learnkit-deck-picker,
+.learnkit-anki-import-modal .learnkit-group-picker {
   z-index: var(--lk-z-popover-overlay);
   position: relative;
 }
@@ -2018,15 +2006,15 @@ z-index: 11;
   backdrop-filter: none;
   border: none;
   box-shadow: none;
-  padding: 0 !important;
+  padding: 0;
   margin: 0;
-  width: 100dvw !important;
-  max-width: 100dvw !important;
-  min-height: 100dvh !important;
-  height: 100dvh !important;
-  max-height: 100dvh !important;
-  border-radius: 0 !important;
-  overflow: hidden !important;
+  width: 100dvw;
+  max-width: 100dvw;
+  min-height: 100dvh;
+  height: 100dvh;
+  max-height: 100dvh;
+  border-radius: 0;
+  overflow: hidden;
 }
 
 .learnkit .lk-modals.modal.learnkit-zoom-overlay > .modal-content.learnkit-zoom-content {
@@ -2034,13 +2022,13 @@ z-index: 11;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100% !important;
-  max-width: 100% !important;
-  min-height: 100dvh !important;
-  height: 100dvh !important;
-  max-height: 100dvh !important;
-  overflow: hidden !important;
-  margin: 0 !important;
+  width: 100%;
+  max-width: 100%;
+  min-height: 100dvh;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  margin: 0;
 }
 
 .learnkit .learnkit-zoom-host {
@@ -2110,9 +2098,9 @@ z-index: 11;
 /* In zoom modal, cancel the flashcard inline image cap (350px) from misc.css. */
 .learnkit .lk-modals.modal.learnkit-zoom-overlay .learnkit-io-image-inline.learnkit-zoom-img,
 .learnkit .lk-modals.modal.learnkit-zoom-overlay .learnkit-io-image-zoomed.learnkit-zoom-img {
-  max-height: 100% !important;
-  width: auto !important;
-  height: auto !important;
+  max-height: 100%;
+  width: auto;
+  height: auto;
 }
 
 .learnkit .learnkit-zoom-close {
@@ -2121,7 +2109,7 @@ z-index: 11;
   right: 10px;
   z-index: 5;
   min-width: 30px;
-  max-height: 30px !important;
+  max-height: 30px;
   border: 0.5px solid var(--color-base-30);
   background: color-mix(in srgb, var(--background) 80%, transparent);
   box-shadow: none;
@@ -2149,7 +2137,7 @@ z-index: 11;
 .learnkit .learnkit-zoom-surface .learnkit-zoom-close {
   transform: scale(calc(1 / var(--learnkit-zoom-scale, 1)));
   transform-origin: top right;
-  gap: 0 !important;
+  gap: 0;
 }
 
 /* ---- Confirm modals (settings) ---- */
@@ -2161,11 +2149,6 @@ z-index: 11;
 
 .learnkit-confirm-modal .modal-header {
   padding-bottom: 6px;
-}
-
-.learnkit-confirm-modal .modal-title {
-  font-size: var(--font-ui-medium);
-  font-weight: 700;
 }
 
 .learnkit-confirm-modal .modal-content {
@@ -2210,16 +2193,16 @@ z-index: 11;
 }
 
 .learnkit-confirm-modal .learnkit-settings-action-btn.learnkit-btn-danger {
-  background: var(--background-modifier-error) !important;
-  border-color: var(--background-modifier-error-hover, var(--background-modifier-error)) !important;
-  color: var(--text-on-accent) !important;
+  background: var(--background-modifier-error);
+  border-color: var(--background-modifier-error-hover, var(--background-modifier-error));
+  color: var(--text-on-accent);
 }
 
 .learnkit-confirm-modal .learnkit-settings-action-btn.learnkit-btn-danger:hover,
 .learnkit-confirm-modal .learnkit-settings-action-btn.learnkit-btn-danger:focus-visible {
-  background: var(--background-modifier-error-hover, var(--background-modifier-error)) !important;
-  border-color: var(--background-modifier-error-hover, var(--background-modifier-error)) !important;
-  color: var(--text-on-accent) !important;
+  background: var(--background-modifier-error-hover, var(--background-modifier-error));
+  border-color: var(--background-modifier-error-hover, var(--background-modifier-error));
+  color: var(--text-on-accent);
 }
 
 .learnkit-confirm-box {

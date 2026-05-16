@@ -6,7 +6,7 @@
 /* ---- Browser table ---- */
 
 .learnkit .text-xs {
-  font-size: var(--learnkit-font-xs) !important;
+  font-size: var(--learnkit-font-xs);
 }
 
 /* Browser table should align with other content */
@@ -29,11 +29,11 @@
 }
 
 .learnkit .lk-browser-search-card:hover {
-  background-color: var(--color-base-00) !important;
+  background-color: var(--color-base-00);
 }
 
 .learnkit .lk-browser-controls-card:hover {
-  background-color: var(--color-base-05) !important;
+  background-color: var(--color-base-05);
 }
 
 .learnkit .lk-browser-table-card {
@@ -110,11 +110,11 @@
 .learnkit .lk-browser-density-btn {
   min-width: 0;
   white-space: nowrap;
-  font-size: var(--font-ui-small) !important;
-  padding: 6px 14px !important;
-  min-height: 34px !important;
-  height: 32px !important;
-  border-radius: var(--radius-md) !important;
+  font-size: var(--font-ui-small);
+  padding: 6px 14px;
+  min-height: 34px;
+  height: 32px;
+  border-radius: var(--radius-md);
 }
 
 .learnkit .lk-browser-density-btn.lk-browser-density-btn-active,
@@ -122,10 +122,10 @@
 .learnkit .lk-browser-density-btn.lk-browser-density-btn-active:focus-visible,
 .learnkit .lk-browser-density-btn.lk-browser-density-btn-active:active {
   cursor: not-allowed;
-  transform: none !important;
+  transform: none;
   color: var(--theme-base-95);
-  background: var(--theme-base-25) !important;
-  border: 0.5px solid var(--theme-base-45) !important;
+  background: var(--theme-base-25);
+  border: 0.5px solid var(--theme-base-45);
 }
 
 /* ---- Compact density overrides ---- */
@@ -134,26 +134,20 @@
   padding-top: 4px;
   padding-bottom: 4px;
   font-size: var(--learnkit-font-2xs);
-}
-
-.learnkit [data-lk-browser-density="compact"] .lk-browser-cell {
-  border-right: 0.5px solid var(--color-base-30);
-}
-
-.learnkit [data-lk-browser-density="compact"] .lk-browser-cell:last-child {
-  border-right: none;
-}
-
-.learnkit [data-lk-browser-density="compact"] .lk-browser-th {
   border-left: none;
   border-right: none;
 }
 
 .learnkit [data-lk-browser-density="compact"] .lk-browser-cell {
+  border-right: 0.5px solid var(--color-base-30);
   padding: 3px;
   font-size: var(--learnkit-font-2xs);
   height: auto;
   vertical-align: top;
+}
+
+.learnkit [data-lk-browser-density="compact"] .lk-browser-cell:last-child {
+  border-right: none;
 }
 
 .learnkit [data-lk-browser-density="compact"] .lk-browser-row {
@@ -166,17 +160,16 @@
 .learnkit [data-lk-browser-density="compact"] .lk-browser-contenteditable,
 .learnkit [data-lk-browser-density="compact"] .lk-browser-flag-overlay,
 .learnkit [data-lk-browser-density="compact"] .lk-browser-flag-overlay--multiline,
-.learnkit [data-lk-browser-density="compact"] .lk-browser-tag-box,
 .learnkit [data-lk-browser-density="compact"] .lk-browser-img-overlay,
 .learnkit [data-lk-browser-density="compact"] .lk-browser-io-box,
 .learnkit [data-lk-browser-density="compact"] .lk-browser-mcq-input,
 .learnkit [data-lk-browser-density="compact"] .lk-browser-mcq-add,
 .learnkit [data-lk-browser-density="compact"] .lk-browser-oq-input,
 .learnkit [data-lk-browser-density="compact"] .lk-browser-oq-add {
-  border: none !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .learnkit [data-lk-browser-density="compact"] .lk-browser-cell:focus-within {
@@ -189,25 +182,20 @@
 .learnkit [data-lk-browser-density="compact"] textarea.lk-browser-textarea--editable,
 .learnkit [data-lk-browser-density="compact"] textarea.lk-browser-flag-textarea,
 .learnkit [data-lk-browser-density="compact"] .lk-browser-flag-overlay {
-  background: var(--lk-browser-editor-bg, var(--color-base-10)) !important;
-}
-
-.learnkit [data-lk-browser-density="compact"] .lk-browser-tag-box {
-  background: var(--lk-browser-editor-bg, var(--color-base-10)) !important;
+  background: var(--lk-browser-editor-bg, var(--color-base-10));
 }
 
 .learnkit [data-lk-browser-density="compact"] .lk-browser-textarea,
 .learnkit [data-lk-browser-density="compact"] .lk-browser-contenteditable,
-.learnkit [data-lk-browser-density="compact"] .lk-browser-flag-editor-wrap--multiline,
-.learnkit [data-lk-browser-density="compact"] .lk-browser-tag-box {
-  padding: 0 !important;
+.learnkit [data-lk-browser-density="compact"] .lk-browser-flag-editor-wrap--multiline {
+  padding: 0;
   height: var(--learnkit-editor-height, 38px);
   min-height: var(--learnkit-editor-height, 38px);
   max-height: var(--learnkit-editor-height, 38px);
 }
 
 .learnkit [data-lk-browser-density="compact"] .lk-browser-flag-editor-wrap {
-  padding: 0 !important;
+  padding: 0;
   height: var(--learnkit-editor-height, 38px);
   min-height: var(--learnkit-editor-height, 38px);
   max-height: var(--learnkit-editor-height, 38px);
@@ -215,7 +203,7 @@
 
 .learnkit [data-lk-browser-density="compact"] .lk-browser-mcq-cell,
 .learnkit [data-lk-browser-density="compact"] .lk-browser-oq-cell {
-  padding: 0 !important;
+  padding: 0;
   gap: 1px;
   height: var(--learnkit-editor-height, 56px);
   min-height: var(--learnkit-editor-height, 56px);
@@ -235,7 +223,7 @@
 .learnkit [data-lk-browser-density="compact"] .lk-browser-oq-add {
   height: 22px;
   min-height: 22px;
-  padding: 0 !important;
+  padding: 0;
   font-size: var(--learnkit-font-3xs);
 }
 
@@ -250,7 +238,7 @@
 }
 
 .learnkit [data-lk-browser-density="compact"] .lk-browser-io-box {
-  padding: 0 !important;
+  padding: 0;
 }
 
 /* Compact textarea font: override the hardcoded 0.85rem so typed-in
@@ -258,14 +246,14 @@
 .learnkit [data-lk-browser-density="compact"] textarea.lk-browser-textarea,
 .learnkit [data-lk-browser-density="compact"] textarea.lk-browser-textarea--editable,
 .learnkit [data-lk-browser-density="compact"] textarea.lk-browser-flag-textarea {
-  font-size: 0.7rem !important;
+  font-size: 0.7rem;
   line-height: 1.35;
-  padding: 0 !important;
-  overflow: scroll !important;
+  padding: 0;
+  overflow: scroll;
 }
 
 .learnkit [data-lk-browser-density="compact"] .lk-browser-flag-overlay {
-  padding: 0 !important;
+  padding: 0;
   font-size: var(--learnkit-font-2xs);
   line-height: 1.3;
   height: 100%;
@@ -313,9 +301,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  height: var(--learnkit-editor-height, 38px);
+  min-height: var(--learnkit-editor-height, 38px);
+  max-height: var(--learnkit-editor-height, 38px);
   padding: 2px 6px;
   background: transparent;
   border: none;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .learnkit .lk-browser-tag-compact-text {
@@ -352,7 +345,7 @@
 
 /* Allow tooltips to overflow browser cells */
 .learnkit .lk-browser-cell[data-tooltip],
-.learnkit .lk-browser-cell:has([data-tooltip]) {
+.learnkit .lk-browser-cell.lk-browser-cell-has-tooltip {
   overflow: visible;
 }
 
@@ -393,16 +386,16 @@
 .learnkit textarea.lk-browser-textarea--editable,
 .learnkit textarea.lk-browser-flag-textarea {
   font-size: 0.8rem;
-  background: var(--lk-browser-editor-bg, var(--color-base-10)) !important;
+  background: var(--lk-browser-editor-bg, var(--color-base-10));
 }
 
 /* Comfortable textarea styling: keep clear field boundaries and readable text. */
 .learnkit [data-lk-browser-density="comfortable"] textarea.lk-browser-textarea,
 .learnkit [data-lk-browser-density="comfortable"] textarea.lk-browser-textarea--editable,
 .learnkit [data-lk-browser-density="comfortable"] textarea.lk-browser-flag-textarea {
-  border: 0.5px solid var(--theme-accent) !important;
-  border-radius: var(--radius-md) !important;
-  font-size: 0.74rem !important;
+  border: 0.5px solid var(--theme-accent);
+  border-radius: var(--radius-md);
+  font-size: 0.74rem;
 }
 
 /* Contenteditable cells with image support */
@@ -492,12 +485,12 @@
   font-size: 0.9rem;
 }
 
-.learnkit .lk-browser-view .table tbody tr:not(:hover):not(:has(input[type="checkbox"][data-card-id]:checked)) td .lk-browser-flag-overlay {
+.learnkit .lk-browser-view .table tbody tr:not(:hover):not(.lk-browser-row-selected) td .lk-browser-flag-overlay {
   color: var(--text-muted);
 }
 
 .learnkit .lk-browser-view .table tbody tr:hover td .lk-browser-flag-overlay,
-.learnkit .lk-browser-view .table tbody tr:has(input[type="checkbox"][data-card-id]:checked) td .lk-browser-flag-overlay,
+.learnkit .lk-browser-view .table tbody tr.lk-browser-row-selected td .lk-browser-flag-overlay,
 .learnkit .lk-browser-view .table tbody td.lk-browser-cell:focus-within .lk-browser-flag-overlay {
   color: var(--text-normal);
 }
@@ -505,7 +498,7 @@
 .learnkit .lk-browser-flag-overlay--multiline {
   overflow: auto;
   white-space: pre-wrap;
-  border: 0.5px solid var(--color-base-40) !important;
+  border: 0.5px solid var(--color-base-40);
   overflow-wrap: anywhere;
   word-break: break-word;
   font-size: 0.9rem;
@@ -702,7 +695,7 @@
 .learnkit .lk-browser-tag-remove,
 .learnkit .lk-browser-tag-remove .svg-icon,
 .learnkit .lk-browser-tag-remove .svg-icon.lucide-x {
-  color: var(--theme-base-95) !important;
+  color: var(--theme-base-95);
   stroke: currentColor;
 }
 
@@ -717,15 +710,15 @@
   height: 36px;
   box-sizing: border-box;
   align-self: stretch;
-  background: var(--color-base-05) !important;
-  border: none !important;
-  border-radius: var(--radius-md) !important;
+  background: var(--color-base-05);
+  border: none;
+  border-radius: var(--radius-md);
   color: var(--text-normal);
-  box-shadow: none !important;
+  box-shadow: none;
 }
 
 .learnkit .lk-browser-search-input:is(:hover, :focus, :focus-visible, :active) {
-  background: var(--color-base-05) !important;
+  background: var(--color-base-05);
 }
 
 .learnkit .lk-browser-search-input::placeholder {
@@ -734,8 +727,8 @@
 
 /* Browser search input focus */
 .learnkit .lk-browser-search-input:focus {
-  border: none !important;
-  box-shadow: none !important;
+  border: none;
+  box-shadow: none;
   outline: none;
 }
 
@@ -753,8 +746,8 @@
 .learnkit [data-lk-browser-density="compact"] .lk-browser-oq-add:focus,
 .learnkit [data-lk-browser-density="compact"] .lk-browser-tag-box:focus,
 .learnkit [data-lk-browser-density="compact"] .lk-browser-tag-box:focus-within {
-  border: none !important;
-  box-shadow: none !important;
+  border: none;
+  box-shadow: none;
   outline: none;
 }
 
@@ -773,7 +766,7 @@
   box-sizing: border-box;
   border-collapse: separate;
   border-spacing: 0;
-  margin-top: 0 !important;
+  margin-top: 0;
 }
 
 .learnkit .lk-browser-select-col {
@@ -794,11 +787,7 @@
   width: 42px;
   text-align: center;
   cursor: pointer;
-}
-
-.learnkit .lk-browser-select-th:has(.lk-browser-select-all) {
   padding: 0;
-  vertical-align: middle;
 }
 
 .learnkit .lk-browser-select-all {
@@ -844,15 +833,15 @@
 
 /* Allow tooltips to overflow clipped cells */
 .learnkit .learnkit-cell-clip[data-tooltip],
-.learnkit .learnkit-cell-clip:has([data-tooltip]) {
+.learnkit .learnkit-cell-clip.learnkit-cell-clip-has-tooltip {
   overflow: visible;
 }
 
 .learnkit .learnkit-sticky-th {
   top: var(--learnkit-sticky-top, 0px);
     z-index: 20;
-    background-color: var(--color-base-05) !important;
-    border-bottom: 0.5px solid var(--color-base-35) !important;
+    background-color: var(--color-base-05);
+    border-bottom: 0.5px solid var(--color-base-35);
     box-shadow: 0 1px 0 var(--lk-browser-border-soft);
     vertical-align: middle;
     background-clip: padding-box;
@@ -918,25 +907,22 @@
   pointer-events: none;
 }
 
-.learnkit .lk-browser-th-label {
-  line-height: 1.2;
-}
-
 /* Subtle hover cue on sortable header cells. */
 .learnkit .lk-browser-header-cell:hover {
   background-color: color-mix(in srgb, var(--color-base-10) 55%, transparent 45%);
 }
 
 .learnkit .lk-browser-header-cell:is(:hover, :focus, :focus-visible) .lk-browser-th-label {
-  color: var(--text-normal) !important;
+  color: var(--text-normal);
 }
 
 .learnkit .lk-browser-header-cell:is(:hover, :focus, :focus-visible) .lk-browser-th-icon {
-  opacity: 0.9 !important;
+  opacity: 0.9;
   color: var(--text-normal);
 }
 
 .learnkit .lk-browser-th-label {
+  line-height: 1.2;
   vertical-align: middle;
   display: inline-block;
   align-self: center;
@@ -987,13 +973,13 @@
 }
 
 /* Selected browser rows (via row checkbox) */
-.learnkit .lk-browser-view .table tbody tr:has(input[type="checkbox"][data-card-id]:checked),
-.learnkit .lk-browser-view .table tbody tr:has(input[type="checkbox"][data-card-id]:checked) td {
+.learnkit .lk-browser-view .table tbody tr.lk-browser-row-selected,
+.learnkit .lk-browser-view .table tbody tr.lk-browser-row-selected td {
   background: var(--color-base-15);
 }
 
-.learnkit .lk-browser-view .table tbody tr:has(input[type="checkbox"][data-card-id]:checked):hover,
-.learnkit .lk-browser-view .table tbody tr:has(input[type="checkbox"][data-card-id]:checked):hover td {
+.learnkit .lk-browser-view .table tbody tr.lk-browser-row-selected:hover,
+.learnkit .lk-browser-view .table tbody tr.lk-browser-row-selected:hover td {
   background: var(--color-base-15);
 }
 
@@ -1008,46 +994,46 @@
 .learnkit .lk-browser-view nav[role="navigation"] .btn,
 .learnkit .lk-browser-view nav[role="navigation"] .learnkit-btn-toolbar,
 .learnkit .lk-browser-view [data-tooltip="Rows per page"] {
-  height: 32px !important;
-  min-height: 32px !important;
-  max-height: 32px !important;
+  height: 32px;
+  min-height: 32px;
+  max-height: 32px;
   font-size: var(--font-ui-small);
 }
 
 /* Keep numeric pagination buttons exactly square across all states. */
 .learnkit .lk-browser-view nav[role="navigation"] button[aria-label^="Page "] {
-  width: 32px !important;
-  min-width: 32px !important;
-  max-width: 32px !important;
-  height: 32px !important;
-  min-height: 32px !important;
-  max-height: 32px !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  box-sizing: border-box !important;
+  width: 32px;
+  min-width: 32px;
+  max-width: 32px;
+  height: 32px;
+  min-height: 32px;
+  max-height: 32px;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
   aspect-ratio: 1 / 1;
-  flex: 0 0 32px !important;
-  display: inline-flex !important;
+  flex: 0 0 32px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
   background-color: transparent;
-  transform: none !important;
+  transform: none;
 }
 
 .learnkit .lk-browser-view nav[role="navigation"] button[aria-label^="Page "]:hover,
 .learnkit .lk-browser-view nav[role="navigation"] button[aria-label^="Page "]:focus-visible,
 .learnkit .lk-browser-view nav[role="navigation"] button[aria-label^="Page "]:active,
 .learnkit .lk-browser-view nav[role="navigation"] button[aria-label^="Page "][aria-current="page"] {
-  width: 32px !important;
-  min-width: 32px !important;
-  max-width: 32px !important;
-  height: 32px !important;
-  min-height: 32px !important;
-  max-height: 32px !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  transform: none !important;
+  width: 32px;
+  min-width: 32px;
+  max-width: 32px;
+  height: 32px;
+  min-height: 32px;
+  max-height: 32px;
+  padding: 0;
+  margin: 0;
+  transform: none;
 }
 
 /* ---- Search input alignment ---- */
@@ -1098,14 +1084,14 @@ font-size: var(--learnkit-font-xs);
 
 /* Checkbox column cells are emitted with utility classes that set `display:flex`.
    Override to true table-cell layout so they match row height and stay centered. */
-.learnkit .lk-browser-view .table tbody td.lk-browser-cell:has(input[type="checkbox"][data-card-id]) {
+.learnkit .lk-browser-view .table tbody td.lk-browser-cell.lk-browser-cell-select {
   display: table-cell;
   height: auto;
   vertical-align: middle;
   text-align: center;
 }
 
-.learnkit .lk-browser-view .table tbody td.lk-browser-cell:has(input[type="checkbox"][data-card-id]) > input[type="checkbox"][data-card-id] {
+.learnkit .lk-browser-view .table tbody td.lk-browser-cell.lk-browser-cell-select > input[type="checkbox"][data-card-id] {
   margin: 0 auto;
   vertical-align: middle;
 }
@@ -1120,11 +1106,12 @@ font-size: var(--learnkit-font-xs);
   --lk-browser-editor-bg-active: var(--color-base-15);
   --lk-browser-editor-bg: var(--lk-browser-editor-bg-active);
   background-color: var(--lk-browser-row-hover);
+  color: var(--text-normal);
 }
 
 /* Keep selected rows visually locked when hovered. */
-.learnkit .lk-browser-view .table tbody tr:has(input[type="checkbox"][data-card-id]:checked) td,
-.learnkit .lk-browser-view .table tbody tr:has(input[type="checkbox"][data-card-id]:checked):hover td {
+.learnkit .lk-browser-view .table tbody tr.lk-browser-row-selected td,
+.learnkit .lk-browser-view .table tbody tr.lk-browser-row-selected:hover td {
   --lk-browser-cell-bg: var(--lk-browser-row-hover);
   --lk-browser-editor-bg-active: var(--color-base-15);
   --lk-browser-editor-bg: var(--lk-browser-editor-bg-active);
@@ -1134,10 +1121,6 @@ font-size: var(--learnkit-font-xs);
 
 .learnkit .lk-browser-view .table tbody td.lk-browser-cell:focus-within {
   --lk-browser-editor-bg: var(--lk-browser-editor-bg-active);
-}
-
-.learnkit .lk-browser-view .table tbody tr:hover td {
-  color: var(--text-normal);
 }
 
 /* Deck browser table header uses muted text */
@@ -1333,9 +1316,9 @@ font-size: var(--learnkit-font-xs);
 /* Comfortable browser cell chrome (and default non-compact fallback). */
 .learnkit [data-lk-browser-density="comfortable"] :is(.lk-browser-tag-box, .lk-browser-oq-cell, .lk-browser-io-box, .lk-browser-mcq-cell),
 .learnkit [data-lk-browser-root="1"]:not([data-lk-browser-density="compact"]) :is(.lk-browser-tag-box, .lk-browser-oq-cell, .lk-browser-io-box, .lk-browser-mcq-cell) {
-  border: 0.5px solid var(--color-base-40) !important;
-  border-radius: var(--radius-md) !important;
-  font-size: 0.75rem !important;
+  border: 0.5px solid var(--color-base-40);
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
 }
 
 /* ---- Mobile browser toolbar layout ---- */
@@ -1359,7 +1342,7 @@ body.is-mobile .learnkit .lk-browser-cards-stack {
 }
 
 body.is-mobile .learnkit .lk-browser-table-card {
-  padding: 0 !important;
+  padding: 0;
 }
 
 body.is-mobile .learnkit .lk-browser-search-group,
@@ -1423,12 +1406,12 @@ body.is-phone .learnkit .lk-browser-title-strip > .learnkit-inline-sentence > .l
 /* ---- Browser toolbar action buttons ---- */
 
 .learnkit .lk-browser-action-btn {
-  font-size: var(--font-ui-small) !important;
-  border-radius: var(--radius-md) !important;
-  gap: 5px !important;
-  height: 34px !important;
-  min-height: 34px !important;
-  padding: 6px 12px !important;
+  font-size: var(--font-ui-small);
+  border-radius: var(--radius-md);
+  gap: 5px;
+  height: 34px;
+  min-height: 34px;
+  padding: 6px 12px;
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
 }
 
@@ -1446,11 +1429,11 @@ body.is-phone .learnkit .lk-browser-title-strip > .learnkit-inline-sentence > .l
 /* ---- Browser filter buttons ---- */
 
 .learnkit .lk-browser-filter .learnkit-btn-toolbar {
-  font-size: var(--font-ui-small) !important;
-  height: 34px !important;
-  min-height: 34px !important;
-  padding: 6px 12px !important;
-  border-radius: var(--radius-md) !important;
+  font-size: var(--font-ui-small);
+  height: 34px;
+  min-height: 34px;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
 }
 
 /* Browser controls: transparent base with subtle border, then stronger state borders. */
@@ -1458,9 +1441,9 @@ body.is-phone .learnkit .lk-browser-title-strip > .learnkit-inline-sentence > .l
   .learnkit-btn-toolbar,
   .lk-browser-action-btn
 ) {
-  background: transparent !important;
-  border: 0.5px solid transparent !important;
-  box-shadow: none !important;
+  background: transparent;
+  border: 0.5px solid transparent;
+  box-shadow: none;
 }
 
 .learnkit .lk-browser-controls-row :is(
@@ -1468,16 +1451,16 @@ body.is-phone .learnkit .lk-browser-title-strip > .learnkit-inline-sentence > .l
   .lk-browser-action-btn
 ):is(:hover, :focus, :focus-visible, :active),
 .learnkit .lk-browser-controls-row .lk-browser-filter .learnkit-btn-toolbar[aria-expanded="true"] {
-  background: var(--color-base-10) !important;
-  border-color: var(--color-base-35) !important;
+  background: var(--color-base-10);
+  border-color: var(--color-base-35);
 }
 
 .learnkit .lk-browser-controls-row :is(
   .learnkit-btn-toolbar,
   .lk-browser-action-btn
 ):disabled {
-  background: transparent !important;
-  border-color: transparent !important;
+  background: transparent;
+  border-color: transparent;
 }
 
 /* ---- Browser bottom bar ---- */
@@ -1488,17 +1471,17 @@ body.is-phone .learnkit .lk-browser-title-strip > .learnkit-inline-sentence > .l
 }
 
 .learnkit .lk-browser-summary {
-  font-size: var(--font-ui-smaller) !important;
+  font-size: var(--font-ui-smaller);
   color: var(--text-faint);
 }
 
 .learnkit .lk-browser-selection-count {
-  font-size: var(--font-ui-smaller) !important;
+  font-size: var(--font-ui-smaller);
   color: var(--text-faint);
 }
 
 .learnkit .lk-browser-rows-label {
-  font-size: var(--font-ui-smaller) !important;
+  font-size: var(--font-ui-smaller);
   color: var(--text-faint);
 }
 
@@ -1521,12 +1504,7 @@ body.is-phone .learnkit .lk-browser-title-strip > .learnkit-inline-sentence > .l
 }
 
 .theme-dark .learnkit .lk-browser-search-input {
-  border-color: var(--color-base-35) !important;
-}
-
-body.is-mobile .learnkit .lk-browser-density-btn {
-  min-width: 0;
-  flex: 1 1 calc((100% - 8px) / 2);
+  border-color: var(--color-base-35);
 }
 
 body.is-mobile .learnkit .lk-browser-filter {
@@ -1575,8 +1553,8 @@ body.is-mobile .learnkit .lk-browser-action-btn-suspend {
 
 body.is-mobile .learnkit .lk-browser-filter-columns-wrap .lk-browser-filter > button,
 body.is-mobile .learnkit .lk-browser-action-btn-suspend {
-  justify-content: center !important;
-  gap: 6px !important;
+  justify-content: center;
+  gap: 6px;
 }
 
 body.is-mobile .learnkit .lk-browser-filter-columns-wrap .lk-browser-filter > button :is(
@@ -1587,7 +1565,7 @@ body.is-mobile .learnkit .lk-browser-action-btn-suspend :is(
   [class*="svg-icon"],
   svg
 ) {
-  margin: 0 !important;
+  margin: 0;
 }
 
 body.is-mobile .learnkit .lk-browser-action-btn-suspend {
@@ -1611,15 +1589,15 @@ body.is-mobile .learnkit .lk-browser-controls-row :is(
   .learnkit-btn-toolbar,
   .lk-browser-action-btn
 ) {
-  height: 28px !important;
-  min-height: 28px !important;
-  padding: 0 8px !important;
-  border-radius: var(--radius-md) !important;
-  border: 0.5px solid transparent !important;
-  background: transparent !important;
-  color: var(--text-normal) !important;
-  font-size: var(--learnkit-font-xs) !important;
-  gap: 6px !important;
+  height: 28px;
+  min-height: 28px;
+  padding: 0 8px;
+  border-radius: var(--radius-md);
+  border: 0.5px solid transparent;
+  background: transparent;
+  color: var(--text-normal);
+  font-size: var(--learnkit-font-xs);
+  gap: 6px;
 }
 
 body.is-mobile .learnkit .lk-browser-controls-row .lk-browser-filter .learnkit-btn-toolbar {
@@ -1627,20 +1605,20 @@ body.is-mobile .learnkit .lk-browser-controls-row .lk-browser-filter .learnkit-b
 }
 
 body.is-mobile .learnkit .lk-browser-controls-row .lk-browser-filter-columns-wrap .lk-browser-filter .learnkit-btn-toolbar {
-  justify-content: center !important;
+  justify-content: center;
 }
 
 body.is-mobile .learnkit .lk-browser-view .table thead th,
 body.is-mobile .learnkit .lk-browser-view .learnkit-sticky-th {
-  background-color: var(--color-base-05) !important;
-  border-bottom: 0.5px solid var(--color-base-35) !important;
+  background-color: var(--color-base-05);
+  border-bottom: 0.5px solid var(--color-base-35);
   background-clip: padding-box;
-  color: var(--text-normal) !important;
+  color: var(--text-normal);
 }
 
 body.is-mobile .learnkit .lk-browser-view .table thead th span,
 body.is-mobile .learnkit .lk-browser-view .lk-browser-th-label {
-  color: var(--text-normal) !important;
+  color: var(--text-normal);
 }
 
 body.is-phone .learnkit .lk-browser-bottom-bar {
@@ -1659,11 +1637,11 @@ body.is-phone .learnkit .lk-browser-summary-wrap {
 body.is-phone .learnkit .lk-browser-selection-row,
 body.is-phone .learnkit .lk-browser-rows-control,
 body.is-phone .learnkit .lk-browser-page-indicator {
-  display: none !important;
+  display: none;
 }
 
 body.is-phone .learnkit .lk-browser-bottom-right {
-  display: flex !important;
+  display: flex;
   flex: 0 0 auto;
   margin-left: auto;
 }
@@ -1679,11 +1657,11 @@ body.is-phone .learnkit .lk-browser-pagination {
 }
 
 body.is-phone .learnkit .lk-browser-pagination button[aria-label^="Page "] {
-  display: none !important;
+  display: none;
 }
 
 body.is-phone .learnkit .lk-browser-pagination .learnkit-btn-toolbar:disabled {
-  display: none !important;
+  display: none;
 }
 
 body.is-mobile .learnkit .lk-browser-controls-row :is(
@@ -1693,7 +1671,7 @@ body.is-mobile .learnkit .lk-browser-controls-row :is(
   [class*="svg-icon"],
   svg
 ) {
-  display: inline-flex !important;
+  display: inline-flex;
   width: 14px;
   height: 14px;
   min-width: 14px;
@@ -1726,68 +1704,48 @@ body.is-phone .learnkit [data-lk-browser-root="1"] .lk-browser-tbody {
 overflow-y: visible;
 }
 
-body.is-phone .learnkit .lk-browser-bottom-bar {
-align-items: flex-start;
-justify-content: flex-start;
-gap: 10px;
+body.is-phone .learnkit [data-lk-browser-root="1"] .lk-browser-bottom-bar {
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 10px;
 }
 
-body.is-phone .learnkit .lk-browser-summary-wrap,
-body.is-phone .learnkit .lk-browser-bottom-right {
-display: flex;
-flex-direction: row;
-align-items: center;
-justify-content: space-between;
-gap: 8px;
-min-width: 0;
-margin-left: 0;
+body.is-phone .learnkit [data-lk-browser-root="1"] .lk-browser-summary-wrap {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  min-width: 0;
+  margin-left: 0;
+  flex-wrap: nowrap;
+  width: 100%;
 }
 
-body.is-phone .learnkit .lk-browser-summary-wrap {
-gap: 0;
-flex-wrap: nowrap;
-
-body.is-phone .learnkit .lk-browser-selection-row {
-align-items: center;
-justify-content: flex-start;
-gap: 8px;
-justify-content: flex-end;
-flex-wrap: nowrap;
-
-body.is-phone .learnkit .lk-browser-bottom-right {
-display: flex;
-align-items: center;
-display: none;
-flex-wrap: wrap;
-gap: 8px;
-}
-width: auto;
-justify-content: flex-end;
-margin-left: auto;
-flex: 0 0 auto;
+body.is-phone .learnkit [data-lk-browser-root="1"] .lk-browser-selection-row {
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: nowrap;
+  width: auto;
 }
 
-width: auto;
-width: 100%;
-justify-content: flex-start;
+body.is-phone .learnkit [data-lk-browser-root="1"] .lk-browser-pagination {
+  width: 100%;
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
 
-body.is-phone .learnkit .lk-browser-pagination {
-
-body.is-phone .learnkit .lk-browser-pagination button[aria-label^="Page "] {
-display: none;
+body.is-phone .learnkit [data-lk-browser-root="1"] .lk-browser-pagination button[aria-label^="Page "] {
+  display: none;
 }
 
-body.is-phone .learnkit .lk-browser-selection-row .lk-browser-clear-selection {
-display: none;
-}
-width: 100%;
-overflow-x: auto;
-white-space: nowrap;
--webkit-overflow-scrolling: touch;
-scrollbar-width: none;
+body.is-phone .learnkit [data-lk-browser-root="1"] .lk-browser-selection-row .lk-browser-clear-selection {
+  display: none;
 }
 
-body.is-phone .learnkit .lk-browser-pagination::-webkit-scrollbar {
-display: none;
+body.is-phone .learnkit [data-lk-browser-root="1"] .lk-browser-pagination::-webkit-scrollbar {
+  display: none;
 }

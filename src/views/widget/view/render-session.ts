@@ -126,7 +126,7 @@ function fallbackWidgetTitle(view: WidgetViewLike, card: CardRecord): string {
 export function renderWidgetSession(view: WidgetViewLike, root: HTMLElement): void {
   if (!view.session) return;
   const wrap = el("div", "bg-background");
-  wrap.classList.add("learnkit-widget", "learnkit-widget", "learnkit", "learnkit");
+  wrap.classList.add("learnkit-widget", "learnkit");
   // ---- Header -------------------------------------------------------
   const header = el("div", "sprout-widget-header");
 
@@ -161,6 +161,7 @@ export function renderWidgetSession(view: WidgetViewLike, root: HTMLElement): vo
   header.appendChild(studyingWrap);
   header.appendChild(backBtn);
   wrap.appendChild(header);
+  wrap.classList.add("learnkit-widget-has-session-header");
 
   // ---- Empty queue (session complete) --------------------------------
   const card = view.currentCard();

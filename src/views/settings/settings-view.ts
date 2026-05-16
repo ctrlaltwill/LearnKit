@@ -304,14 +304,14 @@ export class LearnKitSettingsView extends ItemView {
     if (!stages.length) return;
 
     for (const { el } of stages) {
-      el.classList.remove("learnkit-settings-top-enter", "learnkit-settings-top-enter");
+      el.classList.remove("learnkit-settings-top-enter");
       el.style.removeProperty("--learnkit-settings-enter-delay");
       // Remove AOS hooks on top stages so AOS cannot short-circuit title-strip motion.
       el.removeAttribute("data-aos");
       el.removeAttribute("data-aos-delay");
       el.removeAttribute("data-aos-duration");
       el.removeAttribute("data-aos-anchor-placement");
-      el.classList.remove("aos-init", "aos-animate", "learnkit-aos-fallback", "learnkit-aos-fallback");
+      el.classList.remove("aos-init", "aos-animate", "learnkit-aos-fallback");
     }
 
     window.requestAnimationFrame(() => {
@@ -320,7 +320,7 @@ export class LearnKitSettingsView extends ItemView {
         el.style.setProperty("--learnkit-settings-enter-delay", `${Math.max(0, delay)}ms`);
         // Force reflow so class re-add always restarts the keyframe.
         void el.offsetHeight;
-        el.classList.add("learnkit-settings-top-enter", "learnkit-settings-top-enter");
+        el.classList.add("learnkit-settings-top-enter");
       }
     });
   }
@@ -337,9 +337,7 @@ export class LearnKitSettingsView extends ItemView {
     const tx = (token: string, fallback: string) =>
       t(this.plugin.settings?.general?.interfaceLanguage, token, fallback);
 
-    root.classList.add("learnkit-view-content", "learnkit-view-content",
-      "learnkit-settings-view-root", "learnkit-settings-view-root",
-    );
+    root.classList.add("learnkit-view-content", "learnkit-settings-view-root");
 
     this.containerEl.addClass("learnkit");
     this.setTitle?.(tx("ui.view.settings.title", "Settings"));
@@ -420,6 +418,7 @@ export class LearnKitSettingsView extends ItemView {
     // The adapter uses its containerEl for notices/refresh — we need to
     // call the private render methods. We access them via the prototype.
     const tab = this._activeTab;
+    container.classList.toggle("learnkit-settings-tab-content-has-guide-layout", tab === "guide");
 
     if (tab === "about") {
       this._renderReleaseNotesTab(container);
@@ -1003,6 +1002,7 @@ export class LearnKitSettingsView extends ItemView {
               gap: 6,
             });
             dropdown.classList.add("is-visible");
+            group.classList.add("is-open");
             btn.setAttribute("aria-expanded", "true");
             openDropdownGroup = group;
             openDropdownEl = dropdown;
@@ -1010,6 +1010,7 @@ export class LearnKitSettingsView extends ItemView {
 
           const hide = () => {
             dropdown.classList.remove("is-visible");
+            group.classList.remove("is-open");
             btn.setAttribute("aria-expanded", "false");
             if (openDropdownGroup === group) openDropdownGroup = null;
             if (openDropdownEl === dropdown) openDropdownEl = null;
@@ -1025,6 +1026,7 @@ export class LearnKitSettingsView extends ItemView {
             if (openDropdownGroup && openDropdownGroup !== group) {
               const openDropdown = openDropdownEl;
               const openBtn = openDropdownGroup.querySelector<HTMLButtonElement>(".learnkit-guide-nav-btn");
+              openDropdownGroup.classList.remove("is-open");
               if (openDropdown) openDropdown.classList.remove("is-visible");
               if (openBtn) openBtn.setAttribute("aria-expanded", "false");
               openDropdownGroup = null;
@@ -1190,6 +1192,7 @@ export class LearnKitSettingsView extends ItemView {
           if (!target || !openDropdownGroup || openDropdownGroup.contains(target) || openDropdownEl?.contains(target)) return;
           const openDropdown = openDropdownEl;
           const openBtn = openDropdownGroup.querySelector<HTMLButtonElement>(".learnkit-guide-nav-btn");
+          openDropdownGroup.classList.remove("is-open");
           if (openDropdown) openDropdown.classList.remove("is-visible");
           if (openBtn) openBtn.setAttribute("aria-expanded", "false");
           openDropdownGroup = null;
@@ -1202,6 +1205,7 @@ export class LearnKitSettingsView extends ItemView {
             if (openDropdownGroup) {
               const openDropdown = openDropdownEl;
               const openBtn = openDropdownGroup.querySelector<HTMLButtonElement>(".learnkit-guide-nav-btn");
+              openDropdownGroup.classList.remove("is-open");
               if (openDropdown) openDropdown.classList.remove("is-visible");
               if (openBtn) openBtn.setAttribute("aria-expanded", "false");
               openDropdownGroup = null;

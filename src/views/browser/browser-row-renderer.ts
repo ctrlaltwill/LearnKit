@@ -127,7 +127,7 @@ export function buildPageTableBody(
 
     // ── Checkbox cell ──
     const selTd = activeDocument.createElement("td");
-    selTd.className = `align-middle flex items-center justify-center text-center ${ctx.cellWrapClass} lk-browser-cell`;
+    selTd.className = `align-middle flex items-center justify-center text-center ${ctx.cellWrapClass} lk-browser-cell lk-browser-cell-select`;
     forceCellClip(selTd);
     forceWrapStyles(selTd);
 
@@ -136,6 +136,7 @@ export function buildPageTableBody(
     checkbox.setAttribute("data-card-id", String(card.id));
     checkbox.className = "cursor-pointer accent-[var(--text-normal)]";
     checkbox.checked = ctx.selectedIds.has(String(card.id));
+    tr.classList.toggle("lk-browser-row-selected", checkbox.checked);
     checkbox.addEventListener("change", (ev) => {
       ev.stopPropagation();
       const checked = checkbox.checked;
@@ -161,6 +162,7 @@ export function buildPageTableBody(
         ctx.updateSelectionIndicator();
         ctx.updateSelectAllCheckboxState();
       }
+      tr.classList.toggle("lk-browser-row-selected", checked);
       ctx.setLastShiftSelectionIndex(rowIndex);
     });
 
@@ -315,6 +317,14 @@ export function buildPageTableBody(
         }
       }
       ctx.setLastShiftSelectionIndex(rowIndex);
+    });
+
+    tr.querySelectorAll<HTMLElement>("td.lk-browser-cell").forEach((cell) => {
+      if (!cell.hasAttribute("data-tooltip") && !cell.querySelector("[data-tooltip]")) return;
+      cell.classList.add("lk-browser-cell-has-tooltip");
+      if (cell.classList.contains("learnkit-cell-clip")) {
+        cell.classList.add("learnkit-cell-clip-has-tooltip");
+      }
     });
 
     tbody.appendChild(tr);

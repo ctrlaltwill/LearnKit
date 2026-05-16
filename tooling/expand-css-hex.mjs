@@ -28,11 +28,17 @@ async function expandHexInFile(filePath) {
   let replacements = 0;
 
   root.walkDecls((decl) => {
-    const updated = decl.value.replace(/#([0-9a-fA-F]{3})(?![0-9a-fA-F])/g, (_, hex) => {
-      const [r, g, b] = hex;
-      replacements += 1;
-      return `#${r}${r}${g}${g}${b}${b}`;
-    });
+    const updated = decl.value
+      .replace(/#([0-9a-fA-F]{4})(?![0-9a-fA-F])/g, (_, hex) => {
+        const [r, g, b, a] = hex;
+        replacements += 1;
+        return `#${r}${r}${g}${g}${b}${b}${a}${a}`;
+      })
+      .replace(/#([0-9a-fA-F]{3})(?![0-9a-fA-F])/g, (_, hex) => {
+        const [r, g, b] = hex;
+        replacements += 1;
+        return `#${r}${r}${g}${g}${b}${b}`;
+      });
 
     if (updated !== decl.value) {
       decl.value = updated;
