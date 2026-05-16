@@ -8,9 +8,10 @@
 import {  } from "obsidian";
 
 import * as React from "react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import type { ChartConfiguration } from "chart.js";
 import { useAnalyticsPopoverZIndex } from "../filter-styles";
 import { t } from "../../../platform/translations/translator";
+import { ChartJsCanvas, resolveChartColor } from "../charts/chartjs-canvas";
 
 type CardLike = {
   id: string;
@@ -254,19 +255,61 @@ export function TopicMasteryCard(props: {
     return Math.max(60, Math.ceil(maxScore / 10) * 10);
   }, [chartData]);
 
-  const tooltip = React.useCallback((ctx: { active?: boolean; payload?: ReadonlyArray<{ payload?: unknown }> }) => {
-    if (!ctx.active || !ctx.payload || !ctx.payload.length) return null;
-    const row = ctx.payload[0]?.payload as ChartRow | undefined;
-    if (!row) return null;
-    return (
-      <div className="learnkit-data-tooltip-surface">
-        <div className="text-sm font-medium text-background">{row.key}</div>
-        <div className="text-background">Mastery: {row.score.toFixed(1)}</div>
-        <div className="text-background">Confidence: {row.confidence}%</div>
-        <div className="text-background">Due soon: {row.dueSoon}</div>
-      </div>
-    );
-  }, []);
+  const chartConfig = React.useMemo<ChartConfiguration<"bar">>(() => {
+    const axisColor = resolveChartColor("var(--border)");
+    const tickColor = resolveChartColor("var(--text-muted)");
+
+    return {
+      type: "bar",
+      data: {
+        labels: chartData.map((row) => row.key),
+        datasets: [
+          {
+            label: "Mastery",
+            data: chartData.map((row) => row.score),
+            backgroundColor: resolveChartColor("var(--chart-accent-1)"),
+            borderWidth: 0,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: "y",
+        scales: {
+          x: {
+            min: 0,
+            max: scoreDomainMax,
+            border: { color: axisColor },
+            grid: { color: axisColor, borderDash: [3, 3] },
+            ticks: { color: tickColor, font: { size: 12 } },
+          },
+          y: {
+            border: { display: false },
+            grid: { display: false },
+            ticks: { display: false },
+          },
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              title: (items) => {
+                const row = chartData[items[0]?.dataIndex ?? 0];
+                return row?.key ?? "";
+              },
+              label: (item) => `Mastery: ${Number(item.raw ?? 0).toFixed(1)}`,
+              afterLabel: (item) => {
+                const row = chartData[item.dataIndex ?? 0];
+                if (!row) return [];
+                return [`Confidence: ${row.confidence}%`, `Due soon: ${row.dueSoon}`];
+              },
+            },
+          },
+        },
+      },
+    };
+  }, [chartData, scoreDomainMax]);
 
   return (
     <div className="card learnkit-ana-card h-full overflow-visible p-4 flex flex-col gap-3" ref={wrapRef}>
@@ -343,15 +386,12 @@ export function TopicMasteryCard(props: {
       ) : (
         <>
           <div className="w-full flex-1 learnkit-analytics-chart">
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={chartData} margin={{ top: 12, right: 12, bottom: 12, left: 12 }} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" opacity={0.35} />
-                <XAxis type="number" domain={[0, scoreDomainMax]} tick={{ fontSize: 12 }} />
-                <YAxis dataKey="key" type="category" hide />
-                <Tooltip content={tooltip} />
-                <Bar dataKey="score" fill="var(--chart-accent-1)" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <ChartJsCanvas
+              className="w-full h-full"
+              config={chartConfig}
+              height={250}
+              ariaLabel="Topic mastery"
+            />
           </div>
 
           <div className="flex flex-wrap gap-3 text-xs text-muted-foreground learnkit-ana-chart-legend">

@@ -36,7 +36,7 @@
 /* 9. Cards — generic card surface, small card, dark mode polish */
 @import "./cards.css";
 
-/* 10. Analytics — grid, Recharts, pie chart, filters z-index, chart sizing */
+/* 10. Analytics — grid, charts, pie chart, filters z-index, chart sizing */
 @import "./analytics.css";
 
 /* 11. Home view — greeting, deck search, rows, badges, heatmap, drag-handle */

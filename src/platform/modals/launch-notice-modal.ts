@@ -97,7 +97,7 @@ export class LaunchNoticeModal extends Modal {
     const changesList = body.createEl("ul", { cls: "" });
     changesList.createEl("li", { text: tx("ui.launchNotice.changes.item1", "Improved reading view rendering and consistency.") });
     changesList.createEl("li", { text: tx("ui.launchNotice.changes.item2", "Grading duration visibility - can be turned on in settings, allowing you to see the duration between reviews.") });
-    changesList.createEl("li", { text: tx("ui.launchNotice.changes.item3", "Improved image occlusion editing, including ocr-powered auto-masking.") });
+    changesList.createEl("li", { text: tx("ui.launchNotice.changes.item3", "Improved image occlusion editing and tooling.") });
     changesList.createEl("li", { text: tx("ui.launchNotice.changes.item4", "General quality-of-life improvements.") });
 
     const closingHeading = body.createEl("h2", { text: tx("ui.launchNotice.heading.from", "From") });

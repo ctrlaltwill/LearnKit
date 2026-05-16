@@ -8,12 +8,13 @@
 import {  } from "obsidian";
 
 import * as React from "react";
-import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import type { ChartConfiguration } from "chart.js";
 import { createXAxisTicks, formatAxisLabel } from "../chart-axis-utils";
 import { useAnalyticsPopoverZIndex } from "../filter-styles";
 import { MS_DAY } from "../../../platform/core/constants";
 import { interfaceLocaleToIntlLocale } from "../../../platform/translations/locale-registry";
 import { t } from "../../../platform/translations/translator";
+import { ChartJsCanvas, resolveChartColor } from "../charts/chartjs-canvas";
 
 type NoteReviewEventLike = {
   kind?: string;
@@ -88,19 +89,6 @@ function ChevronIcon(props: { open: boolean }) {
     >
       <polyline points="6 4 14 12 6 20" />
     </svg>
-  );
-}
-
-function TooltipContent(props: { active?: boolean; payload?: Array<{ payload?: unknown }>; locale?: string }) {
-  if (!props.active || !props.payload || !props.payload.length) return null;
-  const datum = props.payload[0]?.payload as DayRow | undefined;
-  if (!datum) return null;
-  return (
-    <div className="learnkit-data-tooltip-surface">
-      <div className="text-sm font-medium text-background">{datum.date}</div>
-      <div className="text-background">{t(props.locale, "ui.analytics.noteReview.tooltipScheduled", "Scheduled: {count}", { count: datum.scheduled })}</div>
-      <div className="text-background">{t(props.locale, "ui.analytics.noteReview.tooltipReviewed", "Reviewed: {count}", { count: datum.reviewed })}</div>
-    </div>
   );
 }
 
@@ -245,6 +233,87 @@ export function NoteReviewAnalyticsCard(props: {
   }, [data]);
   const yTicks = React.useMemo(() => buildYAxisTicks(yMax), [yMax]);
 
+  const chartConfig = React.useMemo<ChartConfiguration<"bar">>(() => {
+    const axisColor = resolveChartColor("var(--border)");
+    const tickColor = resolveChartColor("var(--text-muted)");
+    const xTickSet = new Set(xTicks);
+
+    return {
+      type: "bar",
+      data: {
+        datasets: [
+          {
+            label: t(props.locale, "ui.analytics.noteReview.legendReviewed", "Reviewed"),
+            data: data.map((row) => ({ x: row.dayIndex, y: row.reviewed })),
+            parsing: false,
+            stack: "notes",
+            backgroundColor: resolveChartColor("var(--chart-accent-2)"),
+            borderWidth: 0,
+          },
+          {
+            label: t(props.locale, "ui.analytics.noteReview.legendScheduled", "Scheduled"),
+            data: data.map((row) => ({ x: row.dayIndex, y: row.scheduledRemaining })),
+            parsing: false,
+            stack: "notes",
+            backgroundColor: resolveChartColor("var(--chart-accent-4)"),
+            borderWidth: 0,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            type: "linear",
+            min: startIdx,
+            max: todayIdx,
+            stacked: true,
+            border: { color: axisColor },
+            grid: { display: false },
+            ticks: {
+              color: tickColor,
+              font: { size: 11 },
+              callback: (value) => {
+                const day = Number(value);
+                if (!xTickSet.has(day)) return "";
+                return xTickFormatter(day);
+              },
+            },
+          },
+          y: {
+            type: "linear",
+            min: 0,
+            max: yMax || undefined,
+            stacked: true,
+            border: { color: axisColor },
+            grid: { display: false },
+            ticks: {
+              color: tickColor,
+              font: { size: 11 },
+              callback: (value) => String(value),
+            },
+            afterBuildTicks: (axis) => {
+              axis.ticks = yTicks.map((value) => ({ value }));
+            },
+          },
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              title: (items) => {
+                const day = Number(items[0]?.parsed.x ?? todayIdx);
+                return formatDayTitle(day, tz, intlLocale);
+              },
+              label: (item) => `${item.dataset.label ?? ""}: ${Number(item.parsed.y ?? 0)}`,
+            },
+          },
+        },
+      },
+    };
+  }, [data, intlLocale, props.locale, startIdx, todayIdx, tz, xTickFormatter, xTicks, yMax, yTicks]);
+
   const durationOptions = React.useMemo(() => [7, 30, 90], []);
 
   return (
@@ -338,28 +407,12 @@ export function NoteReviewAnalyticsCard(props: {
       ) : (
         <>
           <div className="w-full flex-1 learnkit-analytics-chart">
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={data} margin={{ left: 8, right: 8, top: 12, bottom: 12 }}>
-                <XAxis
-                  dataKey="dayIndex"
-                  type="number"
-                  domain={[startIdx, todayIdx]}
-                  ticks={xTicks}
-                  tickFormatter={xTickFormatter}
-                  tick={{ fontSize: 11 }}
-                />
-                <YAxis
-                  domain={[0, yMax || "auto"]}
-                  ticks={yTicks}
-                  tick={{ fontSize: 11 }}
-                  width={30}
-                  allowDecimals={false}
-                />
-                <Tooltip content={<TooltipContent locale={props.locale} />} cursor={{ fill: "var(--background-modifier-hover)", opacity: 0.5 }} />
-                <Bar dataKey="reviewed" stackId="a" name={t(props.locale, "ui.analytics.noteReview.legendReviewed", "Reviewed")} fill="var(--chart-accent-2)" radius={[0, 0, 0, 0]} />
-                <Bar dataKey="scheduledRemaining" stackId="a" name={t(props.locale, "ui.analytics.noteReview.legendScheduled", "Scheduled")} fill="var(--chart-accent-4)" radius={[3, 3, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <ChartJsCanvas
+              className="w-full h-full"
+              config={chartConfig}
+              height={250}
+              ariaLabel={t(props.locale, "ui.analytics.noteReview.title", "Note review activity")}
+            />
           </div>
           <div className="flex flex-wrap gap-3 text-xs text-muted-foreground learnkit-ana-chart-legend">
             <div className="inline-flex items-center gap-2"><span className="inline-block learnkit-ana-legend-dot learnkit-ana-legend-dot-square" style={{ ["--learnkit-legend-color" as string]: "var(--chart-accent-2)" }} />{t(props.locale, "ui.analytics.noteReview.legendReviewed", "Reviewed")}</div>

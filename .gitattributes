@@ -1,0 +1,8 @@
+# Exclude development-only files from source archives (git archive)
+tooling/** export-ignore
+offline/** export-ignore
+coverage/** export-ignore
+release/** export-ignore
+.local/** export-ignore
+.vscode/** export-ignore
+node_modules/** export-ignore

@@ -10,12 +10,13 @@
 import {  } from "obsidian";
 
 import * as React from "react";
-import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import type { ChartConfiguration } from "chart.js";
 import { createXAxisTicks, formatAxisLabel } from "../chart-axis-utils";
 import { endTruncateClass, useAnalyticsPopoverZIndex } from "../filter-styles";
 import { MS_DAY } from "../../../platform/core/constants";
 import { interfaceLocaleToIntlLocale } from "../../../platform/translations/locale-registry";
 import { t } from "../../../platform/translations/translator";
+import { ChartJsCanvas, resolveChartColor } from "./chartjs-canvas";
 
 function InfoIcon(props: { text: string }) {
   return (
@@ -206,19 +207,6 @@ function rankFilterMatches(items: string[], query: string, limit = 5) {
     })
     .map((entry) => entry.item)
     .slice(0, limit);
-}
-
-function TooltipContent(props: { active?: boolean; payload?: Array<{ payload?: unknown }>; locale?: string }) {
-  if (!props.active || !props.payload || !props.payload.length) return null;
-  const datum = props.payload[0]?.payload as Datum | undefined;
-  if (!datum) return null;
-  const tx = (token: string, fallback: string, vars?: Record<string, string | number>) => t(props.locale, token, fallback, vars);
-  return (
-    <div className="learnkit-data-tooltip-surface">
-      <div className="text-sm font-medium text-background">{datum.date}</div>
-      <div className="text-background">{tx("ui.analytics.newCards.tooltipCreated", "Created: {count}", { count: datum.created })}</div>
-    </div>
-  );
 }
 
 function roundUpToNearest10(value: number): number {
@@ -440,6 +428,77 @@ export function NewCardsPerDayChart(props: {
   }, [data]);
 
   const yTicks = React.useMemo(() => buildYAxisTicks(yMax), [yMax]);
+
+  const chartConfig = React.useMemo<ChartConfiguration<"bar">>(() => {
+    const axisColor = resolveChartColor("var(--border)");
+    const tickColor = resolveChartColor("var(--text-muted)");
+    const xTickSet = new Set(xTicks);
+
+    return {
+      type: "bar",
+      data: {
+        datasets: [
+          {
+            label: tx("ui.analytics.newCards.subtitle", "Cards created per day"),
+            data: data.map((row) => ({ x: row.dayIndex, y: row.created })),
+            parsing: false,
+            backgroundColor: resolveChartColor(BAR_COLOR),
+            borderWidth: 0,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: props.enableAnimations ?? true,
+        scales: {
+          x: {
+            type: "linear",
+            min: startIndex,
+            max: todayIndex,
+            border: { color: axisColor },
+            grid: { display: false },
+            ticks: {
+              color: tickColor,
+              font: { size: 12 },
+              callback: (value) => {
+                const day = Number(value);
+                if (!xTickSet.has(day)) return "";
+                return xTickFormatter(day);
+              },
+            },
+          },
+          y: {
+            type: "linear",
+            min: 0,
+            max: yMax,
+            border: { color: axisColor },
+            grid: { display: false },
+            ticks: {
+              color: tickColor,
+              font: { size: 12 },
+              callback: (value) => String(value),
+            },
+            afterBuildTicks: (axis) => {
+              axis.ticks = yTicks.map((value) => ({ value }));
+            },
+          },
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              title: (items) => {
+                const day = Number(items[0]?.parsed.x ?? todayIndex);
+                return formatDayTitle(day, tz, intlLocale);
+              },
+              label: (item) => tx("ui.analytics.newCards.tooltipCreated", "Created: {count}", { count: Number(item.parsed.y ?? 0) }),
+            },
+          },
+        },
+      },
+    };
+  }, [data, intlLocale, props.enableAnimations, startIndex, todayIndex, tx, tz, xTickFormatter, xTicks, yMax, yTicks]);
 
   return (
     <div className="card learnkit-ana-card h-full overflow-visible p-4 flex flex-col gap-3">
@@ -684,31 +743,12 @@ export function NewCardsPerDayChart(props: {
         </div>
       </div>
 
-      <div className="w-full flex-1 learnkit-analytics-chart">
-        <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={data} margin={{ top: 12, right: 12, bottom: 12, left: 8 }}>
-            <XAxis
-              dataKey="dayIndex"
-              tickLine={false}
-              axisLine={{ stroke: "var(--border)" }}
-              interval={0}
-              ticks={xTicks}
-              tick={{ fontSize: 12 }}
-              tickFormatter={xTickFormatter}
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={{ stroke: "var(--border)" }}
-              width={32}
-              tick={{ fontSize: 12 }}
-              ticks={yTicks}
-              domain={[0, yMax]}
-            />
-            <Tooltip content={<TooltipContent locale={props.locale} />} />
-            <Bar dataKey="created" fill={BAR_COLOR} radius={[0, 0, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      <ChartJsCanvas
+        className="w-full flex-1 learnkit-analytics-chart"
+        config={chartConfig}
+        height={250}
+        ariaLabel={tx("ui.analytics.newCards.title", "New cards added")}
+      />
     </div>
   );
 }

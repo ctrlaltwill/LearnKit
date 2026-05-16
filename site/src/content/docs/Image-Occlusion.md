@@ -33,19 +33,6 @@ The current editor supports:
 - pan and zoom controls
 - image crop and rotation tools
 - text annotations
-- OCR-powered auto-masking
-
-## Auto-masking with OCR
-
-`Auto-Mask` looks for text-like regions in the image and creates masks for them.
-
-This is useful for labelled diagrams, but it is still a draft step. You should expect to clean up the result manually.
-
-In practice:
-
-- clear, high-contrast labels work best
-- existing masks are kept
-- generated masks can be moved, resized, regrouped, or deleted before saving
 
 ## Save modes
 
@@ -105,4 +92,4 @@ If the content is mostly text and order matters more than location, [Ordered Que
 
 If you want location-based interaction with click or drag behavior, use [Hotspot Cards](../Hotspot-Cards).
 
-Last modified: 28/04/2026
+Last modified: 17/05/2026

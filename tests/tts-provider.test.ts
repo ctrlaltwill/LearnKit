@@ -25,7 +25,7 @@ function makeAudio(overrides: Partial<SproutSettings["audio"]> = {}): SproutSett
     preferredVoiceURI: "",
     useFlagsForVoiceSelection: true,
     speakFlagLanguageLabel: false,
-    scriptLanguages: { cyrillic: "ru-RU", arabic: "ar-SA", cjk: "zh-CN", devanagari: "hi-IN" },
+    scriptLanguages: { cyrillic: "ru-RU", arabic: "ar-SA", cjk: "zh-CN", devanagari: "mr-IN" },
     ttsProvider: "openai",
     ttsVoiceId: "alloy",
     ttsModel: "tts-1",

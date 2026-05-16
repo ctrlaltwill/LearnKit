@@ -1,1 +1,9 @@
+declare module "basecoat-css";
 declare module "basecoat-css/all";
+declare module "basecoat-css/basecoat";
+declare module "basecoat-css/command";
+declare module "basecoat-css/dropdown-menu";
+declare module "basecoat-css/popover";
+declare module "basecoat-css/select";
+declare module "basecoat-css/sidebar";
+declare module "basecoat-css/tabs";

@@ -1,7 +1,7 @@
 /**
  * @file src/analytics/chart-axis-utils.ts
  * @summary Shared utility functions for computing axis tick positions and
- * formatting axis labels across multiple Recharts-based analytics charts.
+ * formatting axis labels across multiple analytics charts.
  * Provides consistent Y-axis rounding and X-axis tick placement (start, mid,
  * end, today) as well as a "Today" label formatter.
  *

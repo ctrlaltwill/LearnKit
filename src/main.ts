@@ -9,7 +9,14 @@
 
 // This file is small on purpose. The chaos now lives in organized modules. Have fun exploring!
 
-import "basecoat-css/all";
+import "basecoat-css";
+import "basecoat-css/basecoat";
+import "basecoat-css/command";
+import "basecoat-css/dropdown-menu";
+import "basecoat-css/popover";
+import "basecoat-css/select";
+import "basecoat-css/sidebar";
+import "basecoat-css/tabs";
 
 import { LearnKitPluginBase } from "./platform/plugin/plugin-base";
 import { WithCoreMethods } from "./platform/plugin/core-methods";

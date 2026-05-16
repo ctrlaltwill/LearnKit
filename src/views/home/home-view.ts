@@ -1261,14 +1261,6 @@ export class SproutHomeView extends ItemView {
         action: () => quickStartStudy(),
       },
       {
-        title: "Auto-mask diagrams",
-        body: "With auto-mask, labelling diagrams has never been quicker.",
-        demo: "Demo: 3 quick masks detected on one image",
-        actionLabel: "Open image occlusion settings",
-        actionIcon: "scan-line",
-        action: () => openSettingsTab("settings"),
-      },
-      {
         title: "Math cloze",
         body: "Cloze key parts of formulas to memorize structure, not just outcomes.",
         demo: "Demo: E = m c^[____]",

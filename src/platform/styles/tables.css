@@ -169,7 +169,7 @@
   border-bottom: var(--learnkit-border-width) solid var(--learnkit-border-color);
 }
 .learnkit .learnkit-changelog-table tbody tr {
-  background: var(--background);
+  background: var(--color-base-05);
 }
 .learnkit .learnkit-changelog-table th,
 .learnkit .learnkit-changelog-table td,

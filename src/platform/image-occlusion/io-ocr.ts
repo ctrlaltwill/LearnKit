@@ -1,6 +1,6 @@
 /**
  * @file src/imageocclusion/io-ocr.ts
- * @summary OCR-powered auto-mask detection for Image Occlusion. Uses Tesseract.js to detect
+ * @summary OCR-powered auto-mask detection for Image Occlusion.
  * text boxes, groups words into lines, vertically merges adjacent lines, filters noisy
  * detections, and returns normalised IORect masks ready for the IO editor overlay.
  *
@@ -8,8 +8,6 @@
  *   - AutoMaskOptions — options controlling OCR and post-processing behaviour
  *   - autoDetectTextMasks — detect and return IO masks from image text regions
  */
-import {  } from "obsidian";
-
 import type { ClipboardImage, IORect } from "./io-types";
 
 export type OcrTextRegion = {
@@ -36,20 +34,6 @@ export type AutoMaskOptions = {
 type PxRect = { x: number; y: number; w: number; h: number };
 type OcrWord = PxRect & { confidence: number; text: string };
 type OcrRegion = PxRect & { confidence: number; text: string };
-
-type RecognizeFn = (
-  image: Blob | HTMLImageElement | HTMLCanvasElement,
-  lang: string,
-  options: Record<string, unknown>,
-) => Promise<{
-  data?: {
-    words?: Array<{
-      text?: string;
-      confidence?: number;
-      bbox?: { x0?: number; y0?: number; x1?: number; y1?: number };
-    }>;
-  };
-}>;
 
 const DEFAULT_MIN_CONFIDENCE = 48;
 const DEFAULT_MIN_AREA_PERCENT = 0.00008;
@@ -419,30 +403,9 @@ export async function detectOcrTextRegions(imageData: ClipboardImage, opts: Auto
 }
 
 async function runTesseractWords(imageData: ClipboardImage, lang: string): Promise<OcrWord[]> {
-  const hasWorkerSupport = typeof Worker !== "undefined";
-  if (!hasWorkerSupport) {
-    throw new Error("Auto-detect requires Web Worker support on this platform.");
-  }
-
-  // Use the browser build so Obsidian renderer runtime does not resolve node worker_threads.
-  const tesseract = (await import("tesseract.js/dist/tesseract.esm.min.js")) as {
-    default?: { recognize?: RecognizeFn };
-    recognize?: RecognizeFn;
-  };
-  const recognize = tesseract.recognize || tesseract.default?.recognize;
-  if (typeof recognize !== "function") {
-    throw new Error("OCR engine could not be initialized.");
-  }
-
-  const preprocessedInput = await preprocessForOcr(imageData);
-  const result = await recognize(preprocessedInput, lang || "eng", {
-    tessedit_pageseg_mode: "12",
-  });
-
-  const words = Array.isArray(result?.data?.words) ? result.data.words : [];
-  return words
-    .map((w) => toPxRectFromWord(w))
-    .filter((w): w is OcrWord => !!w);
+  void imageData;
+  void lang;
+  return [];
 }
 
 export async function autoDetectTextMasks(imageData: ClipboardImage, opts: AutoMaskOptions): Promise<IORect[]> {

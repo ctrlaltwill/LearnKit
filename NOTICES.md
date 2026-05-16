@@ -24,7 +24,6 @@ Host platform APIs (for example, Obsidian) are not redistributed by this plugin 
 | recharts | [recharts/recharts](https://github.com/recharts/recharts) | 3.8.1 | MIT | Charts and analytics visualizations |
 | sql.js | [sql-js/sql.js](https://github.com/sql-js/sql.js) | 1.14.1 | MIT | SQLite access for Anki import and export |
 | tailwind-merge | [dcastil/tailwind-merge](https://github.com/dcastil/tailwind-merge) | 3.5.0 | MIT | Resolving Tailwind utility class conflicts |
-| tesseract.js | [naptha/tesseract.js](https://github.com/naptha/tesseract.js) | 5.1.1 | Apache-2.0 | OCR engine used for Image Occlusion Auto-Mask text region detection |
 | ts-fsrs | [open-spaced-repetition/ts-fsrs](https://github.com/open-spaced-repetition/ts-fsrs) | 5.3.2 | MIT | FSRS scheduling engine for flashcard scheduling |
 
 ## 2. Documentation Site Dependencies

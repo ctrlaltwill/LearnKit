@@ -2200,7 +2200,7 @@ export class SproutCoachView extends ItemView {
     const healthHost = topRow.createDiv({ cls: "learnkit-coach-health-host learnkit-coach-health-host" });
     this._mountHealthPanel(healthHost, health);
 
-    const readinessHost = host.createDiv({ cls: "learnkit-coach-recharts-host learnkit-coach-recharts-host" });
+    const readinessHost = host.createDiv({ cls: "learnkit-coach-chart-host learnkit-coach-chart-host" });
     const selectedScope = this._scopeFromParts(selectedPlan.scope_type, selectedPlan.scope_key, selectedPlan.scope_name);
     const { points, todayIndex, startLabel, endLabel, totalDays } = this._buildReadinessTimeline(selectedPlan, selectedScope, now);
     this._mountReadinessChart(readinessHost, points, todayIndex, startLabel, endLabel, totalDays);

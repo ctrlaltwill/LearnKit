@@ -1220,7 +1220,7 @@ export class LearnKitSettingsTab extends PluginSettingTab {
         cyrillic: "ru-RU",
         arabic: "ar-SA",
         cjk: "zh-CN",
-        devanagari: "hi-IN",
+        devanagari: "mr-IN",
       };
       if (typeof (audio as Record<string, unknown>).useFlagsForVoiceSelection !== "boolean") {
         (audio as Record<string, unknown>).useFlagsForVoiceSelection = true;

@@ -12,12 +12,13 @@
 import {  } from "obsidian";
 
 import * as React from "react";
-import { Area, Bar, ComposedChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import type { ChartConfiguration } from "chart.js";
 import { createXAxisTicks, formatAxisLabel } from "../chart-axis-utils";
 import { endTruncateClass, useAnalyticsPopoverZIndex } from "../filter-styles";
 import { cssClassForProps } from "../../../platform/core/ui";
 import { interfaceLocaleToIntlLocale } from "../../../platform/translations/locale-registry";
 import { t } from "../../../platform/translations/translator";
+import { ChartJsCanvas, makeVerticalGradient, resolveChartColor, resolveChartColorWithAlpha } from "./chartjs-canvas";
 
 function InfoIcon(props: { text: string }) {
   return (
@@ -217,31 +218,6 @@ function smoothSeries(values: number[], window: number) {
     }
     return count ? total / count : 0;
   });
-}
-
-function TooltipContent(props: { active?: boolean; payload?: Array<{ payload?: unknown }>; label?: string; locale?: string }) {
-  if (!props.active || !props.payload || !props.payload.length) return null;
-  const datum = props.payload[0]?.payload as Datum | undefined;
-  if (!datum) return null;
-  const total = datum.new + datum.learning + datum.relearning + datum.review;
-  const tx = (token: string, fallback: string, vars?: Record<string, string | number>) => t(props.locale, token, fallback, vars);
-  const dueLabel = tx("ui.common.due", "Due");
-  const newLabel = tx("ui.common.stage.new", "New");
-  const learningLabel = tx("ui.common.stage.learning", "Learning");
-  const relearningLabel = tx("ui.common.stage.relearning", "Relearning");
-  const reviewLabel = tx("ui.common.stage.review", "Review");
-  const backlogLabel = tx("ui.analytics.forecast.backlog", "Backlog");
-  return (
-    <div className="learnkit-data-tooltip-surface">
-      <div className="text-sm font-medium text-background">{datum.date}</div>
-      <div className="text-background">{`${dueLabel}: ${total}`}</div>
-      <div className="text-background">{`${newLabel}: ${datum.new}`}</div>
-      <div className="text-background">{`${learningLabel}: ${datum.learning}`}</div>
-      <div className="text-background">{`${relearningLabel}: ${datum.relearning}`}</div>
-      <div className="text-background">{`${reviewLabel}: ${datum.review}`}</div>
-      <div className="text-background">{`${backlogLabel}: ${datum.backlog}`}</div>
-    </div>
-  );
 }
 
 function roundUpToNearest10(value: number): number {
@@ -465,10 +441,141 @@ export function FutureDueChart(props: {
       tx("ui.view.coach.readiness.today", "Today"),
     );
   const yMax = React.useMemo(() => {
-    const maxValue = data.reduce((max, row) => Math.max(max, row.new + row.learning + row.relearning + row.review), 0);
+    const maxStackedDue = data.reduce((max, row) => Math.max(max, row.due), 0);
+    const maxBacklog = data.reduce((max, row) => Math.max(max, row.backlog, row.backlogSmooth), 0);
+    const maxValue = Math.max(maxStackedDue, maxBacklog);
     return roundUpToNearest10(maxValue);
   }, [data]);
   const yTicks = React.useMemo(() => buildYAxisTicks(yMax), [yMax]);
+
+  const chartConfig = React.useMemo<ChartConfiguration<"bar">>(() => {
+    const axisColor = resolveChartColor("var(--border)");
+    const tickColor = resolveChartColor("var(--text-muted)");
+    const xTickSet = new Set(xTicks);
+    const labels = {
+      new: tx("ui.common.stage.new", "New"),
+      learning: tx("ui.common.stage.learning", "Learning"),
+      relearning: tx("ui.common.stage.relearning", "Relearning"),
+      review: tx("ui.common.stage.review", "Review"),
+      backlog: tx("ui.analytics.forecast.backlog", "Backlog"),
+    };
+
+    return {
+      type: "bar",
+      data: {
+        datasets: [
+          {
+            label: labels.new,
+            data: data.map((row) => ({ x: row.dayIndex, y: row.new })),
+            parsing: false,
+            stack: "due",
+            order: 1,
+            backgroundColor: resolveChartColor(STAGE_COLORS.new),
+            borderWidth: 0,
+          },
+          {
+            label: labels.learning,
+            data: data.map((row) => ({ x: row.dayIndex, y: row.learning })),
+            parsing: false,
+            stack: "due",
+            order: 1,
+            backgroundColor: resolveChartColor(STAGE_COLORS.learning),
+            borderWidth: 0,
+          },
+          {
+            label: labels.relearning,
+            data: data.map((row) => ({ x: row.dayIndex, y: row.relearning })),
+            parsing: false,
+            stack: "due",
+            order: 1,
+            backgroundColor: resolveChartColor(STAGE_COLORS.relearning),
+            borderWidth: 0,
+          },
+          {
+            label: labels.review,
+            data: data.map((row) => ({ x: row.dayIndex, y: row.review })),
+            parsing: false,
+            stack: "due",
+            order: 1,
+            backgroundColor: resolveChartColor(STAGE_COLORS.review),
+            borderWidth: 0,
+          },
+          {
+            type: "line",
+            label: labels.backlog,
+            data: data.map((row) => ({ x: row.dayIndex, y: row.backlogSmooth })),
+            parsing: false,
+            order: 10,
+            borderColor: resolveChartColor(GREEN_LINE),
+            borderWidth: 3,
+            pointRadius: 0,
+            pointHoverRadius: 3,
+            tension: 0.35,
+            fill: true,
+            backgroundColor: (ctx) =>
+              makeVerticalGradient(
+                ctx.chart,
+                resolveChartColorWithAlpha("var(--theme-accent)", 0.302, ctx.chart.canvas),
+                resolveChartColorWithAlpha("var(--theme-accent)", 0.031, ctx.chart.canvas),
+              ),
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: props.enableAnimations ?? true,
+        interaction: { mode: "index", intersect: false },
+        scales: {
+          x: {
+            type: "linear",
+            min: startIndex,
+            max: endIndex,
+            stacked: true,
+            border: { color: axisColor },
+            grid: { display: false },
+            ticks: {
+              color: tickColor,
+              font: { size: 12 },
+              callback: (value) => {
+                const day = Number(value);
+                if (!xTickSet.has(day)) return "";
+                return xTickFormatter(day);
+              },
+            },
+          },
+          y: {
+            type: "linear",
+            min: 0,
+            max: yMax,
+            stacked: true,
+            border: { color: axisColor },
+            grid: { display: false },
+            ticks: {
+              color: tickColor,
+              font: { size: 12 },
+              callback: (value) => String(value),
+            },
+            afterBuildTicks: (axis) => {
+              axis.ticks = yTicks.map((value) => ({ value }));
+            },
+          },
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              title: (items) => {
+                const day = Number(items[0]?.parsed.x ?? todayIndex);
+                return formatDayTitle(day, tz, intlLocale);
+              },
+              label: (item) => `${item.dataset.label ?? ""}: ${Math.round(Number(item.parsed.y ?? 0))}`,
+            },
+          },
+        },
+      },
+    };
+  }, [data, endIndex, intlLocale, props.enableAnimations, startIndex, todayIndex, tx, tz, xTickFormatter, xTicks, yMax, yTicks]);
 
   const avgDaily = React.useMemo(() => {
     if (!data.length) return 0;
@@ -736,51 +843,12 @@ export function FutureDueChart(props: {
         </div>
       </div>
 
-      <div className="w-full flex-1 learnkit-analytics-chart">
-        <ResponsiveContainer width="100%" height={250}>
-          <ComposedChart data={data} margin={{ top: 12, right: 16, bottom: 12, left: 8 }}>
-            <defs>
-              <linearGradient id="learnkit-forecast-area" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--theme-accent)" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="var(--theme-accent)" stopOpacity={0.02} />
-              </linearGradient>
-            </defs>
-            <XAxis
-              dataKey="dayIndex"
-              tickLine={false}
-              axisLine={{ stroke: "var(--border)" }}
-              tick={{ fontSize: 12 }}
-              ticks={xTicks}
-              interval={0}
-              tickFormatter={xTickFormatter}
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={{ stroke: "var(--border)" }}
-              width={32}
-              tick={{ fontSize: 12 }}
-              ticks={yTicks}
-              domain={[0, yMax]}
-            />
-            <Tooltip content={<TooltipContent locale={props.locale} />} />
-            <Bar dataKey="new" stackId="due" fill={STAGE_COLORS.new} radius={[0, 0, 0, 0]} />
-            <Bar dataKey="learning" stackId="due" fill={STAGE_COLORS.learning} radius={[0, 0, 0, 0]} />
-            <Bar dataKey="relearning" stackId="due" fill={STAGE_COLORS.relearning} radius={[0, 0, 0, 0]} />
-            <Bar dataKey="review" stackId="due" fill={STAGE_COLORS.review} radius={[0, 0, 0, 0]} />
-            <Area
-              dataKey="backlogSmooth"
-              type="natural"
-              stroke={GREEN_LINE}
-              fill="url(#learnkit-forecast-area)"
-              strokeWidth={3}
-              dot={false}
-              isAnimationActive={props.enableAnimations ?? true}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </ComposedChart>
-        </ResponsiveContainer>
-      </div>
+      <ChartJsCanvas
+        className="w-full flex-1 learnkit-analytics-chart"
+        config={chartConfig}
+        height={250}
+        ariaLabel={tx("ui.analytics.forecast.title", "Study forecast")}
+      />
 
       <div className="flex flex-wrap gap-3 text-xs text-muted-foreground learnkit-ana-chart-legend">
         <div className="inline-flex items-center gap-2">

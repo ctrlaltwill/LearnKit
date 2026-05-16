@@ -414,7 +414,7 @@ export const DEFAULT_SETTINGS: LearnKitSettings = {
       cyrillic: "ru-RU",
       arabic: "ar-SA",
       cjk: "zh-CN",
-      devanagari: "hi-IN",
+      devanagari: "mr-IN",
     },
     useFlagsForVoiceSelection: true,
     speakFlagLanguageLabel: false,

@@ -245,7 +245,6 @@ export function getScriptLanguageGroups(): ScriptGroupOption[] {
       label: "Devanagari script — देवनागरी",
       description: "Choose the accent and pronunciation for Devanagari text.",
       languages: [
-        { value: "hi-IN", label: "Hindi (हिन्दी)", flagCode: "hi-in" },
         { value: "mr-IN", label: "Marathi (मराठी)", flagCode: "mr-in" },
         { value: "ne-NP", label: "Nepali (नेपाली)", flagCode: "ne-np" },
       ],
@@ -546,7 +545,7 @@ const FLAG_CODE_TO_LOCALE: Record<string, string> = {
   kr: "ko-KR",
   ru: "ru-RU",
   sa: "ar-SA",
-  in: "hi-IN",
+  in: "mr-IN",
 };
 
 const PRIMARY_LANG_DEFAULT_LOCALE: Record<string, string> = {
@@ -574,7 +573,7 @@ const PRIMARY_LANG_DEFAULT_LOCALE: Record<string, string> = {
   ko: "ko-KR",
   ru: "ru-RU",
   ar: "ar-SA",
-  hi: "hi-IN",
+  hi: "mr-IN",
   ur: "ur-PK",
   fa: "fa-IR",
   uk: "uk-UA",

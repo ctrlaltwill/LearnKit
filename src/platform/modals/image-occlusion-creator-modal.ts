@@ -18,7 +18,6 @@ import {
   buildCanvasContainer,
   buildFooter,
 } from "../../platform/image-occlusion/io-modal-ui";
-import { autoDetectTextMasks } from "../../platform/image-occlusion/io-ocr";
 
 import {
   resolveImageFile as resolveIoImageFile,
@@ -82,7 +81,6 @@ export class ImageOcclusionCreatorModal extends Modal {
   private btnTransform?: HTMLButtonElement;
   private btnUndo?: HTMLButtonElement;
   private btnRedo?: HTMLButtonElement;
-  private btnAutoMask?: HTMLButtonElement;
   private btnResetMasks?: HTMLButtonElement;
   private btnCrop?: HTMLButtonElement;
   private btnText?: HTMLButtonElement;
@@ -119,7 +117,6 @@ export class ImageOcclusionCreatorModal extends Modal {
   private textDrawing = false;
   private textStart: { x: number; y: number } | null = null;
   private textPreviewEl: HTMLElement | null = null;
-  private autoMaskBusy = false;
   private onDocPaste?: (ev: ClipboardEvent) => void;
   private onDocKeyDown?: (ev: KeyboardEvent) => void;
   private fitRetryRaf: number | null = null;
@@ -281,14 +278,12 @@ export class ImageOcclusionCreatorModal extends Modal {
       },
       onUndo: () => this.undo(),
       onRedo: () => this.redo(),
-      onAutoMask: () => void this.runAutoMask(),
       onResetMasks: () => this.resetMasks(),
       onSetTool: (tool) => this.setTool(tool),
       onRotate: (dir) => void this.rotateImage(dir),
     });
     this.btnUndo = toolbarRefs.btnUndo;
     this.btnRedo = toolbarRefs.btnRedo;
-    this.btnAutoMask = toolbarRefs.btnAutoMask;
     this.btnResetMasks = toolbarRefs.btnResetMasks;
     this.btnTransform = toolbarRefs.btnTransform;
     this.btnRectTool = toolbarRefs.btnRectTool;
@@ -296,11 +291,6 @@ export class ImageOcclusionCreatorModal extends Modal {
     this.btnCustomTool = toolbarRefs.btnCustomTool;
     this.btnSmartMaskTool = toolbarRefs.btnSmartMaskTool;
     this.btnCrop = toolbarRefs.btnCrop;
-
-    if (this.isHotspotMode() && this.btnAutoMask) {
-      this.btnAutoMask.remove();
-      this.btnAutoMask = undefined;
-    }
 
     // Set initial tool highlight
     this.setTool(this.currentTool);
@@ -360,7 +350,6 @@ export class ImageOcclusionCreatorModal extends Modal {
 
     this.updatePlaceholderVisibility();
     this.updateUndoRedoState();
-    this.updateAutoMaskButtonState();
     this.updateResetMasksButtonState();
 
     // ── Extra information field ──────────────────────────────────────────────
@@ -631,7 +620,6 @@ export class ImageOcclusionCreatorModal extends Modal {
     this.renderRects();
     this.updatePlaceholderVisibility();
     this.updateUndoRedoState();
-    this.updateAutoMaskButtonState();
     this.updateResetMasksButtonState();
   }
 
@@ -665,7 +653,6 @@ export class ImageOcclusionCreatorModal extends Modal {
     this.updatePlaceholderVisibility();
     this.seedHistoryFromImage();
     this.fitToViewportWhenReady();
-    this.updateAutoMaskButtonState();
     this.updateResetMasksButtonState();
 
   }
@@ -794,13 +781,6 @@ export class ImageOcclusionCreatorModal extends Modal {
 
     // Keyboard shortcuts
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "f") {
-        e.preventDefault();
-        e.stopPropagation();
-        void this.runAutoMask();
-        return;
-      }
-
       const activeEl = activeDocument.activeElement as HTMLElement | null;
       if (activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA")) return;
 
@@ -2177,7 +2157,6 @@ export class ImageOcclusionCreatorModal extends Modal {
       this.updatePlaceholderVisibility();
     }
     this.updateUndoRedoState();
-    this.updateAutoMaskButtonState();
     this.updateResetMasksButtonState();
   }
 
@@ -2197,7 +2176,6 @@ export class ImageOcclusionCreatorModal extends Modal {
       this.updatePlaceholderVisibility();
     }
     this.updateUndoRedoState();
-    this.updateAutoMaskButtonState();
     this.updateResetMasksButtonState();
   }
 
@@ -2213,16 +2191,6 @@ export class ImageOcclusionCreatorModal extends Modal {
     };
     setBtnState(this.btnUndo, canUndo);
     setBtnState(this.btnRedo, canRedo);
-  }
-
-  private updateAutoMaskButtonState() {
-    const btn = this.btnAutoMask;
-    if (!btn) return;
-    const enabled = !!this.ioImageData && !this.autoMaskBusy;
-    btn.disabled = !enabled;
-    btn.setAttribute("aria-disabled", enabled ? "false" : "true");
-    btn.classList.toggle("learnkit-opacity-35", !enabled);
-    btn.classList.toggle("learnkit-pointer-none", !enabled);
   }
 
   private updateResetMasksButtonState() {
@@ -2245,46 +2213,6 @@ export class ImageOcclusionCreatorModal extends Modal {
     this.updateResetMasksButtonState();
   }
 
-  private async runAutoMask() {
-    if (this.autoMaskBusy) return;
-    if (!this.ioImageData) {
-      new Notice("Add an image first.");
-      return;
-    }
-    this.autoMaskBusy = true;
-    this.updateAutoMaskButtonState();
-    this.updateResetMasksButtonState();
-
-    try {
-      const existing = this.rects.map((r) => ({ ...r }));
-      const masks = await autoDetectTextMasks(this.ioImageData, {
-        stageW: this.stageW,
-        stageH: this.stageH,
-        existingRects: existing,
-        startGroupNumber: this.getNextGroupNumber(),
-      });
-
-      if (!masks.length) {
-        new Notice(this._tx("ui.io.autoMask.noRegions", "No text regions detected. Try a clearer image."));
-        return;
-      }
-
-      this.rects.push(...masks);
-      this.selectedRectId = null;
-      this.selectedTextId = null;
-      this.saveHistory();
-      this.renderRects();
-      this.updateResetMasksButtonState();
-      new Notice(this._tx("ui.io.autoMask.added", "Added {count} auto masks.", { count: masks.length }));
-    } catch (e: unknown) {
-      new Notice(this._tx("ui.io.autoMask.failed", "Auto-detect failed ({error})", { error: e instanceof Error ? e.message : String(e) }));
-    } finally {
-      this.autoMaskBusy = false;
-      this.updateAutoMaskButtonState();
-      this.updateResetMasksButtonState();
-    }
-  }
-
   /** Rotate the image 90° clockwise or counter-clockwise. */
   private async rotateImage(direction: "cw" | "ccw") {
     if (!this.ioImageData) {
@@ -2303,7 +2231,6 @@ export class ImageOcclusionCreatorModal extends Modal {
     this.selectedTextId = null;
     this.saveHistory();
     await this.loadImageToCanvas();
-    this.updateAutoMaskButtonState();
     this.updateResetMasksButtonState();
   }
 
@@ -2325,7 +2252,6 @@ export class ImageOcclusionCreatorModal extends Modal {
     this.selectedTextId = null;
     this.saveHistory();
     await this.loadImageToCanvas();
-    this.updateAutoMaskButtonState();
     this.updateResetMasksButtonState();
   }
 

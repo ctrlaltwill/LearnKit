@@ -13,10 +13,11 @@
 import {  } from "obsidian";
 
 import * as React from "react";
-import { Label, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import type { ChartConfiguration, Plugin } from "chart.js";
 import { startTruncateClass, useAnalyticsPopoverZIndex } from "../filter-styles";
 import { cssClassForProps } from "../../../platform/core/ui";
 import { t } from "../../../platform/translations/translator";
+import { ChartJsCanvas, resolveChartColor, resolveChartColors } from "./chartjs-canvas";
 
 type PieDatum = { name: string; value: number };
 
@@ -75,24 +76,6 @@ function normalizeEventType(raw: string) {
   return t;
 }
 
-function PieTooltip(props: { active?: boolean; payload?: Array<{ name?: string; value?: number }>; locale?: string }) {
-  const tx = React.useMemo(
-    () => (token: string, fallback: string, vars?: Record<string, string | number>) => t(props.locale, token, fallback, vars),
-    [props.locale],
-  );
-  if (!props.active || !props.payload || !props.payload.length) return null;
-  const item = props.payload[0] as { name?: string; value?: number } | undefined;
-  if (!item) return null;
-  return (
-    <div className="learnkit-data-tooltip-surface">
-      <div className="text-sm font-medium text-background">{item.name}</div>
-      <div className="text-background">
-        {tx("ui.analytics.chart.count", "Count")}: {item.value ?? 0}
-      </div>
-    </div>
-  );
-}
-
 function ChevronIcon({ open }: { open: boolean }) {
   return (
     <svg
@@ -135,7 +118,6 @@ function PieCard(props: {
   subtitle?: string;
   data: PieDatum[];
   headerSlot?: React.ReactNode;
-  highlightLabel?: string;
   centerValue?: string;
   centerLabel?: string;
   infoText?: string;
@@ -143,16 +125,74 @@ function PieCard(props: {
 }) {
   const tx = React.useMemo(() => (token: string, fallback: string, vars?: Record<string, string | number>) => t(props.locale, token, fallback, vars), [props.locale]);
   const total = props.data.reduce((sum, item) => sum + item.value, 0);
-  const highlightLabel = props.highlightLabel?.toLowerCase();
+  const centerValue = props.centerValue ?? total.toLocaleString();
+  const centerLabel = props.centerLabel ?? "";
 
-  // Add colors to data for recharts v3
-  const dataWithColors = React.useMemo(() => 
-    props.data.map((item, index) => ({
-      ...item,
-      fill: palette[index % palette.length]
-    })),
-    [props.data]
-  );
+  const chartConfig = React.useMemo<ChartConfiguration<"doughnut">>(() => {
+    const labels = props.data.map((item) => item.name);
+    const values = props.data.map((item) => item.value);
+    const colors = resolveChartColors(props.data.map((_, index) => palette[index % palette.length]));
+
+    return {
+      type: "doughnut",
+      data: {
+        labels,
+        datasets: [
+          {
+            data: values,
+            backgroundColor: colors,
+            borderColor: resolveChartColor("var(--background)"),
+            borderWidth: 2,
+            spacing: 2,
+            offset: 0,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: "65%",
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (item) => `${item.label}: ${Number(item.raw ?? 0)}`,
+            },
+          },
+        },
+      },
+    };
+  }, [props.data]);
+
+  const centerTextPlugin = React.useMemo<Plugin<"doughnut">>(() => {
+    return {
+      id: `learnkit-center-${props.title.toLowerCase().replace(/\s+/g, "-")}`,
+      afterDraw: (chart) => {
+        if (total <= 0) return;
+        const area = chart.chartArea;
+        if (!area) return;
+
+        const cx = (area.left + area.right) / 2;
+        const cy = (area.top + area.bottom) / 2;
+        const ctx = chart.ctx;
+        const primary = resolveChartColor("var(--foreground)");
+        const secondary = resolveChartColor("var(--text-muted)");
+
+        ctx.save();
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = primary;
+        ctx.font = "600 22px sans-serif";
+        ctx.fillText(centerValue, cx, cy - 2);
+        if (centerLabel) {
+          ctx.fillStyle = secondary;
+          ctx.font = "400 11px sans-serif";
+          ctx.fillText(centerLabel, cx, cy + 18);
+        }
+        ctx.restore();
+      },
+    };
+  }, [centerLabel, centerValue, props.title, total]);
 
   return (
     <div className="card learnkit-ana-card h-full overflow-visible p-4 flex flex-col gap-3">
@@ -175,45 +215,12 @@ function PieCard(props: {
         ) : null}
 
         {total > 0 ? (
-          <div className="learnkit-analytics-chart">
-            <ResponsiveContainer width="100%" height={200}>
-            <PieChart>
-              <Tooltip content={<PieTooltip locale={props.locale} />} />
-              <Pie
-                data={dataWithColors}
-                dataKey="value"
-                nameKey="name"
-                innerRadius={55}
-                outerRadius={85}
-                paddingAngle={2}
-                stroke="var(--background)"
-                className={highlightLabel ? "learnkit-pie-highlightable" : undefined}
-              >
-                <Label
-                  content={({ viewBox }) => {
-                    if (!viewBox || !("cx" in viewBox) || !("cy" in viewBox)) return null;
-                    const cx = viewBox.cx;
-                    const cy = viewBox.cy;
-                    const value = props.centerValue ?? total.toLocaleString();
-                    const label = props.centerLabel ?? "";
-                    return (
-                      <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle">
-                        <tspan x={cx} y={cy} className="fill-foreground text-2xl font-semibold">
-                          {value}
-                        </tspan>
-                        {label ? (
-                          <tspan x={cx} y={cy + 22} className="fill-muted-foreground text-xs">
-                            {label}
-                          </tspan>
-                        ) : null}
-                      </text>
-                    );
-                  }}
-                />
-              </Pie>
-            </PieChart>
-            </ResponsiveContainer>
-          </div>
+          <ChartJsCanvas
+            className="learnkit-analytics-chart"
+            config={{ ...chartConfig, plugins: [centerTextPlugin] }}
+            height={200}
+            ariaLabel={props.title}
+          />
         ) : null}
       </div>
 
@@ -615,7 +622,6 @@ export function StagePieCard(props: {
       infoText={tx("ui.analytics.pie.cardsByStage.info", "Breakdown of your cards by learning stage using current scheduler state.")}
       data={data}
       headerSlot={headerSlot}
-      highlightLabel={tx("ui.common.stage.new", "New")}
       centerValue={totalCards.toLocaleString()}
       centerLabel={tx("ui.analytics.pie.cardsByStageCenterLabel", "Flashcards")}
       locale={props.locale}
@@ -988,7 +994,6 @@ export function AnswerButtonsPieCard(props: { events: Record<string, unknown>[];
       subtitle={tx("ui.analytics.answerButtons.subtitle", "Last 30 days")}
       infoText={tx("ui.analytics.answerButtons.info", "Summary of review outcomes (Again/Hard/Good/Easy) over the recent window.")}
       data={data}
-      highlightLabel="Again"
       headerSlot={headerSlot}
       centerValue={totalAnswered.toLocaleString()}
       centerLabel={tx("ui.analytics.answerButtons.centerLabel", "Flashcards answered")}

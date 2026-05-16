@@ -13,8 +13,6 @@ import { joinPath } from "../../../platform/integrations/sync/backup";
 import type LearnKitPlugin from "../../../main";
 import { placePopover, replaceChildrenWithHTML, setCssProps } from "../../../platform/core/ui";
 import { mimeFromExt, resolveImageFile } from "../../../platform/image-occlusion/io-helpers";
-import { detectOcrTextRegions } from "../../../platform/image-occlusion/io-ocr";
-import { loadImageElement } from "../../../platform/image-occlusion/io-image-ops";
 import { insertTextAtCursorOrAppend } from "../../../platform/image-occlusion/io-save";
 import { syncOneFile } from "../../../platform/integrations/sync/sync-engine";
 import { bestEffortAttachmentPath, normaliseVaultPath, writeBinaryToVault } from "../../../platform/modals/modal-utils";
@@ -36,7 +34,6 @@ import type {
   StudyAssistantChatMode,
   StudyAssistantConversationRef,
   StudyAssistantImageDescriptor,
-  StudyAssistantOcrTextRegion,
   StudyAssistantReviewDepth,
   StudyAssistantSuggestion,
 } from "../../../platform/integrations/ai/study-assistant-types";
@@ -2416,60 +2413,13 @@ export class SproutAssistantPopup {
     }
   }
 
-  private async detectOcrTextRegionsForImage(file: TFile, ref: string): Promise<StudyAssistantOcrTextRegion[]> {
-    const imageData = await this.readVisionClipboardImage(file, ref);
-    if (!imageData) return [];
-
-    try {
-      const imageEl = await loadImageElement(imageData);
-      if (!imageEl) return [];
-
-      const regions = await detectOcrTextRegions(imageData, {
-        stageW: Math.max(1, imageEl.naturalWidth || imageEl.width || 1),
-        stageH: Math.max(1, imageEl.naturalHeight || imageEl.height || 1),
-      });
-
-      return regions
-        .map((region) => ({
-          text: String(region.text || "").trim(),
-          confidence: region.confidence,
-          x: region.x,
-          y: region.y,
-          w: region.w,
-          h: region.h,
-        }))
-        .filter((region) => !!region.text)
-        .slice(0, 24);
-    } catch {
-      return [];
-    }
-  }
-
   private async buildVisionImageDescriptors(
-    file: TFile,
     noteContent: string,
     imageRefs: string[],
-    includeOcrTargets: boolean,
   ): Promise<StudyAssistantImageDescriptor[]> {
-    const descriptors = extractStudyAssistantImageDescriptors(noteContent)
+    return extractStudyAssistantImageDescriptors(noteContent)
       .filter((descriptor) => imageRefs.includes(descriptor.ref))
       .map((descriptor, index) => ({ ...descriptor, order: index + 1 }));
-
-    if (!includeOcrTargets || !descriptors.length) return descriptors;
-
-    const ocrEntries = await Promise.all(
-      imageRefs.map(async (ref) => [ref, await this.detectOcrTextRegionsForImage(file, ref)] as const),
-    );
-    const ocrByRef = new Map<string, StudyAssistantOcrTextRegion[]>(
-      ocrEntries.filter((entry) => entry[1].length > 0),
-    );
-
-    return descriptors.map((descriptor) => {
-      const ocrTextRegions = ocrByRef.get(descriptor.ref);
-      return ocrTextRegions?.length
-        ? { ...descriptor, ocrTextRegions }
-        : descriptor;
-    });
   }
 
   private resolveVisionImageRefs(file: TFile, refs: string[]): string[] {
@@ -4467,8 +4417,7 @@ export class SproutAssistantPopup {
       const includeImages = !!settings.privacy.includeImagesInFlashcard;
       const embedRefs = this.extractImageRefs(noteContent);
       const imageRefs = includeImages ? this.resolveVisionImageRefs(file, embedRefs) : [];
-      const includeOcrTargets = includeImages && enabledTypes.includes("io");
-      const imageDescriptors = await this.buildVisionImageDescriptors(file, noteContent, imageRefs, includeOcrTargets);
+      const imageDescriptors = await this.buildVisionImageDescriptors(noteContent, imageRefs);
       const imageDataUrls = includeImages ? await this.buildVisionImageDataUrls(file, imageRefs) : [];
       const targetSuggestionCount = Math.max(1, Math.min(10, Math.round(Number(settings.generatorTargetCount) || 5)));
       const extraRequest = String(userMessage || "").trim();
@@ -4769,8 +4718,7 @@ export class SproutAssistantPopup {
       const includeImages = !!settings.privacy.includeImagesInFlashcard;
       const embedRefs = this.extractImageRefs(noteContent);
       const imageRefs = includeImages ? this.resolveVisionImageRefs(file, embedRefs) : [];
-      const includeOcrTargets = includeImages && enabledTypes.includes("io");
-      const imageDescriptors = await this.buildVisionImageDescriptors(file, noteContent, imageRefs, includeOcrTargets);
+      const imageDescriptors = await this.buildVisionImageDescriptors(noteContent, imageRefs);
       const imageDataUrls = includeImages ? await this.buildVisionImageDataUrls(file, imageRefs) : [];
       const noteEmbedUrls = settings.privacy.includeAttachmentsInCompanion
         ? await this.buildNoteEmbedNonImageAttachmentUrls(file, embedRefs)

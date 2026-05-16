@@ -102,9 +102,6 @@ Release 1.1.0 focused on introducing Companion, the built-in AI companion.
 ### Data Storage
 - Transitioned storage from JSON to SQLite to improve reliability, scalability, and data consistency as LearnKit grows.
 
-### Image Occlusion Editor
-- Added **Auto-Mask** feature in the IO editor toolbar to detect text regions and create masks automatically.
-
 ### Reviewer
 - Enabled grading-card interval duration hints by default so next-interval timing appears under grade buttons.
 

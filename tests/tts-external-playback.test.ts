@@ -23,7 +23,7 @@ function makeAudio(overrides: Partial<SproutSettings["audio"]> = {}): SproutSett
     clozeAnswerMode: "cloze-only",
     defaultLanguage: "en-US",
     autoDetectLanguage: true,
-    scriptLanguages: { cyrillic: "ru-RU", arabic: "ar-SA", cjk: "zh-CN", devanagari: "hi-IN" },
+    scriptLanguages: { cyrillic: "ru-RU", arabic: "ar-SA", cjk: "zh-CN", devanagari: "mr-IN" },
     useFlagsForVoiceSelection: true,
     speakFlagLanguageLabel: false,
     rate: 1,

@@ -11,16 +11,8 @@
  */
 
 import * as React from "react";
-import {
-  Area,
-  ComposedChart,
-  Line,
-  ReferenceLine,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import type { ChartConfiguration } from "chart.js";
+import { ChartJsCanvas, makeVerticalGradient, resolveChartColor } from "../analytics/charts/chartjs-canvas";
 
 export type ExamReadinessPoint = {
   dayIndex: number;
@@ -132,44 +124,6 @@ function InfoIcon(props: { text: string }) {
   );
 }
 
-function TodayLabel(props: { viewBox?: { x?: number; y?: number }; text: string }) {
-  const x = (props.viewBox?.x ?? 0) + 5;
-  return (
-    <text x={x} y={14} fill="var(--text-muted)" fontSize={11} fontWeight={500} textAnchor="start">
-      {props.text}
-    </text>
-  );
-}
-
-function ReadinessTooltip(props: {
-  active?: boolean;
-  payload?: Array<{ dataKey?: string; value?: number }>;
-  label?: string;
-  tx: (token: string, fallback: string, vars?: Record<string, string | number>) => string;
-}) {
-  const { active, payload, label } = props;
-  if (!active || !payload?.length) return null;
-  const actual = payload.find((p: { dataKey?: string }) => p.dataKey === "readiness");
-  const proj = payload.find((p: { dataKey?: string }) => p.dataKey === "projected");
-  return (
-    <div className="learnkit-data-tooltip-surface">
-      <div className="text-sm font-medium text-background">{label}</div>
-      {actual?.value != null && (
-        <div className="text-background">
-          {props.tx("ui.view.coach.readiness.label", "Readiness")}:{" "}
-          {Math.round(actual.value)}
-        </div>
-      )}
-      {proj?.value != null && (
-        <div className="text-background">
-          {props.tx("ui.view.coach.readiness.projected", "Projected")}:{" "}
-          {Math.round(proj.value)}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export type CoachHealthPanelProps = {
   tx: (token: string, fallback: string, vars?: Record<string, string | number>) => string;
   flash: { score: number; label: string };
@@ -229,6 +183,108 @@ export type CoachReadinessPanelProps = {
 export function CoachReadinessPanel(props: CoachReadinessPanelProps) {
   const { readiness, todayIndex, startLabel, endLabel, totalDays } = props;
 
+  const chartConfig = React.useMemo<ChartConfiguration<"line">>(() => {
+    const axisColor = resolveChartColor("var(--border)");
+    const tickColor = resolveChartColor("var(--text-muted)");
+    const readinessColor = resolveChartColor("var(--chart-accent-3)");
+    const projectedColor = resolveChartColor("var(--chart-accent-2)");
+
+    return {
+      type: "line",
+      data: {
+        datasets: [
+          {
+            label: props.tx("ui.view.coach.readiness.label", "Readiness"),
+            data: readiness.map((point) => ({ x: point.dayIndex, y: point.readiness })),
+            parsing: false,
+            borderColor: readinessColor,
+            borderWidth: 2,
+            pointRadius: 0,
+            spanGaps: false,
+            tension: 0.3,
+            fill: true,
+            backgroundColor: (ctx) => makeVerticalGradient(ctx.chart, `${readinessColor}59`, `${readinessColor}08`),
+          },
+          {
+            label: props.tx("ui.view.coach.readiness.projected", "Projected"),
+            data: readiness.map((point) => ({ x: point.dayIndex, y: point.projected })),
+            parsing: false,
+            borderColor: projectedColor,
+            borderWidth: 2,
+            borderDash: [6, 3],
+            pointRadius: 0,
+            spanGaps: true,
+            tension: 0.3,
+            fill: false,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        interaction: { mode: "index", intersect: false },
+        scales: {
+          x: {
+            type: "linear",
+            min: 0,
+            max: totalDays,
+            border: { color: axisColor },
+            grid: { display: false },
+            ticks: {
+              color: tickColor,
+              font: { size: 11 },
+              callback: (value) => {
+                const day = Number(value);
+                if (day === 0) return startLabel;
+                if (day === totalDays) return endLabel;
+                return "";
+              },
+            },
+          },
+          y: {
+            min: 0,
+            max: 100,
+            border: { color: axisColor },
+            grid: { display: false },
+            ticks: {
+              color: tickColor,
+              font: { size: 11 },
+            },
+          },
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              title: (items) => String(items[0]?.label ?? ""),
+              label: (item) => `${item.dataset.label ?? ""}: ${Math.round(Number(item.parsed.y ?? 0))}`,
+            },
+          },
+          annotation: {
+            annotations: {
+              today: {
+                type: "line",
+                xMin: todayIndex,
+                xMax: todayIndex,
+                borderColor: tickColor,
+                borderDash: [4, 3],
+                borderWidth: 1,
+                label: {
+                  display: true,
+                  content: props.tx("ui.view.coach.readiness.today", "Today"),
+                  color: tickColor,
+                  position: "start",
+                  font: { size: 11, weight: 500 },
+                },
+              },
+            },
+          },
+        },
+      },
+    };
+  }, [endLabel, props, readiness, startLabel, todayIndex, totalDays]);
+
   return (
     <div className="card learnkit-coach-timeline-rechart-card">
       <div className="learnkit-coach-progress-header">
@@ -242,68 +298,12 @@ export function CoachReadinessPanel(props: CoachReadinessPanelProps) {
       </div>
 
       <SizedChartContainer className="learnkit-coach-timeline-rechart">
-        <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={readiness} margin={{ top: 24, right: 12, bottom: 4, left: 8 }}>
-            <defs>
-              <linearGradient id="coachReadinessGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--chart-accent-3)" stopOpacity={0.35} />
-                <stop offset="95%" stopColor="var(--chart-accent-3)" stopOpacity={0.03} />
-              </linearGradient>
-            </defs>
-
-            <XAxis
-              dataKey="dayIndex"
-              type="number"
-              domain={[0, totalDays]}
-              ticks={[0, totalDays]}
-              tickFormatter={(val: number) => val === 0 ? startLabel : endLabel}
-              tick={{ fontSize: 11, fill: "var(--text-muted)" }}
-              axisLine={{ stroke: "var(--border)" }}
-              tickLine={false}
-            />
-            <YAxis
-              domain={[0, 100]}
-              ticks={[0, 25, 50, 75, 100]}
-              tick={{ fontSize: 11, fill: "var(--text-muted)" }}
-              axisLine={{ stroke: "var(--border)" }}
-              tickLine={false}
-              width={30}
-            />
-
-            <Tooltip content={<ReadinessTooltip tx={props.tx} />} />
-
-            <ReferenceLine
-              x={todayIndex}
-              stroke="var(--text-muted)"
-              strokeDasharray="4 3"
-              strokeWidth={1}
-              label={<TodayLabel text={props.tx("ui.view.coach.readiness.today", "Today")} />}
-            />
-
-            <Area
-              type="monotone"
-              dataKey="readiness"
-              name={props.tx("ui.view.coach.readiness.label", "Readiness")}
-              stroke="var(--chart-accent-3)"
-              strokeWidth={2}
-              fill="url(#coachReadinessGrad)"
-              connectNulls={false}
-              dot={false}
-              isAnimationActive={false}
-            />
-            <Line
-              type="monotone"
-              dataKey="projected"
-              name={props.tx("ui.view.coach.readiness.projected", "Projected")}
-              stroke="var(--chart-accent-2)"
-              strokeWidth={2}
-              strokeDasharray="6 3"
-              dot={false}
-              connectNulls
-              isAnimationActive={false}
-            />
-          </ComposedChart>
-        </ResponsiveContainer>
+        <ChartJsCanvas
+          className="w-full h-full"
+          config={chartConfig}
+          height={240}
+          ariaLabel={props.tx("ui.view.coach.readiness.title", "Exam Readiness")}
+        />
       </SizedChartContainer>
 
       <div className="learnkit-coach-chart-legend">

@@ -1,5 +1,5 @@
 /* ============================================================================
-   ANALYTICS — Grid, Recharts axis/tick, pie chart, info icons, filter
+  ANALYTICS — Grid, chart cards, pie chart, info icons, filter
    z-index stacking, chart cards, heatmap, analytics tables.
    ========================================================================== */
 
@@ -165,29 +165,6 @@ body.is-phone .learnkit .learnkit-analytics-content-shell > * + * {
 }
 
 
-/* ---- Recharts axis + ticks ---- */
-
-.learnkit .learnkit-analytics-root .recharts-cartesian-axis-line,
-.learnkit .learnkit-analytics-root .recharts-cartesian-axis-tick-line {
-  stroke: var(--border);
-}
-.learnkit .learnkit-analytics-root .recharts-cartesian-axis-tick-value {
-  fill: var(--text-muted);
-  font-size: var(--learnkit-font-2xs);
-}
-.learnkit .learnkit-analytics-root .recharts-label tspan {
-  fill: var(--text-muted);
-}
-
-/* ---- Pie chart center value ---- */
-
-.learnkit .learnkit-analytics-root .fill-foreground {
-  fill: #111111;
-}
-.theme-dark .learnkit .learnkit-analytics-root .fill-foreground {
-  fill: #ffffff;
-}
-
 /* ---- Info icons ---- */
 
 .learnkit .learnkit-analytics-root .lucide-info {
@@ -198,22 +175,6 @@ body.is-phone .learnkit .learnkit-analytics-content-shell > * + * {
 .learnkit .learnkit-analytics-root [data-tooltip]:has(.lucide-info) {
   cursor: pointer;
   z-index: var(--lk-z-analytics-info);
-}
-
-/* Recharts tooltip: fade in only — no slide-in translation effect */
-.learnkit .recharts-tooltip-wrapper {
-  transition-property: opacity ;
-  transition-duration: 120ms ;
-  transition-timing-function: ease ;
-  transition-delay: 0s ;
-  animation: none ;
-}
-.learnkit .recharts-tooltip-wrapper[style*="translate"] {
-  /* Let Recharts set the translate for positioning but block the animated transition on it */
-  transition-property: opacity ;
-  transition-duration: 120ms ;
-  transition-timing-function: ease ;
-  transition-delay: 0s ;
 }
 
 .learnkit .learnkit-analytics-root [data-tooltip]:has(.lucide-info):is(:hover, :focus-visible) {
@@ -398,12 +359,9 @@ body.is-phone .learnkit .learnkit-analytics-content-shell > * + * {
   border-radius: var(--radius-md);
   overflow: auto;
   transition: background-color 0.2s;
-  background-color: color-mix(in oklab, var(--background) 80%, transparent 20%);
 }
 
-.learnkit .learnkit-analytics-table-wrap:hover {
-  background-color: var(--background);
-}
+
 
 /* Analytics table: keep hover radius on cells; wrapper handles border */
 .learnkit .learnkit-analytics-root .table {

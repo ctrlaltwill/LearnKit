@@ -38,7 +38,6 @@ export interface ToolbarRefs {
   fileInput: HTMLInputElement;
   btnUndo: HTMLButtonElement;
   btnRedo: HTMLButtonElement;
-  btnAutoMask: HTMLButtonElement;
   btnResetMasks: HTMLButtonElement;
   btnTransform: HTMLButtonElement;
   btnRectTool: HTMLButtonElement;
@@ -54,7 +53,6 @@ export interface ToolbarCallbacks {
   onFileSelected(file: File): void;
   onUndo(): void;
   onRedo(): void;
-  onAutoMask(): void;
   onResetMasks(): void;
   onSetTool(tool: "occlusion-rect" | "occlusion-circle" | "occlusion-freehand" | "occlusion-smart-lasso" | "transform" | "text" | "crop"): void;
   onRotate(dir: "cw" | "ccw"): void;
@@ -62,7 +60,6 @@ export interface ToolbarCallbacks {
 
 /** Build the IO-editor toolbar and return element references. */
 export function buildToolbar(parent: HTMLElement, cb: ToolbarCallbacks): ToolbarRefs {
-  const findShortcut = getPlatformShortcut("F");
   const undoTip = getPlatformShortcut("Z");
   const redoShortcut = isMobileLikePlatform() ? null : (Platform.isMacOS ? "⌘⇧Z" : "Ctrl+Shift+Z");
 
@@ -136,7 +133,7 @@ export function buildToolbar(parent: HTMLElement, cb: ToolbarCallbacks): Toolbar
 
   createSep();
 
-  // Drawing tools + auto-detect
+  // Drawing tools
   const btnRectTool = createIconBtn(
     toolbarGroup,
     "square",
@@ -161,12 +158,6 @@ export function buildToolbar(parent: HTMLElement, cb: ToolbarCallbacks): Toolbar
     t(undefined, "ui.io.toolbar.addSmartMask", "Add Smart Mask"),
     () => cb.onSetTool("occlusion-smart-lasso"),
   );
-  const btnAutoMask = createIconBtn(
-    toolbarGroup,
-    "wand-sparkles",
-    findShortcut ? `${t(undefined, "ui.io.toolbar.autoMask", "Auto-Mask")} (${findShortcut})` : t(undefined, "ui.io.toolbar.autoMask", "Auto-Mask"),
-    () => cb.onAutoMask(),
-  );
   const btnResetMasks = createIconBtn(
     toolbarGroup,
     "trash-2",
@@ -186,7 +177,6 @@ export function buildToolbar(parent: HTMLElement, cb: ToolbarCallbacks): Toolbar
     fileInput,
     btnUndo,
     btnRedo,
-    btnAutoMask,
     btnResetMasks,
     btnTransform,
     btnRectTool,

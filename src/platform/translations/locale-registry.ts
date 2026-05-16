@@ -80,13 +80,6 @@ const INTERFACE_LOCALE_REGISTRY: ReadonlyArray<InterfaceLocaleDefinition> = [
     flagCode: "es",
     status: "community",
   },
-  {
-    code: "hi",
-    label: "Hindi",
-    nativeLabel: "हिन्दी",
-    flagCode: "in",
-    status: "community",
-  },
 ];
 
 const MANUAL_INTERFACE_LOCALE_SET = new Set(
@@ -115,7 +108,6 @@ function toSupportedManualLocale(value: unknown, fallback: string): string {
   if (candidate === "fr" || candidate.startsWith("fr")) return "fr";
   if (candidate === "ja" || candidate.startsWith("ja")) return "ja";
   if (candidate === "es" || candidate.startsWith("es")) return "es";
-  if (candidate === "hi" || candidate.startsWith("hi")) return "hi";
 
   return MANUAL_INTERFACE_LOCALE_SET.has(candidate) ? candidate : fallback;
 }
@@ -163,7 +155,6 @@ export function interfaceLocaleToIntlLocale(value: unknown): string {
   if (resolved === "fr") return "fr-FR";
   if (resolved === "ja") return "ja-JP";
   if (resolved === "es") return "es-ES";
-  if (resolved === "hi") return "hi-IN";
   return "en-US";
 }
 
