@@ -120,8 +120,6 @@ html {
 }
 
 .sl-markdown-content a:not(.sl-link-button) {
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.18em;
 }
 
 .sl-markdown-content img {
@@ -134,13 +132,13 @@ html {
   box-shadow: var(--shadow-sm);
 }
 
-.expressive-code .frame.is-terminal .header {
-  background: transparent !important;
-  border: none !important;
+.sl-markdown-content .expressive-code .frame.is-terminal .header {
+  background: transparent;
+  border: none;
 }
 
-.expressive-code .frame.is-terminal .header::after {
-  border-bottom: none !important;
+.sl-markdown-content .expressive-code .frame.is-terminal .header::after {
+  border-bottom: none;
 }
 
 @media (max-width: 50rem) {
@@ -150,6 +148,7 @@ html {
 }
 
 /* Starlight search uses dark-first tokens for its dialog. Force a light surface in day theme only. */
+/* stylelint-disable selector-type-no-unknown */
 :root[data-theme="light"] site-search dialog,
 :root[data-theme="light"] site-search .dialog-frame {
   background-color: var(--background);
@@ -158,17 +157,18 @@ html {
 :root[data-theme="light"] site-search #starlight__search {
   --pagefind-ui-background: var(--background);
 }
+/* stylelint-enable selector-type-no-unknown */
 
 /* Scope table compaction to the Companion model compatibility table only. */
-.sl-markdown-content h2#compatibility-table + table {
+.sl-markdown-content.sl-markdown-content h2#compatibility-table + table {
   width: 100%;
-  font-size: 0.8rem !important;
+  font-size: 0.8rem;
   line-height: 1.25;
 }
 
-.sl-markdown-content h2#compatibility-table + table th,
-.sl-markdown-content h2#compatibility-table + table td {
-  font-size: 0.8rem !important;
+.sl-markdown-content.sl-markdown-content h2#compatibility-table + table th,
+.sl-markdown-content.sl-markdown-content h2#compatibility-table + table td {
+  font-size: 0.8rem;
   padding: 0.35rem 0.45rem;
   vertical-align: top;
 }

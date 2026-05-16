@@ -142,7 +142,7 @@
 .learnkit .lk-home-quick-study-btn {
   margin-left: auto;
   font-size: var(--learnkit-font-xs);
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1;
   padding: 9px 14px;
 }
@@ -152,9 +152,8 @@
   border: 0.5px solid var(--theme-black-95);
   border-radius: 8px;
   background: var(--theme-base-95);
-  color: #ffffff;
   font-size: var(--learnkit-font-xs);
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1;
   padding: 9px 14px;
   box-shadow: none;
@@ -165,7 +164,6 @@
     border: 0.5px solid var(--theme-black-85);
   border-radius: 8px;
   background: var(--theme-black-95); 
-  color: #ffffff;
   transform: translateY(-1px);
   box-shadow: none;
 }
@@ -174,7 +172,6 @@
 .learnkit .learnkit-btn-accent:active {
       border: 0.5px solid var(--theme-black-75);
         background: var(--theme-black-85); 
-        color: #ffffff;
   transform: translateY(0);
 }
 

@@ -22,6 +22,9 @@
   min-height: 0;
   overflow: hidden;
   box-sizing: border-box;
+  background: none;
+  background-color: transparent;
+  zoom: var(--learnkit-leaf-zoom, 1);
 }
 
 .learnkit .border-border,
@@ -64,12 +67,6 @@
   color: var(--text-faint);
   background-color: transparent;
   border-color: transparent;
-}
-
-.learnkit-widget.learnkit {
-  background: none;
-  background-color: transparent;
-  zoom: var(--learnkit-leaf-zoom, 1);
 }
 
 .learnkit.learnkit-widget.learnkit-widget-has-summary-header {
@@ -233,7 +230,7 @@
 
 /* Widget grading buttons: use neutral default widget styling (match Edit/More) */
 .learnkit.learnkit-widget .learnkit-widget-action-btn:is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy) {
-  column-gap: 0;
+  gap: 0;
   background-color: var(--background);
   color: var(--foreground);
   border-color: var(--learnkit-border-color);
@@ -666,7 +663,7 @@
 /* Inline code within widget text */
 .learnkit .learnkit-widget-text code,
 .learnkit .learnkit-widget-info code {
-  font-family: var(--font-monospace, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace);
+  font-family: var(--font-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace);
   background-color: var(--color-base-20);
   color: var(--color-base-70);
   border-radius: 4px;

@@ -156,13 +156,12 @@
 
 .learnkit .learnkit-btn-toolbar.learnkit-btn-accent {
   background: var(--theme-base-95);
-  color: #ffffff;
+  font-weight: 400;
   border: 0.5px solid var(--theme-black-95);
 }
 
 .learnkit .learnkit-btn-toolbar.learnkit-btn-accent:hover {
   background: var(--theme-black-95);
-  color: #ffffff;
   border: 0.5px solid var(--theme-black-85);
   transform: translateY(-1px);
 }
@@ -170,7 +169,6 @@
 .learnkit .learnkit-btn-toolbar.learnkit-btn-accent:focus-visible,
 .learnkit .learnkit-btn-toolbar.learnkit-btn-accent:active {
   background: var(--theme-black-85);
-  color: #ffffff;
   border: 0.5px solid var(--theme-black-75);
   transform: translateY(0);
 }
@@ -415,19 +413,17 @@
 /* Dark theme: let accent win over toolbar defaults */
 .theme-dark .learnkit .learnkit-btn-toolbar.learnkit-btn-accent {
   background: var(--theme-base-95);
-  color: #ffffff;
+  font-weight: 400;
   border: 0.5px solid var(--theme-black-95);
 }
 .theme-dark .learnkit .learnkit-btn-toolbar.learnkit-btn-accent:hover {
   background: var(--theme-black-95);
-  color: #ffffff;
   border: 0.5px solid var(--theme-black-85);
   transform: translateY(-1px);
 }
 .theme-dark .learnkit .learnkit-btn-toolbar.learnkit-btn-accent:focus-visible,
 .theme-dark .learnkit .learnkit-btn-toolbar.learnkit-btn-accent:active {
   background: var(--theme-black-85);
-  color: #ffffff;
   border: 0.5px solid var(--theme-black-75);
   transform: translateY(0);
 }

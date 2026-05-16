@@ -283,7 +283,6 @@ a.learnkit-header-center-brand-link:hover {
 
 /* Keep the Tools trigger (btn-icon-outline) visually consistent with other header actions. */
 .learnkit .learnkit-header .lk-more-wrap .btn-icon-outline.learnkit-btn-toolbar {
-  background-color: transparent;
   color: var(--text-normal);
   border: 0.5px solid transparent;
 }

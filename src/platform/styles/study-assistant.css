@@ -2876,7 +2876,6 @@
 .learnkit-edit-block-new.markdown-rendered .internal-link {
   color: var(--link-color, var(--text-accent));
   text-decoration: underline;
-  text-decoration-style: dotted;
 }
 
 .learnkit-edit-proposal-replacement.markdown-rendered :is(h1, h2, h3, h4, h5, h6),
@@ -2978,7 +2977,6 @@
 .learnkit-edit-proposal-source-fragment .internal-link {
   color: var(--link-color, var(--text-accent));
   text-decoration: underline;
-  text-decoration-style: dotted;
 }
 
 .learnkit-edit-proposal-source-fragment .cm-header {

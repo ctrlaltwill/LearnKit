@@ -884,7 +884,12 @@ body.is-phone .learnkit-guide-body table {
 
 /* Copy-code button — bare icon, no button chrome */
 .learnkit-guide-body pre .copy-code-button {
-  all: unset;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font: inherit;
   position: absolute;
   top: 3px;
   right: 3px;
@@ -947,7 +952,6 @@ body:not(.is-mobile) .learnkit-guide-body pre button.copy-code-button.learnkit-g
 }
 
 .learnkit-guide-link:hover {
-  text-decoration-style: solid;
   color: var(--interactive-accent-hover, var(--interactive-accent));
 }
 
@@ -2829,7 +2833,12 @@ input.learnkit-ss-search-input {
 }
 
 .learnkit .learnkit-folder-suggest-item {
-  all: unset;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font: inherit;
   box-sizing: border-box;
   display: flex;
   align-items: center;

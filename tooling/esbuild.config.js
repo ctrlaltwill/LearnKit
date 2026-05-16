@@ -24,6 +24,15 @@ function writeError(error) {
 // duplicating them breaks instanceof checks in CM6.
 const external = ["obsidian", "*.css", "@codemirror/state", "@codemirror/view"];
 
+const sqlJsBrowserEntry = path.join(rootDir, "node_modules", "sql.js", "dist", "sql-wasm-browser.js");
+
+const sqlJsBrowserAliasPlugin = {
+  name: "sqljs-browser-alias",
+  setup(build) {
+    build.onResolve({ filter: /^sql\.js$/ }, () => ({ path: sqlJsBrowserEntry }));
+  },
+};
+
 async function build() {
   const ctx = await esbuild.context({
     entryPoints: [entry],
@@ -35,6 +44,7 @@ async function build() {
     minify: isProd,
     outfile: path.join(outdir, "main.js"),
     external,
+    plugins: [sqlJsBrowserAliasPlugin],
     logLevel: "info",
 
     // Replace process.env.NODE_ENV at build time so it works on mobile

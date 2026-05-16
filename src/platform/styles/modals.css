@@ -75,7 +75,7 @@
   max-height: 80vh;
   padding: 1.2rem 0;
   border: 0.5px solid var(--color-base-35);
-  background: var(--color-base-05);
+  background: rgba(255,255,255,0.8);
   overflow: hidden;
   padding-left: 5px;
   padding-right: 5px;
@@ -591,8 +591,7 @@
   box-sizing: border-box;
   display: flex;
   flex-wrap: wrap;
-  column-gap: 6px;
-  row-gap: 2px;
+  gap: 2px 6px;
   align-content: flex-start;
   cursor: pointer;
   background: var(--background-modifier-form-field);
@@ -610,7 +609,11 @@
 /* ---- Card editor modal ---- */
 
 .learnkit .learnkit-card-editor-modal-root {
-  all: unset;
+  margin: 0;
+  border: 0;
+  outline: none;
+  font: inherit;
+  color: inherit;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -790,7 +793,7 @@ width: min(720px, 100%);
 .learnkit .learnkit-gatekeeper-body code,
 .learnkit .learnkit-gatekeeper-body .learnkit-md-block code,
 .learnkit .learnkit-gatekeeper-body .learnkit-widget-text code {
-  font-family: var(--font-monospace, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace);
+  font-family: var(--font-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace);
   font-size: 0.85em;
   background-color: var(--code-background, var(--background-modifier-hover, rgba(128,128,128,0.15)));
   color: var(--code-normal, var(--text-normal));
@@ -981,7 +984,7 @@ width: min(720px, 100%);
   border: 0.5px solid var(--theme-black-95);
   border-radius: 8px;
   background: var(--theme-base-95);
-  color: #ffffff;
+  font-weight: 400;
   box-shadow: none;
   transition: transform 140ms ease, background-color 140ms ease, border-color 140ms ease;
 }
@@ -990,14 +993,12 @@ width: min(720px, 100%);
 .learnkit :is(.learnkit-btn-primary-action, .learnkit-card-creator-add-btn, .learnkit-bulk-edit-save-btn, .learnkit-io-save-btn):focus-visible {
   border-color: var(--theme-black-85);
   background: var(--theme-black-95);
-  color: #ffffff;
   transform: translateY(-1px);
 }
 
 .learnkit :is(.learnkit-btn-primary-action, .learnkit-card-creator-add-btn, .learnkit-bulk-edit-save-btn, .learnkit-io-save-btn):active {
   border-color: var(--theme-black-75);
   background: var(--theme-black-85);
-  color: #ffffff;
   transform: translateY(0);
 }
 
@@ -1238,8 +1239,7 @@ body.is-mobile .learnkit .learnkit-cloze-mobile-actions {
   box-sizing: border-box;
   display: flex;
   flex-wrap: wrap;
-  column-gap: 6px;
-  row-gap: 2px;
+  gap: 2px 6px;
   align-content: flex-start;
   background: color-mix(in srgb, var(--color-base-05) 95%, transparent 05%);
   border: 0.5px solid color-mix(in srgb, var(--color-base-70) 20%, transparent 80%);
@@ -2579,7 +2579,6 @@ z-index: 11;
   width: auto;
   min-width: 28px;
   padding: 0 8px;
-  column-gap: 6px;
   gap: 6px;
 }
 

@@ -96,7 +96,7 @@
   margin-bottom: 6px;
 }
 
-mjx-container[jax="CHTML"][display="true"] {
+.MathJax[jax="CHTML"][display="true"] {
   display: block;
   text-align: left;
   margin: 0.5em 1em;
@@ -105,15 +105,15 @@ mjx-container[jax="CHTML"][display="true"] {
 /* Normalise display-math margins inside flashcard bodies, MCQ option
    lists, and OQ sequence lists so that pure-LaTeX items match the
    height of text+inline-LaTeX items. */
-.learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-body mjx-container[jax="CHTML"][display="true"] {
+.learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-body .MathJax[jax="CHTML"][display="true"] {
   display: inline-block;
   margin: 0;
   text-align: center;
 }
 
-.learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-options-list li mjx-container[jax="CHTML"][display="true"],
-.learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-sequence-list li mjx-container[jax="CHTML"][display="true"],
-.learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-answer-list li mjx-container[jax="CHTML"][display="true"] {
+.learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-options-list li .MathJax[jax="CHTML"][display="true"],
+.learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-sequence-list li .MathJax[jax="CHTML"][display="true"],
+.learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-answer-list li .MathJax[jax="CHTML"][display="true"] {
   display: inline-block;
   margin: 0;
   vertical-align: middle;
@@ -145,7 +145,7 @@ mjx-container[jax="CHTML"][display="true"] {
   max-height: none;
 }
 
-/* ---- CSS multi-column masonry layout on preview sections ---- */
+/* ---- Card grid layout on preview sections ---- */
 
 /*
  * Force eager rendering of masonry sections so Obsidian's virtualiser
@@ -159,26 +159,25 @@ mjx-container[jax="CHTML"][display="true"] {
 }
 
 /*
- * True masonry card layout using CSS multi-column.
- * Cards flow top-to-bottom within each column, so shorter cards
- * pack tightly without row-height gaps (unlike CSS Grid).
- *
- * Non-card siblings use `column-span: all` so headings, lists,
- * and other content stay full-width and create natural column
- * break-points between card groups.
+ * Responsive card grid layout for reading sections.
+ * Cards keep a stable minimum width and fill available space.
  */
 .markdown-preview-section.learnkit-layout-masonry > .learnkit-reading-card-run {
-  column-width: 280px;
-  column-gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
   margin-top: 1.5rem;
-    margin-bottom: 2.5rem;
+  margin-bottom: 2.5rem;
 }
 
-/* Vertical gap between cards matches the horizontal column-gap.
-   needed to override .learnkit .learnkit-pretty-card.accent base margins */
+/* Grid spacing controls card gutters directly in masonry sections. */
 .markdown-preview-section.learnkit-layout-masonry > .learnkit-reading-card-run > .learnkit-pretty-card {
-  margin-top: 0;
-  margin-bottom: 16px;
+  margin: 0;
+}
+
+/* Keep non-card children as full-width section separators in the grid flow. */
+.markdown-preview-section.learnkit-layout-masonry > .learnkit-reading-card-run > :not(.learnkit-pretty-card) {
+  grid-column: 1 / -1;
 }
 
 /* Hidden duplicates must not take space */
@@ -245,7 +244,6 @@ mjx-container[jax="CHTML"][display="true"] {
   box-sizing: border-box;
   margin-top: 20px;
   margin-bottom: 20px;
-  break-inside: avoid;
   page-break-inside: avoid;
   overflow: visible;
   background-color: var(--background-primary);
@@ -709,7 +707,7 @@ mjx-container[jax="CHTML"][display="true"] {
 /* Responsive: single column on narrow screens */
 @media (max-width: 520px) {
   .markdown-preview-section.learnkit-layout-masonry > .learnkit-reading-card-run {
-    column-count: 1;
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1420,7 +1418,7 @@ padding: 0px;
 
 /* Make LaTeX (mjx-container) inside <strong> visually bold via
    a slightly thicker stroke, matching the surrounding bold text. */
-.learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-answer strong mjx-container {
+.learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-answer strong .MathJax {
   -webkit-text-stroke: 0.4px currentColor;
 }
 
@@ -1590,7 +1588,7 @@ padding: 0px;
    ========================================================================== */
 
 .learnkit-group-header {
-  column-span: all;
+  grid-column: 1 / -1;
   font-size: var(--learnkit-font-xs);
   font-weight: 600;
   color: var(--text-muted);

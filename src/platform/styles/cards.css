@@ -15,7 +15,7 @@
 /* Inline code styling for reading-view and study-session cards */
 .learnkit .learnkit-pretty-card code,
 .learnkit .lk-review-root[data-lk-review-mode="session"] .lk-session-card code {
-  font-family: var(--font-monospace, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace);
+  font-family: var(--font-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace);
   background-color: var(--color-base-20);
   color: var(--color-base-70);
   border-radius: 4px;
@@ -71,8 +71,7 @@ body.is-phone .small-card {
   box-sizing: border-box;
   display: flex;
   flex-wrap: wrap;
-  column-gap: 6px;
-  row-gap: 2px;
+  gap: 2px 6px;
   align-items: center;
   background: var(--background-modifier-form-field);
   border: var(--learnkit-border-width) solid var(--learnkit-border-color);
@@ -494,7 +493,6 @@ body.is-phone .small-card {
 .learnkit .learnkit-flag-editor-overlay .internal-link {
   color: var(--link-color, var(--text-accent));
   text-decoration: underline;
-  text-decoration-style: dotted;
 }
 
 .learnkit .learnkit-flag-editor-overlay :is(h1, h2, h3, h4, h5, h6) {
@@ -2486,8 +2484,7 @@ body.is-mobile .learnkit .learnkit-coach-scope-actions-grid {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  column-gap: 6px;
-  row-gap: 4px;
+  gap: 4px 6px;
   font-size: 0.9rem;
   color: var(--text-normal);
 }
