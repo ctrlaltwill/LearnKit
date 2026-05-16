@@ -356,7 +356,7 @@ export function WithCoreMethods<T extends Constructor<LearnKitPluginBase>>(Base:
       startMarkdownModeWatcher({
         app: this.app,
         state,
-        registerInterval: this.registerInterval.bind(this),
+        registerWorkspaceEvent: this.registerEvent.bind(this),
         setWatcherInterval: (id: number | null) => {
           this._readingModeWatcherInterval = id;
         },

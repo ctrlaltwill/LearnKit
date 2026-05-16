@@ -11,7 +11,7 @@
  *  - scheduleReadingViewRefresh
  */
 
-import { type App, MarkdownView, TFile, type WorkspaceLeaf } from "obsidian";
+import { type App, type EventRef, MarkdownView, TFile, type WorkspaceLeaf } from "obsidian";
 
 import { log } from "../../platform/core/logger";
 import { queryFirst } from "../../platform/core/ui";
@@ -178,22 +178,19 @@ export function scheduleReadingViewRefresh(params: {
 export function startMarkdownModeWatcher(params: {
   app: App;
   state: ReadingRefreshState;
-  registerInterval: (id: number) => void;
+  registerWorkspaceEvent: (eventRef: EventRef) => void;
   setWatcherInterval: (id: number | null) => void;
   scheduleRefresh: (params?: { delayMs?: number; activeOnly?: boolean }) => void;
 }): void {
-  const { app, state, registerInterval, setWatcherInterval, scheduleRefresh } = params;
-  if (state.readingModeWatcherInterval != null) {
-    setWatcherInterval(state.readingModeWatcherInterval);
+  const { app, state, registerWorkspaceEvent, setWatcherInterval, scheduleRefresh } = params;
+  // -1 is a sentinel meaning event-driven watcher already registered.
+  if (state.readingModeWatcherInterval === -1) {
+    setWatcherInterval(-1);
     return;
   }
+  setWatcherInterval(-1);
 
   let lastActiveLeaf: WorkspaceLeaf | null = null;
-
-  const setWatcherTimeout = (id: number | null) => {
-    state.readingModeWatcherInterval = id;
-    setWatcherInterval(id);
-  };
 
   const scanModes = () => {
     try {
@@ -227,13 +224,13 @@ export function startMarkdownModeWatcher(params: {
   };
 
   scanModes();
-  const scheduleModeScan = () => {
-    setWatcherTimeout(window.setTimeout(() => {
-      setWatcherTimeout(null);
-      scanModes();
-      scheduleModeScan();
-    }, 180));
-  };
-  scheduleModeScan();
-  if (state.readingModeWatcherInterval != null) registerInterval(state.readingModeWatcherInterval);
+  registerWorkspaceEvent(app.workspace.on("active-leaf-change", () => {
+    scanModes();
+  }));
+  registerWorkspaceEvent(app.workspace.on("file-open", () => {
+    scanModes();
+  }));
+  registerWorkspaceEvent(app.workspace.on("layout-change", () => {
+    scanModes();
+  }));
 }
