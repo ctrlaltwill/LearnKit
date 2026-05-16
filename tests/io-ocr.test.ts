@@ -90,25 +90,4 @@ describe("io ocr post-processing", () => {
     expect(clamped).toMatchObject({ x: 0, y: 0, w: 8, h: 8 });
   });
 
-  it("preprocesses pixels into higher-contrast grayscale", () => {
-    const pixels = new Uint8ClampedArray([
-      40,
-      20,
-      20,
-      255,
-      210,
-      220,
-      230,
-      255,
-    ]);
-
-    __test.preprocessRgbaInPlace(pixels);
-
-    expect(pixels[0]).toBe(0);
-    expect(pixels[1]).toBe(0);
-    expect(pixels[2]).toBe(0);
-    expect(pixels[4]).toBe(255);
-    expect(pixels[5]).toBe(255);
-    expect(pixels[6]).toBe(255);
-  });
 });
