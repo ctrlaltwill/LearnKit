@@ -444,18 +444,18 @@ export function syncReadingViewStyles(): void {
   css += `.learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-answer,\n`;
   css += `.learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-options,\n`;
   css += `.learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-info {\n`;
-  css += `  font-size: ${effectiveFontSize}rem !important;\n`;
+  css += `  font-size: ${effectiveFontSize}rem ;\n`;
   css += `}\n`;
 
   // Ensure hidden source fragments never leak below prettified cards,
   // even when scoped stylesheet transforms miss plain markdown leaves.
   css += `.markdown-preview-section > :not(.el-ul):not(.el-ol)[data-learnkit-hidden="true"] {\n`;
-  css += `  display: none !important;\n`;
-  css += `  max-height: 0 !important;\n`;
-  css += `  overflow: hidden !important;\n`;
-  css += `  margin: 0 !important;\n`;
-  css += `  padding: 0 !important;\n`;
-  css += `  border: none !important;\n`;
+  css += `  display: none ;\n`;
+  css += `  max-height: 0 ;\n`;
+  css += `  overflow: hidden ;\n`;
+  css += `  margin: 0 ;\n`;
+  css += `  padding: 0 ;\n`;
+  css += `  border: none ;\n`;
   css += `}\n`;
   // In vertical layout, keep hidden list spillover in normal flow so
   // Obsidian's virtualizer retains correct section height.
@@ -463,18 +463,18 @@ export function syncReadingViewStyles(): void {
   css += `.markdown-preview-section.learnkit-layout-vertical > .el-ol[data-learnkit-hidden="true"],\n`;
   css += `.markdown-preview-section.learnkit-layout-vertical > .el-ul.learnkit-hidden-important,\n`;
   css += `.markdown-preview-section.learnkit-layout-vertical > .el-ol.learnkit-hidden-important {\n`;
-  css += `  position: absolute !important;\n`;
-  css += `  left: -99999px !important;\n`;
-  css += `  top: auto !important;\n`;
-  css += `  width: 1px !important;\n`;
-  css += `  height: 1px !important;\n`;
-  css += `  overflow: hidden !important;\n`;
-  css += `  margin: 0 !important;\n`;
-  css += `  padding: 0 !important;\n`;
-  css += `  border: none !important;\n`;
-  css += `  opacity: 0 !important;\n`;
-  css += `  user-select: none !important;\n`;
-  css += `  pointer-events: none !important;\n`;
+  css += `  position: absolute ;\n`;
+  css += `  left: -99999px ;\n`;
+  css += `  top: auto ;\n`;
+  css += `  width: 1px ;\n`;
+  css += `  height: 1px ;\n`;
+  css += `  overflow: hidden ;\n`;
+  css += `  margin: 0 ;\n`;
+  css += `  padding: 0 ;\n`;
+  css += `  border: none ;\n`;
+  css += `  opacity: 0 ;\n`;
+  css += `  user-select: none ;\n`;
+  css += `  pointer-events: none ;\n`;
   css += `}\n`;
   css += `.markdown-preview-section > .el-p[data-learnkit-processed] {\n`;
   css += `  opacity: 1;\n`;
@@ -484,31 +484,31 @@ export function syncReadingViewStyles(): void {
   // ── Layout ──
   if (effectiveLayout === 'vertical') {
     css += `.markdown-preview-section.learnkit-layout-vertical > .learnkit-reading-card-run {\n`;
-    css += `  column-width: unset !important;\n  column-gap: unset !important;\n  column-count: 1 !important;\n`;
+    css += `  column-width: unset ;\n  column-gap: unset ;\n  column-count: 1 ;\n`;
     css += `  display: flex;\n  flex-direction: column;\n  gap: 12px;\n`;
     css += `}\n`;
     css += `.markdown-preview-section.learnkit-layout-vertical > .learnkit-reading-card-run > .learnkit-pretty-card {\n`;
-    css += `  margin-top: 0 !important;\n  margin-bottom: 0 !important;\n`;
+    css += `  margin-top: 0 ;\n  margin-bottom: 0 ;\n`;
     css += `}\n`;
   }
 
   if (macroPreset === 'flashcards') {
     css += `.markdown-preview-section.learnkit-layout-masonry > .learnkit-reading-card-run:has(.learnkit-pretty-card.learnkit-macro-flashcards) {\n`;
-    css += `  column-width: 280px !important;\n`;
-    css += `  column-gap: 16px !important;\n`;
-    css += `  display: block !important;\n`;
+    css += `  column-width: 280px ;\n`;
+    css += `  column-gap: 16px ;\n`;
+    css += `  display: block ;\n`;
     css += `}\n`;
     css += `.markdown-preview-section.learnkit-layout-masonry > .learnkit-reading-card-run:has(.learnkit-pretty-card.learnkit-macro-flashcards) > .learnkit-pretty-card.learnkit-macro-flashcards {\n`;
-    css += `  margin-top: 0 !important;\n`;
-    css += `  padding-top: 0 !important;\n`;
-    css += `  margin-bottom: 16px !important;\n`;
+    css += `  margin-top: 0 ;\n`;
+    css += `  padding-top: 0 ;\n`;
+    css += `  margin-bottom: 16px ;\n`;
     css += `}\n`;
   }
 
   // ── Card mode: full (expand collapsibles, hide toggle buttons) ──
   if (rv?.cardMode === 'full') {
-    css += `.learnkit-pretty-card .learnkit-collapsible { max-height: none !important; overflow: visible !important; }\n`;
-    css += `.learnkit-pretty-card .learnkit-toggle-btn { display: none !important; }\n`;
+    css += `.learnkit-pretty-card .learnkit-collapsible { max-height: none ; overflow: visible ; }\n`;
+    css += `.learnkit-pretty-card .learnkit-toggle-btn { display: none ; }\n`;
   }
 
   // ── Field visibility / included data ──
@@ -529,27 +529,27 @@ export function syncReadingViewStyles(): void {
   const activeFields = macroFields ?? rv?.visibleFields;
   if (activeFields) {
     const vf = activeFields;
-    if (!vf.title) css += `${macroSelector} .learnkit-card-header { display: none !important; }\n`;
-    if (!vf.question) css += `${macroSelector} .learnkit-section-question { display: none !important; }\n`;
-    if (!vf.options) css += `${macroSelector} .learnkit-section-options { display: none !important; }\n`;
-    if (!vf.answer) css += `${macroSelector} .learnkit-section-answer { display: none !important; }\n`;
-    if (!vf.info) css += `${macroSelector} .learnkit-section-info { display: none !important; }\n`;
-    if (!vf.groups) css += `${macroSelector} .learnkit-groups-list, ${macroSelector} .learnkit-section-groups { display: none !important; }\n`;
-    if (!vf.edit && macroPreset !== 'flashcards') css += `${macroSelector} .learnkit-card-edit-btn { display: none !important; }\n`;
+    if (!vf.title) css += `${macroSelector} .learnkit-card-header { display: none ; }\n`;
+    if (!vf.question) css += `${macroSelector} .learnkit-section-question { display: none ; }\n`;
+    if (!vf.options) css += `${macroSelector} .learnkit-section-options { display: none ; }\n`;
+    if (!vf.answer) css += `${macroSelector} .learnkit-section-answer { display: none ; }\n`;
+    if (!vf.info) css += `${macroSelector} .learnkit-section-info { display: none ; }\n`;
+    if (!vf.groups) css += `${macroSelector} .learnkit-groups-list, ${macroSelector} .learnkit-section-groups { display: none ; }\n`;
+    if (!vf.edit && macroPreset !== 'flashcards') css += `${macroSelector} .learnkit-card-edit-btn { display: none ; }\n`;
   }
 
   if (macroPreset === 'flashcards') {
     const showAudioButton = macroFields?.displayAudioButton !== false;
     const showEditButton = macroFields?.displayEditButton !== false;
-    if (!showAudioButton) css += `${macroSelector} .learnkit-flashcard-speak-btn { display: none !important; }\n`;
-    if (!showEditButton) css += `${macroSelector} .learnkit-card-edit-btn { display: none !important; }\n`;
+    if (!showAudioButton) css += `${macroSelector} .learnkit-flashcard-speak-btn { display: none ; }\n`;
+    if (!showEditButton) css += `${macroSelector} .learnkit-card-edit-btn { display: none ; }\n`;
   }
   const showLabels = (macroConfig as { fields?: { labels?: boolean } } | undefined)?.fields?.labels ?? rv?.displayLabels;
   if (showLabels === false) {
-    css += `${macroSelector} .learnkit-section-label { display: none !important; }\n`;
+    css += `${macroSelector} .learnkit-section-label { display: none ; }\n`;
   }
   if (macroPreset === 'classic') {
-    css += `.learnkit-pretty-card.learnkit-macro-classic .learnkit-section-label { display: flex !important; }\n`;
+    css += `.learnkit-pretty-card.learnkit-macro-classic .learnkit-section-label { display: flex ; }\n`;
   }
 
   if (macroPreset === 'custom') {

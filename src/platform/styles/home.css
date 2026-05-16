@@ -82,7 +82,7 @@
   border: 0;
   border-radius: 0;
   box-shadow: none;
-  margin: 0 2px 0 4px !important;
+  margin: 0 2px 0 4px ;
   padding: 0;
   min-width: 1ch;
   width: min(100%, var(--lk-home-name-width, auto));
@@ -150,10 +150,10 @@
 
 .learnkit .learnkit-btn-accent {
   margin-left: auto;
-  border: 0.5px solid var(--theme-black-95) !important;
+  border: 0.5px solid var(--theme-black-95) ;
   border-radius: 8px;
-  background: var(--theme-base-95) !important;
-  color: #ffffff !important;
+  background: var(--theme-base-95) ;
+  color: #ffffff ;
   font-size: var(--learnkit-font-xs);
   font-weight: 600;
   line-height: 1;
@@ -163,26 +163,26 @@
 }
 
 .learnkit .learnkit-btn-accent:hover {
-    border: 0.5px solid var(--theme-black-85) !important;
+    border: 0.5px solid var(--theme-black-85) ;
   border-radius: 8px;
-  background: var(--theme-black-95) !important; 
-  color: #ffffff !important;
+  background: var(--theme-black-95) ; 
+  color: #ffffff ;
   transform: translateY(-1px);
   box-shadow: none;
 }
 
 .learnkit .learnkit-btn-accent:focus-visible,
 .learnkit .learnkit-btn-accent:active {
-      border: 0.5px solid var(--theme-black-75) !important;
-        background: var(--theme-black-85) !important; 
-        color: #ffffff !important;
+      border: 0.5px solid var(--theme-black-75) ;
+        background: var(--theme-black-85) ; 
+        color: #ffffff ;
   transform: translateY(0);
 }
 
 body.is-phone .learnkit .lk-home-title-strip > .lk-home-title-row {
   flex-direction: column;
-  align-items: center !important;
-  justify-content: center !important;
+  align-items: center ;
+  justify-content: center ;
   row-gap: 8px;
 }
 
@@ -207,7 +207,7 @@ body.is-phone .learnkit .lk-home-title-strip .lk-home-quick-study-btn {
 
 .learnkit :where(.dropdown-menu,.bc.p-1,.p-1,.rounded-md.border.border-border.bg-popover.text-popover-foreground.p-1) :is([role=menuitem],[role=menuitemradio]).group {
   border: 0.5px solid var(--color-base-00);
-  margin: 1px 0 !important;
+  margin: 1px 0 ;
 }
 
 .learnkit :where(.dropdown-menu,.bc.p-1,.p-1,.rounded-md.border.border-border.bg-popover.text-popover-foreground.p-1) :is([role=menuitem],[role=menuitemradio]).group:hover,
@@ -588,23 +588,23 @@ body.is-phone .learnkit .lk-home-title-strip .lk-home-quick-study-btn {
 /* ---- Responsive ---- */
 
 body.is-phone .learnkit .lk-home-root {
-  gap: 8px !important;
+  gap: 8px ;
 }
 
 /* Home body wrapper is created with `gap-4`; force 8px rhythm on phone. */
 body.is-phone .learnkit .lk-home-content-shell > .w-full.flex.flex-col {
-  gap: 8px !important;
+  gap: 8px ;
 }
 
 body.is-phone .learnkit .lk-home-content-shell > * + * {
-  margin-top: 8px !important;
+  margin-top: 8px ;
 }
 
 /* Keep dashboard cards (overdue/heatmap/recent decks) at 8px rhythm on phone. */
 body.is-phone .learnkit .lk-home-stats-grid,
 body.is-phone .learnkit .lk-home-decks-row,
 body.is-phone .learnkit .lk-home-content-shell :is(.grid, .learnkit-ana-grid) {
-  gap: 8px !important;
+  gap: 8px ;
 }
 
 body.is-phone .learnkit .lk-home-title-strip {
@@ -630,8 +630,8 @@ body.is-phone .learnkit .learnkit-greeting-suffix {
 body.is-phone .learnkit .lk-home-deck-section {
   background-color: var(--background);
   border-radius: var(--radius-md);
-  border: 0.5px solid var(--color-base-35) !important;
-  border-color: var(--color-base-35) !important;
+  border: 0.5px solid var(--color-base-35) ;
+  border-color: var(--color-base-35) ;
   box-shadow: none;
   padding: var(--lk-shell-padding-mobile);
 }
@@ -656,16 +656,16 @@ body.is-phone .learnkit .lk-home-stats-grid > .learnkit-stat-card .lk-home-stat-
 
 @media (max-width: 767px) {
   .learnkit .lk-home-root {
-    gap: 8px !important;
+    gap: 8px ;
   }
 
   .learnkit .lk-home-content-shell > .w-full.flex.flex-col {
-    gap: 8px !important;
+    gap: 8px ;
   }
 
   .learnkit .lk-home-stats-grid,
   .learnkit .lk-home-decks-row,
   .learnkit .lk-home-content-shell :is(.grid, .learnkit-ana-grid) {
-    gap: 8px !important;
+    gap: 8px ;
   }
 }

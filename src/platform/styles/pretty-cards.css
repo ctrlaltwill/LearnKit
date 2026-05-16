@@ -203,18 +203,18 @@ mjx-container[jax="CHTML"][display="true"] {
 .markdown-preview-section.learnkit-layout-vertical > .el-ol[data-learnkit-hidden="true"],
 .markdown-preview-section.learnkit-layout-vertical > .el-ul.learnkit-hidden-important,
 .markdown-preview-section.learnkit-layout-vertical > .el-ol.learnkit-hidden-important {
-  position: absolute !important;
-  left: -99999px !important;
-  top: auto !important;
-  width: 1px !important;
-  height: 1px !important;
-  overflow: hidden !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: none !important;
-  opacity: 0 !important;
-  user-select: none !important;
-  pointer-events: none !important;
+  position: absolute ;
+  left: -99999px ;
+  top: auto ;
+  width: 1px ;
+  height: 1px ;
+  overflow: hidden ;
+  margin: 0 ;
+  padding: 0 ;
+  border: none ;
+  opacity: 0 ;
+  user-select: none ;
+  pointer-events: none ;
 }
 
 /* ---- Reading view utilities ---- */
@@ -868,7 +868,7 @@ mjx-container[jax="CHTML"][display="true"] {
   border: 0.5px solid var(--color-base-35);
   background: none;
   max-width: 100%;
-  border-radius: 8px !important;
+  border-radius: 8px ;
   font-size: 0;
   line-height: 0;
   display: inline-block;
@@ -1105,7 +1105,7 @@ mjx-container[jax="CHTML"][display="true"] {
 }
 
 .learnkit-pretty-card.learnkit-reading-view-wrapper.learnkit-macro-markdown {
-  margin-top: 1rem !important;
+  margin-top: 1rem ;
 }
 
 .learnkit-pretty-card.learnkit-macro-markdown .learnkit-markdown-lines {
@@ -1352,9 +1352,9 @@ mjx-container[jax="CHTML"][display="true"] {
 .learnkit-pretty-card img.learnkit-inline-flag {
   width: 1em;
   margin: 0;
-padding: 0px !important;
-    max-height: 16px !important;
-    max-width: 16px !important;
+padding: 0px ;
+    max-height: 16px ;
+    max-width: 16px ;
   list-style-type: disc;
   max-height: 1em;
   border-radius: 999px;

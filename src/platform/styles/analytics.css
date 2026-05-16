@@ -68,47 +68,47 @@
 }
 
 body.is-phone .learnkit .learnkit-analytics-root {
-  gap: 8px !important;
+  gap: 8px ;
 }
 
 /* Use a single column gap rhythm for analytics sections on phones. */
 body.is-phone .learnkit .learnkit-analytics-content-shell > .w-full.space-y-4 {
   display: flex;
   flex-direction: column;
-  gap: 8px !important;
+  gap: 8px ;
 }
 
 /* Analytics body wrapper uses `space-y-4`; enforce 8px spacing on phone. */
 body.is-phone .learnkit .learnkit-analytics-content-shell > .w-full.space-y-4 > :not([hidden]) ~ :not([hidden]) {
-  margin-top: 0 !important;
+  margin-top: 0 ;
 }
 
 /* Analytics rows commonly use `gap-4`; normalize to 8px on phone. */
 body.is-phone .learnkit .learnkit-analytics-content-shell :is(.learnkit-ana-grid, .grid) {
-  gap: 8px !important;
+  gap: 8px ;
 }
 
 body.is-phone .learnkit .learnkit-analytics-content-shell > * + * {
-  margin-top: 8px !important;
+  margin-top: 8px ;
 }
 
 @media (max-width: 767px) {
   .learnkit .learnkit-analytics-root {
-    gap: 8px !important;
+    gap: 8px ;
   }
 
   .learnkit .learnkit-analytics-content-shell > .w-full.space-y-4 {
     display: flex;
     flex-direction: column;
-    gap: 8px !important;
+    gap: 8px ;
   }
 
   .learnkit .learnkit-analytics-content-shell > .w-full.space-y-4 > :not([hidden]) ~ :not([hidden]) {
-    margin-top: 0 !important;
+    margin-top: 0 ;
   }
 
   .learnkit .learnkit-analytics-content-shell :is(.learnkit-ana-grid, .grid) {
-    gap: 8px !important;
+    gap: 8px ;
   }
 
   .learnkit .learnkit-analytics-title-strip {
@@ -202,18 +202,18 @@ body.is-phone .learnkit .learnkit-analytics-content-shell > * + * {
 
 /* Recharts tooltip: fade in only — no slide-in translation effect */
 .learnkit .recharts-tooltip-wrapper {
-  transition-property: opacity !important;
-  transition-duration: 120ms !important;
-  transition-timing-function: ease !important;
-  transition-delay: 0s !important;
-  animation: none !important;
+  transition-property: opacity ;
+  transition-duration: 120ms ;
+  transition-timing-function: ease ;
+  transition-delay: 0s ;
+  animation: none ;
 }
 .learnkit .recharts-tooltip-wrapper[style*="translate"] {
   /* Let Recharts set the translate for positioning but block the animated transition on it */
-  transition-property: opacity !important;
-  transition-duration: 120ms !important;
-  transition-timing-function: ease !important;
-  transition-delay: 0s !important;
+  transition-property: opacity ;
+  transition-duration: 120ms ;
+  transition-timing-function: ease ;
+  transition-delay: 0s ;
 }
 
 .learnkit .learnkit-analytics-root [data-tooltip]:has(.lucide-info):is(:hover, :focus-visible) {
@@ -430,17 +430,17 @@ body.is-phone .learnkit .learnkit-analytics-content-shell > * + * {
 
   .learnkit .learnkit-analytics-stats-card .learnkit-changelog-table tbody tr:hover td {
     background-color: var(--theme-base-10);
-    border-top-color: var(--theme-base-35) !important;
-    border-bottom-color: var(--theme-base-35) !important;
+    border-top-color: var(--theme-base-35) ;
+    border-bottom-color: var(--theme-base-35) ;
     color: var(--theme-base-95);
   }
 
   .learnkit .learnkit-analytics-stats-card .learnkit-changelog-table tbody tr:hover td:first-child {
-    border-left-color: var(--theme-base-35) !important;
+    border-left-color: var(--theme-base-35) ;
   }
 
   .learnkit .learnkit-analytics-stats-card .learnkit-changelog-table tbody tr:hover td:last-child {
-    border-right-color: var(--theme-base-35) !important;
+    border-right-color: var(--theme-base-35) ;
   }
 
   .learnkit .learnkit-analytics-stats-card .learnkit-changelog-table tbody tr:hover td .text-muted-foreground {
@@ -509,7 +509,7 @@ body.is-mobile .learnkit .learnkit-analytics-stats-card .learnkit-analytics-stat
 
 body.is-mobile .learnkit .learnkit-analytics-title-strip .lk-home-title-description,
 body.is-mobile .learnkit .learnkit-analytics-title-strip .text-muted-foreground {
-  display: none !important;
+  display: none ;
 }
 
 body.is-mobile .learnkit .learnkit-analytics-title-strip > .learnkit-analytics-title-row {
@@ -528,10 +528,10 @@ body.is-mobile .learnkit .learnkit-analytics-title-strip .learnkit-analytics-tit
 .learnkit .learnkit-analytics-filter-btn.is-active:focus-visible,
 .learnkit .learnkit-analytics-filter-btn.is-active:active {
   cursor: not-allowed;
-  transform: none !important;
-  color: var(--theme-base-95) !important;
-  background: var(--theme-base-25) !important;
-  border: 0.5px solid var(--theme-base-45) !important;
+  transform: none ;
+  color: var(--theme-base-95) ;
+  background: var(--theme-base-25) ;
+  border: 0.5px solid var(--theme-base-45) ;
 }
 
 body.is-mobile .learnkit .learnkit-analytics-title-strip .learnkit-analytics-filter-buttons {
@@ -556,11 +556,11 @@ body.is-mobile .learnkit .learnkit-analytics-title-strip .learnkit-analytics-fil
 
 /* Mobile analytics card layout: keep all top-level card groups at 8px spacing. */
 body.is-mobile .learnkit .learnkit-analytics-root {
-  gap: 8px !important;
+  gap: 8px ;
 }
 
 body.is-mobile .learnkit .learnkit-analytics-root > :is(.learnkit-ana-grid, .grid) {
-  gap: 8px !important;
+  gap: 8px ;
 }
 
 
@@ -614,8 +614,8 @@ body.is-mobile .learnkit .learnkit-analytics-root > :is(.learnkit-ana-grid, .gri
 
 /* Analytics popovers: glass surface like header/note bars. */
 .learnkit :is([id^="learnkit-"][id$="-filter-popover"], .learnkit-ana-popover) {
-  background: color-mix(in srgb, var(--color-base-05) 95%, transparent 05%) !important;
-  border: 0.5px solid var(--color-base-35) !important;
+  background: color-mix(in srgb, var(--color-base-05) 95%, transparent 05%) ;
+  border: 0.5px solid var(--color-base-35) ;
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
 }
@@ -629,44 +629,44 @@ body.is-mobile .learnkit .learnkit-analytics-root > :is(.learnkit-ana-grid, .gri
   height: 36px;
   padding: 0 12px;
   border-radius: var(--radius-s, 4px);
-  border: 0.5px var(--color-base-40) solid !important;
-  background-color: color-mix(in srgb, var(--color-base-40) 8%, transparent 92%) !important;
-  color: var(--text-normal) !important;
+  border: 0.5px var(--color-base-40) solid ;
+  background-color: color-mix(in srgb, var(--color-base-40) 8%, transparent 92%) ;
+  color: var(--text-normal) ;
   box-shadow: none;
   transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease;
 }
 
 .learnkit .learnkit-ana-card .learnkit-btn-filter:is(:hover, [aria-expanded="true"]) {
-  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) !important;
-  border-color: var(--color-base-40) !important;
-  color: var(--color-base-100) !important;
+  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) ;
+  border-color: var(--color-base-40) ;
+  color: var(--color-base-100) ;
 }
 
 .learnkit .learnkit-ana-card .learnkit-btn-filter:focus-visible {
-  background-color: color-mix(in srgb, var(--color-base-45) 17%, transparent 83%) !important;
-  border-color: var(--color-base-40) !important;
-  color: var(--color-base-100) !important;
+  background-color: color-mix(in srgb, var(--color-base-45) 17%, transparent 83%) ;
+  border-color: var(--color-base-40) ;
+  color: var(--color-base-100) ;
 }
 
 .learnkit .learnkit-ana-card .learnkit-btn-filter:active {
-  background-color: color-mix(in srgb, var(--color-base-50) 19%, transparent 81%) !important;
-  border-color: var(--color-base-40) !important;
-  color: var(--color-base-100) !important;
+  background-color: color-mix(in srgb, var(--color-base-50) 19%, transparent 81%) ;
+  border-color: var(--color-base-40) ;
+  color: var(--color-base-100) ;
 }
 
 /* Heatmap filter trigger: match borderless note-review action styling. */
 .learnkit #learnkit-heatmap-filter-trigger.learnkit-btn-filter {
-  border: 0.5px var(--color-base-40) solid !important;
-  box-shadow: none !important;
-  background-color: var(--color-base-20) !important;
-  color: var(--text-normal) !important;
+  border: 0.5px var(--color-base-40) solid ;
+  box-shadow: none ;
+  background-color: var(--color-base-20) ;
+  color: var(--text-normal) ;
   transition: border-color .12s, background-color .12s, color .12s;
 }
 
 .learnkit #learnkit-heatmap-filter-trigger.learnkit-btn-filter:is(:hover, :focus-visible, :focus-within, :active, [aria-expanded="true"]) {
-  border-color: var(--color-base-40) !important;
-  background-color: var(--color-base-25) !important;
-  color: var(--color-base-100) !important;
+  border-color: var(--color-base-40) ;
+  background-color: var(--color-base-25) ;
+  color: var(--color-base-100) ;
 }
 
 /* Analytics filter popovers: shared menu hover/active treatment */

@@ -101,8 +101,8 @@ body.is-phone .learnkit .learnkit-view-content {
   /* 40px base + 60px for Obsidian's mobile bottom toolbar (env() is 0 in webview) */
   padding-bottom: 100px;
   /* Let the shell gutter be the only horizontal spacing from the viewport. */
-  padding-left: 0 !important;
-  padding-right: 0 !important;
+  padding-left: 0 ;
+  padding-right: 0 ;
 }
 
 body.is-phone {
@@ -120,11 +120,11 @@ body.is-phone .learnkit :is(
   .learnkit-settings-content-shell,
   .learnkit-note-review-content-shell
 ) {
-  padding: 0 !important;
-  background: none !important;
-  border: none !important;
-  border-radius: 0px !important;
-  max-width: calc(100% - var(--lk-shell-gutter-desktop)) !important;
+  padding: 0 ;
+  background: none ;
+  border: none ;
+  border-radius: 0px ;
+  max-width: calc(100% - var(--lk-shell-gutter-desktop)) ;
 }
 
 /* Mobile card spacing inside shells: keep consistent 8px rhythm. */
@@ -146,7 +146,7 @@ body.is-phone .learnkit :is(
   .learnkit-settings-view-root,
   .learnkit-note-review-root
 ) {
-  gap: 8px !important;
+  gap: 8px ;
 }
 
 body.is-phone .learnkit .learnkit-view-content > * + * {
@@ -154,8 +154,8 @@ body.is-phone .learnkit .learnkit-view-content > * + * {
 }
 
 body.is-phone .learnkit .learnkit-view-content {
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
+  overflow-y: auto ;
+  overflow-x: hidden ;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -297,9 +297,9 @@ body.is-phone .learnkit :is(
   display: flex;
   width: 100%;
   flex-wrap: wrap;
-  justify-content: center !important;
+  justify-content: center ;
   row-gap: 8px;
-  align-items: center !important;
+  align-items: center ;
 }
 
 body.is-phone .learnkit :is(
@@ -310,7 +310,7 @@ body.is-phone .learnkit :is(
   .learnkit-review-title-timer-host
 ) {
   width: 100%;
-  justify-content: center !important;
+  justify-content: center ;
   align-items: center;
   flex-wrap: wrap;
   row-gap: 8px;
@@ -339,7 +339,7 @@ body.is-phone .learnkit :is(
   .learnkit-exam-generator-setup-topline,
   .learnkit-coach-wizard-topline
 ) > :first-child > .text-muted-foreground {
-  display: none !important;
+  display: none ;
 }
 
 body.is-phone .learnkit :is(
@@ -371,7 +371,7 @@ body.is-phone .learnkit :is(
   [class*="title-subtitle"],
   [class*="title-description"]
 ) {
-  display: none !important;
+  display: none ;
 }
 
 body.is-phone .learnkit .learnkit-settings-view-tab-row {
@@ -384,7 +384,7 @@ body.is-phone .learnkit :is(
   select,
   textarea
 ) {
-  border-radius: var(--radius-md) !important;
+  border-radius: var(--radius-md) ;
 }
 
 

@@ -133,7 +133,7 @@ export const CLOZE_ANSWER_HELP =
 export { clearNode } from "../../platform/core/shared-utils";
 
 /**
- * Basecoat table defaults enforce `white-space: nowrap !important` on td/th.
+ * Basecoat table defaults enforce `white-space: nowrap ` on td/th.
  * To beat that, we MUST set inline styles with priority "important".
  */
 export function forceWrapStyles(el: HTMLElement) {

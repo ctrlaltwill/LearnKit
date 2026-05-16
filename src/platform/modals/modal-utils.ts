@@ -133,7 +133,7 @@ export function parkBehind(modalEl: HTMLElement, behind: boolean) {
  * Toggle an element's visibility.
  *
  * IMPORTANT: some utility styles can override basic toggles, so we set
- * both `[hidden]` and `display:none !important` when hiding.
+ * both `[hidden]` and `display:none ` when hiding.
  */
 export function setVisible(el: HTMLElement, visible: boolean) {
   if (visible) {

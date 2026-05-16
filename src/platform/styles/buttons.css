@@ -16,18 +16,18 @@
 .learnkit input[type=email],
 .learnkit input[type=password],
 .learnkit input[type=number] {
-  box-shadow: none !important;
+  box-shadow: none ;
 }
 
 /* ---- Icon outline buttons ---- */
 
 .learnkit .btn-icon-outline {
-  background: var(--background) !important;
-  color: var(--foreground) !important;
-  border: var(--learnkit-border-width) solid var(--learnkit-border-color) !important;
-  box-shadow: none !important;
-  border-radius: var(--radius-md, var(--radius-md)) !important;
-  padding: 0.375rem !important;
+  background: var(--background) ;
+  color: var(--foreground) ;
+  border: var(--learnkit-border-width) solid var(--learnkit-border-color) ;
+  box-shadow: none ;
+  border-radius: var(--radius-md, var(--radius-md)) ;
+  padding: 0.375rem ;
   min-width: 32px;
   min-height: 36px;
   display: inline-flex;
@@ -36,73 +36,73 @@
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 .learnkit .learnkit-view-actions .btn-icon-outline {
-  height: 36px !important;
-  min-height: 36px !important;
+  height: 36px ;
+  min-height: 36px ;
 }
 .learnkit .learnkit-view-actions .learnkit-btn-toolbar,
 .learnkit .learnkit-view-actions .btn-icon-outline {
-  height: 36px !important;
-  min-height: 36px !important;
+  height: 36px ;
+  min-height: 36px ;
   align-items: center;
 }
 .learnkit .view-header-nav-buttons .learnkit-btn-toolbar,
 .learnkit .learnkit-header .view-header-nav-buttons .learnkit-btn-toolbar {
-  height: 36px !important;
-  min-height: 36px !important;
+  height: 36px ;
+  min-height: 36px ;
   align-items: center;
 }
 
 /* Header action buttons: transparent border at rest; visible border on interaction. */
 .learnkit .learnkit-header :is(.learnkit-btn-toolbar, .btn-icon-outline) {
-  border: 0.5px solid transparent !important;
+  border: 0.5px solid transparent ;
 }
 
 .learnkit .learnkit-header :is(.learnkit-btn-toolbar, .btn-icon-outline):is(:hover, :active, :focus, :focus-visible, :focus-within, [aria-expanded="true"]) {
-  border: 0.5px solid var(--color-base-35) !important;
+  border: 0.5px solid var(--color-base-35) ;
 }
 
 .learnkit .btn-icon-outline:hover,
 .learnkit .btn-icon-outline:focus-visible {
-  background: var(--color-base-25) !important;
-  color: var(--color-base-100) !important;
-  border-color: var(--color-base-35) !important
+  background: var(--color-base-25) ;
+  color: var(--color-base-100) ;
+  border-color: var(--color-base-35) 
 }
 .learnkit .btn-icon-outline:focus-visible {
   outline: 2px solid rgba(var(--interactive-accent-rgb), 0.5);
   outline-offset: 2px;
 }
 .learnkit .btn-icon-outline:active {
-  background: var(--muted) !important;
-  color: var(--foreground) !important;
-  border-color: var(--muted) !important;
+  background: var(--muted) ;
+  color: var(--foreground) ;
+  border-color: var(--muted) ;
 }
 
 .theme-dark .learnkit .btn-icon-outline {
-  background: var(--background) !important;
-  color: var(--foreground) !important;
-  border: var(--learnkit-border-width) solid var(--learnkit-border-color) !important;
-  border-radius: var(--radius-md, var(--radius-md)) !important;
+  background: var(--background) ;
+  color: var(--foreground) ;
+  border: var(--learnkit-border-width) solid var(--learnkit-border-color) ;
+  border-radius: var(--radius-md, var(--radius-md)) ;
 }
 .theme-dark .learnkit .btn-icon-outline:hover,
 .theme-dark .learnkit .btn-icon-outline:focus-visible {
-  background: var(--color-base-35) !important;
-  color: var(--color-base-100) !important;
-  border-color: var(--color-base-35) !important;
+  background: var(--color-base-35) ;
+  color: var(--color-base-100) ;
+  border-color: var(--color-base-35) ;
 }
 .theme-dark .learnkit .btn-icon-outline:active {
-  background: var(--muted) !important;
-  color: var(--foreground) !important;
-  border-color: var(--muted) !important;
+  background: var(--muted) ;
+  color: var(--foreground) ;
+  border-color: var(--muted) ;
 }
 
 /* ---- Ghost icon buttons (no background / border) ---- */
 
 .learnkit .btn-icon-ghost {
-  background: transparent !important;
-  color: var(--foreground) !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 0 !important;
+  background: transparent ;
+  color: var(--foreground) ;
+  border: none ;
+  box-shadow: none ;
+  padding: 0 ;
   min-width: 24px;
   min-height: 24px;
   display: inline-flex;
@@ -111,7 +111,7 @@
 }
 .learnkit .btn-icon-ghost:hover,
 .learnkit .btn-icon-ghost:focus-visible {
-  color: var(--text-normal) !important;
+  color: var(--text-normal) ;
   opacity: 0.8;
 }
 .learnkit .btn-icon-ghost:focus-visible {
@@ -127,34 +127,34 @@
 
 .learnkit .learnkit-btn-toolbar {
   background: var(--color-base-20);
-  color: var(--foreground) !important;
+  color: var(--foreground) ;
   border: 0.5px solid var(--color-base-30);
-  box-shadow: none !important;
+  box-shadow: none ;
   border-radius: var(--radius-md, var(--radius-md));
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
 .learnkit .learnkit-btn-toolbar:hover,
 .learnkit .learnkit-btn-toolbar:focus-visible {
-  background: var(--color-base-25)!important;
-  color: var(--color-base-100) !important;
-  border-color: var(--color-base-40) !important;
+  background: var(--color-base-25);
+  color: var(--color-base-100) ;
+  border-color: var(--color-base-40) ;
 }
 
 .learnkit .learnkit-btn-toolbar:active {
-  background: var(--color-base-35)!important;
-  color: var(--color-base-100) !important;
-  border-color: var(--color-base-40) !important;
+  background: var(--color-base-35);
+  color: var(--color-base-100) ;
+  border-color: var(--color-base-40) ;
 }
 
 /* ---- Generic reusable button variants ---- */
 
 .learnkit .learnkit-btn-toolbar {
   background-color: transparent;
-  color: var(--text-normal) !important;
+  color: var(--text-normal) ;
   border: 0.5px solid var(--color-base-00) ;
-  border-radius: var(--radius-md, var(--radius-md)) !important;
-  box-shadow: none !important;
+  border-radius: var(--radius-md, var(--radius-md)) ;
+  box-shadow: none ;
   transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
@@ -162,73 +162,73 @@
 .learnkit .learnkit-btn-toolbar:focus-visible,
 .learnkit .learnkit-btn-toolbar:focus-within,
 .learnkit .learnkit-btn-toolbar[aria-expanded="true"] {
-  background-color: var(--color-base-20) !important;
-  color: var(--color-base-100) !important;
-  border-color: var(--color-base-35) !important;
+  background-color: var(--color-base-20) ;
+  color: var(--color-base-100) ;
+  border-color: var(--color-base-35) ;
 }
 
 .learnkit .learnkit-btn-toolbar:active {
-  background-color: var(--color-base-25) !important;
-  color: var(--color-base-100) !important;
-  border-color: var(--color-base-40) !important;
+  background-color: var(--color-base-25) ;
+  color: var(--color-base-100) ;
+  border-color: var(--color-base-40) ;
 }
 
 /* ---- When toolbar + accent coexist, let accent win ---- */
 
 .learnkit .learnkit-btn-toolbar.learnkit-btn-accent {
-  background: var(--theme-base-95) !important;
-  color: #ffffff !important;
-  border: 0.5px solid var(--theme-black-95) !important;
+  background: var(--theme-base-95) ;
+  color: #ffffff ;
+  border: 0.5px solid var(--theme-black-95) ;
 }
 
 .learnkit .learnkit-btn-toolbar.learnkit-btn-accent:hover {
-  background: var(--theme-black-95) !important;
-  color: #ffffff !important;
-  border: 0.5px solid var(--theme-black-85) !important;
+  background: var(--theme-black-95) ;
+  color: #ffffff ;
+  border: 0.5px solid var(--theme-black-85) ;
   transform: translateY(-1px);
 }
 
 .learnkit .learnkit-btn-toolbar.learnkit-btn-accent:focus-visible,
 .learnkit .learnkit-btn-toolbar.learnkit-btn-accent:active {
-  background: var(--theme-black-85) !important;
-  color: #ffffff !important;
-  border: 0.5px solid var(--theme-black-75) !important;
+  background: var(--theme-black-85) ;
+  color: #ffffff ;
+  border: 0.5px solid var(--theme-black-75) ;
   transform: translateY(0);
 }
 
 .learnkit .learnkit-btn-filter {
-  background-color: color-mix(in srgb, var(--color-base-40) 8%, transparent 92%) !important;
-  color: var(--text-normal) !important;
-  border: 0.5px var(--color-base-40) solid !important;
+  background-color: color-mix(in srgb, var(--color-base-40) 8%, transparent 92%) ;
+  color: var(--text-normal) ;
+  border: 0.5px var(--color-base-40) solid ;
 }
 
 .learnkit .learnkit-btn-filter:is(:hover, :focus-visible, :focus-within, [aria-expanded="true"]) {
-  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) !important;
-  color: var(--color-base-100) !important;
-  border-color: var(--color-base-40) !important;
+  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) ;
+  color: var(--color-base-100) ;
+  border-color: var(--color-base-40) ;
 }
 
 .learnkit .learnkit-btn-filter:active {
-  background-color: color-mix(in srgb, var(--color-base-50) 19%, transparent 81%) !important;
-  color: var(--color-base-100) !important;
-  border-color: var(--color-base-40) !important;
+  background-color: color-mix(in srgb, var(--color-base-50) 19%, transparent 81%) ;
+  color: var(--color-base-100) ;
+  border-color: var(--color-base-40) ;
 }
 
 /* Ensure filter icons always inherit button text color (fixes dark icon in dark mode). */
 .learnkit .learnkit-btn-filter :is(.svg-icon, .lucide-filter, .text-foreground) {
-  color: currentColor !important;
+  color: currentColor ;
 }
 
 .learnkit :is(.learnkit-btn-control, .learnkit-btn-outline-muted) {
-  border-radius: var(--radius-md, var(--radius-md)) !important;
-  padding: 7px 15px !important;
+  border-radius: var(--radius-md, var(--radius-md)) ;
+  padding: 7px 15px ;
   transition: transform .14s, background-color .14s, color .14s, border-color .14s;
 }
 
 .learnkit .learnkit-btn-control {
-  color: var(--theme-base-95) !important;
-  background: var(--theme-base-15) !important;
-  border: 0.5px solid var(--theme-base-35) !important;
+  color: var(--theme-base-95) ;
+  background: var(--theme-base-15) ;
+  border: 0.5px solid var(--theme-base-35) ;
 }
 
 
@@ -236,27 +236,27 @@
 .learnkit .learnkit-btn-control:focus-visible,
 .learnkit .learnkit-btn-control:active {
   transform: translateY(0);
-  background: var(--theme-base-25) !important;
+  background: var(--theme-base-25) ;
 }
 
 .learnkit .learnkit-btn-outline-muted {
-  color: var(--theme-base-95) !important;
-  background: var(--theme-base-15) !important;
-  border: 0.5px solid var(--theme-base-35) !important;
+  color: var(--theme-base-95) ;
+  background: var(--theme-base-15) ;
+  border: 0.5px solid var(--theme-base-35) ;
 }
 
 .learnkit .learnkit-btn-outline-muted:hover:not(:disabled):not([disabled]) {
       transform: translateY(-1px);
-    border: 0.5px solid var(--theme-base-45) !important;
-    color: var(--theme-base-95) !important;
-    background-color: var(--theme-base-25) !important;}
+    border: 0.5px solid var(--theme-base-45) ;
+    color: var(--theme-base-95) ;
+    background-color: var(--theme-base-25) ;}
 
 .learnkit .learnkit-btn-outline-muted:focus-visible,
 .learnkit .learnkit-btn-outline-muted:active {
  transform: translateY(-1px);
-    border: 0.5px solid var(--theme-base-45) !important;
-    color: var(--theme-base-95) !important;
-    background-color: var(--theme-base-25) !important;
+    border: 0.5px solid var(--theme-base-45) ;
+    color: var(--theme-base-95) ;
+    background-color: var(--theme-base-25) ;
 }
 
 .learnkit .learnkit-btn-outline-muted:disabled,
@@ -269,13 +269,13 @@
 .learnkit .learnkit-btn-outline-muted[disabled]:focus,
 .learnkit .learnkit-btn-outline-muted:disabled:focus-visible,
 .learnkit .learnkit-btn-outline-muted[disabled]:focus-visible {
-  background: var(--theme-base-05) !important;
-  color: var(--theme-base-75) !important;
-  border: 0.5px solid var(--theme-base-25) !important;
-  opacity: 1 !important;
-  filter: none !important;
-  cursor: not-allowed !important;
-  transform: none !important;
+  background: var(--theme-base-05) ;
+  color: var(--theme-base-75) ;
+  border: 0.5px solid var(--theme-base-25) ;
+  opacity: 1 ;
+  filter: none ;
+  cursor: not-allowed ;
+  transform: none ;
 }
 
 /* Keep title-strip controls visually consistent across views. */
@@ -289,9 +289,9 @@
     .learnkit-btn-toolbar.learnkit-btn-control[aria-pressed="true"],
     .learnkit-btn-toolbar.learnkit-btn-control.is-active
   ) {
-  border: 0.5px solid var(--theme-black-95) !important;
-  background: var(--theme-base-95) !important;
-  color: #ffffff !important;
+  border: 0.5px solid var(--theme-black-95) ;
+  background: var(--theme-base-95) ;
+  color: #ffffff ;
 }
 
 .learnkit .lk-home-title-strip :is(
@@ -306,9 +306,9 @@
     .learnkit-btn-toolbar.learnkit-btn-control[aria-pressed="true"],
     .learnkit-btn-toolbar.learnkit-btn-control.is-active
   ):focus-visible {
-  border: 0.5px solid var(--theme-black-95) !important;
-  background: var(--theme-base-95) !important;
-  color: #ffffff !important;
+  border: 0.5px solid var(--theme-black-95) ;
+  background: var(--theme-base-95) ;
+  color: #ffffff ;
   transform: translateY(0);
 }
 
@@ -323,14 +323,14 @@
   align-items: center;
   display: inline-flex;
   width: 26px;
-  height: 26px !important;
+  height: 26px ;
   min-width: 26px;
-  min-height: 26px !important;
-  border-radius: calc(var(--radius-md) + 2px) !important;
-  padding: 0 !important;
-  background: var(--color-base-20) !important;
-  color: var(--color-base-100) !important;
-  border: 0.5px solid var(--color-base-35) !important;
+  min-height: 26px ;
+  border-radius: calc(var(--radius-md) + 2px) ;
+  padding: 0 ;
+  background: var(--color-base-20) ;
+  color: var(--color-base-100) ;
+  border: 0.5px solid var(--color-base-35) ;
   transition: transform .16s, background-color .16s, color .16s, box-shadow .16s;
 }
 
@@ -343,8 +343,8 @@
 .learnkit .learnkit-btn-exit-sm:hover,
 .learnkit .learnkit-btn-exit-sm:focus-visible {
   transform: translateY(-1px);
-  background: var(--color-base-25) !important;
-  border-color: var(--color-base-40) !important;
+  background: var(--color-base-25) ;
+  border-color: var(--color-base-40) ;
 }
 
 .learnkit .learnkit-btn-exit-sm:active {
@@ -362,94 +362,94 @@
 
 .learnkit .button-group {
   display: inline-flex;
-  border-radius: var(--radius-md, var(--radius-md)) !important;
+  border-radius: var(--radius-md, var(--radius-md)) ;
   overflow: hidden;
-  background: var(--background) !important;
-  border: var(--learnkit-border-width) solid var(--learnkit-border-color) !important;
+  background: var(--background) ;
+  border: var(--learnkit-border-width) solid var(--learnkit-border-color) ;
 }
 
 .learnkit .button-group .learnkit-btn-toolbar,
 .learnkit .button-group .btn-icon-outline {
-  border-radius: 0 !important;
-  border: none !important;
-  border-right: var(--learnkit-border-width) solid var(--learnkit-border-color) !important;
+  border-radius: 0 ;
+  border: none ;
+  border-right: var(--learnkit-border-width) solid var(--learnkit-border-color) ;
 }
 .learnkit .button-group .learnkit-btn-toolbar:last-child,
 .learnkit .button-group .btn-icon-outline:last-child {
-  border-right: none !important;
+  border-right: none ;
 }
 
 /* First child inherits left radii from group */
 .learnkit .button-group > :first-child {
-  border-top-left-radius: var(--radius-md, var(--radius-md)) !important;
-  border-bottom-left-radius: var(--radius-md, var(--radius-md)) !important;
+  border-top-left-radius: var(--radius-md, var(--radius-md)) ;
+  border-bottom-left-radius: var(--radius-md, var(--radius-md)) ;
 }
 /* Last child inherits right radii from group */
 .learnkit .button-group > :last-child {
-  border-top-right-radius: var(--radius-md, var(--radius-md)) !important;
-  border-bottom-right-radius: var(--radius-md, var(--radius-md)) !important;
+  border-top-right-radius: var(--radius-md, var(--radius-md)) ;
+  border-bottom-right-radius: var(--radius-md, var(--radius-md)) ;
 }
 
 /* ---- Dark theme outline buttons & button groups ---- */
 
 .theme-dark .learnkit .learnkit-btn-toolbar {
-  background: var(--background) !important;
-  color: var(--foreground) !important;
-  border: var(--learnkit-border-width) solid var(--learnkit-border-color) !important;
-  border-radius: var(--radius-md, var(--radius-md)) !important;
+  background: var(--background) ;
+  color: var(--foreground) ;
+  border: var(--learnkit-border-width) solid var(--learnkit-border-color) ;
+  border-radius: var(--radius-md, var(--radius-md)) ;
 }
 .theme-dark .learnkit .learnkit-btn-toolbar:hover,
 .theme-dark .learnkit .learnkit-btn-toolbar:focus-visible {
-  background: var(--color-base-35) !important;
-  color: var(--color-base-100) !important;
-  border-color: var(--color-base-35) !important;
+  background: var(--color-base-35) ;
+  color: var(--color-base-100) ;
+  border-color: var(--color-base-35) ;
 }
 .theme-dark .learnkit .learnkit-btn-toolbar:active {
-  background: var(--muted) !important;
-  color: var(--foreground) !important;
-  border-color: var(--muted) !important;
+  background: var(--muted) ;
+  color: var(--foreground) ;
+  border-color: var(--muted) ;
 }
 .theme-dark .learnkit .button-group {
-  background: var(--background) !important;
-  border: var(--learnkit-border-width) solid var(--learnkit-border-color) !important;
-  border-radius: var(--radius-md, var(--radius-md)) !important;
+  background: var(--background) ;
+  border: var(--learnkit-border-width) solid var(--learnkit-border-color) ;
+  border-radius: var(--radius-md, var(--radius-md)) ;
 }
 .theme-dark .learnkit .button-group .learnkit-btn-toolbar,
 .theme-dark .learnkit .button-group .btn-icon-outline {
-  border-radius: 0 !important;
-  border: none !important;
-  border-right: var(--learnkit-border-width) solid var(--learnkit-border-color) !important;
+  border-radius: 0 ;
+  border: none ;
+  border-right: var(--learnkit-border-width) solid var(--learnkit-border-color) ;
 }
 .theme-dark .learnkit .button-group .learnkit-btn-toolbar:last-child,
 .theme-dark .learnkit .button-group .btn-icon-outline:last-child {
-  border-right: none !important;
+  border-right: none ;
 }
 .theme-dark .learnkit .button-group > :first-child {
-  border-top-left-radius: var(--radius-md, var(--radius-md)) !important;
-  border-bottom-left-radius: var(--radius-md, var(--radius-md)) !important;
+  border-top-left-radius: var(--radius-md, var(--radius-md)) ;
+  border-bottom-left-radius: var(--radius-md, var(--radius-md)) ;
 }
 .theme-dark .learnkit .button-group > :last-child {
-  border-top-right-radius: var(--radius-md, var(--radius-md)) !important;
-  border-bottom-right-radius: var(--radius-md, var(--radius-md)) !important;
+  border-top-right-radius: var(--radius-md, var(--radius-md)) ;
+  border-bottom-right-radius: var(--radius-md, var(--radius-md)) ;
 }
 
 /* Dark theme: let accent win over toolbar defaults */
 .theme-dark .learnkit .learnkit-btn-toolbar.learnkit-btn-accent {
-  background: var(--theme-base-95) !important;
-  color: #ffffff !important;
-  border: 0.5px solid var(--theme-black-95) !important;
+  background: var(--theme-base-95) ;
+  color: #ffffff ;
+  border: 0.5px solid var(--theme-black-95) ;
 }
 .theme-dark .learnkit .learnkit-btn-toolbar.learnkit-btn-accent:hover {
-  background: var(--theme-black-95) !important;
-  color: #ffffff !important;
-  border: 0.5px solid var(--theme-black-85) !important;
+  background: var(--theme-black-95) ;
+  color: #ffffff ;
+  border: 0.5px solid var(--theme-black-85) ;
   transform: translateY(-1px);
 }
 .theme-dark .learnkit .learnkit-btn-toolbar.learnkit-btn-accent:focus-visible,
 .theme-dark .learnkit .learnkit-btn-toolbar.learnkit-btn-accent:active {
-  background: var(--theme-black-85) !important;
-  color: #ffffff !important;
-  border: 0.5px solid var(--theme-black-75) !important;
+  background: var(--theme-black-85) ;
+  color: #ffffff ;
+  border: 0.5px solid var(--theme-black-75) ;
   transform: translateY(0);
 }
 
@@ -460,9 +460,9 @@
     .learnkit-btn-outline-muted,
     .learnkit-btn-toolbar.learnkit-btn-control:not([aria-pressed="true"]):not(.is-active)
   ) {
-  color: var(--theme-base-95) !important;
-  background: var(--theme-base-15) !important;
-  border: 0.5px solid var(--theme-base-35) !important;
+  color: var(--theme-base-95) ;
+  background: var(--theme-base-15) ;
+  border: 0.5px solid var(--theme-base-35) ;
 }
 
 .learnkit :is(.lk-home-title-strip, .learnkit-analytics-title-strip) :is(
@@ -470,9 +470,9 @@
     .learnkit-btn-outline-muted,
     .learnkit-btn-toolbar.learnkit-btn-control:not([aria-pressed="true"]):not(.is-active)
   ):is(:hover, :focus-visible, :active) {
-  color: var(--theme-base-95) !important;
-  background: var(--theme-base-25) !important;
-  border: 0.5px solid var(--theme-base-45) !important;
+  color: var(--theme-base-95) ;
+  background: var(--theme-base-25) ;
+  border: 0.5px solid var(--theme-base-45) ;
 }
 
 .learnkit :is(.lk-home-title-strip, .learnkit-analytics-title-strip) :is(
@@ -481,9 +481,9 @@
     .learnkit-btn-toolbar.learnkit-btn-control[aria-pressed="true"],
     .learnkit-btn-toolbar.learnkit-btn-control.is-active
   ) {
-  border: 0.5px solid var(--theme-black-95) !important;
-  background: var(--theme-base-95) !important;
-  color: #ffffff !important;
+  border: 0.5px solid var(--theme-black-95) ;
+  background: var(--theme-base-95) ;
+  color: #ffffff ;
 }
 
 .learnkit :is(.lk-home-title-strip, .learnkit-analytics-title-strip) :is(
@@ -492,25 +492,25 @@
     .learnkit-btn-toolbar.learnkit-btn-control[aria-pressed="true"],
     .learnkit-btn-toolbar.learnkit-btn-control.is-active
   ):is(:hover, :focus-visible, :active) {
-  border: 0.5px solid var(--theme-black-95) !important;
-  background: var(--theme-base-95) !important;
-  color: #ffffff !important;
+  border: 0.5px solid var(--theme-black-95) ;
+  background: var(--theme-base-95) ;
+  color: #ffffff ;
 }
 
 /* ---- Global Obsidian button padding reset ---- */
 
 .learnkit :is(button, .button) {
-  height: auto !important;
-  font-weight: 400 !important;
+  height: auto ;
+  font-weight: 400 ;
 }
 
 /* Keep icon-only/round controls compact. */
 .learnkit :is(.btn-icon-ghost, .learnkit-widget-back-btn, .learnkit-io-close-btn, .learnkit-btn-unstyled) {
-  padding: 0 !important;
+  padding: 0 ;
 }
 
 .learnkit .btn-icon-outline {
-  padding: 0.375rem !important;
+  padding: 0.375rem ;
 }
 
 
@@ -518,11 +518,11 @@
 /* ---- Pagination current-page button ---- */
 
 button[aria-current="page"] {
-    outline: none !important;
+    outline: none ;
     color: var(--foreground);
     background-color: var(--background-modifier-hover);
-    box-shadow: none !important;
-  border: 0.5px solid var(--learnkit-border-color) !important;
+    box-shadow: none ;
+  border: 0.5px solid var(--learnkit-border-color) ;
 }
 
 .theme-dark button[aria-current="page"] {
@@ -532,9 +532,9 @@ button[aria-current="page"] {
 /* ---- Expand/collapse button compact behavior ---- */
 
 .learnkit .learnkit-btn-toolbar[data-learnkit-expand-collapse] {
-  min-width: 36px !important;
-  padding-left: 8px !important;
-  padding-right: 8px !important;
+  min-width: 36px ;
+  padding-left: 8px ;
+  padding-right: 8px ;
   overflow: hidden;
 }
 
@@ -565,19 +565,19 @@ button[aria-current="page"] {
   .learnkit-widget-back-btn,
   .learnkit-widget-action-btn
 ) {
-  min-height: 36px !important;
-  font-weight: 400 !important;
+  min-height: 36px ;
+  font-weight: 400 ;
 }
 
 /* Exclude coach scope menu items from global button min-height forcing. */
 .learnkit .learnkit-coach-scope-item {
   border-radius: var(--radius-s);
-  height: 32px !important;
-  min-height: 32px !important;
+  height: 32px ;
+  min-height: 32px ;
 }
 
 .learnkit :is(.btn, .learnkit-btn-toolbar, .btn-primary, .btn-destructive, .btn-icon-outline) {
-  max-height: none !important;
+  max-height: none ;
 }
 
 /* ---- Unstyled button reset ---- */
@@ -589,7 +589,7 @@ button[aria-current="page"] {
   border: none;
   box-shadow: none;
   outline: none;
-  padding: 0 !important;
+  padding: 0 ;
   cursor: pointer;
   font: inherit;
   color: inherit;
@@ -603,10 +603,10 @@ button[aria-current="page"] {
 
 
 button.learnkit-guide-dropdown-item {
-  background-color: transparent !important;
+  background-color: transparent ;
 }
 
 button.learnkit-guide-dropdown-item:hover {
-  background-color: var(--accent, var(--color-base-25)) !important;
-  color: var(--accent-foreground, var(--text-normal)) !important;
+  background-color: var(--accent, var(--color-base-25)) ;
+  color: var(--accent-foreground, var(--text-normal)) ;
 }

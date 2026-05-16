@@ -135,12 +135,12 @@ html {
 }
 
 .expressive-code .frame.is-terminal .header {
-  background: transparent !important;
-  border: none !important;
+  background: transparent ;
+  border: none ;
 }
 
 .expressive-code .frame.is-terminal .header::after {
-  border-bottom: none !important;
+  border-bottom: none ;
 }
 
 @media (max-width: 50rem) {
@@ -162,13 +162,13 @@ html {
 /* Scope table compaction to the Companion model compatibility table only. */
 .sl-markdown-content h2#compatibility-table + table {
   width: 100%;
-  font-size: 0.8rem !important;
+  font-size: 0.8rem ;
   line-height: 1.25;
 }
 
 .sl-markdown-content h2#compatibility-table + table th,
 .sl-markdown-content h2#compatibility-table + table td {
-  font-size: 0.8rem !important;
+  font-size: 0.8rem ;
   padding: 0.35rem 0.45rem;
   vertical-align: top;
 }

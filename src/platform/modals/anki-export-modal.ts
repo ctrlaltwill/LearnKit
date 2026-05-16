@@ -517,7 +517,7 @@ export class AnkiExportModal extends Modal {
     // ── FSRS info callout ──────────────────────────────────────────────────────
     const fsrsNote = body.createDiv({
       cls: "rounded-lg p-3 text-sm learnkit-danger-callout learnkit-danger-callout",
-      attr: { style: "background: var(--background-modifier-message) !important;" },
+      attr: { style: "background: var(--background-modifier-message) ;" },
     });
     fsrsNote.createDiv({
       text: "💡 Enable FSRS in Anki after import",

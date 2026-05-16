@@ -434,7 +434,7 @@
   z-index: var(--layer-popover, 50);
   transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
   padding: 0;
-  box-shadow: none !important;
+  box-shadow: none ;
 }
 
 .learnkit-assistant-trigger:hover {
@@ -625,7 +625,7 @@
 .learnkit-assistant-popup.is-modal-location:not(.learnkit-assistant-popup-embedded) {
   --learnkit-assistant-popup-assistant-surface: color-mix(in srgb, var(--color-base-05) 95%, transparent 05%);
   border: 0.5px solid color-mix(in srgb, var(--color-base-70) 18%, transparent 82%);
-  background: var(--color-base-00) !important;
+  background: var(--color-base-00) ;
   -webkit-backdrop-filter: blur(16px) saturate(125%);
   backdrop-filter: blur(16px) saturate(125%);
   box-shadow: var(--shadow-s);
@@ -633,7 +633,7 @@
 
 .learnkit-assistant-popup.is-modal-location:not(.learnkit-assistant-popup-embedded) .learnkit-assistant-popup-header,
 .learnkit-assistant-popup.is-modal-location:not(.learnkit-assistant-popup-embedded) .learnkit-assistant-popup-composer {
-  background: transparent !important;
+  background: transparent ;
 }
 
 .learnkit-assistant-popup.is-modal-location:not(.learnkit-assistant-popup-embedded) .learnkit-assistant-popup-content {
@@ -732,9 +732,9 @@
 /* Widget-only: make header action buttons match teaser card surface. */
 .learnkit-assistant-popup.learnkit-assistant-popup-embedded .learnkit-assistant-popup-overflow,
 .learnkit-assistant-popup.learnkit-assistant-popup-embedded .learnkit-assistant-popup-close {
-  background: var(--background) !important;
+  background: var(--background) ;
   box-shadow: none;
-  border: var(--color-base-40) 0.5px solid !important;
+  border: var(--color-base-40) 0.5px solid ;
 }
 
 /* Widget tab icons should follow the active theme icon color. */
@@ -806,21 +806,21 @@
 }
 
 .learnkit-assistant-popup-close {
-  width: 36px !important;
-  height: 36px !important;
-  min-width: 36px !important;
-  min-height: 36px !important;
-  max-width: 36px !important;
-  max-height: 36px !important;
+  width: 36px ;
+  height: 36px ;
+  min-width: 36px ;
+  min-height: 36px ;
+  max-width: 36px ;
+  max-height: 36px ;
   border-radius: var(--radius-md);
-  border: 0.5px solid transparent !important;
+  border: 0.5px solid transparent ;
   background: transparent;
   color: var(--text-normal);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 !important;
+  padding: 0 ;
   flex: 0 0 auto;
   transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
@@ -866,14 +866,14 @@
 .learnkit-assistant-popup-overflow {
   --learnkit-assistant-overflow-collapsed-width: 36px;
   --learnkit-assistant-overflow-expanded-width: 102px;
-  width: 36px !important;
-  height: 36px !important;
-  min-width: 36px !important;
-  min-height: 36px !important;
-  max-width: 36px !important;
-  max-height: 36px !important;
+  width: 36px ;
+  height: 36px ;
+  min-width: 36px ;
+  min-height: 36px ;
+  max-width: 36px ;
+  max-height: 36px ;
   border-radius: var(--radius-md);
-  border: 0.5px solid transparent !important;
+  border: 0.5px solid transparent ;
   background: transparent;
   color: var(--text-normal);
   cursor: pointer;
@@ -881,7 +881,7 @@
   align-items: center;
   justify-content: center;
   gap: 0;
-  padding: 0 !important;
+  padding: 0 ;
   flex: 0 0 auto;
   box-shadow: none;
   overflow: hidden;
@@ -906,22 +906,22 @@
 }
 
 .learnkit-assistant-popup-header-actions :is(.learnkit-assistant-popup-overflow, .learnkit-assistant-popup-close):hover {
-  background-color: color-mix(in srgb, var(--color-base-35) 20%, transparent 75%) !important;
-  color: var(--color-base-100) !important;
-  border-color: var(--color-base-35) !important;
+  background-color: color-mix(in srgb, var(--color-base-35) 20%, transparent 75%) ;
+  color: var(--color-base-100) ;
+  border-color: var(--color-base-35) ;
 }
 
 .learnkit-assistant-popup-header-actions :is(.learnkit-assistant-popup-overflow, .learnkit-assistant-popup-close)[aria-expanded="true"] {
-  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) !important;
-  color: var(--color-base-100) !important;
-  border-color: var(--color-base-35) !important;
+  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) ;
+  color: var(--color-base-100) ;
+  border-color: var(--color-base-35) ;
 }
 
 .learnkit-assistant-popup-header-actions :is(.learnkit-assistant-popup-overflow, .learnkit-assistant-popup-close):focus-visible,
 .learnkit-assistant-popup-header-actions :is(.learnkit-assistant-popup-overflow, .learnkit-assistant-popup-close):focus-within {
-  background-color: color-mix(in srgb, var(--color-base-45) 17%, transparent 83%) !important;
-  color: var(--color-base-100) !important;
-  border-color: var(--color-base-35) !important;
+  background-color: color-mix(in srgb, var(--color-base-45) 17%, transparent 83%) ;
+  color: var(--color-base-100) ;
+  border-color: var(--color-base-35) ;
 }
 
 .learnkit-assistant-popup-overflow:hover [data-learnkit-label="true"],
@@ -935,9 +935,9 @@
 }
 
 .learnkit-assistant-popup-header-actions :is(.learnkit-assistant-popup-overflow, .learnkit-assistant-popup-close):active {
-  background-color: color-mix(in srgb, var(--color-base-50) 19%, transparent 81%) !important;
-  color: var(--color-base-100) !important;
-  border-color: var(--color-base-35) !important;
+  background-color: color-mix(in srgb, var(--color-base-50) 19%, transparent 81%) ;
+  color: var(--color-base-100) ;
+  border-color: var(--color-base-35) ;
 }
 
 .learnkit-assistant-popup-overflow .svg-icon {
@@ -954,10 +954,10 @@
   width: var(--learnkit-popover-width, auto);
   min-width: 224px;
   z-index: var(--lk-z-popover-overlay);
-  border: 0.5px solid var(--color-base-35) !important;
+  border: 0.5px solid var(--color-base-35) ;
   border-radius: var(--radius-md);
   padding: 4px;
-  background: color-mix(in srgb, var(--color-base-05) 95%, transparent 05%) !important;
+  background: color-mix(in srgb, var(--color-base-05) 95%, transparent 05%) ;
   color: var(--text-normal);
   box-shadow: var(--shadow-s, 0 10px 28px rgba(0, 0, 0, 0.18));
   -webkit-backdrop-filter: blur(14px);
@@ -994,24 +994,24 @@
   line-height: 1.2;
   transition: background-color 0.14s, color 0.14s, border-color 0.14s;
   display: flex;
-  background-color: #0000 !important;
-  border: 0.5px solid #0000 !important;
+  background-color: #0000 ;
+  border: 0.5px solid #0000 ;
 }
 
 .learnkit-assistant-popup-header-menu-item:hover,
 .learnkit-assistant-popup-header-menu-item:focus-visible {
-  background: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) !important;
+  background: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) ;
   color: var(--text-normal);
-  border-color: color-mix(in srgb, var(--color-base-70) 25%, transparent 75%) !important;
+  border-color: color-mix(in srgb, var(--color-base-70) 25%, transparent 75%) ;
 }
 
 .learnkit-assistant-popup-header-menu-item:active,
 .learnkit-assistant-popup-header-menu-item[aria-checked="true"],
 .learnkit-assistant-popup-header-menu-item[aria-current="true"],
 .learnkit-assistant-popup-header-menu-item[aria-selected="true"] {
-  background: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) !important;
+  background: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) ;
   color: var(--text-normal);
-  border-color: color-mix(in srgb, var(--color-base-70) 25%, transparent 75%) !important;
+  border-color: color-mix(in srgb, var(--color-base-70) 25%, transparent 75%) ;
 }
 
 .learnkit-assistant-popup-header-menu-item:focus-visible {
@@ -1056,11 +1056,11 @@
 
 /* Keep popup icon button padding against global `.learnkit button` resets. */
 .learnkit-assistant-popup .learnkit-assistant-popup-close {
-  padding: 0 !important;
+  padding: 0 ;
 }
 
 .learnkit-assistant-popup .learnkit-assistant-popup-overflow {
-  padding: 0 !important;
+  padding: 0 ;
 }
 
 /* ---- Mode toolbar ---- */
@@ -1340,7 +1340,7 @@
   td,
   hr
 ) {
-  margin: 0 0 0.5em !important;
+  margin: 0 0 0.5em ;
   padding: 0;
   border: 0;
 }
@@ -1466,7 +1466,7 @@
   left: 0;
   right: 0;
   top: 0;
-  border-top: 0.5px solid var(--color-base-35) !important;
+  border-top: 0.5px solid var(--color-base-35) ;
   pointer-events: none;
   z-index: 2;
 }
@@ -1483,8 +1483,8 @@
 }
 
 .learnkit-assistant-popup-composer-shell:focus-within {
-  border-color: var(--theme-base-80, color-mix(in srgb, var(--interactive-accent, #6a8dff) 42%, var(--background-modifier-border, rgba(0, 0, 0, 0.12)))) !important;
-  background: var(--theme-base-05, color-mix(in srgb, var(--interactive-accent, #6a8dff) 8%, var(--background-primary, #ffffff))) !important;
+  border-color: var(--theme-base-80, color-mix(in srgb, var(--interactive-accent, #6a8dff) 42%, var(--background-modifier-border, rgba(0, 0, 0, 0.12)))) ;
+  background: var(--theme-base-05, color-mix(in srgb, var(--interactive-accent, #6a8dff) 8%, var(--background-primary, #ffffff))) ;
 }
 
 .learnkit-assistant-popup-input {
@@ -1517,10 +1517,10 @@
 
 @media (hover: hover) {
   .learnkit-assistant-popup-input:hover {
-    background-color: transparent !important;
-    border-color: transparent !important;
-    box-shadow: none !important;
-    transition: none !important;
+    background-color: transparent ;
+    border-color: transparent ;
+    box-shadow: none ;
+    transition: none ;
   }
 }
 
@@ -1529,38 +1529,38 @@
   right: 6px;
   top: 50%;
   transform: translateY(-50%);
-  width: 36px !important;
-  height: 36px !important;
-  min-width: 36px !important;
-  min-height: 36px !important;
-  max-width: 36px !important;
-  max-height: 36px !important;
+  width: 36px ;
+  height: 36px ;
+  min-width: 36px ;
+  min-height: 36px ;
+  max-width: 36px ;
+  max-height: 36px ;
   border-radius: var(--radius-md);
-  border: var(--color-base-40) 0.5px solid !important;
-  background: transparent !important;
+  border: var(--color-base-40) 0.5px solid ;
+  background: transparent ;
   color: var(--text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 !important;
+  padding: 0 ;
   transition: background 0.12s ease, transform 0.1s ease;
 }
 
 /* Guard against global button reset rules in Sprout core styles. */
 .learnkit .learnkit-assistant-popup-send,
 .learnkit .learnkit-assistant-popup-attach-btn {
-  width: 36px !important;
-  height: 36px !important;
-  min-height: 36px !important;
+  width: 36px ;
+  height: 36px ;
+  min-height: 36px ;
   border-radius: 999px;
-  border-width: 0.5px !important;
-  padding: 0 !important;
+  border-width: 0.5px ;
+  padding: 0 ;
   line-height: 0;
 }
 
 .learnkit-assistant-popup-send:hover:not(:disabled) {
-  background: var(--background-modifier-hover, rgba(0, 0, 0, 0.06)) !important;
+  background: var(--background-modifier-hover, rgba(0, 0, 0, 0.06)) ;
   color: var(--text-normal);
 }
 
@@ -1589,7 +1589,7 @@
 
 /* Keep popup send button padding against global `.learnkit button` resets. */
 .learnkit-assistant-popup .learnkit-assistant-popup-send {
-  padding: 0 !important;
+  padding: 0 ;
 }
 
 @keyframes sprout-assistant-spin {
@@ -1608,26 +1608,26 @@
   left: 6px;
   top: 50%;
   transform: translateY(-50%);
-  width: 36px !important;
-  height: 36px !important;
-  min-width: 36px !important;
-  min-height: 36px !important;
-  max-width: 36px !important;
-  max-height: 36px !important;
+  width: 36px ;
+  height: 36px ;
+  min-width: 36px ;
+  min-height: 36px ;
+  max-width: 36px ;
+  max-height: 36px ;
   border-radius: var(--radius-md);
-  border: var(--color-base-40) 0.5px solid !important;
-  background: transparent !important;
+  border: var(--color-base-40) 0.5px solid ;
+  background: transparent ;
   color: var(--text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 !important;
+  padding: 0 ;
   transition: color 0.12s ease;
 }
 
 .learnkit-assistant-popup-attach-btn:hover:not(:disabled) {
-  background: var(--background-modifier-hover, rgba(0, 0, 0, 0.06)) !important;
+  background: var(--background-modifier-hover, rgba(0, 0, 0, 0.06)) ;
   color: var(--text-normal);
 }
 
@@ -1654,16 +1654,16 @@
 /* Force composer action buttons to stay circular against global button resets. */
 .learnkit .learnkit-assistant-popup .learnkit-assistant-popup-attach-btn,
 .learnkit .learnkit-assistant-popup .learnkit-assistant-popup-send {
-  width: 36px !important;
-  height: 36px !important;
-  min-width: 36px !important;
-  min-height: 36px !important;
-  max-width: 36px !important;
-  max-height: 36px !important;
+  width: 36px ;
+  height: 36px ;
+  min-width: 36px ;
+  min-height: 36px ;
+  max-width: 36px ;
+  max-height: 36px ;
   aspect-ratio: 1 / 1;
-  border-radius: 50% !important;
-  padding: 0 !important;
-  line-height: 0 !important;
+  border-radius: 50% ;
+  padding: 0 ;
+  line-height: 0 ;
 }
 
 /* ---- Attachment chips strip (above composer shell) ---- */
@@ -1722,27 +1722,27 @@
 }
 
 .learnkit .learnkit-assistant-popup .learnkit-assistant-popup-attach-btn {
-  width: 36px !important;
-  height: 36px !important;
-  min-width: 36px !important;
-  min-height: 36px !important;
-  max-width: 36px !important;
-  max-height: 36px !important;
-  padding: 0 !important;
-  line-height: 0 !important;
+  width: 36px ;
+  height: 36px ;
+  min-width: 36px ;
+  min-height: 36px ;
+  max-width: 36px ;
+  max-height: 36px ;
+  padding: 0 ;
+  line-height: 0 ;
 }
 
 .learnkit .learnkit-assistant-popup .learnkit-assistant-popup-attachment-remove {
-  padding: 0 !important;
-  line-height: 0 !important;
+  padding: 0 ;
+  line-height: 0 ;
 }
 
 /* Final guard: beat broad button padding rules with a more specific chip button selector. */
 .learnkit .learnkit-assistant-popup .learnkit-assistant-popup-attachment-chip > button.learnkit-assistant-popup-attachment-remove {
-  padding: 0 !important;
-  padding-block: 0 !important;
-  padding-inline: 0 !important;
-  margin: 0 !important;
+  padding: 0 ;
+  padding-block: 0 ;
+  padding-inline: 0 ;
+  margin: 0 ;
 }
 
 /* Modal Companion: subtle transparent internals (single outer glass panel remains the primary effect). */
@@ -1762,8 +1762,8 @@
 }
 
 .learnkit-assistant-popup.is-modal-location:not(.learnkit-assistant-popup-embedded) .learnkit-assistant-popup-composer-shell:focus-within {
-  background: color-mix(in srgb, var(--color-base-00) 34%, transparent 66%) !important;
-  border-color: var(--color-base-40) !important;
+  background: color-mix(in srgb, var(--color-base-00) 34%, transparent 66%) ;
+  border-color: var(--color-base-40) ;
 }
 
 .learnkit-assistant-popup.is-modal-location:not(.learnkit-assistant-popup-embedded) .learnkit-assistant-popup-input {
@@ -1774,75 +1774,75 @@
   .learnkit-assistant-popup-btn,
   .learnkit-assistant-popup-insert-btn
 ) {
-  border-radius: var(--radius-md) !important;
-  background: color-mix(in srgb, var(--color-base-40) 8%, transparent 92%) !important;
+  border-radius: var(--radius-md) ;
+  background: color-mix(in srgb, var(--color-base-40) 8%, transparent 92%) ;
   color: var(--text-normal);
-  border: 0.5px solid color-mix(in srgb, var(--color-base-70) 14%, transparent 86%) !important;
+  border: 0.5px solid color-mix(in srgb, var(--color-base-70) 14%, transparent 86%) ;
 }
 
 .learnkit-assistant-popup.is-modal-location:not(.learnkit-assistant-popup-embedded) :is(
   .learnkit-assistant-popup-btn,
   .learnkit-assistant-popup-insert-btn
 ):is(:hover, :focus-visible, :focus-within, [aria-expanded="true"]) {
-  background: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) !important;
-  color: var(--color-base-100) !important;
-  border-color: color-mix(in srgb, var(--color-base-70) 25%, transparent 75%) !important;
+  background: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) ;
+  color: var(--color-base-100) ;
+  border-color: color-mix(in srgb, var(--color-base-70) 25%, transparent 75%) ;
 }
 
 .learnkit-assistant-popup.is-modal-location:not(.learnkit-assistant-popup-embedded) :is(
   .learnkit-assistant-popup-btn,
   .learnkit-assistant-popup-insert-btn
 ):active {
-  background: color-mix(in srgb, var(--color-base-50) 19%, transparent 81%) !important;
-  color: var(--color-base-100) !important;
-  border-color: color-mix(in srgb, var(--color-base-75) 30%, transparent 70%) !important;
+  background: color-mix(in srgb, var(--color-base-50) 19%, transparent 81%) ;
+  color: var(--color-base-100) ;
+  border-color: color-mix(in srgb, var(--color-base-75) 30%, transparent 70%) ;
 }
 
 .learnkit-assistant-popup.is-modal-location:not(.learnkit-assistant-popup-embedded) :is(
   .learnkit-assistant-popup-overflow,
   .learnkit-assistant-popup-close
 ) {
-  border-radius: var(--radius-md) !important;
-  background: transparent !important;
+  border-radius: var(--radius-md) ;
+  background: transparent ;
   color: var(--text-normal);
-  border: 0.5px solid transparent !important;
+  border: 0.5px solid transparent ;
 }
 
 .learnkit-assistant-popup.is-modal-location:not(.learnkit-assistant-popup-embedded) :is(
   .learnkit-assistant-popup-overflow,
   .learnkit-assistant-popup-close
 ):is(:hover, :focus-visible, :focus-within, [aria-expanded="true"], :active) {
-  background: color-mix(in srgb, var(--color-base-35) 20%, transparent 75%) !important;
-  color: var(--color-base-100) !important;
-  border-color: var(--color-base-35) !important;
+  background: color-mix(in srgb, var(--color-base-35) 20%, transparent 75%) ;
+  color: var(--color-base-100) ;
+  border-color: var(--color-base-35) ;
 }
 
 .learnkit-assistant-popup.is-modal-location:not(.learnkit-assistant-popup-embedded)
   :is(.learnkit-assistant-popup-overflow, .learnkit-assistant-popup-close)[aria-expanded="true"] {
-  background: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) !important;
-  color: var(--color-base-100) !important;
-  border-color: var(--color-base-35) !important;
+  background: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) ;
+  color: var(--color-base-100) ;
+  border-color: var(--color-base-35) ;
 }
 
 .learnkit-assistant-popup.is-modal-location:not(.learnkit-assistant-popup-embedded)
   :is(.learnkit-assistant-popup-overflow, .learnkit-assistant-popup-close):focus-visible,
 .learnkit-assistant-popup.is-modal-location:not(.learnkit-assistant-popup-embedded)
   :is(.learnkit-assistant-popup-overflow, .learnkit-assistant-popup-close):focus-within {
-  background: color-mix(in srgb, var(--color-base-45) 17%, transparent 83%) !important;
-  color: var(--color-base-100) !important;
-  border-color: var(--color-base-35) !important;
+  background: color-mix(in srgb, var(--color-base-45) 17%, transparent 83%) ;
+  color: var(--color-base-100) ;
+  border-color: var(--color-base-35) ;
 }
 
 .learnkit-assistant-popup.is-modal-location:not(.learnkit-assistant-popup-embedded)
   :is(.learnkit-assistant-popup-overflow, .learnkit-assistant-popup-close):active {
-  background: color-mix(in srgb, var(--color-base-50) 19%, transparent 81%) !important;
-  color: var(--color-base-100) !important;
-  border-color: var(--color-base-35) !important;
+  background: color-mix(in srgb, var(--color-base-50) 19%, transparent 81%) ;
+  color: var(--color-base-100) ;
+  border-color: var(--color-base-35) ;
 }
 
 /* ---- Attachment picker modal ---- */
 .learnkit-attachment-picker .modal-content {
-  padding: 0 !important;
+  padding: 0 ;
 }
 
 .learnkit-attachment-picker-root {
@@ -1876,36 +1876,36 @@
 }
 
 .learnkit-attachment-picker .learnkit-attachment-picker-close-btn {
-  width: 32px !important;
-  height: 32px !important;
-  min-width: 32px !important;
-  min-height: 32px !important;
-  max-width: 32px !important;
-  max-height: 32px !important;
-  padding: 0 !important;
-  gap: 0 !important;
+  width: 32px ;
+  height: 32px ;
+  min-width: 32px ;
+  min-height: 32px ;
+  max-width: 32px ;
+  max-height: 32px ;
+  padding: 0 ;
+  gap: 0 ;
   overflow: hidden;
   justify-content: center;
 }
 
 .learnkit-attachment-picker .learnkit-attachment-picker-close-btn [data-learnkit-label="true"] {
-  display: none !important;
+  display: none ;
   overflow: hidden;
   white-space: nowrap;
-  max-width: 0 !important;
-  opacity: 0 !important;
-  margin-left: 0 !important;
-  transform: none !important;
-  transition: none !important;
+  max-width: 0 ;
+  opacity: 0 ;
+  margin-left: 0 ;
+  transform: none ;
+  transition: none ;
 }
 
 .learnkit-attachment-picker .learnkit-attachment-picker-close-btn:is(:hover, :focus-visible, :focus-within, [aria-expanded="true"]) [data-learnkit-label="true"] {
-  display: none !important;
+  display: none ;
 }
 
 .learnkit-attachment-picker-search {
   margin-bottom: 1rem;
-      box-shadow: none !important;
+      box-shadow: none ;
 }
 
 .learnkit-attachment-picker-list {
@@ -3015,7 +3015,7 @@
   justify-content: center;
   width: 22px;
   height: 22px;
-  border-radius: 4px !important;
+  border-radius: 4px ;
   background: transparent;
   cursor: pointer;
   font-size: 14px;
@@ -3034,7 +3034,7 @@
   color: var(--text-success, #16a34a);
   border: 0.5px solid color-mix(in srgb, var(--text-success, #16a34a) 40%, transparent);
   background-color: color-mix(in srgb, var(--text-success, #16a34a) 14%, var(--background-primary));
-  box-shadow: none !important;
+  box-shadow: none ;
 }
 
 .learnkit-edit-proposal-action-btn.is-accept:hover,
@@ -3047,7 +3047,7 @@
   color: var(--text-error, #b42318);
   border: 0.5px solid color-mix(in srgb, var(--text-error, #b42318) 40%, transparent);
   background-color: color-mix(in srgb, var(--text-error, #b42318) 14%, var(--background-primary));
-  box-shadow: none !important;
+  box-shadow: none ;
 }
 
 .learnkit-edit-proposal-action-btn.is-reject:hover,

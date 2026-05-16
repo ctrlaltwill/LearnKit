@@ -186,25 +186,25 @@
 /* Popover search inputs: keep visually borderless, including focus state. */
 .learnkit .learnkit-popover-dropdown .learnkit-search-naked,
 .learnkit .learnkit-popover-overlay .learnkit-search-naked {
-  border: none !important;
-  border-color: transparent !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  outline: none !important;
+  border: none ;
+  border-color: transparent ;
+  background: transparent ;
+  box-shadow: none ;
+  outline: none ;
 }
 
 .learnkit .learnkit-popover-dropdown .learnkit-search-naked:is(:hover, :focus, :focus-visible, :active),
 .learnkit .learnkit-popover-overlay .learnkit-search-naked:is(:hover, :focus, :focus-visible, :active) {
-  border-color: transparent !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  outline: none !important;
+  border-color: transparent ;
+  background: transparent ;
+  box-shadow: none ;
+  outline: none ;
 }
 
 /* Browser radio dropdown popovers: match analytics filter popover surface + states. */
 .learnkit .learnkit-dd-popover .learnkit-dd-panel {
-  background: color-mix(in srgb, var(--color-base-05) 95%, transparent 05%) !important;
-  border: 0.5px solid var(--color-base-35) !important;
+  background: color-mix(in srgb, var(--color-base-05) 95%, transparent 05%) ;
+  border: 0.5px solid var(--color-base-35) ;
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
 }
@@ -235,7 +235,7 @@
 
 /* Group picker results: show about 8 options max, then scroll. */
 .learnkit .learnkit-group-picker-results {
-  max-height: 264px !important;
+  max-height: 264px ;
   overflow-y: auto;
 }
 
@@ -243,8 +243,8 @@
 .learnkit .learnkit-group-picker-divider {
   display: block;
   width: 100%;
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
+  margin-top: 0 ;
+  margin-bottom: 0 ;
 }
 
 .learnkit .learnkit-columns-panel {
@@ -325,7 +325,7 @@
 /* Header nav popover panel: transparent glass surface. */
 .learnkit .learnkit-header-menu-panel,
 .learnkit-header-menu-panel {
-  background: color-mix(in srgb, var(--color-base-05) 95%, transparent 05%) !important;
+  background: color-mix(in srgb, var(--color-base-05) 95%, transparent 05%) ;
   border: var(--color-base-35) 0.5px solid;
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
@@ -333,8 +333,8 @@
 
 /* Keep reviewer/note-review More menus on the same panel surface as header dropdowns. */
 .learnkit :is(.learnkit-session-more-popover, .learnkit-note-review-more-popover).learnkit-header-menu-panel {
-  background: color-mix(in srgb, var(--color-base-05) 95%, transparent 05%) !important;
-  border: 0.5px solid var(--color-base-35) !important;
+  background: color-mix(in srgb, var(--color-base-05) 95%, transparent 05%) ;
+  border: 0.5px solid var(--color-base-35) ;
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
 }
@@ -342,21 +342,21 @@
 /* Keep header menu items visually soft: transparent base border + transparent hover fill. */
 .learnkit .learnkit-header-menu-panel .group,
 .learnkit-header-menu-panel .group {
-  border: 0.5px solid transparent !important;
-  background-color: transparent !important;
+  border: 0.5px solid transparent ;
+  background-color: transparent ;
 }
 
 .learnkit .learnkit-header-menu-panel .group:is(:hover, :focus, :focus-visible, :active),
 .learnkit-header-menu-panel .group:is(:hover, :focus, :focus-visible, :active) {
-  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) !important;
-  border: 0.5px solid color-mix(in srgb, var(--color-base-70) 25%, transparent 75%) !important;
+  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) ;
+  border: 0.5px solid color-mix(in srgb, var(--color-base-70) 25%, transparent 75%) ;
 }
 
 @supports (color: color-mix(in lab, red, red)) {
   .learnkit .learnkit-header-menu-panel .group:is(:hover, :focus, :focus-visible, :active),
   .learnkit-header-menu-panel .group:is(:hover, :focus, :focus-visible, :active) {
-    background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) !important;
-    border: 0.5px solid color-mix(in srgb, var(--color-base-70) 25%, transparent 75%) !important;
+    background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) ;
+    border: 0.5px solid color-mix(in srgb, var(--color-base-70) 25%, transparent 75%) ;
   }
 }
 
