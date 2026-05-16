@@ -175,7 +175,7 @@
 
 /* ---- When toolbar + accent coexist, let accent win ---- */
 
-.learnkit .learnkit-btn-toolbar.learnkit-btn-accent {
+.learnkit .lk-modals.modal .learnkit-btn-toolbar.learnkit-btn-accent {
   background: var(--theme-base-95) ;
   color: #ffffff ;
   border: 0.5px solid var(--theme-black-95) ;

@@ -134,26 +134,20 @@
   padding-top: 4px;
   padding-bottom: 4px;
   font-size: var(--learnkit-font-2xs);
-}
-
-.learnkit [data-lk-browser-density="compact"] .lk-browser-cell {
-  border-right: 0.5px solid var(--color-base-30);
-}
-
-.learnkit [data-lk-browser-density="compact"] .lk-browser-cell:last-child {
-  border-right: none;
-}
-
-.learnkit [data-lk-browser-density="compact"] .lk-browser-th {
   border-left: none;
   border-right: none;
 }
 
 .learnkit [data-lk-browser-density="compact"] .lk-browser-cell {
+  border-right: 0.5px solid var(--color-base-30);
   padding: 3px;
   font-size: var(--learnkit-font-2xs);
   height: auto;
   vertical-align: top;
+}
+
+.learnkit [data-lk-browser-density="compact"] .lk-browser-cell:last-child {
+  border-right: none;
 }
 
 .learnkit [data-lk-browser-density="compact"] .lk-browser-row {
@@ -918,10 +912,6 @@
   pointer-events: none;
 }
 
-.learnkit .lk-browser-th-label {
-  line-height: 1.2;
-}
-
 /* Subtle hover cue on sortable header cells. */
 .learnkit .lk-browser-header-cell:hover {
   background-color: color-mix(in srgb, var(--color-base-10) 55%, transparent 45%);
@@ -937,6 +927,7 @@
 }
 
 .learnkit .lk-browser-th-label {
+  line-height: 1.2;
   vertical-align: middle;
   display: inline-block;
   align-self: center;
@@ -1120,6 +1111,7 @@ font-size: var(--learnkit-font-xs);
   --lk-browser-editor-bg-active: var(--color-base-15);
   --lk-browser-editor-bg: var(--lk-browser-editor-bg-active);
   background-color: var(--lk-browser-row-hover);
+  color: var(--text-normal);
 }
 
 /* Keep selected rows visually locked when hovered. */
@@ -1134,10 +1126,6 @@ font-size: var(--learnkit-font-xs);
 
 .learnkit .lk-browser-view .table tbody td.lk-browser-cell:focus-within {
   --lk-browser-editor-bg: var(--lk-browser-editor-bg-active);
-}
-
-.learnkit .lk-browser-view .table tbody tr:hover td {
-  color: var(--text-normal);
 }
 
 /* Deck browser table header uses muted text */
@@ -1524,11 +1512,6 @@ body.is-phone .learnkit .lk-browser-title-strip > .learnkit-inline-sentence > .l
   border-color: var(--color-base-35) ;
 }
 
-body.is-mobile .learnkit .lk-browser-density-btn {
-  min-width: 0;
-  flex: 1 1 calc((100% - 8px) / 2);
-}
-
 body.is-mobile .learnkit .lk-browser-filter {
   width: 100%;
   min-width: 0;
@@ -1727,67 +1710,60 @@ overflow-y: visible;
 }
 
 body.is-phone .learnkit .lk-browser-bottom-bar {
-align-items: flex-start;
-justify-content: flex-start;
-gap: 10px;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 10px;
 }
 
 body.is-phone .learnkit .lk-browser-summary-wrap,
 body.is-phone .learnkit .lk-browser-bottom-right {
-display: flex;
-flex-direction: row;
-align-items: center;
-justify-content: space-between;
-gap: 8px;
-min-width: 0;
-margin-left: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  margin-left: 0;
 }
 
 body.is-phone .learnkit .lk-browser-summary-wrap {
-gap: 0;
-flex-wrap: nowrap;
+  gap: 0;
+  flex-wrap: nowrap;
+}
 
 body.is-phone .learnkit .lk-browser-selection-row {
-align-items: center;
-justify-content: flex-start;
-gap: 8px;
-justify-content: flex-end;
-flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: nowrap;
+  width: auto;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
 
 body.is-phone .learnkit .lk-browser-bottom-right {
-display: flex;
-align-items: center;
-display: none;
-flex-wrap: wrap;
-gap: 8px;
-}
-width: auto;
-justify-content: flex-end;
-margin-left: auto;
-flex: 0 0 auto;
-}
-
-width: auto;
-width: 100%;
-justify-content: flex-start;
+  display: none;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 body.is-phone .learnkit .lk-browser-pagination {
+  width: 100%;
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
 
 body.is-phone .learnkit .lk-browser-pagination button[aria-label^="Page "] {
-display: none;
+  display: none;
 }
 
 body.is-phone .learnkit .lk-browser-selection-row .lk-browser-clear-selection {
-display: none;
-}
-width: 100%;
-overflow-x: auto;
-white-space: nowrap;
--webkit-overflow-scrolling: touch;
-scrollbar-width: none;
+  display: none;
 }
 
 body.is-phone .learnkit .lk-browser-pagination::-webkit-scrollbar {
-display: none;
+  display: none;
 }

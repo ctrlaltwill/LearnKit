@@ -620,6 +620,7 @@
 /* ---- Card editor modal ---- */
 
 .learnkit .learnkit-card-editor-modal-root {
+  /* eslint-disable-next-line obsidianmd/no-unknown-properties */
   all: unset;
   display: flex;
   flex-direction: column;
@@ -1412,8 +1413,6 @@ body.is-mobile .learnkit .learnkit-edit-modal {
   max-width: 1500px;
   overflow: hidden;
   flex-shrink: 0;
-  background-color: var(--background-secondary);
-  border: var(--learnkit-border-width) solid var(--learnkit-border-color);
   border-radius: var(--radius-md, var(--radius-md));
   background-color: var(--color-base-10) ;
     border: 0.5px solid var(--color-base-40) ;

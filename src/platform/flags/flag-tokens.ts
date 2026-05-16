@@ -27,7 +27,8 @@ const FLAG_CACHE_MAX_BYTES = 2_500_000;
 
 let memoryCache: Map<string, string> | null = null;
 const pendingFetches = new Map<string, Promise<string | null>>();
-let persistTimer: number | null = null;
+let _cacheDirty = false;
+let _dataJsonAvailable = false;
 
 export type CircleFlagTokenMatch = {
   code: string;
@@ -123,6 +124,50 @@ export function renderFlagPreviewHtml(input: string): string {
   return escapeTextWithCircleFlags(input).replace(/\r?\n/g, "<br>");
 }
 
+/**
+ * Hydrate the in-memory flag cache from data.json's `flagCache` field.
+ * Call during plugin startup AFTER loading the root object.
+ * Entries already in memory (e.g. from localStorage fallback) take priority.
+ */
+export function loadFlagCacheFromDataJson(raw: unknown): void {
+  if (!raw || typeof raw !== "object") return;
+  const src = raw as Record<string, unknown>;
+  const map = ensureCache();
+  for (const [k, v] of Object.entries(src)) {
+    if (map.has(k)) continue; // localStorage entry wins (may be fresher)
+    const code = normalizeFlagCode(k);
+    if (!code || typeof v !== "string" || !v.startsWith("data:image/svg+xml")) continue;
+    map.set(code, v);
+  }
+  _dataJsonAvailable = true;
+}
+
+/**
+ * Return the serialized flag cache for inclusion in data.json.
+ * Returns `null` when nothing has changed since the last persist.
+ */
+export function getFlagCacheForDataJson(): Record<string, string> | null {
+  if (!_cacheDirty && !_dataJsonAvailable) return null;
+  const map = ensureCache();
+  if (map.size === 0) return null;
+  const out: Record<string, string> = {};
+  for (const [k, v] of map.entries()) out[k] = v;
+  return out;
+}
+
+/**
+ * Call after data.json has been successfully saved with the flag cache.
+ * Clears the dirty flag and removes the legacy localStorage key (one-time migration).
+ */
+export function flagCacheWasPersisted(): void {
+  _cacheDirty = false;
+  _dataJsonAvailable = true;
+  // One-time cleanup: remove legacy localStorage cache
+  if (typeof window !== "undefined") {
+    try { window.localStorage.removeItem(FLAG_CACHE_KEY); } catch { /* ignore */ }
+  }
+}
+
 function ensureCache(): Map<string, string> {
   if (memoryCache) return memoryCache;
   memoryCache = new Map<string, string>();
@@ -150,19 +195,7 @@ function cacheBytes(map: Map<string, string>): number {
 }
 
 function queuePersistCache() {
-  if (typeof window === "undefined") return;
-  if (persistTimer !== null) window.clearTimeout(persistTimer);
-  persistTimer = window.setTimeout(() => {
-    persistTimer = null;
-    const map = ensureCache();
-    const asObj: Record<string, string> = {};
-    for (const [k, v] of map.entries()) asObj[k] = v;
-    try {
-      window.localStorage.setItem(FLAG_CACHE_KEY, JSON.stringify(asObj));
-    } catch {
-      return;
-    }
-  }, 180);
+  _cacheDirty = true;
 }
 
 function getCachedFlagDataUri(code: string): string | null {

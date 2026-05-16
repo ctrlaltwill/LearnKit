@@ -28,6 +28,7 @@ import { formatSyncNotice, syncOneFile, syncQuestionBank, shouldSyncFile, type S
 import { ParseErrorModal } from "../modals/parse-error-modal";
 import { formatCurrentNoteSyncNotice } from "../integrations/sync/sync-notices";
 import { isAnchorLine } from "../../views/settings/settings-utils";
+import { getFlagCacheForDataJson, flagCacheWasPersisted } from "../flags/flag-tokens";
 import { parseCardsFromText } from "../../engine/parser/parser";
 import { ConfirmSyncPrivilegesModal } from "../../views/settings/confirm-modals";
 
@@ -274,9 +275,13 @@ export function WithDataSyncMethods<T extends Constructor<LearnKitPluginBase>>(B
 
         root.settings = syncSettings;
         delete root.store;
-  delete root.versionTracking;
+        delete root.versionTracking;
+
+        const flagCache = getFlagCacheForDataJson();
+        if (flagCache) root.flagCache = flagCache;
 
         await this.saveData(root);
+        flagCacheWasPersisted();
         await this.store.persist();
         return;
       }
@@ -334,6 +339,9 @@ export function WithDataSyncMethods<T extends Constructor<LearnKitPluginBase>>(B
         root.store = this.store.data;
         delete root.versionTracking;
 
+        const flagCache2 = getFlagCacheForDataJson();
+        if (flagCache2) root.flagCache = flagCache2;
+
         if (canStat) {
           const mtimeBeforeWrite = await safeStatMtime(adapter, dataPath);
           if (mtimeBefore && mtimeBeforeWrite && mtimeBeforeWrite !== mtimeBefore) {
@@ -342,6 +350,7 @@ export function WithDataSyncMethods<T extends Constructor<LearnKitPluginBase>>(B
         }
 
         await this.saveData(root);
+        flagCacheWasPersisted();
         return;
       }
 
@@ -365,7 +374,12 @@ export function WithDataSyncMethods<T extends Constructor<LearnKitPluginBase>>(B
       root.settings = syncSettings;
       root.store = this.store.data;
       delete root.versionTracking;
+
+      const flagCache3 = getFlagCacheForDataJson();
+      if (flagCache3) root.flagCache = flagCache3;
+
       await this.saveData(root);
+      flagCacheWasPersisted();
     };
 
     refreshGithubStars = async (force = false): Promise<void> => {

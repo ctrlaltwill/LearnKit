@@ -96,6 +96,7 @@
   margin-bottom: 6px;
 }
 
+/* eslint-disable-next-line obsidianmd/no-unknown-type-selector */
 mjx-container[jax="CHTML"][display="true"] {
   display: block;
   text-align: left;
@@ -105,14 +106,18 @@ mjx-container[jax="CHTML"][display="true"] {
 /* Normalise display-math margins inside flashcard bodies, MCQ option
    lists, and OQ sequence lists so that pure-LaTeX items match the
    height of text+inline-LaTeX items. */
+/* eslint-disable-next-line obsidianmd/no-unknown-type-selector */
 .learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-body mjx-container[jax="CHTML"][display="true"] {
   display: inline-block;
   margin: 0;
   text-align: center;
 }
 
+/* eslint-disable-next-line obsidianmd/no-unknown-type-selector */
 .learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-options-list li mjx-container[jax="CHTML"][display="true"],
+/* eslint-disable-next-line obsidianmd/no-unknown-type-selector */
 .learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-sequence-list li mjx-container[jax="CHTML"][display="true"],
+/* eslint-disable-next-line obsidianmd/no-unknown-type-selector */
 .learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-answer-list li mjx-container[jax="CHTML"][display="true"] {
   display: inline-block;
   margin: 0;
@@ -1254,14 +1259,12 @@ mjx-container[jax="CHTML"][display="true"] {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 16px;
   box-sizing: border-box;
   font-size: inherit;
   text-align: center;
   line-height: 1.5;
-  border: var(--learnkit-border-width) solid var(--learnkit-border-color);
   border-radius: var(--radius-md);
-  border: 0.5px solid var(--color-base-30);;
+  border: 0.5px solid var(--color-base-30);
   background: var(--color-base-20);
   padding: 12px;
   overflow: hidden;
@@ -1353,7 +1356,6 @@ mjx-container[jax="CHTML"][display="true"] {
   width: 1em;
   margin: 0;
 padding: 0px ;
-    max-height: 16px ;
     max-width: 16px ;
   list-style-type: disc;
   max-height: 1em;
@@ -1452,6 +1454,7 @@ padding: 0px ;
 
 /* Make LaTeX (mjx-container) inside <strong> visually bold via
    a slightly thicker stroke, matching the surrounding bold text. */
+/* eslint-disable-next-line obsidianmd/no-unknown-type-selector */
 .learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-answer strong mjx-container {
   -webkit-text-stroke: 0.4px currentColor;
 }

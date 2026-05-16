@@ -122,9 +122,7 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
 
 .lk-session-card.card {
   transition: height 0.2s ease-in-out;
-  height: auto;
   min-height: 0;
-  max-height: none;
   height: fit-content;
   max-height: max-content;
   border-radius: var(--radius-md);

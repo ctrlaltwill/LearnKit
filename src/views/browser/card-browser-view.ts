@@ -66,6 +66,7 @@ type BrowserDensityMode = "comfortable" | "compact";
 
 const BROWSER_DENSITY_STORAGE_KEY = "sprout.browser.tableDensity.v1";
 const BROWSER_COLS_STORAGE_KEY = "sprout.browser.colVisibility.v1";
+const BROWSER_PREFS_ROOT_KEY = "browserPrefs";
 const COMPACT_DEFAULT_HIDDEN_COLS: ColKey[] = ["id", "stage", "due", "location"];
 const ALL_COLS: ColKey[] = ["id", "type", "stage", "due", "title", "question", "answer", "info", "location", "groups"];
 
@@ -166,6 +167,9 @@ export class SproutCardBrowserView extends ItemView {
   getIcon() { return "table-2"; }
 
   async onOpen() {
+    // Hydrate browser prefs from data.json (overrides localStorage fallback from constructor)
+    await this._hydrateBrowserPrefsFromDataJson();
+    this._applyDensityPreset();
     this.render();
     if (this.plugin.settings?.general?.enableAnimations ?? true) {
       window.setTimeout(() => {
@@ -320,20 +324,43 @@ export class SproutCardBrowserView extends ItemView {
     try { this._header?.updateWidthButtonLabel?.(); } catch (e) { log.swallow("update width button label", e); }
   }
 
+  private async _hydrateBrowserPrefsFromDataJson() {
+    try {
+      const root = (await this.plugin.loadData()) as Record<string, unknown> | null;
+      const prefs = root?.[BROWSER_PREFS_ROOT_KEY] as Record<string, unknown> | undefined;
+      if (prefs) {
+        if (typeof prefs.density === "string") {
+          this._densityMode = prefs.density === "compact" ? "compact" : "comfortable";
+        }
+        if (prefs.cols && typeof prefs.cols === "object") {
+          const cols = prefs.cols as Record<string, unknown>;
+          const valid = new Set<ColKey>(ALL_COLS);
+          for (const mode of ["comfortable", "compact"] as const) {
+            const arr = cols[mode];
+            if (!Array.isArray(arr)) continue;
+            const filtered = arr.filter((c): c is ColKey => valid.has(c as ColKey));
+            if (filtered.length === 0) continue;
+            const target = mode === "compact" ? this._compactCols : this._comfortableCols;
+            target.clear();
+            for (const c of filtered) target.add(c);
+          }
+        }
+        return; // data.json takes priority
+      }
+    } catch {
+      // Ignore — fall through to localStorage
+    }
+    // Fallback: migrate from localStorage
+    this._loadDensityMode();
+    this._loadColumnPrefs();
+  }
+
   private _loadDensityMode() {
     try {
       const raw = window.localStorage.getItem(BROWSER_DENSITY_STORAGE_KEY);
       this._densityMode = raw === "compact" ? "compact" : "comfortable";
     } catch {
       this._densityMode = "comfortable";
-    }
-  }
-
-  private _saveDensityMode() {
-    try {
-      window.localStorage.setItem(BROWSER_DENSITY_STORAGE_KEY, this._densityMode);
-    } catch {
-      // Ignore storage failures (private mode / quota)
     }
   }
 
@@ -354,6 +381,43 @@ export class SproutCardBrowserView extends ItemView {
       }
     } catch {
       // Ignore parse failures — keep defaults
+    }
+  }
+
+  private _browserPrefsSaveTimer: ReturnType<typeof setTimeout> | null = null;
+
+  private _queuePersistBrowserPrefs() {
+    if (this._browserPrefsSaveTimer !== null) return;
+    this._browserPrefsSaveTimer = setTimeout(async () => {
+      this._browserPrefsSaveTimer = null;
+      try {
+        const root = (await this.plugin.loadData()) || {};
+        root[BROWSER_PREFS_ROOT_KEY] = {
+          density: this._densityMode,
+          cols: {
+            comfortable: Array.from(this._comfortableCols),
+            compact: Array.from(this._compactCols),
+          },
+        };
+        await this.plugin.saveData(root);
+        // One-time cleanup: remove legacy localStorage keys
+        try {
+          window.localStorage.removeItem(BROWSER_DENSITY_STORAGE_KEY);
+          window.localStorage.removeItem(BROWSER_COLS_STORAGE_KEY);
+        } catch { /* ignore */ }
+      } catch {
+        // Fallback: write to localStorage if data.json save fails
+        this._saveDensityMode();
+        this._saveColumnPrefs();
+      }
+    }, 300);
+  }
+
+  private _saveDensityMode() {
+    try {
+      window.localStorage.setItem(BROWSER_DENSITY_STORAGE_KEY, this._densityMode);
+    } catch {
+      // Ignore storage failures (private mode / quota)
     }
   }
 
@@ -421,12 +485,11 @@ export class SproutCardBrowserView extends ItemView {
     if (prevMode === "compact" && mode === "comfortable") {
       this._comfortableCols.clear();
       for (const col of this._allCols) this._comfortableCols.add(col);
-      this._saveColumnPrefs();
     }
 
     this._applyDensityPreset();
     this._syncDensityDataset();
-    this._saveDensityMode();
+    this._queuePersistBrowserPrefs();
     this._updateDensityToggleUi();
     this._applyColumnVisibility();
     if (refresh) this.refreshTable();
@@ -987,7 +1050,7 @@ export class SproutCardBrowserView extends ItemView {
         const target = this._visibleCols;
         target.clear();
         for (const c of cols) target.add(c);
-        this._saveColumnPrefs();
+        this._queuePersistBrowserPrefs();
       },
       applyColumnVisibility: () => this._applyColumnVisibility(),
     });

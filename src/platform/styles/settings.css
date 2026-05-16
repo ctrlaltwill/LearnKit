@@ -625,7 +625,6 @@
 
 .learnkit .learnkit-guide-body h2 {
     border-bottom: none;
-    margin-top: 2.2em;
     margin-bottom: .6em;
     padding: 2rem 0 .35em;
     font-weight: 600;
@@ -892,6 +891,7 @@ body.is-phone .learnkit-guide-body table {
 
 /* Copy-code button — bare icon, no button chrome */
 .learnkit-guide-body pre .copy-code-button {
+  /* eslint-disable-next-line obsidianmd/no-unknown-properties */
   all: unset;
   position: absolute;
   top: 3px;
@@ -2657,7 +2657,6 @@ input.learnkit-ss-search-input {
   flex: 1;
   border: none;
   outline: none;
-  border: none ;
   background-color: #000000 ;
   box-shadow: none;
   color: var(--text-normal);
@@ -2844,6 +2843,7 @@ input.learnkit-ss-search-input {
 }
 
 .learnkit .learnkit-folder-suggest-item {
+  /* eslint-disable-next-line obsidianmd/no-unknown-properties */
   all: unset;
   box-sizing: border-box;
   display: flex;

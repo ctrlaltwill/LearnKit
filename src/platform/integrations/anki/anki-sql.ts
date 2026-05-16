@@ -14,7 +14,7 @@
  *  - readModels / readDecks / readCollectionCrt — read collection metadata
  */
 
-import initSqlJs from "sql.js";
+import initSqlJs from "sql.js/dist/sql-wasm-browser.js";
 import type { Database, SqlJsStatic, SqlValue } from "sql.js";
 import wasmBinary from "sql.js/dist/sql-wasm.wasm";
 import {

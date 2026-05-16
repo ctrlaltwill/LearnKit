@@ -994,8 +994,8 @@
   line-height: 1.2;
   transition: background-color 0.14s, color 0.14s, border-color 0.14s;
   display: flex;
-  background-color: #0000 ;
-  border: 0.5px solid #0000 ;
+  background-color: transparent ;
+  border: 0.5px solid transparent ;
 }
 
 .learnkit-assistant-popup-header-menu-item:hover,

@@ -968,6 +968,7 @@
 
 /* ---- MathJax: remove block margins inside Sprout cards/widgets ---- */
 
+/* eslint-disable-next-line obsidianmd/no-unknown-type-selector */
 .learnkit .lk-session-card mjx-container[jax="CHTML"][display="true"],
 .learnkit.learnkit-widget mjx-container[jax="CHTML"][display="true"],
 .learnkit .learnkit-widget mjx-container[jax="CHTML"][display="true"],
@@ -975,8 +976,11 @@
   margin: 0;
 }
 
+/* eslint-disable-next-line obsidianmd/no-unknown-type-selector */
 .learnkit .learnkit-pretty-card mjx-container[jax="CHTML"][display="true"],
+/* eslint-disable-next-line obsidianmd/no-unknown-type-selector */
 .learnkit .learnkit-pretty-card mjx-container[jax="CHTML"],
+/* eslint-disable-next-line obsidianmd/no-unknown-type-selector */
 .learnkit .learnkit-pretty-card mjx-math[display="true"],
 .learnkit .learnkit-pretty-card .MathJax,
 .learnkit .learnkit-pretty-card .MJX-TEX {
@@ -1017,6 +1021,7 @@
 }
 
 /* Also reset the inner MathJax container inside math blocks */
+/* eslint-disable-next-line obsidianmd/no-unknown-type-selector */
 .learnkit .lk-session-card .math.math-block.is-loaded mjx-container,
 .learnkit.learnkit-widget .math.math-block.is-loaded mjx-container,
 .learnkit .learnkit-widget .math.math-block.is-loaded mjx-container,

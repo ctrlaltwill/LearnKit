@@ -123,6 +123,7 @@ import {
 import { formatAttachmentChipLabel } from "../../shared/attachment-chip-label";
 
 const ASSISTANT_POPUP_SIZE_STORAGE_KEY = "learnkit.assistant.popup.size.v1";
+const ASSISTANT_POPUP_PREFS_ROOT_KEY = "assistantPopupSize";
 const CHAT_AUTO_FOLLOW_THRESHOLD_PX = 24;
 
 type CodeMirrorDispatchTarget = {
@@ -273,9 +274,12 @@ export class SproutAssistantPopup {
   constructor(plugin: LearnKitPlugin) {
     this.plugin = plugin;
     this._loadPersistedUserResize();
+    // Async hydrate from data.json (overrides localStorage if present)
+    void this._hydratePopupSizeFromDataJson();
   }
 
   private _loadPersistedUserResize(): void {
+    // Try data.json first (async hydration will follow in onOpen)
     try {
       const raw = window.localStorage.getItem(ASSISTANT_POPUP_SIZE_STORAGE_KEY);
       if (!raw) return;
@@ -289,18 +293,43 @@ export class SproutAssistantPopup {
     }
   }
 
-  private _persistUserResize(): void {
+  /** Call after data.json is available to override localStorage with persisted prefs. */
+  async _hydratePopupSizeFromDataJson(): Promise<void> {
     try {
-      window.localStorage.setItem(
-        ASSISTANT_POPUP_SIZE_STORAGE_KEY,
-        JSON.stringify({
+      const root = (await this.plugin.loadData()) as Record<string, unknown> | null;
+      const prefs = root?.[ASSISTANT_POPUP_PREFS_ROOT_KEY] as Record<string, unknown> | undefined;
+      if (!prefs) return;
+      const width = Number(prefs.width);
+      const height = Number(prefs.height);
+      if (Number.isFinite(width) && width > 0) this._userResizedWidth = width;
+      if (Number.isFinite(height) && height > 0) this._userResizedHeight = height;
+    } catch {
+      // Ignore — keep localStorage fallback values
+    }
+  }
+
+  private _persistUserResize(): void {
+    // Write to data.json asynchronously; fall back to localStorage on failure.
+    void (async () => {
+      try {
+        const root = (await this.plugin.loadData()) || {};
+        root[ASSISTANT_POPUP_PREFS_ROOT_KEY] = {
           width: this._userResizedWidth,
           height: this._userResizedHeight,
-        }),
-      );
-    } catch {
-      // Ignore storage write failures.
-    }
+        };
+        await this.plugin.saveData(root);
+        // One-time cleanup: remove legacy localStorage key
+        try { window.localStorage.removeItem(ASSISTANT_POPUP_SIZE_STORAGE_KEY); } catch { /* ignore */ }
+      } catch {
+        // Fallback: write to localStorage
+        try {
+          window.localStorage.setItem(
+            ASSISTANT_POPUP_SIZE_STORAGE_KEY,
+            JSON.stringify({ width: this._userResizedWidth, height: this._userResizedHeight }),
+          );
+        } catch { /* ignore */ }
+      }
+    })();
   }
 
   private _registerChatLogSyncListener(): void {

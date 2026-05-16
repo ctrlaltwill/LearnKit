@@ -42,6 +42,7 @@ import { editDecorationExtension } from "../../views/study-assistant/editor/edit
 import { removeAosErrorHandler } from "../core/aos-loader";
 import { initTooltipPositioner } from "../core/tooltip-positioner";
 import { initMobileKeyboardHandler, cleanupMobileKeyboardHandler } from "../core/mobile-keyboard-handler";
+import { loadFlagCacheFromDataJson } from "../flags/flag-tokens";
 
 import { JsonStore } from "../core/store";
 import { SqliteStore, isSqliteDatabasePresent, reconcileAllDbsFromVaultSync } from "../core/sqlite-store";
@@ -176,6 +177,10 @@ export function WithLifecycleMethods<T extends Constructor<LearnKitPluginBase>>(
 
         const root = (await this.loadData()) as unknown;
         const rootObj = isPlainObject(root) ? root : {};
+
+        // Hydrate flag cache from data.json (falls back to localStorage for migration)
+        loadFlagCacheFromDataJson(rootObj.flagCache);
+
         const rootSettings = isPlainObject(rootObj.settings)
           ? (rootObj.settings as Partial<SproutSettings>)
           : {};
