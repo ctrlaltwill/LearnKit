@@ -34,6 +34,9 @@ import {
 
 let _sqlJs: SqlJsStatic | null = null;
 let _sqlJsPromise: Promise<SqlJsStatic> | null = null;
+const initSqlJsTyped = initSqlJs as unknown as (config: {
+  wasmBinary: ArrayBuffer;
+}) => Promise<SqlJsStatic>;
 
 /**
  * Lazily initialise sql.js. Uses the bundled sql.js package and embedded WASM
@@ -49,7 +52,7 @@ export async function getSqlJs(): Promise<SqlJsStatic> {
       : new Uint8Array(wasmBinary);
     const wasmBuffer = wasmArray.slice().buffer;
 
-    _sqlJs = await initSqlJs({ wasmBinary: wasmBuffer });
+    _sqlJs = await initSqlJsTyped({ wasmBinary: wasmBuffer });
     return _sqlJs;
   })().catch((err) => {
     // Reset so the next call retries instead of returning a stale rejected promise

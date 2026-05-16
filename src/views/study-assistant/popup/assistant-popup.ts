@@ -312,12 +312,13 @@ export class SproutAssistantPopup {
     // Write to data.json asynchronously; fall back to localStorage on failure.
     void (async () => {
       try {
-        const root = (await this.plugin.loadData()) || {};
-        root[ASSISTANT_POPUP_PREFS_ROOT_KEY] = {
+        const root = (await this.plugin.loadData()) as Record<string, unknown> | null;
+        const nextRoot: Record<string, unknown> = root ?? {};
+        nextRoot[ASSISTANT_POPUP_PREFS_ROOT_KEY] = {
           width: this._userResizedWidth,
           height: this._userResizedHeight,
         };
-        await this.plugin.saveData(root);
+        await this.plugin.saveData(nextRoot);
         // One-time cleanup: remove legacy localStorage key
         try { window.localStorage.removeItem(ASSISTANT_POPUP_SIZE_STORAGE_KEY); } catch { /* ignore */ }
       } catch {

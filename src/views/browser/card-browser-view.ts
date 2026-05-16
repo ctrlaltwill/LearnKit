@@ -388,18 +388,20 @@ export class SproutCardBrowserView extends ItemView {
 
   private _queuePersistBrowserPrefs() {
     if (this._browserPrefsSaveTimer !== null) return;
-    this._browserPrefsSaveTimer = setTimeout(async () => {
+    this._browserPrefsSaveTimer = setTimeout(() => {
+      void (async () => {
       this._browserPrefsSaveTimer = null;
       try {
-        const root = (await this.plugin.loadData()) || {};
-        root[BROWSER_PREFS_ROOT_KEY] = {
+        const root = (await this.plugin.loadData()) as Record<string, unknown> | null;
+        const nextRoot: Record<string, unknown> = root ?? {};
+        nextRoot[BROWSER_PREFS_ROOT_KEY] = {
           density: this._densityMode,
           cols: {
             comfortable: Array.from(this._comfortableCols),
             compact: Array.from(this._compactCols),
           },
         };
-        await this.plugin.saveData(root);
+        await this.plugin.saveData(nextRoot);
         // One-time cleanup: remove legacy localStorage keys
         try {
           window.localStorage.removeItem(BROWSER_DENSITY_STORAGE_KEY);
@@ -410,6 +412,7 @@ export class SproutCardBrowserView extends ItemView {
         this._saveDensityMode();
         this._saveColumnPrefs();
       }
+      })();
     }, 300);
   }
 
