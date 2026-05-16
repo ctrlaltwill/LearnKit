@@ -311,11 +311,11 @@ export function WithCoreMethods<T extends Constructor<LearnKitPluginBase>>(Base:
       });
     }
 
-    async refreshReadingViewMarkdownLeaves(): Promise<void> {
-      await refreshReadingViewMarkdownLeaves(this.app);
+    async refreshReadingViewMarkdownLeaves(activeOnly = false): Promise<void> {
+      await refreshReadingViewMarkdownLeaves(this.app, { activeOnly });
     }
 
-    _scheduleReadingViewRefresh(delayMs = 90): void {
+    _scheduleReadingViewRefresh(delayMs = 90, options?: { activeOnly?: boolean }): void {
       const state: ReadingRefreshState = {
         readingViewRefreshTimer: this._readingViewRefreshTimer,
         readingModeWatcherInterval: this._readingModeWatcherInterval,
@@ -326,7 +326,7 @@ export function WithCoreMethods<T extends Constructor<LearnKitPluginBase>>(Base:
         state,
         delayMs,
         refresh: () => {
-          void this.refreshReadingViewMarkdownLeaves();
+          void this.refreshReadingViewMarkdownLeaves(!!options?.activeOnly);
         },
       });
       this._readingViewRefreshTimer = state.readingViewRefreshTimer;
@@ -357,11 +357,13 @@ export function WithCoreMethods<T extends Constructor<LearnKitPluginBase>>(Base:
         app: this.app,
         state,
         registerInterval: this.registerInterval.bind(this),
-        scheduleRefresh: (delayMs?: number) => {
-          this._scheduleReadingViewRefresh(delayMs);
+        setWatcherInterval: (id: number | null) => {
+          this._readingModeWatcherInterval = id;
+        },
+        scheduleRefresh: ({ delayMs, activeOnly }: { delayMs?: number; activeOnly?: boolean } = {}) => {
+          this._scheduleReadingViewRefresh(delayMs, { activeOnly });
         },
       });
-      this._readingModeWatcherInterval = state.readingModeWatcherInterval;
     }
 
     _refreshOpenViews(): void {

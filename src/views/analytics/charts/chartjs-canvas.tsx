@@ -95,6 +95,134 @@ export function makeVerticalGradient(
   return gradient;
 }
 
+function parseCssNumber(raw: string | null | undefined, fallback: number) {
+  const value = Number.parseFloat(String(raw ?? "").trim());
+  return Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
+function resolveChartColorFallback(primaryToken: string, fallbackToken: string, sourceElement?: Element | null) {
+  const primary = resolveChartColor(primaryToken, sourceElement);
+  if (primary && !String(primary).trim().startsWith("var(")) return primary;
+  const fallback = resolveChartColor(fallbackToken, sourceElement);
+  if (fallback && !String(fallback).trim().startsWith("var(")) return fallback;
+  return fallback || primary;
+}
+
+function pickDatasetColor(item: { dataset?: Record<string, unknown>; dataIndex?: number }, canvas: HTMLCanvasElement) {
+  const dataset = item.dataset ?? {};
+  const idx = Number(item.dataIndex ?? 0);
+
+  const pick = (value: unknown): string | undefined => {
+    if (Array.isArray(value)) {
+      const entry = value[idx] ?? value[0];
+      return typeof entry === "string" ? entry : undefined;
+    }
+    return typeof value === "string" ? value : undefined;
+  };
+
+  return (
+    pick(dataset.backgroundColor) ||
+    pick(dataset.borderColor) ||
+    resolveChartColor("var(--theme-accent)", canvas)
+  );
+}
+
+function withSharedChartDefaults(config: ChartConfiguration, canvas: HTMLCanvasElement): ChartConfiguration {
+  const style = getComputedStyle(canvas);
+  const options = config.options ?? {};
+  const plugins = options.plugins ?? {};
+  const tooltip = plugins.tooltip ?? {};
+  const tooltipCallbacks =
+    typeof tooltip === "object" && tooltip && "callbacks" in tooltip
+      ? (tooltip as { callbacks?: Record<string, unknown> }).callbacks ?? {}
+      : {};
+  const existingAnimation = (options as { animation?: unknown }).animation;
+
+  const tooltipBorderWidth = parseCssNumber(style.getPropertyValue("--learnkit-border-width"), 1);
+  const tooltipRadius = parseCssNumber(style.getPropertyValue("--radius-md"), 6);
+  const tooltipTextColor = resolveChartColorFallback(
+    "var(--learnkit-tooltip-foreground)",
+    "var(--color-base-100)",
+    canvas,
+  );
+  const tooltipBackgroundColor = resolveChartColorFallback(
+    "var(--learnkit-tooltip-surface)",
+    "var(--color-base-05)",
+    canvas,
+  );
+
+  const sharedTooltip = {
+    backgroundColor: tooltipBackgroundColor,
+    titleColor: tooltipTextColor,
+    bodyColor: tooltipTextColor,
+    footerColor: tooltipTextColor,
+    borderColor: resolveChartColor("var(--learnkit-border-color)", canvas),
+    borderWidth: tooltipBorderWidth,
+    cornerRadius: tooltipRadius,
+    caretSize: 0,
+    caretPadding: 6,
+    padding: {
+      top: 6,
+      right: 10,
+      bottom: 6,
+      left: 10,
+    },
+    displayColors: true,
+    usePointStyle: false,
+    boxWidth: 10,
+    boxHeight: 10,
+    boxPadding: 6,
+    multiKeyBackground: "transparent",
+    callbacks: {
+      labelColor: (item: { dataset?: Record<string, unknown>; dataIndex?: number }) => {
+        const color = pickDatasetColor(item, canvas);
+        return {
+          borderColor: "transparent",
+          backgroundColor: color,
+          borderWidth: 0,
+          borderRadius: 2,
+        };
+      },
+      labelTextColor: () => tooltipTextColor,
+    },
+  };
+
+  let animation: unknown;
+  if (existingAnimation === false) {
+    animation = false;
+  } else if (existingAnimation && typeof existingAnimation === "object") {
+    animation = {
+      duration: 650,
+      easing: "easeOutCubic",
+      ...existingAnimation,
+    };
+  } else {
+    animation = {
+      duration: 650,
+      easing: "easeOutCubic",
+    };
+  }
+
+  return {
+    ...config,
+    options: {
+      ...options,
+      animation: animation as never,
+      plugins: {
+        ...plugins,
+        tooltip: {
+          ...sharedTooltip,
+          ...tooltip,
+          callbacks: {
+            ...(sharedTooltip.callbacks as Record<string, unknown>),
+            ...tooltipCallbacks,
+          },
+        },
+      },
+    },
+  };
+}
+
 type ChartJsCanvasProps = {
   config: ChartConfiguration;
   height: number;
@@ -113,8 +241,10 @@ export function ChartJsCanvas(props: ChartJsCanvasProps) {
     const context = canvas.getContext("2d");
     if (!context) return undefined;
 
+    const normalizedConfig = withSharedChartDefaults(props.config, canvas);
+
     chartRef.current?.destroy();
-    chartRef.current = new ChartJS(context, props.config);
+    chartRef.current = new ChartJS(context, normalizedConfig);
 
     return () => {
       chartRef.current?.destroy();

@@ -74,8 +74,8 @@ export class LearnKitPluginBase extends Plugin {
   declare syncBank: () => Promise<void>;
   declare refreshAllViews: () => void;
   declare notifyWidgetCardsSynced: () => void;
-  declare refreshReadingViewMarkdownLeaves: () => Promise<void>;
-  declare _scheduleReadingViewRefresh: (delayMs?: number) => void;
+  declare refreshReadingViewMarkdownLeaves: (activeOnly?: boolean) => Promise<void>;
+  declare _scheduleReadingViewRefresh: (delayMs?: number, options?: { activeOnly?: boolean }) => void;
   declare _isMainWorkspaceMarkdownLeaf: (leaf: WorkspaceLeaf) => boolean;
   declare _computeContentSignature: (text: string) => string;
   declare _getMarkdownLeafSource: (leaf: WorkspaceLeaf) => Promise<{ sourceContent: string; sourcePath: string }>;

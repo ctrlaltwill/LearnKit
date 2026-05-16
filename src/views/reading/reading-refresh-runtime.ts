@@ -23,6 +23,13 @@ export type ReadingRefreshState = {
   markdownLeafContentSnapshot: WeakMap<WorkspaceLeaf, string>;
 };
 
+function getActiveMainWorkspaceMarkdownLeaf(app: App): WorkspaceLeaf | null {
+  const leaf = app.workspace.getMostRecentLeaf?.() ?? null;
+  if (!leaf) return null;
+  if (!isMainWorkspaceMarkdownLeaf(leaf)) return null;
+  return leaf.view instanceof MarkdownView ? leaf : null;
+}
+
 export function isMainWorkspaceMarkdownLeaf(leaf: WorkspaceLeaf): boolean {
   const view = leaf.view;
   if (!(view instanceof MarkdownView)) return false;
@@ -75,10 +82,19 @@ export async function getMarkdownLeafSource(app: App, leaf: WorkspaceLeaf): Prom
   return { sourceContent: "", sourcePath: "" };
 }
 
-export async function refreshReadingViewMarkdownLeaves(app: App): Promise<void> {
-  const leaves = app.workspace
-    .getLeavesOfType("markdown")
-    .filter((leaf) => isMainWorkspaceMarkdownLeaf(leaf));
+export async function refreshReadingViewMarkdownLeaves(
+  app: App,
+  options?: { activeOnly?: boolean },
+): Promise<void> {
+  const activeOnly = !!options?.activeOnly;
+  const leaves = activeOnly
+    ? (() => {
+      const activeLeaf = getActiveMainWorkspaceMarkdownLeaf(app);
+      return activeLeaf ? [activeLeaf] : [];
+    })()
+    : app.workspace
+      .getLeavesOfType("markdown")
+      .filter((leaf) => isMainWorkspaceMarkdownLeaf(leaf));
 
   await Promise.all(leaves.map(async (leaf) => {
     const container = leaf.view?.containerEl ?? null;
@@ -163,46 +179,47 @@ export function startMarkdownModeWatcher(params: {
   app: App;
   state: ReadingRefreshState;
   registerInterval: (id: number) => void;
-  scheduleRefresh: (delayMs?: number) => void;
+  setWatcherInterval: (id: number | null) => void;
+  scheduleRefresh: (params?: { delayMs?: number; activeOnly?: boolean }) => void;
 }): void {
-  const { app, state, registerInterval, scheduleRefresh } = params;
-  if (state.readingModeWatcherInterval != null) return;
+  const { app, state, registerInterval, setWatcherInterval, scheduleRefresh } = params;
+  if (state.readingModeWatcherInterval != null) {
+    setWatcherInterval(state.readingModeWatcherInterval);
+    return;
+  }
+
+  let lastActiveLeaf: WorkspaceLeaf | null = null;
+
+  const setWatcherTimeout = (id: number | null) => {
+    state.readingModeWatcherInterval = id;
+    setWatcherInterval(id);
+  };
 
   const scanModes = () => {
     try {
-      const leaves = app.workspace
-        .getLeavesOfType("markdown")
-        .filter((leaf) => isMainWorkspaceMarkdownLeaf(leaf));
-      let sawModeChange = false;
+      const activeLeaf = getActiveMainWorkspaceMarkdownLeaf(app);
+      const activeLeafChanged = activeLeaf !== lastActiveLeaf;
+      lastActiveLeaf = activeLeaf;
+      if (!activeLeaf) return;
 
-      for (const leaf of leaves) {
-        const view = leaf.view;
-        if (!(view instanceof MarkdownView)) continue;
+      const view = activeLeaf.view;
+      if (!(view instanceof MarkdownView)) return;
 
-        const mode = view.getMode?.();
-        if (mode !== "source" && mode !== "preview") continue;
+      const mode = view.getMode?.();
+      if (mode !== "source" && mode !== "preview") return;
 
-        const prev = state.markdownLeafModeSnapshot.get(leaf);
-        if (prev !== mode) {
-          state.markdownLeafModeSnapshot.set(leaf, mode);
-          if (prev) sawModeChange = true;
-        }
+      const prevMode = state.markdownLeafModeSnapshot.get(activeLeaf);
+      state.markdownLeafModeSnapshot.set(activeLeaf, mode);
 
-        const sourcePath = view.file instanceof TFile ? view.file.path : "";
-        const liveViewData =
-          typeof (view as unknown as { getViewData?: () => string }).getViewData === "function"
-            ? String((view as unknown as { getViewData: () => string }).getViewData() ?? "")
-            : "";
-        const signature = `${sourcePath}|${computeContentSignature(liveViewData)}`;
-        const prevSignature = state.markdownLeafContentSnapshot.get(leaf);
-        if (prevSignature !== signature) {
-          state.markdownLeafContentSnapshot.set(leaf, signature);
-          if (prevSignature) sawModeChange = true;
-        }
-      }
+      const sourcePath = view.file instanceof TFile ? view.file.path : "";
+      const signature = `${mode}|${sourcePath}`;
+      const prevSignature = state.markdownLeafContentSnapshot.get(activeLeaf);
+      state.markdownLeafContentSnapshot.set(activeLeaf, signature);
 
-      if (sawModeChange) {
-        scheduleRefresh(40);
+      if (mode !== "preview") return;
+
+      if (activeLeafChanged || prevMode !== "preview" || prevSignature !== signature) {
+        scheduleRefresh({ delayMs: 40, activeOnly: true });
       }
     } catch (e) {
       log.swallow("scan markdown mode changes", e);
@@ -211,11 +228,11 @@ export function startMarkdownModeWatcher(params: {
 
   scanModes();
   const scheduleModeScan = () => {
-    state.readingModeWatcherInterval = window.setTimeout(() => {
-      state.readingModeWatcherInterval = null;
+    setWatcherTimeout(window.setTimeout(() => {
+      setWatcherTimeout(null);
       scanModes();
       scheduleModeScan();
-    }, 180);
+    }, 180));
   };
   scheduleModeScan();
   if (state.readingModeWatcherInterval != null) registerInterval(state.readingModeWatcherInterval);

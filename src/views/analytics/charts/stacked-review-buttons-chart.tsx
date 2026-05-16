@@ -551,6 +551,11 @@ export function StackedReviewButtonsChart(props: {
         responsive: true,
         maintainAspectRatio: false,
         animation: props.enableAnimations ?? true,
+        interaction: {
+          mode: "index",
+          axis: "x",
+          intersect: false,
+        },
         scales: {
           x: {
             type: "linear",
@@ -589,6 +594,9 @@ export function StackedReviewButtonsChart(props: {
         plugins: {
           legend: { display: false },
           tooltip: {
+            mode: "index",
+            axis: "x",
+            intersect: false,
             callbacks: {
               title: (items) => {
                 const day = Number(items[0]?.parsed.x ?? todayIndex);
