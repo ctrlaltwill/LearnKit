@@ -40,106 +40,6 @@ const DEFAULT_MIN_AREA_PERCENT = 0.00008;
 const DEFAULT_VERTICAL_MERGE_FACTOR = 0.65;
 const DEFAULT_MASK_BUFFER_PX = 4;
 
-function normalizeChannelValue(value: number, minLum: number, maxLum: number): number {
-  const denom = Math.max(1, maxLum - minLum);
-  const t = (value - minLum) / denom;
-  return Math.max(0, Math.min(255, Math.round(t * 255)));
-}
-
-function preprocessRgbaInPlace(data: Uint8ClampedArray): void {
-  if (!data.length) return;
-
-  const luma: number[] = [];
-  for (let i = 0, p = 0; i < data.length; i += 4, p += 1) {
-    // Perceptual grayscale to stabilise OCR across colored diagram labels.
-    luma[p] = Math.round(data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114);
-  }
-
-  const sorted = [...luma].sort((a, b) => a - b);
-  const lowIdx = Math.floor(sorted.length * 0.02);
-  const highIdx = Math.floor(sorted.length * 0.98);
-  const minLum = sorted[Math.max(0, Math.min(sorted.length - 1, lowIdx))] ?? 0;
-  const maxLum = sorted[Math.max(0, Math.min(sorted.length - 1, highIdx))] ?? 255;
-
-  for (let i = 0, p = 0; i < data.length; i += 4, p += 1) {
-    const norm = normalizeChannelValue(luma[p], minLum, maxLum);
-    const boosted = norm <= 64 ? 0 : norm >= 220 ? 255 : norm;
-    data[i] = boosted;
-    data[i + 1] = boosted;
-    data[i + 2] = boosted;
-  }
-}
-
-async function preprocessForOcr(imageData: ClipboardImage): Promise<Blob | HTMLCanvasElement> {
-  const blob = new Blob([imageData.data], { type: imageData.mime || "image/png" });
-
-  if (typeof document === "undefined") {
-    return blob;
-  }
-
-  const canvas = activeDocument.createElement("canvas");
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  if (!ctx) return blob;
-
-  const drawFromImageBitmap = async (): Promise<boolean> => {
-    if (typeof createImageBitmap !== "function") return false;
-    const bitmap = await createImageBitmap(blob);
-    try {
-      canvas.width = bitmap.width;
-      canvas.height = bitmap.height;
-      ctx.drawImage(bitmap, 0, 0);
-      return true;
-    } finally {
-      bitmap.close();
-    }
-  };
-
-  const drawFromImageElement = async (): Promise<boolean> => {
-    if (typeof Image === "undefined") return false;
-
-    const image = new Image();
-    const imageUrl = URL.createObjectURL(blob);
-    try {
-      await new Promise<void>((resolve, reject) => {
-        image.onload = () => resolve();
-        image.onerror = () => reject(new Error("Failed to decode image for OCR preprocessing."));
-        image.src = imageUrl;
-      });
-      canvas.width = image.naturalWidth || image.width;
-      canvas.height = image.naturalHeight || image.height;
-      if (canvas.width < 1 || canvas.height < 1) return false;
-      ctx.drawImage(image, 0, 0);
-      return true;
-    } finally {
-      URL.revokeObjectURL(imageUrl);
-    }
-  };
-
-  try {
-    let drawn = false;
-    try {
-      drawn = await drawFromImageBitmap();
-    } catch {
-      drawn = false;
-    }
-
-    if (!drawn) {
-      drawn = await drawFromImageElement();
-    }
-
-    if (!drawn || canvas.width < 1 || canvas.height < 1) {
-      return blob;
-    }
-
-    const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    preprocessRgbaInPlace(frame.data);
-    ctx.putImageData(frame, 0, 0);
-    return canvas;
-  } catch {
-    return blob;
-  }
-}
-
 function clamp01(n: number): number {
   if (!Number.isFinite(n)) return 0;
   return Math.max(0, Math.min(1, n));
@@ -351,7 +251,6 @@ export const __test = {
   shouldVerticallyMergeOcrRegions,
   iou,
   expandRect,
-  preprocessRgbaInPlace,
 };
 
 async function collectOcrTextRegions(imageData: ClipboardImage, opts: AutoMaskOptions): Promise<OcrRegion[]> {

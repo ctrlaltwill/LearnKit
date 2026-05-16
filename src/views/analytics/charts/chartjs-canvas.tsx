@@ -114,8 +114,9 @@ function pickDatasetColor(item: { dataset?: Record<string, unknown>; dataIndex?:
 
   const pick = (value: unknown): string | undefined => {
     if (Array.isArray(value)) {
-      const entry = value[idx] ?? value[0];
-      return typeof entry === "string" ? entry : undefined;
+      const entries: readonly unknown[] = value;
+      const candidate = idx >= 0 && idx < entries.length ? entries[idx] : entries[0];
+      return typeof candidate === "string" ? candidate : undefined;
     }
     return typeof value === "string" ? value : undefined;
   };
