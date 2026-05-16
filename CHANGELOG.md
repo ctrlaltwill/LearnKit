@@ -6,6 +6,13 @@ All notable changes to LearnKit are summarized here.
 
 - Draft release notes for `1.2.0`: see [release/1.2.0/RELEASE_NOTES.md](release/1.2.0/RELEASE_NOTES.md)
 
+## 1.5.3 (2026-05-16)
+
+### Note
+This release is a duplicate of 1.5.1, re-submitted for Obsidian Community Plugins approval.
+Version 1.5.2 was repealed/reverted due to issues encountered during the approval review process.
+There are no functional changes relative to 1.5.1.
+
 ## 1.5.1 (2026-05-15)
 
 ### Changed
