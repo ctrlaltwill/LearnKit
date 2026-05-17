@@ -61,7 +61,7 @@
     height: auto;
     box-shadow: none;
     align-items: center;
-    column-gap: 6px;
+    gap: 6px;
     margin: 0;
     padding: 1.0rem 1.2rem;
     display: flex;
@@ -418,7 +418,7 @@ body.is-phone .learnkit .view-header.learnkit-header .view-actions::after {
     align-items: center;
     align-content: center;
     justify-content: normal;
-    column-gap: 0;
+    gap: 0;
     max-width: calc(100% - 1.2rem);
     box-sizing: border-box;
     overflow-x: hidden;

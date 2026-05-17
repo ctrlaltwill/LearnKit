@@ -152,8 +152,13 @@ function PieCard(props: {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        cutout: "70%",
-        animation: props.enableAnimations ?? true,
+        cutout: "58%",
+        animation: props.enableAnimations !== false ? {
+          animateRotate: true,
+          animateScale: true,
+          duration: 800,
+          easing: "easeOutQuart" as const,
+        } : false,
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -220,7 +225,7 @@ function PieCard(props: {
           <ChartJsCanvas
             className="learnkit-analytics-chart"
             config={{ ...chartConfig, plugins: [centerTextPlugin] }}
-            height={170}
+            height={200}
             ariaLabel={props.title}
           />
         ) : null}

@@ -97,7 +97,7 @@
 }
 
 /* eslint-disable-next-line obsidianmd/no-unknown-type-selector */
-mjx-container[jax="CHTML"][display="true"] {
+.MathJax[jax="CHTML"][display="true"] {
   display: block;
   text-align: left;
   margin: 0.5em 1em;
@@ -106,19 +106,15 @@ mjx-container[jax="CHTML"][display="true"] {
 /* Normalise display-math margins inside flashcard bodies, MCQ option
    lists, and OQ sequence lists so that pure-LaTeX items match the
    height of text+inline-LaTeX items. */
-/* eslint-disable-next-line obsidianmd/no-unknown-type-selector */
-.learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-body mjx-container[jax="CHTML"][display="true"] {
+.learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-body .MathJax[jax="CHTML"][display="true"] {
   display: inline-block;
   margin: 0;
   text-align: center;
 }
 
-/* eslint-disable-next-line obsidianmd/no-unknown-type-selector */
-.learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-options-list li mjx-container[jax="CHTML"][display="true"],
-/* eslint-disable-next-line obsidianmd/no-unknown-type-selector */
-.learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-sequence-list li mjx-container[jax="CHTML"][display="true"],
-/* eslint-disable-next-line obsidianmd/no-unknown-type-selector */
-.learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-answer-list li mjx-container[jax="CHTML"][display="true"] {
+.learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-options-list li .MathJax[jax="CHTML"][display="true"],
+.learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-sequence-list li .MathJax[jax="CHTML"][display="true"],
+.learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-answer-list li .MathJax[jax="CHTML"][display="true"] {
   display: inline-block;
   margin: 0;
   vertical-align: middle;
@@ -174,7 +170,7 @@ mjx-container[jax="CHTML"][display="true"] {
  */
 .markdown-preview-section.learnkit-layout-masonry > .learnkit-reading-card-run {
   column-width: 280px;
-  column-gap: 16px;
+  gap: 16px;
   margin-top: 1.5rem;
     margin-bottom: 2.5rem;
 }
@@ -1430,8 +1426,7 @@ padding: 0px ;
 
 /* Make LaTeX (mjx-container) inside <strong> visually bold via
    a slightly thicker stroke, matching the surrounding bold text. */
-/* eslint-disable-next-line obsidianmd/no-unknown-type-selector */
-.learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-answer strong mjx-container {
+.learnkit-pretty-card.learnkit-macro-flashcards .learnkit-flashcard-answer strong .MathJax {
   -webkit-text-stroke: 0.4px currentColor;
 }
 

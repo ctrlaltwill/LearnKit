@@ -1,6 +1,8 @@
 const prefixer = require("postcss-prefix-selector");
 const expandHex = require("./postcss-expand-hex.cjs");
+const stripHas = require("./postcss-strip-has.cjs");
 const dedupeSelectors = require("./postcss-dedupe-selectors.cjs");
+const dedupeProperties = require("./postcss-dedupe-properties.cjs");
 
 module.exports = {
   plugins: [
@@ -23,6 +25,8 @@ module.exports = {
       },
     }),
     expandHex(),
+    stripHas(),
+    dedupeProperties(),
     dedupeSelectors(),
   ],
 };

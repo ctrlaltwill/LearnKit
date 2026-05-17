@@ -144,7 +144,7 @@
 
 /* Match study/gatekeeper spacing for label + keycap in widget grading buttons. */
 .learnkit.learnkit-widget .learnkit-widget-action-btn:is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy) {
-  column-gap: 0;
+  gap: 0;
   --learnkit-btn-bg-mix: 16%;
   --learnkit-btn-fg-mix: 72%;
   --learnkit-btn-border-mix: 45%;
@@ -868,7 +868,7 @@
 /* Inline code within widget text */
 .learnkit .learnkit-widget-text code,
 .learnkit .learnkit-widget-info code {
-  font-family: var(--font-monospace, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace);
+  font-family: var(--font-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace);
   background-color: var(--color-base-20);
   color: var(--color-base-70);
   border-radius: 4px;

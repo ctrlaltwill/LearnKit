@@ -9,7 +9,7 @@
 
 // This file is small on purpose. The chaos now lives in organized modules. Have fun exploring!
 
-import "basecoat-css";
+// Basecoat JS components (CSS is imported via styles.tailwind.css — Tailwind/PostCSS pipeline)
 import "basecoat-css/basecoat";
 import "basecoat-css/command";
 import "basecoat-css/dropdown-menu";

@@ -888,8 +888,7 @@ body.is-phone .learnkit-guide-body table {
 
 /* Copy-code button — bare icon, no button chrome */
 .learnkit-guide-body pre .copy-code-button {
-  /* eslint-disable-next-line obsidianmd/no-unknown-properties */
-  all: unset;
+  box-sizing: border-box;
   position: absolute;
   top: 3px;
   right: 3px;
@@ -898,6 +897,17 @@ body.is-phone .learnkit-guide-body table {
   justify-content: center;
   height: 15px;
   width: 15px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  text-align: inherit;
+  outline: none;
+  cursor: pointer;
   padding: 2px;
   margin: 3px;
   cursor: pointer;
@@ -2832,8 +2842,6 @@ input.learnkit-ss-search-input {
 }
 
 .learnkit .learnkit-folder-suggest-item {
-  /* eslint-disable-next-line obsidianmd/no-unknown-properties */
-  all: unset;
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -2847,7 +2855,12 @@ input.learnkit-ss-search-input {
   color: inherit;
   text-align: left;
   font-size: 0.875rem;
+  font-family: inherit;
+  font-weight: inherit;
   line-height: 1.25rem;
+  padding: 0;
+  outline: none;
+  cursor: pointer;
   padding: 6px 8px;
   cursor: pointer;
   user-select: none;

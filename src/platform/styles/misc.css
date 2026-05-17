@@ -966,18 +966,16 @@
 /* ---- MathJax: remove block margins inside Sprout cards/widgets ---- */
 
 /* eslint-disable-next-line obsidianmd/no-unknown-type-selector */
-.learnkit .lk-session-card mjx-container[jax="CHTML"][display="true"],
-.learnkit.learnkit-widget mjx-container[jax="CHTML"][display="true"],
-.learnkit .learnkit-widget mjx-container[jax="CHTML"][display="true"],
-.learnkit .learnkit-widget-card-body mjx-container[jax="CHTML"][display="true"] {
+.learnkit .lk-session-card .MathJax[jax="CHTML"][display="true"],
+.learnkit.learnkit-widget .MathJax[jax="CHTML"][display="true"],
+.learnkit .learnkit-widget .MathJax[jax="CHTML"][display="true"],
+.learnkit .learnkit-widget-card-body .MathJax[jax="CHTML"][display="true"] {
   margin: 0;
 }
 
 /* eslint-disable-next-line obsidianmd/no-unknown-type-selector */
-.learnkit .learnkit-pretty-card mjx-container[jax="CHTML"][display="true"],
-/* eslint-disable-next-line obsidianmd/no-unknown-type-selector */
-.learnkit .learnkit-pretty-card mjx-container[jax="CHTML"],
-/* eslint-disable-next-line obsidianmd/no-unknown-type-selector */
+.learnkit .learnkit-pretty-card .MathJax[jax="CHTML"][display="true"],
+.learnkit .learnkit-pretty-card .MathJax[jax="CHTML"],
 .learnkit .learnkit-pretty-card mjx-math[display="true"],
 .learnkit .learnkit-pretty-card .MathJax,
 .learnkit .learnkit-pretty-card .MJX-TEX {
@@ -1018,13 +1016,12 @@
 }
 
 /* Also reset the inner MathJax container inside math blocks */
-/* eslint-disable-next-line obsidianmd/no-unknown-type-selector */
-.learnkit .lk-session-card .math.math-block.is-loaded mjx-container,
-.learnkit.learnkit-widget .math.math-block.is-loaded mjx-container,
-.learnkit .learnkit-widget .math.math-block.is-loaded mjx-container,
-.learnkit .learnkit-widget-card-body .math.math-block.is-loaded mjx-container,
-.learnkit .learnkit-gatekeeper-modal .math.math-block.is-loaded mjx-container,
-.learnkit .learnkit-pretty-card .math.math-block.is-loaded mjx-container {
+.learnkit .lk-session-card .math.math-block.is-loaded .MathJax,
+.learnkit.learnkit-widget .math.math-block.is-loaded .MathJax,
+.learnkit .learnkit-widget .math.math-block.is-loaded .MathJax,
+.learnkit .learnkit-widget-card-body .math.math-block.is-loaded .MathJax,
+.learnkit .learnkit-gatekeeper-modal .math.math-block.is-loaded .MathJax,
+.learnkit .learnkit-pretty-card .math.math-block.is-loaded .MathJax {
   margin: 0;
   padding: 0;
 }

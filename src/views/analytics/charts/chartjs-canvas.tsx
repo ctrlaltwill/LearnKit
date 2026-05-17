@@ -192,16 +192,41 @@ function withSharedChartDefaults(config: ChartConfiguration, canvas: HTMLCanvasE
   if (existingAnimation === false) {
     animation = false;
   } else if (existingAnimation && typeof existingAnimation === "object") {
+    // Explicit animation config supplied — merge with defaults, letting the caller override
     animation = {
-      duration: 650,
-      easing: "easeOutCubic",
+      duration: 800,
+      easing: "easeOutQuart",
       ...existingAnimation,
     };
   } else {
-    animation = {
-      duration: 650,
-      easing: "easeOutCubic",
-    };
+    // No explicit animation config — apply per-chart-type defaults for a recharts-like feel
+    const base = { duration: 800, easing: "easeOutQuart" } as const;
+    const chartType = config.type as string;
+    switch (chartType) {
+      case "doughnut":
+      case "pie":
+        animation = {
+          ...base,
+          animateRotate: true,
+          animateScale: true,
+        };
+        break;
+      case "bar":
+        animation = {
+          ...base,
+          // bars grow from zero — no need for extra config, numbers animation handles it
+        };
+        break;
+      case "line":
+        animation = {
+          ...base,
+          duration: 1000,
+          // progressive X-axis reveal gives a sweep-left-to-right feel
+        };
+        break;
+      default:
+        animation = { ...base };
+    }
   }
 
   return {
