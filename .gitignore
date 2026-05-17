@@ -23,7 +23,11 @@ CHANGELOG.md
 .github/RELEASE_NOTES_1.0.5-beta.1.md
 
 # Tooling files excluded from review artifact scanning
-tooling/
-tooling/esbuild.config.js
-tooling/postcss.config.cjs
-tooling/eslint.config.mjs
+tooling/*
+!tooling/esbuild.config.js
+!tooling/postcss.config.cjs
+!tooling/eslint.config.mjs
+!tooling/dedupe-css-source.mjs
+!tooling/postcss-dedupe-selectors.cjs
+!tooling/expand-css-hex.mjs
+!tooling/postcss-expand-hex.cjs

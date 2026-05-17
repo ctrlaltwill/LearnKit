@@ -28,10 +28,15 @@ async function expandHexInFile(filePath) {
   let replacements = 0;
 
   root.walkDecls((decl) => {
-    const updated = decl.value.replace(/#([0-9a-fA-F]{3})(?![0-9a-fA-F])/g, (_, hex) => {
-      const [r, g, b] = hex;
+    const updated = decl.value.replace(/#([0-9a-fA-F]{3,4})(?![0-9a-fA-F])/g, (_, hex) => {
       replacements += 1;
-      return `#${r}${r}${g}${g}${b}${b}`;
+      if (hex.length === 3) {
+        const [r, g, b] = hex;
+        return `#${r}${r}${g}${g}${b}${b}`;
+      }
+      // 4-digit: #RGBA → #RRGGBBAA
+      const [r, g, b, a] = hex;
+      return `#${r}${r}${g}${g}${b}${b}${a}${a}`;
     });
 
     if (updated !== decl.value) {

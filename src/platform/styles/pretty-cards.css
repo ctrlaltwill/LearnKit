@@ -398,6 +398,7 @@ mjx-container[jax="CHTML"][display="true"] {
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   padding-bottom: 4px;
+  scroll-behavior: smooth;
 }
 
 .learnkit-pretty-card.learnkit-macro-guidebook .learnkit-card-section {
@@ -417,12 +418,13 @@ mjx-container[jax="CHTML"][display="true"] {
 
 /* Markdown macro (native reading look) */
 .learnkit-pretty-card.learnkit-macro-markdown {
-  background: transparent;
-  border: none;
-  border-radius: 0;
+  background: var(--background-primary);
+  border: var(--learnkit-border-width) solid var(--learnkit-border-color);
+  border-radius: var(--radius-md);
   margin-top: 0;
   margin-bottom: 12px;
   color: var(--text-normal);
+  padding: 4px 0px;
 }
 
 .learnkit-pretty-card.learnkit-macro-markdown .learnkit-card-header {
@@ -1100,16 +1102,6 @@ mjx-container[jax="CHTML"][display="true"] {
 
 /* ---- Macro styles ---- */
 
-.learnkit-pretty-card.learnkit-macro-markdown {
-  background: var(--background-primary);
-  border: var(--learnkit-border-width) solid var(--learnkit-border-color);
-  border-radius: var(--radius-md);
-  padding: 4px 0px;
-  margin-top: 0;
-  margin-bottom: 12px;
-  color: var(--text-normal);
-}
-
 .learnkit-pretty-card.learnkit-reading-view-wrapper.learnkit-macro-markdown {
   margin-top: 1rem ;
 }
@@ -1223,23 +1215,6 @@ mjx-container[jax="CHTML"][display="true"] {
 
 .learnkit-pretty-card.learnkit-macro-custom .learnkit-custom-section {
   margin: 0;
-}
-
-.learnkit-pretty-card.learnkit-macro-guidebook .learnkit-card-content {
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
-}
-
-.learnkit-pretty-card.learnkit-macro-guidebook .learnkit-card-section {
-  flex: 0 0 min(420px, 100%);
-  min-width: min(420px, 100%);
-  scroll-snap-align: start;
-  border: var(--learnkit-border-width) solid var(--learnkit-border-color);
-  border-radius: var(--radius-s);
-  padding: 10px 12px;
 }
 
 /* ---- Flashcard 3D flip mechanism ---- */

@@ -411,6 +411,12 @@
   align-items: center;
   justify-content: center;
   padding: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 240px;
+  overflow: hidden;
+  position: relative;
+  z-index: 4;
 }
 
 .learnkit-guide-layout.is-loading .learnkit-guide-content {
@@ -422,15 +428,6 @@
 .learnkit-guide-layout.is-loading .learnkit-guide-content::before,
 .learnkit-guide-layout.is-loading .learnkit-guide-content::after {
   display: none;
-}
-
-.learnkit-guide-layout.is-loading .learnkit-guide-content-inner {
-  width: 100%;
-  height: 100%;
-  min-height: 240px;
-  overflow: hidden;
-  position: relative;
-  z-index: 4;
 }
 
 /* Indeterminate loading bar at the top of the layout */
@@ -1028,6 +1025,7 @@ body:not(.is-mobile) .learnkit-guide-body pre button.copy-code-button.learnkit-g
   background: var(--background-secondary, var(--background));
   width: 100%;
   box-shadow: none;
+  transition: background-color 0.2s;
 }
 
 /* ---- Backup table (matches .learnkit-changelog-table) ---- */
@@ -1117,6 +1115,9 @@ td.learnkit-backup-cell.learnkit-backup-cell.learnkit-backup-actions.learnkit-ba
 .learnkit-backup-table td:last-child {
   border-top-right-radius: var(--radius-md);
   border-bottom-right-radius: var(--radius-md);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 /* Header cells */
@@ -1134,11 +1135,6 @@ td.learnkit-backup-cell.learnkit-backup-cell.learnkit-backup-actions.learnkit-ba
 .learnkit-backup-cell {
   color: var(--text-muted);
   font-size: var(--learnkit-font-xs);
-}
-
-.learnkit .learnkit-settings-table-wrap,
-.learnkit-settings .learnkit-settings-table-wrap {
-  transition: background-color 0.2s;
 }
 
 .learnkit .learnkit-settings-table-wrap:hover,
@@ -1261,12 +1257,6 @@ td.learnkit-backup-cell.learnkit-backup-cell.learnkit-backup-actions.learnkit-ba
 }
 
 /* Last column: allow word-wrap */
-.learnkit-backup-table th:last-child,
-.learnkit-backup-table td:last-child {
-  white-space: normal;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-}
 
 /* ---- Backup row action buttons ---- */
 
@@ -2902,15 +2892,13 @@ input.learnkit-ss-search-input {
   border-radius: 0;
   min-height: 0;
   overflow-y: auto;
+  padding-top: 20px;
+  padding-bottom: 20px;
 }
 
 /* Override parent padding so content aligns with other views.
    The header is position:static on settings, so the default 60px top padding
    (designed for an overlaying absolute header) is excessive. */
-.learnkit .learnkit-settings-view-root {
-  padding-top: 20px;
-  padding-bottom: 20px;
-}
 
 .learnkit .learnkit-settings-content-shell {
   display: flex;
@@ -3004,6 +2992,7 @@ body.is-phone .learnkit .learnkit-guide-content-inner {
 
 body.is-phone .learnkit .learnkit-guide-content-inner {
   padding: 36px 14px 24px;
+  padding-bottom: 24px;
 }
 
 body.is-phone .learnkit .learnkit-guide-content-inner.learnkit-guide-content-inner--snap {
@@ -3187,10 +3176,6 @@ body.is-phone .learnkit .learnkit-guide-footer {
   right: auto;
   bottom: auto;
   margin: 0 1.2rem 1.2rem;
-}
-
-body.is-phone .learnkit .learnkit-guide-content-inner {
-  padding-bottom: 24px;
 }
 
 /* Button groups: transparent backgrounds on mobile */

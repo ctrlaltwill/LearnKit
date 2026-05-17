@@ -1165,9 +1165,6 @@
   height: 16px;
   pointer-events: none;
   z-index: 2;
-}
-
-.learnkit-assistant-popup-content::before {
   top: 0;
   background: linear-gradient(to bottom, var(--color-base-00), transparent);
 }
@@ -2470,10 +2467,6 @@
   border-radius: 10px;
   overflow: hidden;
   background: var(--background-primary, #ffffff);
-}
-
-.learnkit-assistant-popup-io-preview,
-.learnkit .learnkit-study-assistant-io-preview {
   position: relative;
 }
 

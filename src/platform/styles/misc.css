@@ -39,8 +39,9 @@
 .learnkit .learnkit-github-stars-star svg {
   width: 18px;
   height: 18px;
-  color: #f4b400;
+  color: var(--theme-accent);
   transition: filter 0.18s;
+  fill: var(--theme-accent);
 }
 
 .learnkit .learnkit-github-stars-value {
@@ -49,10 +50,6 @@
 }
 
 /* Force GitHub star to use accent color for fill */
-.learnkit .learnkit-github-stars-star svg {
-  fill: var(--theme-accent);
-  color: var(--theme-accent);
-}
 /* Spin the GitHub star on hover */
 .learnkit .learnkit-github-stars:hover .learnkit-github-stars-star {
   transition: transform 0.6s cubic-bezier(0.4,0.2,0.2,1);

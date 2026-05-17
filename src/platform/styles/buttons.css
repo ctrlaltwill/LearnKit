@@ -127,11 +127,12 @@
 
 .learnkit .learnkit-btn-toolbar {
   background: var(--color-base-20);
-  color: var(--foreground) ;
-  border: 0.5px solid var(--color-base-30);
+  color: var(--text-normal);
+  border: 0.5px solid var(--color-base-00);
   box-shadow: none ;
   border-radius: var(--radius-md, var(--radius-md));
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  background-color: transparent;
 }
 
 .learnkit .learnkit-btn-toolbar:hover,
@@ -145,18 +146,10 @@
   background: var(--color-base-35);
   color: var(--color-base-100) ;
   border-color: var(--color-base-40) ;
+  background-color: var(--color-base-25) ;
 }
 
 /* ---- Generic reusable button variants ---- */
-
-.learnkit .learnkit-btn-toolbar {
-  background-color: transparent;
-  color: var(--text-normal) ;
-  border: 0.5px solid var(--color-base-00) ;
-  border-radius: var(--radius-md, var(--radius-md)) ;
-  box-shadow: none ;
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-}
 
 .learnkit .learnkit-btn-toolbar:hover,
 .learnkit .learnkit-btn-toolbar:focus-visible,
@@ -165,12 +158,6 @@
   background-color: var(--color-base-20) ;
   color: var(--color-base-100) ;
   border-color: var(--color-base-35) ;
-}
-
-.learnkit .learnkit-btn-toolbar:active {
-  background-color: var(--color-base-25) ;
-  color: var(--color-base-100) ;
-  border-color: var(--color-base-40) ;
 }
 
 /* ---- When toolbar + accent coexist, let accent win ---- */
@@ -507,10 +494,6 @@
 /* Keep icon-only/round controls compact. */
 .learnkit :is(.btn-icon-ghost, .learnkit-widget-back-btn, .learnkit-io-close-btn, .learnkit-btn-unstyled) {
   padding: 0 ;
-}
-
-.learnkit .btn-icon-outline {
-  padding: 0.375rem ;
 }
 
 

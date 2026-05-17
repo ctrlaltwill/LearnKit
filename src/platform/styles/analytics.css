@@ -313,6 +313,10 @@ body.is-phone .learnkit .learnkit-analytics-content-shell > * + * {
 .learnkit .learnkit-analytics-stats-card .learnkit-changelog-table tbody tr {
   height: var(--lk-row-height-default, 42px);
   background-color: var(--theme-base-05);
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease;
+  cursor: pointer;
 }
 
 .learnkit .learnkit-analytics-stats-card .learnkit-changelog-table thead tr,
@@ -324,19 +328,6 @@ body.is-phone .learnkit .learnkit-analytics-content-shell > * + * {
 .learnkit .learnkit-analytics-stats-card .learnkit-changelog-table tbody td,
 .learnkit .learnkit-analytics-stats-card .learnkit-changelog-table tbody .learnkit-changelog-cell {
   background-color: var(--theme-base-05);
-}
-
-.learnkit .learnkit-analytics-stats-card:is(:hover, :focus-within) .learnkit-changelog-table thead tr,
-.learnkit .learnkit-analytics-stats-card:is(:hover, :focus-within) .learnkit-changelog-table thead th,
-.learnkit .learnkit-analytics-stats-card:is(:hover, :focus-within) .learnkit-changelog-table thead .learnkit-changelog-cell,
-.learnkit .learnkit-analytics-stats-card:is(:hover, :focus-within) .learnkit-changelog-table tbody tr,
-.learnkit .learnkit-analytics-stats-card:is(:hover, :focus-within) .learnkit-changelog-table tbody td,
-.learnkit .learnkit-analytics-stats-card:is(:hover, :focus-within) .learnkit-changelog-table tbody .learnkit-changelog-cell {
-  background-color: var(--theme-base-10);
-}
-
-.learnkit .learnkit-analytics-stats-card .learnkit-changelog-table tbody td,
-.learnkit .learnkit-analytics-stats-card .learnkit-changelog-table tbody .learnkit-changelog-cell {
   height: var(--lk-row-height-default, 42px);
   vertical-align: middle;
   padding-top: 0;
@@ -346,6 +337,15 @@ body.is-phone .learnkit .learnkit-analytics-content-shell > * + * {
   border-left: 0;
   border-right: 0;
   transition: border-color 0.18s ease, background-color 0.18s ease, color 0.18s ease;
+}
+
+.learnkit .learnkit-analytics-stats-card:is(:hover, :focus-within) .learnkit-changelog-table thead tr,
+.learnkit .learnkit-analytics-stats-card:is(:hover, :focus-within) .learnkit-changelog-table thead th,
+.learnkit .learnkit-analytics-stats-card:is(:hover, :focus-within) .learnkit-changelog-table thead .learnkit-changelog-cell,
+.learnkit .learnkit-analytics-stats-card:is(:hover, :focus-within) .learnkit-changelog-table tbody tr,
+.learnkit .learnkit-analytics-stats-card:is(:hover, :focus-within) .learnkit-changelog-table tbody td,
+.learnkit .learnkit-analytics-stats-card:is(:hover, :focus-within) .learnkit-changelog-table tbody .learnkit-changelog-cell {
+  background-color: var(--theme-base-10);
 }
 
 .learnkit .learnkit-analytics-stats-card .learnkit-changelog-table tbody td:first-child,
@@ -383,12 +383,6 @@ body.is-phone .learnkit .learnkit-analytics-content-shell > * + * {
 }
 
 /* Daily stats table: subtle row hover like deck table */
-.learnkit .learnkit-analytics-stats-card .learnkit-changelog-table tbody tr {
-  transition:
-    background-color 0.18s ease,
-    border-color 0.18s ease;
-  cursor: pointer;
-}
 
 @media (hover: hover) {
   .learnkit .learnkit-analytics-stats-card .learnkit-changelog-table tbody tr:hover {

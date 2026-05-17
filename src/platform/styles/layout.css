@@ -44,6 +44,8 @@
 /* Sprout-scoped pinch zoom: only Sprout leaves, never other plugins */
 .workspace-leaf-content.learnkit {
   zoom: var(--learnkit-leaf-zoom, 1);
+    border-radius: 0px;
+    border: none;
 }
 
 /* View-header wrappers: transparent so header card margins are clean */
@@ -100,6 +102,9 @@ body.is-phone .learnkit .learnkit-view-content {
   /* Let the shell gutter be the only horizontal spacing from the viewport. */
   padding-left: 0 ;
   padding-right: 0 ;
+  overflow-y: auto ;
+  overflow-x: hidden ;
+  -webkit-overflow-scrolling: touch;
 }
 
 body.is-phone {
@@ -148,12 +153,6 @@ body.is-phone .learnkit :is(
 
 body.is-phone .learnkit .learnkit-view-content > * + * {
   margin-top: 8px;
-}
-
-body.is-phone .learnkit .learnkit-view-content {
-  overflow-y: auto ;
-  overflow-x: hidden ;
-  -webkit-overflow-scrolling: touch;
 }
 
 /* Prevent horizontal scrolling on mobile across all LearnKit views */
@@ -436,11 +435,6 @@ body.learnkit.learnkit-hide-status-bar .status-bar {
 .learnkit-header {
     border: none;
     border-radius: 0px;
-}
-
-.workspace-leaf-content.learnkit {
-    border-radius: 0px;
-    border: none;
 }
 
 /* ---- Fixed-height input ---- */

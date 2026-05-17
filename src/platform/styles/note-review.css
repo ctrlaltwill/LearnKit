@@ -520,7 +520,7 @@
 
   background: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-bg-mix), var(--background)) ;
   color: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-fg-mix), var(--foreground)) ;
-  border: 0.5px solid color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-border-mix), transparent) ;
+  border: 0.5px solid color-mix(in srgb, var(--learnkit-btn-tint) 34%, transparent);
 }
 
 .learnkit .learnkit-note-review-dock-buttons > :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy):hover:not(:disabled),
@@ -531,9 +531,10 @@
 
 .learnkit .learnkit-note-review-dock-buttons > :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy) :is(kbd, .kbd) {
   background: color-mix(in srgb, var(--learnkit-kbd-tint) var(--learnkit-kbd-bg-mix), transparent);
-  border-color: color-mix(in srgb, var(--learnkit-kbd-tint) var(--learnkit-kbd-border-mix), transparent);
+  border-color: transparent;
   color: color-mix(in srgb, rgb(255, 255, 255) 88%, var(--learnkit-kbd-tint) 12%);
   transition: border-color .12s, background-color .12s, color .12s;
+  border: none ;
 }
 
 .learnkit .learnkit-note-review-dock-buttons > :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy):is(:hover, :focus-visible, :active):not(:disabled) :is(kbd, .kbd) {
@@ -541,17 +542,9 @@
 }
 
 /* Subtle bordered grading controls (note review dock) */
-.learnkit .learnkit-note-review-dock-buttons > :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy) {
-  border: 0.5px solid color-mix(in srgb, var(--learnkit-btn-tint) 34%, transparent) ;
-}
 
 .learnkit .learnkit-note-review-dock-buttons > :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy):is(:hover:not(:disabled), :focus-visible) {
   border-color: color-mix(in srgb, var(--learnkit-btn-tint) 48%, transparent) ;
-}
-
-.learnkit .learnkit-note-review-dock-buttons > :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy) :is(kbd, .kbd) {
-  border: none ;
-  border-color: transparent ;
 }
 
 .learnkit .learnkit-note-review-more {
@@ -703,6 +696,10 @@ body.is-phone .learnkit .learnkit-note-review-panel {
   --learnkit-note-review-edge-fade: 32px;
   --learnkit-note-review-topbar-inset: 8px;
   --learnkit-note-review-topbar-clearance: 118px;
+  margin-top: 0 ;
+  padding-top: 0 ;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 body.is-phone .learnkit .learnkit-note-review-content {
@@ -722,13 +719,6 @@ body.is-phone .learnkit .learnkit-note-review-article {
 
 body.is-phone .learnkit .learnkit-note-review-note-body {
   padding: 0 8px ;
-}
-
-body.is-phone .learnkit .learnkit-note-review-panel {
-  margin-top: 0 ;
-  padding-top: 0 ;
-  margin-left: 0;
-  margin-right: 0;
 }
 
 body.is-phone .learnkit .learnkit-note-review-stage {

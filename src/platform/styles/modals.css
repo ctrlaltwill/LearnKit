@@ -107,8 +107,8 @@
 }
 
 .learnkit-confirm-modal .modal-title {
-    font-size: 1.2rem ;
-    font-weight: 600;
+    font-size: var(--font-ui-medium);
+    font-weight: 700;
     letter-spacing: normal;
 }
 /* ---- Header + content spacing ---- */
@@ -2157,11 +2157,6 @@ z-index: 11;
 
 .learnkit-confirm-modal .modal-header {
   padding-bottom: 6px;
-}
-
-.learnkit-confirm-modal .modal-title {
-  font-size: var(--font-ui-medium);
-  font-weight: 700;
 }
 
 .learnkit-confirm-modal .modal-content {

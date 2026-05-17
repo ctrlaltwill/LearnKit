@@ -93,6 +93,7 @@
   border-color: var(--learnkit-border-color) ;
   box-shadow: none ;
   pointer-events: auto;
+  border-radius: var(--radius-l);
 }
 
 .learnkit .learnkit-group-select-popover.is-open {
@@ -151,6 +152,8 @@ body.is-mobile .learnkit .learnkit-deck-controls-row {
 body.is-mobile .learnkit .learnkit-deck-title-actions {
   width: 100%;
   justify-content: stretch;
+  display: flex;
+  flex-wrap: wrap;
 }
 
 body.is-mobile .learnkit .learnkit-deck-group-combo {
@@ -201,11 +204,6 @@ body.is-mobile .learnkit .learnkit-deck-left-actions {
   display: flex;
   flex-wrap: wrap;
   width: 100%;
-}
-
-body.is-mobile .learnkit .learnkit-deck-title-actions {
-  display: flex;
-  flex-wrap: wrap;
 }
 
 body.is-mobile .learnkit .learnkit-deck-study-all-btn,
@@ -369,10 +367,6 @@ body.is-mobile .learnkit .learnkit-deck-expand-buttons .learnkit-btn-toolbar {
 }
 
 /* Group select popover: clip inner borders to rounded corners */
-.learnkit .learnkit-group-select-popover {
-  border-radius: var(--radius-l);
-  overflow: hidden;
-}
 
 /* Ensure group select popover is never transparent */
 .learnkit-group-select-popover {

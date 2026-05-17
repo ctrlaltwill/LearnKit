@@ -2,7 +2,6 @@
    HEADER — Brand link, brand icon/text reveal animation.
    ========================================================================== */
 
-.learnkit .learnkit-header-wrap,
 .learnkit .learnkit-header-wrap {
   --learnkit-app-header-inset: 10px;
   --learnkit-app-header-top: 8px;
@@ -21,8 +20,6 @@
 }
 
 .learnkit .learnkit-header-wrap + .learnkit-view-content,
-.learnkit .learnkit-header-wrap + .learnkit-view-content,
-.learnkit .learnkit-header-wrap + .view-content,
 .learnkit .learnkit-header-wrap + .view-content,
 .workspace-leaf-content.learnkit > .learnkit-header-wrap + .view-content,
 .workspace-leaf-content > .learnkit-header-wrap + .learnkit-view-content {
@@ -381,7 +378,6 @@ a.learnkit-header-center-brand-link:hover {
 }
 
 /* --- Mobile header layout --- */
-body.is-phone .learnkit .learnkit-header-wrap,
 body.is-phone .learnkit .learnkit-header-wrap {
   --learnkit-app-header-top: 10px;
 }
@@ -407,7 +403,6 @@ body.is-phone .learnkit .view-header.learnkit-header .view-actions::after {
 }
 
 @media (max-width: 820px) {
-  .learnkit .learnkit-header-wrap,
   .learnkit .learnkit-header-wrap {
     --learnkit-app-header-inset: 0;
     --learnkit-app-header-top: 6px;
@@ -498,14 +493,12 @@ body.is-phone .learnkit .view-header.learnkit-header .view-actions::after {
   .learnkit .learnkit-header .dropdown-menu.learnkit-dropdown-root {
     margin-left: auto;
     margin-right: 0;
-  }
-  .learnkit .learnkit-header .learnkit-nav-host {
-    justify-content: flex-end;
     align-items: center;
     height: 36px;
     margin: 0;
   }
-  .learnkit .learnkit-header .dropdown-menu.learnkit-dropdown-root {
+  .learnkit .learnkit-header .learnkit-nav-host {
+    justify-content: flex-end;
     align-items: center;
     height: 36px;
     margin: 0;

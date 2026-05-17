@@ -187,7 +187,13 @@
 }
 
 .learnkit [data-lk-browser-density="compact"] .lk-browser-tag-box {
-  background: var(--lk-browser-editor-bg, var(--color-base-10)) ;
+  background: transparent;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 2px 6px;
+  border: none;
 }
 
 .learnkit [data-lk-browser-density="compact"] .lk-browser-textarea,
@@ -302,15 +308,6 @@
 }
 
 /* Compact groups: comma-separated text, no badges */
-.learnkit [data-lk-browser-density="compact"] .lk-browser-tag-box {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  padding: 2px 6px;
-  background: transparent;
-  border: none;
-}
 
 .learnkit .lk-browser-tag-compact-text {
   color: var(--text-normal);
@@ -787,11 +784,7 @@
   width: 42px;
   text-align: center;
   cursor: pointer;
-}
-
-.learnkit .lk-browser-select-th {
   padding: 0;
-  vertical-align: middle;
 }
 
 .learnkit .lk-browser-select-all {
@@ -1628,14 +1621,16 @@ body.is-mobile .learnkit .lk-browser-view .lk-browser-th-label {
 body.is-phone .learnkit .lk-browser-bottom-bar {
   display: flex;
   flex-wrap: nowrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 10px;
 }
 
 body.is-phone .learnkit .lk-browser-summary-wrap {
   flex: 1 1 auto;
   min-width: 0;
+  gap: 0;
+  flex-wrap: nowrap;
 }
 
 body.is-phone .learnkit .lk-browser-selection-row,
@@ -1645,9 +1640,12 @@ body.is-phone .learnkit .lk-browser-page-indicator {
 }
 
 body.is-phone .learnkit .lk-browser-bottom-right {
-  display: flex ;
+  display: none;
   flex: 0 0 auto;
   margin-left: auto;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 body.is-phone .learnkit .lk-browser-pager-host {
@@ -1658,6 +1656,11 @@ body.is-phone .learnkit .lk-browser-pager-host {
 
 body.is-phone .learnkit .lk-browser-pagination {
   gap: 6px;
+  width: 100%;
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
 
 body.is-phone .learnkit .lk-browser-pagination button[aria-label^="Page "] {
@@ -1708,12 +1711,6 @@ body.is-phone .learnkit [data-lk-browser-root="1"] .lk-browser-tbody {
 overflow-y: visible;
 }
 
-body.is-phone .learnkit .lk-browser-bottom-bar {
-  align-items: flex-start;
-  justify-content: flex-start;
-  gap: 10px;
-}
-
 body.is-phone .learnkit .lk-browser-summary-wrap,
 body.is-phone .learnkit .lk-browser-bottom-right {
   display: flex;
@@ -1725,11 +1722,6 @@ body.is-phone .learnkit .lk-browser-bottom-right {
   margin-left: 0;
 }
 
-body.is-phone .learnkit .lk-browser-summary-wrap {
-  gap: 0;
-  flex-wrap: nowrap;
-}
-
 body.is-phone .learnkit .lk-browser-selection-row {
   align-items: center;
   justify-content: flex-end;
@@ -1738,25 +1730,6 @@ body.is-phone .learnkit .lk-browser-selection-row {
   width: auto;
   margin-left: auto;
   flex: 0 0 auto;
-}
-
-body.is-phone .learnkit .lk-browser-bottom-right {
-  display: none;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-body.is-phone .learnkit .lk-browser-pagination {
-  width: 100%;
-  overflow-x: auto;
-  white-space: nowrap;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-
-body.is-phone .learnkit .lk-browser-pagination button[aria-label^="Page "] {
-  display: none;
 }
 
 body.is-phone .learnkit .lk-browser-selection-row .lk-browser-clear-selection {

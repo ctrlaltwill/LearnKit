@@ -1275,6 +1275,15 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
 /* Keep grade label + keycap tight in study and gatekeeper grading buttons. */
 .learnkit :is(.lk-session-card, .learnkit-gatekeeper-modal) :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy) {
   column-gap: 0;
+  --learnkit-btn-bg-mix: 16%;
+  --learnkit-btn-fg-mix: 72%;
+  --learnkit-btn-border-mix: 45%;
+  --learnkit-btn-bg-hover-mix: 24%;
+  --learnkit-btn-border-hover-mix: 60%;
+
+  background-color: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-bg-mix), var(--background-primary));
+  color: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-fg-mix), var(--foreground));
+  border: 0.5px solid color-mix(in srgb, var(--learnkit-kbd-tint) var(--learnkit-kbd-border-mix), transparent);
 }
 
 /* Remove box shadow from session/gatekeeper grading buttons to match outline buttons */
@@ -1324,6 +1333,7 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
   border: var(--learnkit-border-width) solid color-mix(in srgb, var(--destructive) 45%, transparent);
   background: color-mix(in srgb, var(--destructive) 16%, var(--background));
   color: color-mix(in srgb, var(--destructive) 72%, var(--foreground));
+  --learnkit-btn-tint: var(--destructive);
 }
 
 .learnkit :is(.lk-session-card, .learnkit-gatekeeper-modal) .learnkit-btn-again:hover,
@@ -1440,6 +1450,7 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
   --learnkit-btn-bg-mix: 26%;
   --learnkit-btn-fg-mix: 82%;
   --learnkit-btn-border-mix: 58%;
+  --learnkit-kbd-tint: var(--learnkit-btn-tint);
 }
 
 .theme-dark .learnkit .learnkit-btn-hard {
@@ -1447,6 +1458,7 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
   --learnkit-btn-bg-mix: 54%;
   --learnkit-btn-fg-mix: 64%;
   --learnkit-btn-border-mix: 58%;
+  --learnkit-kbd-tint: var(--learnkit-btn-tint);
 }
 
 .theme-dark .learnkit .learnkit-btn-good {
@@ -1454,6 +1466,7 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
   --learnkit-btn-bg-mix: 48%;
   --learnkit-btn-fg-mix: 72%;
   --learnkit-btn-border-mix: 58%;
+  --learnkit-kbd-tint: var(--learnkit-btn-tint);
 }
 
 .theme-dark .learnkit .learnkit-btn-easy {
@@ -1461,6 +1474,7 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
   --learnkit-btn-bg-mix: 42%;
   --learnkit-btn-fg-mix: 82%;
   --learnkit-btn-border-mix: 58%;
+  --learnkit-kbd-tint: var(--learnkit-btn-tint);
 }
 
 .theme-dark .learnkit .learnkit-gatekeeper-modal .learnkit-btn-easy,
@@ -1472,22 +1486,6 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
   background: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-bg-mix, 42%), var(--background));
   color: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-fg-mix, 82%), var(--foreground));
   border: var(--learnkit-border-width) solid color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-border-mix, 58%), transparent);
-}
-
-.theme-dark .learnkit .learnkit-btn-again {
-  --learnkit-kbd-tint: var(--learnkit-btn-tint);
-}
-
-.theme-dark .learnkit .learnkit-btn-hard {
-  --learnkit-kbd-tint: var(--learnkit-btn-tint);
-}
-
-.theme-dark .learnkit .learnkit-btn-good {
-  --learnkit-kbd-tint: var(--learnkit-btn-tint);
-}
-
-.theme-dark .learnkit .learnkit-btn-easy {
-  --learnkit-kbd-tint: var(--learnkit-btn-tint);
 }
 
 .theme-dark .learnkit :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy) :is(kbd, .kbd) {
@@ -1502,9 +1500,6 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
 }
 
 /* Canonical solid grading surfaces (study + gatekeeper) */
-.learnkit :is(.lk-session-card, .learnkit-gatekeeper-modal) .learnkit-btn-again {
-  --learnkit-btn-tint: var(--destructive);
-}
 
 .learnkit :is(.lk-session-card, .learnkit-gatekeeper-modal) .learnkit-btn-hard {
   --learnkit-btn-tint: var(--learnkit-hard-bg);
@@ -1520,18 +1515,6 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
 
 .learnkit :is(.lk-session-card, .learnkit-gatekeeper-modal) .learnkit-btn-easy {
   --learnkit-btn-tint: rgb(var(--interactive-accent-rgb, 138, 92, 245));
-}
-
-.learnkit :is(.lk-session-card, .learnkit-gatekeeper-modal) :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy) {
-  --learnkit-btn-bg-mix: 16%;
-  --learnkit-btn-fg-mix: 72%;
-  --learnkit-btn-border-mix: 45%;
-  --learnkit-btn-bg-hover-mix: 24%;
-  --learnkit-btn-border-hover-mix: 60%;
-
-  background-color: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-bg-mix), var(--background-primary));
-  color: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-fg-mix), var(--foreground));
-  border: 0.5px solid color-mix(in srgb, var(--learnkit-kbd-tint) var(--learnkit-kbd-border-mix), transparent);
 }
 
 .learnkit :is(.lk-session-card, .learnkit-gatekeeper-modal) :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy):hover,
@@ -1580,6 +1563,8 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
 /* Keep grading kbd text white on coloured grading buttons in both themes */
 .learnkit :is(.lk-session-card, .learnkit-gatekeeper-modal) :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy) :is(kbd, .kbd) {
   color: rgb(255, 255, 255);
+  border: none ;
+  border-color: transparent ;
 }
 
 /* Borderless grading controls (study session + gatekeeper) */
@@ -1589,12 +1574,6 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
   :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy):hover,
 .learnkit :is(.lk-session-card, .learnkit-gatekeeper-modal)
   :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy):focus-visible {
-  border: none ;
-  border-color: transparent ;
-}
-
-.learnkit :is(.lk-session-card, .learnkit-gatekeeper-modal)
-  :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy) :is(kbd, .kbd) {
   border: none ;
   border-color: transparent ;
 }
@@ -1706,15 +1685,21 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
 
 /* --- Unfocused state borders (muted) --- */
 .learnkit-cloze-typed-input.learnkit-cloze-typed--partial {
-  border-color: color-mix(in srgb, var(--learnkit-hard-bg) 55%, var(--learnkit-border-color));
+  border-color: var(--learnkit-hard-bg);
+  background-color: color-mix(in srgb, var(--learnkit-hard-bg) 10%, transparent);
+  color: var(--learnkit-hard-bg);
 }
 
 .learnkit-cloze-typed-input.learnkit-cloze-typed--correct {
-  border-color: color-mix(in srgb, var(--learnkit-good-bg) 55%, var(--learnkit-border-color));
+  border-color: var(--learnkit-good-bg);
+  background-color: color-mix(in srgb, var(--learnkit-good-bg) 10%, transparent);
+  color: var(--learnkit-good-bg);
 }
 
 .learnkit-cloze-typed-input.learnkit-cloze-typed--wrong {
-  border-color: color-mix(in srgb, var(--learnkit-again-bg) 55%, var(--learnkit-border-color));
+  border-color: var(--learnkit-again-bg);
+  background-color: color-mix(in srgb, var(--learnkit-again-bg) 10%, transparent);
+  color: var(--learnkit-again-bg);
 }
 
 /* --- Focused state borders (full colour + glow) --- */
@@ -1783,23 +1768,6 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
 }
 
 /* Typed input states */
-.learnkit-cloze-typed-input.learnkit-cloze-typed--partial {
-  border-color: var(--learnkit-hard-bg);
-  background-color: color-mix(in srgb, var(--learnkit-hard-bg) 10%, transparent);
-  color: var(--learnkit-hard-bg);
-}
-
-.learnkit-cloze-typed-input.learnkit-cloze-typed--correct {
-  border-color: var(--learnkit-good-bg);
-  background-color: color-mix(in srgb, var(--learnkit-good-bg) 10%, transparent);
-  color: var(--learnkit-good-bg);
-}
-
-.learnkit-cloze-typed-input.learnkit-cloze-typed--wrong {
-  border-color: var(--learnkit-again-bg);
-  background-color: color-mix(in srgb, var(--learnkit-again-bg) 10%, transparent);
-  color: var(--learnkit-again-bg);
-}
 
 /* ---- Typed cloze result pills (back) ---- */
 /* Override .learnkit-cloze-revealed base so back pills fully match front input styling */
@@ -1859,6 +1827,8 @@ body.is-mobile .learnkit .lk-review-root[data-lk-review-mode="session"] .lk-sess
 /* ---- Flexed session layout: phone only ---- */
 body.is-phone .learnkit .lk-review-root[data-lk-review-mode="session"] > .lk-review-title-strip {
   display: none ;
+  flex: 0 0 auto;
+  z-index: 10;
 }
 
 body.is-phone .learnkit .lk-review-root[data-lk-review-mode="session"] {
@@ -1869,11 +1839,6 @@ body.is-phone .learnkit .lk-review-root[data-lk-review-mode="session"] {
   padding-left: 0 ;
   padding-right: 0 ;
   padding-bottom: 100px ;
-}
-
-body.is-phone .learnkit .lk-review-root[data-lk-review-mode="session"] > .lk-review-title-strip {
-  flex: 0 0 auto;
-  z-index: 10;
 }
 
 body.is-phone .learnkit .lk-review-root[data-lk-review-mode="session"] > .lk-review-content-shell {
@@ -1974,6 +1939,10 @@ body.is-phone .learnkit .lk-session-card.learnkit-session-has-dock {
 body.is-phone .learnkit .lk-session-card > footer.learnkit-session-study-dock {
   margin: 8px ;
   padding: 8px ;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: stretch;
 }
 
 body.is-phone .learnkit .lk-session-card > header.learnkit-session-topbar {
@@ -2006,6 +1975,11 @@ body.is-phone .learnkit .lk-session-card .lk-review-more-icon-btn {
   padding-right: 0;
   justify-content: center;
   border-radius: var(--radius-md, var(--radius-md));
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 12px;
 }
 
 /* Ensure all session footer buttons have consistent radius on mobile */
@@ -2017,14 +1991,6 @@ body.is-phone .learnkit .lk-session-card footer .btn-destructive {
 }
 
 /* ---- Mobile flashcard footer: grade buttons top row, edit/menu bottom row ---- */
-body.is-phone .learnkit .lk-session-card > footer.learnkit-session-study-dock {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 8px ;
-  margin: 8px ;
-  align-items: stretch;
-}
 
 /* Keep footer internals flush; avoid extra top inset from inherited spacing. */
 body.is-phone .learnkit .lk-session-card > footer.learnkit-session-study-dock > * {
@@ -2119,16 +2085,6 @@ body.is-phone .learnkit .lk-session-card .learnkit-session-study-dock-right > * 
 body.is-phone .learnkit .lk-session-card .learnkit-session-study-dock-right .lk-review-more-icon-btn {
   width: 100% ;
   min-width: 0 ;
-}
-
-body.is-phone .learnkit .lk-session-card .lk-review-edit-icon-btn,
-body.is-phone .learnkit .lk-session-card .lk-review-more-icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 36px;
-  padding: 0 12px;
 }
 
 body.is-phone .learnkit .lk-session-card .lk-review-edit-icon-btn [data-learnkit-mobile-label],
