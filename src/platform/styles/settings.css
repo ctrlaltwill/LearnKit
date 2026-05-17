@@ -897,8 +897,6 @@ body.is-phone .learnkit-guide-body table {
   justify-content: center;
   height: 15px;
   width: 15px;
-  padding: 0;
-  margin: 0;
   border: none;
   border-radius: 0;
   background: transparent;
@@ -906,8 +904,6 @@ body.is-phone .learnkit-guide-body table {
   font: inherit;
   line-height: inherit;
   text-align: inherit;
-  outline: none;
-  cursor: pointer;
   padding: 2px;
   margin: 3px;
   cursor: pointer;
@@ -2858,9 +2854,6 @@ input.learnkit-ss-search-input {
   font-family: inherit;
   font-weight: inherit;
   line-height: 1.25rem;
-  padding: 0;
-  outline: none;
-  cursor: pointer;
   padding: 6px 8px;
   cursor: pointer;
   user-select: none;

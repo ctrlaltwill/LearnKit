@@ -131,7 +131,6 @@
 }
 
 .learnkit .lk-modals.modal .modal-content {
-  padding: 0 ;
   background: transparent;
   border: none;
   box-shadow: none;
@@ -621,11 +620,7 @@
   flex-direction: column;
   gap: 16px;
   width: min(640px, 100%);
-  padding: 0;
   margin: 0;
-  border: none;
-  border-radius: 0;
-  background: transparent;
   color: inherit;
   font: inherit;
   line-height: inherit;
@@ -640,7 +635,6 @@
   -webkit-backdrop-filter: blur(16px) saturate(125%);
   backdrop-filter: blur(16px) saturate(125%);
   box-shadow: 0 14px 36px rgba(0, 0, 0, 0.22), 0 4px 14px rgba(0, 0, 0, 0.12);
-  box-sizing: border-box;
 }
 
 .learnkit .learnkit-card-editor-modal-root .fieldset {

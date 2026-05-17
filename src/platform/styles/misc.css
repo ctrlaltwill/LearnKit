@@ -1017,6 +1017,7 @@
 }
 
 /* Also reset the inner MathJax container inside math blocks */
+/* eslint-disable obsidianmd/no-unknown-type-selector */
 .learnkit .lk-session-card .math.math-block.is-loaded .MathJax,
 .learnkit.learnkit-widget .math.math-block.is-loaded .MathJax,
 .learnkit .learnkit-widget .math.math-block.is-loaded .MathJax,
@@ -1026,6 +1027,7 @@
   margin: 0;
   padding: 0;
 }
+/* eslint-enable obsidianmd/no-unknown-type-selector */
 
 /* Inline math: remove any theme-added background/padding */
 .learnkit .lk-session-card .math.math-inline.is-loaded,
