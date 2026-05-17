@@ -122,6 +122,7 @@ function PieCard(props: {
   centerLabel?: string;
   infoText?: string;
   locale?: string;
+  enableAnimations?: boolean;
 }) {
   const tx = React.useMemo(() => (token: string, fallback: string, vars?: Record<string, string | number>) => t(props.locale, token, fallback, vars), [props.locale]);
   const total = props.data.reduce((sum, item) => sum + item.value, 0);
@@ -151,7 +152,8 @@ function PieCard(props: {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        cutout: "65%",
+        cutout: "70%",
+        animation: props.enableAnimations ?? true,
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -162,7 +164,7 @@ function PieCard(props: {
         },
       },
     };
-  }, [props.data]);
+  }, [props.data, props.enableAnimations]);
 
   const centerTextPlugin = React.useMemo<Plugin<"doughnut">>(() => {
     return {
@@ -218,7 +220,7 @@ function PieCard(props: {
           <ChartJsCanvas
             className="learnkit-analytics-chart"
             config={{ ...chartConfig, plugins: [centerTextPlugin] }}
-            height={200}
+            height={170}
             ariaLabel={props.title}
           />
         ) : null}
@@ -625,6 +627,7 @@ export function StagePieCard(props: {
       centerValue={totalCards.toLocaleString()}
       centerLabel={tx("ui.analytics.pie.cardsByStageCenterLabel", "Flashcards")}
       locale={props.locale}
+      enableAnimations={props.enableAnimations}
     />
   );
 }
