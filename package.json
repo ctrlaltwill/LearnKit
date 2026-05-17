@@ -1,6 +1,6 @@
 {
   "name": "learnkit",
-  "version": "1.5.7",
+  "version": "1.5.9",
   "private": true,
   "type": "commonjs",
   "scripts": {
