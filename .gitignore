@@ -29,5 +29,7 @@ tooling/*
 !tooling/eslint.config.mjs
 !tooling/dedupe-css-source.mjs
 !tooling/postcss-dedupe-selectors.cjs
+!tooling/postcss-dedupe-properties.cjs
+!tooling/postcss-strip-has.cjs
 !tooling/expand-css-hex.mjs
 !tooling/postcss-expand-hex.cjs

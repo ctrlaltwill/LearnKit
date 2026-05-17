@@ -11,7 +11,7 @@
     "dev": "concurrently -k \"npm:dev:js\" \"npm:dev:css\"",
     "build:js": "node tooling/esbuild.config.js --prod",
     "build:css": "npx @tailwindcss/cli -i ./src/styles.tailwind.css -o ./dist/styles.tmp.css --minify && npx postcss ./dist/styles.tmp.css -o ./dist/styles.css --config tooling/postcss.config.cjs && rm -f ./dist/styles.tmp.css",
-    "build": "npm run build:js && node tooling/patch-css-main.cjs && npm run build:css && node patch-script-elements.cjs && cp manifest.json dist/manifest.json",
+    "build": "npm run build:js && npm run build:css && node patch-script-elements.cjs && cp manifest.json dist/manifest.json",
     "check": "npm run lint && npm run translations:check && npm run i18n:literals:check && npm run test && npm run build",
     "build:local": "[ -f .local/build-local.sh ] && bash .local/build-local.sh || (echo 'Missing .local/build-local.sh (local-only helper).' && exit 1)",
     "deploy": "npm run build && cp dist/main.js dist/main.js.map dist/manifest.json dist/styles.css \"$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/Medicine/.obsidian/plugins/learnkit/\" && cp dist/main.js dist/main.js.map dist/manifest.json dist/styles.css \"$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/Medicine 17.09.35/.obsidian/plugins/learnkit/\"",
