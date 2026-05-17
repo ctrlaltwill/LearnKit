@@ -76,11 +76,8 @@
   box-sizing: border-box;
 }
 
-.learnkit.learnkit-widget:has(> .sprout-widget-summary-header) {
-  gap: 14px;
-}
-
-.learnkit.learnkit-widget:has(> .sprout-widget-header) {
+/* Widget gap — the widget always contains a header as its first child when content is present. */
+.learnkit.learnkit-widget {
   gap: 14px;
 }
 

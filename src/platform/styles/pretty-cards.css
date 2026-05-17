@@ -806,14 +806,15 @@ mjx-container[jax="CHTML"][display="true"] {
 }
 
 /* Remove background on cloze span when it contains only an image */
-.learnkit-reading-view-cloze:has(> .learnkit-cloze-text > img:only-child),
-.learnkit-reading-view-cloze:has(> img:only-child) {
+.learnkit-reading-view-cloze.learnkit-cloze-image-only,
+.learnkit-reading-view-cloze > img:only-child {
   background-color: transparent;
   padding: 0;
   margin: 0;
 }
 
-.learnkit-cloze-text:has(> img:only-child) {
+.learnkit-cloze-text.learnkit-cloze-text-image-only,
+.learnkit-cloze-text > img:only-child {
   display: block;
 }
 

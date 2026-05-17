@@ -24,10 +24,8 @@
 .learnkit .learnkit-header-wrap + .learnkit-view-content,
 .learnkit .learnkit-header-wrap + .view-content,
 .learnkit .learnkit-header-wrap + .view-content,
-.workspace-leaf-content.learnkit:has(> .learnkit-header-wrap) > .view-content,
-.workspace-leaf-content.learnkit:has(> .learnkit-header-wrap) > .view-content,
-.workspace-leaf-content:has(> .learnkit-header-wrap) > .learnkit-view-content,
-.workspace-leaf-content:has(> .learnkit-header-wrap) > .learnkit-view-content {
+.workspace-leaf-content.learnkit > .learnkit-header-wrap + .view-content,
+.workspace-leaf-content > .learnkit-header-wrap + .learnkit-view-content {
   margin-top: 16px;
 }
 
@@ -35,8 +33,8 @@
    z-index kept below tooltip z-index (9999999) so tooltips always render on top. */
 
 /* Settings, Guide, and Release Notes should scroll freely without sticky header. */
-.learnkit:has(.learnkit-settings-view-root) .learnkit-header-wrap,
-.learnkit:has(.learnkit-settings-view-root) .learnkit-header-wrap {
+.workspace-leaf-content.learnkit[data-type="learnkit-settings"] .learnkit-header-wrap,
+.workspace-leaf-content[data-type="learnkit-settings"] .learnkit-header-wrap {
   position: static;
   left: auto;
   right: auto;
@@ -44,19 +42,15 @@
   padding: var(--learnkit-app-header-top) var(--learnkit-app-header-inset) 0;
 }
 
-.learnkit:has(.learnkit-settings-view-root) .learnkit-header-wrap + .learnkit-view-content,
-.learnkit:has(.learnkit-settings-view-root) .learnkit-header-wrap + .learnkit-view-content,
-.learnkit:has(.learnkit-settings-view-root) .learnkit-header-wrap + .view-content,
-.learnkit:has(.learnkit-settings-view-root) .learnkit-header-wrap + .view-content,
-.workspace-leaf-content.learnkit:has(.learnkit-settings-view-root):has(> .learnkit-header-wrap) > .view-content,
-.workspace-leaf-content.learnkit:has(.learnkit-settings-view-root):has(> .learnkit-header-wrap) > .view-content,
-.workspace-leaf-content:has(.learnkit-settings-view-root):has(> .learnkit-header-wrap) > .learnkit-view-content,
-.workspace-leaf-content:has(.learnkit-settings-view-root):has(> .learnkit-header-wrap) > .learnkit-view-content {
+.workspace-leaf-content.learnkit[data-type="learnkit-settings"] .learnkit-header-wrap + .learnkit-view-content,
+.workspace-leaf-content.learnkit[data-type="learnkit-settings"] .learnkit-header-wrap + .view-content,
+.workspace-leaf-content[data-type="learnkit-settings"] > .learnkit-header-wrap + .view-content,
+.workspace-leaf-content[data-type="learnkit-settings"] > .learnkit-header-wrap + .learnkit-view-content {
   margin-top: 0;
 }
 
-.learnkit:has(.learnkit-settings-view-root) .learnkit-header-wrap::after,
-.learnkit:has(.learnkit-settings-view-root) .learnkit-header-wrap::after {
+.workspace-leaf-content.learnkit[data-type="learnkit-settings"] .learnkit-header-wrap::after,
+.workspace-leaf-content[data-type="learnkit-settings"] .learnkit-header-wrap::after {
   display: none;
 }
 

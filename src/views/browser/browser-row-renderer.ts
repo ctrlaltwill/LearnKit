@@ -127,7 +127,7 @@ export function buildPageTableBody(
 
     // ── Checkbox cell ──
     const selTd = activeDocument.createElement("td");
-    selTd.className = `align-middle flex items-center justify-center text-center ${ctx.cellWrapClass} lk-browser-cell`;
+    selTd.className = `align-middle flex items-center justify-center text-center ${ctx.cellWrapClass} lk-browser-cell lk-browser-select-cell`;
     forceCellClip(selTd);
     forceWrapStyles(selTd);
 

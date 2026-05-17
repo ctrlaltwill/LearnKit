@@ -1,4 +1,5 @@
 const prefixer = require("postcss-prefix-selector");
+const expandHex = require("./postcss-expand-hex.cjs");
 
 module.exports = {
   plugins: [
@@ -20,5 +21,6 @@ module.exports = {
         return `${prefix} ${selector}`;
       },
     }),
+    expandHex(),
   ],
 };

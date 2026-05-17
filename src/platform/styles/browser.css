@@ -346,7 +346,7 @@
 
 /* Allow tooltips to overflow browser cells */
 .learnkit .lk-browser-cell[data-tooltip],
-.learnkit .lk-browser-cell:has([data-tooltip]) {
+.learnkit .lk-browser-cell.lk-browser-cell-has-tooltip {
   overflow: visible;
 }
 
@@ -486,12 +486,12 @@
   font-size: 0.9rem;
 }
 
-.learnkit .lk-browser-view .table tbody tr:not(:hover):not(:has(input[type="checkbox"][data-card-id]:checked)) td .lk-browser-flag-overlay {
+.learnkit .lk-browser-view .table tbody tr:not(:hover):not(.is-selected) td .lk-browser-flag-overlay {
   color: var(--text-muted);
 }
 
 .learnkit .lk-browser-view .table tbody tr:hover td .lk-browser-flag-overlay,
-.learnkit .lk-browser-view .table tbody tr:has(input[type="checkbox"][data-card-id]:checked) td .lk-browser-flag-overlay,
+.learnkit .lk-browser-view .table tbody tr.is-selected td .lk-browser-flag-overlay,
 .learnkit .lk-browser-view .table tbody td.lk-browser-cell:focus-within .lk-browser-flag-overlay {
   color: var(--text-normal);
 }
@@ -555,8 +555,7 @@
 .learnkit .lk-browser-flag-overlay s { text-decoration: line-through; }
 .learnkit .lk-browser-flag-overlay .internal-link {
   color: var(--link-color, var(--text-accent));
-  text-decoration: underline;
-  text-decoration-style: dotted;
+  border-bottom: 1px dotted currentColor;
 }
 
 .learnkit .lk-browser-flag-overlay :is(h1, h2, h3, h4, h5, h6) {
@@ -790,7 +789,7 @@
   cursor: pointer;
 }
 
-.learnkit .lk-browser-select-th:has(.lk-browser-select-all) {
+.learnkit .lk-browser-select-th {
   padding: 0;
   vertical-align: middle;
 }
@@ -838,7 +837,7 @@
 
 /* Allow tooltips to overflow clipped cells */
 .learnkit .learnkit-cell-clip[data-tooltip],
-.learnkit .learnkit-cell-clip:has([data-tooltip]) {
+.learnkit .learnkit-cell-clip.learnkit-cell-clip-has-tooltip {
   overflow: visible;
 }
 
@@ -978,13 +977,13 @@
 }
 
 /* Selected browser rows (via row checkbox) */
-.learnkit .lk-browser-view .table tbody tr:has(input[type="checkbox"][data-card-id]:checked),
-.learnkit .lk-browser-view .table tbody tr:has(input[type="checkbox"][data-card-id]:checked) td {
+.learnkit .lk-browser-view .table tbody tr.is-selected,
+.learnkit .lk-browser-view .table tbody tr.is-selected td {
   background: var(--color-base-15);
 }
 
-.learnkit .lk-browser-view .table tbody tr:has(input[type="checkbox"][data-card-id]:checked):hover,
-.learnkit .lk-browser-view .table tbody tr:has(input[type="checkbox"][data-card-id]:checked):hover td {
+.learnkit .lk-browser-view .table tbody tr.is-selected:hover,
+.learnkit .lk-browser-view .table tbody tr.is-selected:hover td {
   background: var(--color-base-15);
 }
 
@@ -1089,14 +1088,14 @@ font-size: var(--learnkit-font-xs);
 
 /* Checkbox column cells are emitted with utility classes that set `display:flex`.
    Override to true table-cell layout so they match row height and stay centered. */
-.learnkit .lk-browser-view .table tbody td.lk-browser-cell:has(input[type="checkbox"][data-card-id]) {
+.learnkit .lk-browser-view .table tbody td.lk-browser-cell.lk-browser-select-cell {
   display: table-cell;
   height: auto;
   vertical-align: middle;
   text-align: center;
 }
 
-.learnkit .lk-browser-view .table tbody td.lk-browser-cell:has(input[type="checkbox"][data-card-id]) > input[type="checkbox"][data-card-id] {
+.learnkit .lk-browser-view .table tbody td.lk-browser-cell.lk-browser-select-cell > input[type="checkbox"][data-card-id] {
   margin: 0 auto;
   vertical-align: middle;
 }
@@ -1115,8 +1114,8 @@ font-size: var(--learnkit-font-xs);
 }
 
 /* Keep selected rows visually locked when hovered. */
-.learnkit .lk-browser-view .table tbody tr:has(input[type="checkbox"][data-card-id]:checked) td,
-.learnkit .lk-browser-view .table tbody tr:has(input[type="checkbox"][data-card-id]:checked):hover td {
+.learnkit .lk-browser-view .table tbody tr.is-selected td,
+.learnkit .lk-browser-view .table tbody tr.is-selected:hover td {
   --lk-browser-cell-bg: var(--lk-browser-row-hover);
   --lk-browser-editor-bg-active: var(--color-base-15);
   --lk-browser-editor-bg: var(--lk-browser-editor-bg-active);

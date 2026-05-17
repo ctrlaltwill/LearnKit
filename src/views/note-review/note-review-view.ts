@@ -1469,6 +1469,7 @@ export class SproutNoteReviewView extends ItemView {
         this._syncOverflowLayout(panel);
       });
     } else {
+      viewport.classList.add('learnkit-note-review-content--empty');
       this._renderEmptySessionState(viewport);
       this._syncOverflowLayout(panel);
     }

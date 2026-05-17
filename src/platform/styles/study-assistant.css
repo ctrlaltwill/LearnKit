@@ -1646,8 +1646,8 @@
   height: 16px;
 }
 
-/* Shift input padding when attach button is present */
-.learnkit-assistant-popup-composer-shell:has(.learnkit-assistant-popup-attach-btn) .learnkit-assistant-popup-input {
+/* Shift input padding — attach button is always present in composer shells. */
+.learnkit-assistant-popup-composer-shell .learnkit-assistant-popup-input {
   padding-left: 54px;
 }
 
@@ -2882,8 +2882,7 @@
 .learnkit-edit-proposal-replacement.markdown-rendered .internal-link,
 .learnkit-edit-block-new.markdown-rendered .internal-link {
   color: var(--link-color, var(--text-accent));
-  text-decoration: underline;
-  text-decoration-style: dotted;
+  border-bottom: 1px dotted currentColor;
 }
 
 .learnkit-edit-proposal-replacement.markdown-rendered :is(h1, h2, h3, h4, h5, h6),
@@ -2984,8 +2983,7 @@
 
 .learnkit-edit-proposal-source-fragment .internal-link {
   color: var(--link-color, var(--text-accent));
-  text-decoration: underline;
-  text-decoration-style: dotted;
+  border-bottom: 1px dotted currentColor;
 }
 
 .learnkit-edit-proposal-source-fragment .cm-header {

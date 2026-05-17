@@ -199,7 +199,7 @@
   );
 }
 
-.learnkit .learnkit-note-review-content:has(.learnkit-note-review-empty) {
+.learnkit .learnkit-note-review-content.learnkit-note-review-content--empty {
   position: relative;
   display: flex;
   flex-direction: column;

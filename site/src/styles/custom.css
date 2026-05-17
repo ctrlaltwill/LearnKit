@@ -120,8 +120,8 @@ html {
 }
 
 .sl-markdown-content a:not(.sl-link-button) {
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.18em;
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 0.05em;
 }
 
 .sl-markdown-content img {

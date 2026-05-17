@@ -46,14 +46,15 @@
 }
 
 /* Escalate stacking only for row-like contexts where sibling clipping is common.
-  Avoid global ancestor lifting, which can accidentally overlay sticky headers. */
-.learnkit :is(.learnkit-deck-row, tr, td):has([data-tooltip]:hover):not(.lk-browser-table-wrap) {
+  Avoid global ancestor lifting, which can accidentally overlay sticky headers.
+  Parents of tooltip triggers are marked with data-learnkit-has-tooltip at render time. */
+.learnkit :is(.learnkit-deck-row, tr, td)[data-learnkit-has-tooltip]:hover:not(.lk-browser-table-wrap) {
   z-index: 949;
 }
 
 /* Only allow overflow:visible on table cells and rows, not on scroll containers */
-.learnkit tr:has([data-tooltip]:hover),
-.learnkit td:has([data-tooltip]:hover) {
+.learnkit tr[data-learnkit-has-tooltip]:hover,
+.learnkit td[data-learnkit-has-tooltip]:hover {
   overflow: visible;
 }
 

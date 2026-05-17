@@ -6,23 +6,19 @@
 /* ---- Workspace positioning for modal containers ---- */
 
 /* Make the workspace leaf content a positioning context for modals */
-.workspace-leaf-content:has(.lk-modal-container.modal-container),
-.workspace-leaf-content:has(.lk-modal-dim.modal-container) {
+.workspace-leaf-content.learnkit {
   position: relative;
 }
 
 /* Ensure view content is layered below modals but creates stacking context */
-.workspace-leaf-content:has(.lk-modal-container.modal-container) > .view-header,
-.workspace-leaf-content:has(.lk-modal-container.modal-container) > .view-content,
-.workspace-leaf-content:has(.lk-modal-dim.modal-container) > .view-header,
-.workspace-leaf-content:has(.lk-modal-dim.modal-container) > .view-content {
+.workspace-leaf-content.learnkit > .view-header,
+.workspace-leaf-content.learnkit > .view-content {
   position: relative;
   z-index: 1;
 }
 
 /* Make the workspace root area a positioning context for modals (fallback) */
-.workspace-split.mod-root:has(.lk-modal-container.modal-container),
-.workspace-split.mod-root:has(.lk-modal-dim.modal-container) {
+.workspace-split.mod-root {
   position: relative;
 }
 
@@ -563,7 +559,8 @@
 }
 
 /* Show focus effect on tag box when popover is open */
-.learnkit .learnkit-group-picker:has(.learnkit-popover-dropdown.is-open) .learnkit-tag-box {
+.learnkit .learnkit-group-picker[data-popover-open="true"] .learnkit-tag-box,
+.learnkit .learnkit-group-picker:focus-within .learnkit-tag-box {
   border: 1.5px solid var(--theme-accent);
   box-shadow: none;
   outline: none;
@@ -1437,7 +1434,7 @@ body.is-mobile .learnkit .learnkit-edit-modal {
   overflow: hidden;
 }
 
-.learnkit .learnkit-io-canvas-container:has(.learnkit-io-viewport:not(.learnkit-is-hidden)) .learnkit-io-canvas-placeholder {
+.learnkit .learnkit-io-canvas-container.learnkit-io-canvas-has-image .learnkit-io-canvas-placeholder {
   display: none ;
 }
 
@@ -1968,12 +1965,12 @@ z-index: 11;
 
 /* ---- Anki export / import: popover z-index ---- */
 /* When a popover is open its wrapper needs a stacking context above siblings */
-.learnkit-anki-export-modal .relative:has(.learnkit-popover-dropdown.is-open),
-.learnkit-anki-import-modal .relative:has(.learnkit-popover-dropdown.is-open),
-.learnkit-anki-export-modal .learnkit-deck-picker:has(.learnkit-popover-dropdown.is-open),
-.learnkit-anki-export-modal .learnkit-group-picker:has(.learnkit-popover-dropdown.is-open),
-.learnkit-anki-import-modal .learnkit-deck-picker:has(.learnkit-popover-dropdown.is-open),
-.learnkit-anki-import-modal .learnkit-group-picker:has(.learnkit-popover-dropdown.is-open) {
+.learnkit-anki-export-modal .relative[data-popover-open="true"],
+.learnkit-anki-import-modal .relative[data-popover-open="true"],
+.learnkit-anki-export-modal .learnkit-deck-picker[data-popover-open="true"],
+.learnkit-anki-export-modal .learnkit-group-picker[data-popover-open="true"],
+.learnkit-anki-import-modal .learnkit-deck-picker[data-popover-open="true"],
+.learnkit-anki-import-modal .learnkit-group-picker[data-popover-open="true"] {
   z-index: var(--lk-z-popover-overlay);
   position: relative;
 }

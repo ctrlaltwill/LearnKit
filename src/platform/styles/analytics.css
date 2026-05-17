@@ -172,12 +172,12 @@ body.is-phone .learnkit .learnkit-analytics-content-shell > * + * {
   height: 11.2px;
 }
 
-.learnkit .learnkit-analytics-root [data-tooltip]:has(.lucide-info) {
+.learnkit .learnkit-analytics-root [data-tooltip] {
   cursor: pointer;
   z-index: var(--lk-z-analytics-info);
 }
 
-.learnkit .learnkit-analytics-root [data-tooltip]:has(.lucide-info):is(:hover, :focus-visible) {
+.learnkit .learnkit-analytics-root [data-tooltip]:is(:hover, :focus-visible) {
   z-index: var(--lk-z-analytics-info-hover);
 }
 
@@ -199,23 +199,12 @@ body.is-phone .learnkit .learnkit-analytics-content-shell > * + * {
   position: relative;
 }
 
-.learnkit .learnkit-ana-card:has(button[aria-expanded="true"]),
 .learnkit .learnkit-ana-card[data-popover-open="true"] {
   z-index: var(--lk-z-analytics-card-open);
   overflow: visible;
 }
 
 /* Lift the entire row/grid when any filter is open */
-.learnkit .learnkit-analytics-root :where(.learnkit-ana-grid, .grid, .learnkit-heatmap-host):has(
-    .learnkit-ana-card[data-popover-open="true"]
-  ),
-.learnkit .learnkit-analytics-root :where(.learnkit-ana-grid, .grid, .learnkit-heatmap-host):has(
-    .learnkit-ana-card:has(button[aria-expanded="true"])
-  ) {
-  position: relative;
-  z-index: var(--lk-z-analytics-row-open);
-  overflow: visible;
-}
 .learnkit .learnkit-analytics-root :where(.learnkit-ana-grid, .grid, .learnkit-heatmap-host)[data-popover-open="true"] {
   position: relative;
   z-index: var(--lk-z-analytics-row-open);

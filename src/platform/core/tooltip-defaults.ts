@@ -73,6 +73,24 @@ function ensureTooltip(el: TooltipTarget): void {
   if (!el.hasAttribute("data-tooltip-position")) el.setAttribute("data-tooltip-position", "top");
 }
 
+/**
+ * Mark the closest tr / td / .learnkit-deck-row ancestor of a [data-tooltip]
+ * element with data-learnkit-has-tooltip so CSS can escalate z-index and
+ * overflow without relying on :has().
+ */
+function markTooltipParent(el: Element): void {
+  const parent = el.closest<HTMLElement>('tr, td, .learnkit-deck-row');
+  if (parent && !parent.hasAttribute('data-learnkit-has-tooltip')) {
+    parent.setAttribute('data-learnkit-has-tooltip', '');
+  }
+}
+
+function markTooltipParentsInSubtree(root: ParentNode): void {
+  const tooltipEls = (root as HTMLElement).querySelectorAll?.<HTMLElement>('[data-tooltip]');
+  if (!tooltipEls) return;
+  tooltipEls.forEach((el) => markTooltipParent(el));
+}
+
 function processNode(node: Node): void {
   if (node.nodeType !== Node.ELEMENT_NODE) return;
   const elementNode = node as HTMLElement;
@@ -83,6 +101,12 @@ function processNode(node: Node): void {
   // Process descendants
   const descendants = elementNode.querySelectorAll<HTMLElement>("button,[role='button']");
   descendants.forEach((el) => ensureTooltip(el as TooltipTarget));
+
+  // Mark [data-tooltip] parents (for CSS tooltip overflow escalation)
+  if (elementNode.hasAttribute('data-tooltip')) {
+    markTooltipParent(elementNode);
+  }
+  markTooltipParentsInSubtree(elementNode);
 }
 
 /**
@@ -96,6 +120,7 @@ export function initButtonTooltipDefaults(): () => void {
 
   // Initial pass (Obsidian loads views long after DOMContentLoaded)
   processNode(root);
+  markTooltipParentsInSubtree(root);
 
   const obs = new MutationObserver((mutations) => {
     mutations.forEach((m) => {

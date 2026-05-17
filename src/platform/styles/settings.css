@@ -217,14 +217,14 @@
 }
 
 .learnkit-guide-nav-btn[aria-expanded="true"],
-.learnkit-guide-nav-group:has(.learnkit-guide-dropdown.is-visible) > .learnkit-guide-nav-btn {
+.learnkit-guide-nav-group.is-open > .learnkit-guide-nav-btn {
   background-color: var(--color-base-35) ;
   border-color: var(--color-base-40) ;
   color: var(--color-base-100) ;
 }
 
 /* Dropdown-parent buttons remain clickable */
-.learnkit-guide-nav-btn:has(.learnkit-guide-nav-chevron) {
+.learnkit-guide-nav-btn.learnkit-guide-nav-btn--with-chevron {
   cursor: pointer;
 }
 
@@ -239,7 +239,7 @@
 }
 
 .learnkit-guide-nav-btn[aria-expanded="true"] .learnkit-guide-nav-chevron,
-.learnkit-guide-nav-group:has(.learnkit-guide-dropdown.is-visible) > .learnkit-guide-nav-btn .learnkit-guide-nav-chevron {
+.learnkit-guide-nav-group.is-open > .learnkit-guide-nav-btn .learnkit-guide-nav-chevron {
   opacity: 0.9;
   transform: rotate(180deg);
 }
@@ -955,7 +955,6 @@ body:not(.is-mobile) .learnkit-guide-body pre button.copy-code-button.learnkit-g
 }
 
 .learnkit-guide-link:hover {
-  text-decoration-style: solid;
   color: var(--interactive-accent-hover, var(--interactive-accent));
 }
 
@@ -998,13 +997,13 @@ body:not(.is-mobile) .learnkit-guide-body pre button.copy-code-button.learnkit-g
 
 /* ---- Backup section layout ---- */
 
-.learnkit-settings .setting-item:has(.learnkit-settings-backup-control) {
+.learnkit-settings .setting-item.learnkit-settings-item-backup {
   display: block;
   border: none;
   padding: 0;
 }
 
-.learnkit-settings .setting-item:has(.learnkit-settings-backup-control) .setting-item-control {
+.learnkit-settings .setting-item.learnkit-settings-item-backup .setting-item-control {
   width: 100%;
   margin: 0;
 }
@@ -1137,13 +1136,13 @@ td.learnkit-backup-cell.learnkit-backup-cell.learnkit-backup-actions.learnkit-ba
   font-size: var(--learnkit-font-xs);
 }
 
-.learnkit .learnkit-settings-table-wrap:has(.learnkit-backup-table),
-.learnkit-settings .learnkit-settings-table-wrap:has(.learnkit-backup-table) {
+.learnkit .learnkit-settings-table-wrap,
+.learnkit-settings .learnkit-settings-table-wrap {
   transition: background-color 0.2s;
 }
 
-.learnkit .learnkit-settings-table-wrap:has(.learnkit-backup-table):hover,
-.learnkit-settings .learnkit-settings-table-wrap:has(.learnkit-backup-table):hover {
+.learnkit .learnkit-settings-table-wrap:hover,
+.learnkit-settings .learnkit-settings-table-wrap:hover {
   background-color: var(--color-base-10);
 }
 
@@ -2122,7 +2121,7 @@ td.learnkit-backup-cell.learnkit-backup-cell.learnkit-backup-actions.learnkit-ba
 }
 
 /* When guide layout is inside, remove parent border/padding — guide has its own */
-.learnkit-settings-tab-content:has(.learnkit-guide-layout) {
+.learnkit-settings-tab-content.learnkit-settings-tab-content--guide {
   border: 0.5px solid var(--color-base-35);
   background-color: var(--color-base-05);
   padding: 0;
@@ -2363,8 +2362,8 @@ color: var(--color-base-100);
 }
 
 /* Special cases - backup table, folder suggest, etc. should keep their styles */
-.learnkit-settings-tab-content .setting-item:has(.learnkit-settings-backup-control),
-.learnkit-settings-tab-content .setting-item:has(.learnkit-settings-table-wrap) {
+.learnkit-settings-tab-content .setting-item.learnkit-settings-item-backup,
+.learnkit-settings-tab-content .setting-item.learnkit-settings-item-table-wrap {
   border-top: none;
   padding-top: 12px;
 }

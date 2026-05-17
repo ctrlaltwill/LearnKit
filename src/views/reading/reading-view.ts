@@ -493,12 +493,12 @@ export function syncReadingViewStyles(): void {
   }
 
   if (macroPreset === 'flashcards') {
-    css += `.markdown-preview-section.learnkit-layout-masonry > .learnkit-reading-card-run:has(.learnkit-pretty-card.learnkit-macro-flashcards) {\n`;
+    css += `.markdown-preview-section.learnkit-layout-masonry > .learnkit-reading-card-run.learnkit-reading-card-run--has-flashcards {\n`;
     css += `  column-width: 280px ;\n`;
     css += `  column-gap: 16px ;\n`;
     css += `  display: block ;\n`;
     css += `}\n`;
-    css += `.markdown-preview-section.learnkit-layout-masonry > .learnkit-reading-card-run:has(.learnkit-pretty-card.learnkit-macro-flashcards) > .learnkit-pretty-card.learnkit-macro-flashcards {\n`;
+    css += `.markdown-preview-section.learnkit-layout-masonry > .learnkit-reading-card-run.learnkit-reading-card-run--has-flashcards > .learnkit-pretty-card.learnkit-macro-flashcards {\n`;
     css += `  margin-top: 0 ;\n`;
     css += `  padding-top: 0 ;\n`;
     css += `  margin-bottom: 16px ;\n`;
@@ -1355,6 +1355,7 @@ async function processCardElements(container: HTMLElement, _ctx?: MarkdownPostPr
   scheduleViewportReflow();
   maybeScheduleFlashcardsBootstrap(container, allowFlashcardsBootstrap);
   hideSectionLevelOrphanDelimitedParagraphs(container);
+  markClozeImageOnlyWrappers(container);
 
   await Promise.resolve();
 
@@ -1671,6 +1672,9 @@ function wrapContiguousCardRuns(section: HTMLElement) {
         currentRun = section.ownerDocument.createElement('div');
         currentRun.className = 'learnkit-reading-card-run';
         section.insertBefore(currentRun, child);
+      }
+      if (child.classList.contains('learnkit-macro-flashcards')) {
+        currentRun.classList.add('learnkit-reading-card-run--has-flashcards');
       }
       currentRun.appendChild(child);
       continue;
@@ -2211,6 +2215,28 @@ function hideSectionLevelOrphanDelimitedParagraphs(scope: ParentNode): void {
       el.setAttribute('data-learnkit-hidden', 'true');
     }
   }
+}
+
+/**
+ * Add .learnkit-cloze-image-only to .learnkit-reading-view-cloze wrappers
+ * that contain a .learnkit-cloze-text whose only child is an img.
+ * This replaces the removed :has() CSS selector.
+ */
+function markClozeImageOnlyWrappers(scope: ParentNode): void {
+  const clozeTexts = (scope as HTMLElement).querySelectorAll?.<HTMLElement>(
+    '.learnkit-cloze-text > img:only-child'
+  );
+  if (!clozeTexts) return;
+  clozeTexts.forEach((img) => {
+    const clozeWrapper = img.closest('.learnkit-reading-view-cloze');
+    if (clozeWrapper) {
+      clozeWrapper.classList.add('learnkit-cloze-image-only');
+    }
+    const clozeText = img.parentElement;
+    if (clozeText?.classList.contains('learnkit-cloze-text')) {
+      clozeText.classList.add('learnkit-cloze-text-image-only');
+    }
+  });
 }
 
 /* =========================
