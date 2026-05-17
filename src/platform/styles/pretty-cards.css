@@ -148,6 +148,7 @@
   max-height: none;
 }
 
+/* eslint-disable obsidianmd/no-browser-feature */
 /* ---- CSS multi-column masonry layout on preview sections ---- */
 
 /*
@@ -170,7 +171,6 @@
  * and other content stay full-width and create natural column
  * break-points between card groups.
  */
-/* eslint-disable-next-line obsidianmd/no-browser-feature */
 .markdown-preview-section.learnkit-layout-masonry > .learnkit-reading-card-run {
   column-width: 280px;
   gap: 16px;
@@ -197,6 +197,7 @@
 .markdown-preview-section.learnkit-layout-masonry > [data-learnkit-hidden="true"] {
   display: none;
 }
+/* eslint-enable obsidianmd/no-browser-feature */
 
 /* Vertical layout: .el-ul/.el-ol spillover must NOT use display:none
    because collapsing their height breaks Obsidian's virtualiser scroll
@@ -242,6 +243,7 @@
 /* ---- Card surface ---- */
 
 /* Shared base (theme-inherited) for all macros */
+/* eslint-disable-next-line obsidianmd/no-browser-feature */
 .learnkit-pretty-card {
   border-radius: var(--radius-md);
   padding: 12px 12px 15px 12px;
@@ -742,12 +744,13 @@
 }
 
 /* Responsive: single column on narrow screens */
-/* eslint-disable-next-line obsidianmd/no-browser-feature */
+/* eslint-disable obsidianmd/no-browser-feature */
 @media (max-width: 520px) {
   .markdown-preview-section.learnkit-layout-masonry > .learnkit-reading-card-run {
     column-count: 1;
   }
 }
+/* eslint-enable obsidianmd/no-browser-feature */
 
 /* ---- Pretty card paragraph margins ---- */
 
@@ -1598,6 +1601,7 @@ padding: 0px ;
    GROUP HEADERS — Visual separators for cards with the same G| field
    ========================================================================== */
 
+/* eslint-disable-next-line obsidianmd/no-browser-feature */
 .learnkit-group-header {
   column-span: all;
   font-size: var(--learnkit-font-xs);

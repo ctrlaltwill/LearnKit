@@ -1270,20 +1270,6 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
   font-size: 0.72em;
 }
 
-/* Keep grade label + keycap tight in study and gatekeeper grading buttons. */
-.learnkit :is(.lk-session-card, .learnkit-gatekeeper-modal) :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy) {
-  gap: 0;
-  --learnkit-btn-bg-mix: 16%;
-  --learnkit-btn-fg-mix: 72%;
-  --learnkit-btn-border-mix: 45%;
-  --learnkit-btn-bg-hover-mix: 24%;
-  --learnkit-btn-border-hover-mix: 60%;
-
-  background-color: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-bg-mix), var(--background-primary));
-  color: color-mix(in srgb, var(--learnkit-btn-tint) var(--learnkit-btn-fg-mix), var(--foreground));
-  border: 0.5px solid color-mix(in srgb, var(--learnkit-kbd-tint) var(--learnkit-kbd-border-mix), transparent);
-}
-
 /* Remove box shadow from session/gatekeeper grading buttons to match outline buttons */
 .learnkit :is(.lk-session-card footer, .learnkit-gatekeeper-footer) .btn {
   box-shadow: none;
@@ -1399,7 +1385,9 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
 }
 
 /* Light theme grading palette (gatekeeper + study session) */
+/* Keep grade label + keycap tight in study and gatekeeper grading buttons. */
 .learnkit :is(.lk-session-card, .learnkit-gatekeeper-modal) :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy) {
+  gap: 0;
   --learnkit-btn-bg-mix: 16%;
   --learnkit-btn-fg-mix: 72%;
   --learnkit-btn-border-mix: 45%;
