@@ -973,7 +973,7 @@
   margin: 0;
 }
 
-/* eslint-disable-next-line obsidianmd/no-unknown-type-selector */
+/* eslint-disable obsidianmd/no-unknown-type-selector */
 .learnkit .learnkit-pretty-card .MathJax[jax="CHTML"][display="true"],
 .learnkit .learnkit-pretty-card .MathJax[jax="CHTML"],
 .learnkit .learnkit-pretty-card mjx-math[display="true"],
@@ -983,6 +983,7 @@
   margin-block-start: 0;
   margin-block-end: 0;
 }
+/* eslint-enable obsidianmd/no-unknown-type-selector */
 
 /* ---- Override theme math-block styling inside Sprout card views ---- */
 /* Themes like the user's may set background, padding, border-radius on

@@ -1062,6 +1062,7 @@
 
 .learnkit .table {
 font-size: var(--learnkit-font-xs);
+margin: 0.5rem 0;
 }
 
 .learnkit .lk-browser-view .table thead th {

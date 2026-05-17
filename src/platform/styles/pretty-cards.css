@@ -860,7 +860,6 @@
   border-radius: var(--radius-md);
   aspect-ratio: auto;
   object-fit: contain;
-  clip-path: none;
   -webkit-mask-image: none;
   mask-image: none;
 }
