@@ -549,7 +549,7 @@
   padding: 1px 4px;
   border-radius: 3px;
 }
-.learnkit .lk-browser-flag-overlay s { text-decoration: line-through; }
+.learnkit .lk-browser-flag-overlay s { text-decoration-line: line-through; }
 .learnkit .lk-browser-flag-overlay .internal-link {
   color: var(--link-color, var(--text-accent));
   border-bottom: 1px dotted currentColor;

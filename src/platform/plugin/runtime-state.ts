@@ -42,7 +42,6 @@ export function ensurePluginRuntimeState(plugin: LearnKitPluginBase): void {
   plugin._sproutZoomValue ??= 1;
   plugin._sproutZoomSaveTimer ??= null;
 
-  plugin._disposeTooltipPositioner ??= null;
   plugin._reminderEngine ??= null;
   plugin._assistantPopup ??= null;
   plugin._coachDb ??= null;

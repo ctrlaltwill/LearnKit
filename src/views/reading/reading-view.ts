@@ -40,6 +40,7 @@ import {
 import { getTtsService } from "../../platform/integrations/tts/tts-service";
 import { hasCardAnchorForId } from "../../platform/core/identity";
 import { buildReadingFlashcardCloze } from "./reading-flashcard-cloze";
+import { computeContentSignature } from "./reading-refresh-runtime";
 
 /* -----------------------
    Module-level mutable state
@@ -402,12 +403,28 @@ function resolveReadingLayout(
  *
  * Called once on init and again whenever a reading-view setting changes.
  */
+let _lastReadingViewSettingsHash = "";
+let _lastReadingViewEnabled: boolean | null = null;
+
 export function syncReadingViewStyles(): void {
   const plugin = getSproutPlugin();
   const enabled = !!plugin?.settings?.general?.enableReadingStyles;
   const rv = plugin?.settings?.readingView;
   const macroPreset = normaliseMacroPreset((rv?.activeMacro as string | undefined) ?? rv?.preset);
   const effectiveLayout = resolveReadingLayout(rv?.layout, macroPreset);
+
+  // Skip stylesheet regeneration when settings haven't changed.
+  // This avoids the expensive CSS string building + replaceSync on every
+  // sprout:prettify-cards-refresh event during typing / mode switches.
+  const settingsHash = computeContentSignature(
+    JSON.stringify({ enabled, rv, macroPreset, effectiveLayout }),
+  );
+  if (enabled === _lastReadingViewEnabled && settingsHash === _lastReadingViewSettingsHash) {
+    return;
+  }
+  _lastReadingViewEnabled = enabled;
+  _lastReadingViewSettingsHash = settingsHash;
+
   const macroSelector = `.learnkit-pretty-card.learnkit-macro-${macroPreset}`;
 
   const styleSheet = getReadingDynamicStyleSheet();

@@ -35,7 +35,6 @@ export class LearnKitPluginBase extends Plugin {
   declare _hideStatusBarViewTypes: Set<string>;
   declare _sproutZoomValue: number;
   declare _sproutZoomSaveTimer: number | null;
-  declare _disposeTooltipPositioner: (() => void) | null;
   declare _reminderEngine: ReminderEngine | null;
   declare _assistantPopup: SproutAssistantPopup | null;
   declare _coachDb: CoachPlanSqlite | null;

@@ -2775,7 +2775,7 @@
 .learnkit-edit-inline-diff-segment.is-delete {
   color: var(--text-error, #b42318);
   background: color-mix(in srgb, var(--text-error, #b42318) 10%, transparent);
-  text-decoration: line-through;
+  text-decoration-line: line-through;
 }
 
 .learnkit-edit-inline-diff-segment.is-insert {
@@ -2869,7 +2869,7 @@
 
 .learnkit-edit-proposal-replacement.markdown-rendered s,
 .learnkit-edit-block-new.markdown-rendered s {
-  text-decoration: line-through;
+  text-decoration-line: line-through;
 }
 
 .learnkit-edit-proposal-replacement.markdown-rendered .internal-link,
@@ -2965,7 +2965,7 @@
 }
 
 .learnkit-edit-proposal-source-fragment .cm-strikethrough {
-  text-decoration: line-through;
+  text-decoration-line: line-through;
 }
 
 .learnkit-edit-proposal-source-fragment .cm-highlight {

@@ -66,11 +66,11 @@
   font-weight: 500;
   color: var(--text-accent);
   cursor: pointer;
-  text-decoration: none;
+  text-decoration-line: none;
 }
 
 .learnkit-settings-redirect-link:hover {
-  text-decoration: underline;
+  text-decoration-line: underline;
 }
 
 /* ============================================================================
@@ -1692,7 +1692,7 @@ td.learnkit-backup-cell.learnkit-backup-cell.learnkit-backup-actions.learnkit-ba
   font-size: var(--learnkit-font-xs);
   font-weight: 600;
   color: var(--theme-base-95);
-  text-decoration: none;
+  text-decoration-line: none;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -1702,7 +1702,7 @@ td.learnkit-backup-cell.learnkit-backup-cell.learnkit-backup-actions.learnkit-ba
 
 .learnkit-about-linkedin:hover {
   color: var(--theme-base-95);
-  text-decoration: underline;
+  text-decoration-line: underline;
 }
 
 /* ---- About tab content ---- */
@@ -1855,7 +1855,7 @@ td.learnkit-backup-cell.learnkit-backup-cell.learnkit-backup-actions.learnkit-ba
   display: inline-flex;
   justify-content: center;
   gap: 8px;
-  text-decoration: none;
+  text-decoration-line: none;
   margin: 0;
   color: var(--theme-base-95) ;
   align-items: center;
@@ -3319,14 +3319,14 @@ body.is-phone .learnkit .learnkit-about-links-row {
   font-weight: 400;
   color: var(--theme-base-95);
   cursor: pointer;
-  text-decoration: none;
+  text-decoration-line: none;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .learnkit-guide-prev-next-link:hover {
-  text-decoration: underline;
+  text-decoration-line: underline;
 }
 
 .learnkit-guide-prev-next-spacer {

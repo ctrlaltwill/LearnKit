@@ -18,7 +18,7 @@
   font-size: var(--learnkit-font-2xs);
   font-weight: 400;
   line-height: 1.4;
-  max-width: min(300px, var(--learnkit-tooltip-max-width, 300px));
+  max-width: 300px;
   width: max-content;
   white-space: normal;
   overflow-wrap: anywhere;
@@ -27,7 +27,7 @@
   pointer-events: none;
   transition: opacity 0.15s ease;
   transition-delay: 0s;
-  z-index: 950;
+  z-index: 99999;
   /* Use the normalized theme tooltip surface instead of hard black inversion. */
   background-color: var(--learnkit-tooltip-surface, var(--color-base-05));
   color: var(--learnkit-tooltip-foreground, var(--color-base-100));
@@ -127,28 +127,4 @@
   margin-bottom: 0px;
 }
 
-/* ---- Runtime measuring element (used by src/core/tooltip-positioner.ts) ---- */
 
-.learnkit-tooltip-measure {
-  position: fixed;
-  left: -99999px;
-  top: -99999px;
-  visibility: hidden;
-  pointer-events: none;
-  z-index: -1;
-
-  padding: 6px 10px;
-  border-radius: var(--radius-md);
-  font-size: var(--learnkit-font-2xs);
-  font-weight: 400;
-  line-height: 1.4;
-  width: max-content;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  text-align: center;
-
-  background-color: var(--learnkit-tooltip-surface, var(--color-base-05));
-  color: var(--learnkit-tooltip-foreground, var(--color-base-100));
-  border: var(--learnkit-border-width) solid var(--learnkit-border-color);
-  -webkit-font-smoothing: antialiased;
-}

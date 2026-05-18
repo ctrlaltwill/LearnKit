@@ -25,6 +25,7 @@ body[data-learnkit-theme-preset="glass"] .learnkit,
 
   /* Text/foreground - using darkest color-base for text */
   --foreground: var(--learnkit-base-foreground);
+  --color-foreground: var(--foreground);
   --text-color: var(--color-base-100);
   --card-foreground: var(--color-base-100);
   --color-card-foreground: var(--text-color);
@@ -77,6 +78,7 @@ body[data-learnkit-theme-preset="glass"] .learnkit,
 
   /* Muted text */
   --muted-foreground: var(--color-base-40);
+  --color-muted-foreground: var(--muted-foreground);
 
   /* Destructive */
   --destructive: rgb(231, 0, 11);
@@ -190,6 +192,7 @@ body.theme-dark[data-learnkit-theme-preset="glass"] .learnkit,
   --accent: var(--color-base-30);
 
   --foreground: var(--learnkit-base-foreground);
+  --color-foreground: var(--foreground);
   --text-color: var(--color-base-100);
   --card-foreground: var(--color-base-100);
   --color-card-foreground: var(--text-color);
@@ -209,6 +212,7 @@ body.theme-dark[data-learnkit-theme-preset="glass"] .learnkit,
   --muted: var(--color-base-30);
 
   --muted-foreground: var(--color-base-60);
+  --color-muted-foreground: var(--muted-foreground);
 
   --theme-accent: var(--learnkit-theme-accent-override, var(--color-accent));
   --sidebar-accent: var(--theme-accent, rgb(39, 39, 42));

@@ -150,7 +150,7 @@
   border: none;
   border-radius: 0;
   overflow: visible;
-  background: var(--background);
+  background: transparent;
 }
 
 /* Changelog wrapper: padding + border so scroll stays inside */
@@ -165,11 +165,12 @@
 }
 
 .learnkit .learnkit-changelog-table thead tr {
-  background: var(--background);
+  background: transparent;
   border-bottom: var(--learnkit-border-width) solid var(--learnkit-border-color);
 }
 .learnkit .learnkit-changelog-table tbody tr {
-  background: var(--color-base-05);
+  background: transparent;
+  border-color: transparent;
 }
 .learnkit .learnkit-changelog-table th,
 .learnkit .learnkit-changelog-table td,

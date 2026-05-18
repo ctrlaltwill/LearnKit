@@ -3,7 +3,7 @@ import tailwindcss from "@tailwindcss/vite";
 import starlight from "@astrojs/starlight";
 import { docsSidebarTree, toStarlightSidebar } from "./src/docs-structure.mts";
 
-const DEFAULT_BASE = "/LearnKit";
+const DEFAULT_BASE = "/LearnKit-Guide";
 const DEFAULT_SITE = "https://ctrlaltwill.github.io";
 
 function normalizeBase(base) {
@@ -63,12 +63,12 @@ export default defineConfig({
         {
           icon: "github",
           label: "GitHub",
-          href: "https://github.com/ctrlaltwill/LearnKit",
+          href: "https://github.com/ctrlaltwill/LearnKit-Guide",
         },
       ],
       credits: false,
       editLink: {
-        baseUrl: "https://github.com/ctrlaltwill/LearnKit/edit/main/site/",
+        baseUrl: "https://github.com/ctrlaltwill/LearnKit-Guide/edit/main/",
       },
       lastUpdated: true,
       pagination: true,

@@ -487,12 +487,12 @@ body.is-phone .small-card {
 }
 
 .learnkit .learnkit-flag-editor-overlay s {
-  text-decoration: line-through;
+  text-decoration-line: line-through;
 }
 
 .learnkit .learnkit-flag-editor-overlay .internal-link {
   color: var(--link-color, var(--text-accent));
-  text-decoration: underline;
+  text-decoration-line: underline;
 }
 
 .learnkit .learnkit-flag-editor-overlay :is(h1, h2, h3, h4, h5, h6) {

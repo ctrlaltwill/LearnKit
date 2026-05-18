@@ -132,23 +132,21 @@ export async function refreshReadingViewMarkdownLeaves(
     }
 
     window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => {
-        try {
-          scrollHost.scrollTo({ top: prevTop, left: prevLeft });
-        } catch {
-          scrollHost.scrollTop = prevTop;
-          scrollHost.scrollLeft = prevLeft;
-        }
+      try {
+        scrollHost.scrollTo({ top: prevTop, left: prevLeft });
+      } catch {
+        scrollHost.scrollTop = prevTop;
+        scrollHost.scrollLeft = prevLeft;
+      }
 
-        try {
-          content.dispatchEvent(new CustomEvent("sprout:prettify-cards-refresh", {
-            bubbles: true,
-            detail: sourcePayload,
-          }));
-        } catch (e) {
-          log.swallow("dispatch reading view refresh (post-rerender)", e);
-        }
-      });
+      try {
+        content.dispatchEvent(new CustomEvent("sprout:prettify-cards-refresh", {
+          bubbles: true,
+          detail: sourcePayload,
+        }));
+      } catch (e) {
+        log.swallow("dispatch reading view refresh (post-rerender)", e);
+      }
     });
   }));
 }
@@ -224,13 +222,22 @@ export function startMarkdownModeWatcher(params: {
   };
 
   scanModes();
-  registerWorkspaceEvent(app.workspace.on("active-leaf-change", () => {
-    scanModes();
-  }));
-  registerWorkspaceEvent(app.workspace.on("file-open", () => {
-    scanModes();
-  }));
-  registerWorkspaceEvent(app.workspace.on("layout-change", () => {
-    scanModes();
-  }));
+
+  // Coalesce high-frequency workspace events into a single debounced scan
+  // so rapid active-leaf-change / file-open / layout-change storms don't
+  // trigger redundant DOM scans and scheduled refreshes during typing.
+  let coalesceTimer: number | null = null;
+  const COALESCE_MS = 100;
+
+  const coalescedScan = () => {
+    if (coalesceTimer != null) window.clearTimeout(coalesceTimer);
+    coalesceTimer = window.setTimeout(() => {
+      coalesceTimer = null;
+      scanModes();
+    }, COALESCE_MS);
+  };
+
+  registerWorkspaceEvent(app.workspace.on("active-leaf-change", coalescedScan));
+  registerWorkspaceEvent(app.workspace.on("file-open", coalescedScan));
+  registerWorkspaceEvent(app.workspace.on("layout-change", coalescedScan));
 }

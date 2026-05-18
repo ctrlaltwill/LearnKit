@@ -11,14 +11,13 @@
 import {  } from "obsidian";
 
 import * as React from "react";
-import type { ChartConfiguration } from "chart.js";
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { createXAxisTicks, formatAxisLabel } from "../chart-axis-utils";
 import { endTruncateClass, useAnalyticsPopoverZIndex } from "../filter-styles";
 import { MS_DAY } from "../../../platform/core/constants";
 import { cssClassForProps } from "../../../platform/core/ui";
 import { interfaceLocaleToIntlLocale } from "../../../platform/translations/locale-registry";
 import { t } from "../../../platform/translations/translator";
-import { ChartJsCanvas, resolveChartColor } from "./chartjs-canvas";
 
 function InfoIcon(props: { text: string }) {
   return (
@@ -281,6 +280,22 @@ function formatDayTitle(dayIndex: number, timeZone: string, locale: string) {
   return date.toLocaleDateString(locale, { timeZone, weekday: "short", month: "short", day: "numeric" });
 }
 
+function TooltipContent(props: { active?: boolean; payload?: Array<{ payload?: unknown }>; locale?: string }) {
+  if (!props.active || !props.payload || !props.payload.length) return null;
+  const datum = props.payload[0]?.payload as Datum | undefined;
+  if (!datum) return null;
+  const tx = (token: string, fallback: string) => t(props.locale, token, fallback);
+  return (
+    <div className="learnkit-data-tooltip-surface">
+      <div className="text-sm font-medium text-background">{datum.date}</div>
+      <div className="text-background">{`${tx("ui.widget.grade.again", "Again")}: ${datum.again}`}</div>
+      <div className="text-background">{`${tx("ui.widget.grade.hard", "Hard")}: ${datum.hard}`}</div>
+      <div className="text-background">{`${tx("ui.widget.grade.good", "Good")}: ${datum.good}`}</div>
+      <div className="text-background">{`${tx("ui.widget.grade.easy", "Easy")}: ${datum.easy}`}</div>
+    </div>
+  );
+}
+
 function roundUpToNearest10(value: number): number {
   if (!Number.isFinite(value) || value <= 0) return 0;
   return Math.ceil(value / 10) * 10;
@@ -497,118 +512,6 @@ export function StackedReviewButtonsChart(props: {
     return roundUpToNearest10(maxValue);
   }, [data]);
   const yTicks = React.useMemo(() => buildYAxisTicks(yMax), [yMax]);
-
-  const chartConfig = React.useMemo<ChartConfiguration<"bar">>(() => {
-    const axisColor = resolveChartColor("var(--border)");
-    const tickColor = resolveChartColor("var(--text-muted)");
-    const xTickSet = new Set(xTicks);
-    const labels = {
-      again: tx("ui.widget.grade.again", "Again"),
-      hard: tx("ui.widget.grade.hard", "Hard"),
-      good: tx("ui.widget.grade.good", "Good"),
-      easy: tx("ui.widget.grade.easy", "Easy"),
-    };
-
-    return {
-      type: "bar",
-      data: {
-        datasets: [
-          {
-            label: labels.again,
-            data: data.map((row) => ({ x: row.dayIndex, y: row.again })),
-            parsing: false,
-            stack: "reviews",
-            backgroundColor: resolveChartColor(COLORS.again),
-            borderWidth: 0,
-          },
-          {
-            label: labels.hard,
-            data: data.map((row) => ({ x: row.dayIndex, y: row.hard })),
-            parsing: false,
-            stack: "reviews",
-            backgroundColor: resolveChartColor(COLORS.hard),
-            borderWidth: 0,
-          },
-          {
-            label: labels.good,
-            data: data.map((row) => ({ x: row.dayIndex, y: row.good })),
-            parsing: false,
-            stack: "reviews",
-            backgroundColor: resolveChartColor(COLORS.good),
-            borderWidth: 0,
-          },
-          {
-            label: labels.easy,
-            data: data.map((row) => ({ x: row.dayIndex, y: row.easy })),
-            parsing: false,
-            stack: "reviews",
-            backgroundColor: resolveChartColor(COLORS.easy),
-            borderWidth: 0,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: props.enableAnimations ?? true,
-        interaction: {
-          mode: "index",
-          axis: "x",
-          intersect: false,
-        },
-        scales: {
-          x: {
-            type: "linear",
-            min: startIndex,
-            max: todayIndex,
-            stacked: true,
-            border: { color: axisColor },
-            grid: { display: false },
-            ticks: {
-              color: tickColor,
-              font: { size: 12 },
-              callback: (value) => {
-                const day = Number(value);
-                if (!xTickSet.has(day)) return "";
-                return xTickFormatter(day);
-              },
-            },
-          },
-          y: {
-            type: "linear",
-            min: 0,
-            max: yMax,
-            stacked: true,
-            border: { color: axisColor },
-            grid: { display: false },
-            ticks: {
-              color: tickColor,
-              font: { size: 12 },
-              callback: (value) => String(value),
-            },
-            afterBuildTicks: (axis) => {
-              axis.ticks = yTicks.map((value) => ({ value }));
-            },
-          },
-        },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            mode: "index",
-            axis: "x",
-            intersect: false,
-            callbacks: {
-              title: (items) => {
-                const day = Number(items[0]?.parsed.x ?? todayIndex);
-                return formatDayTitle(day, tz, intlLocale);
-              },
-              label: (item) => `${item.dataset.label ?? ""}: ${Number(item.parsed.y ?? 0)}`,
-            },
-          },
-        },
-      },
-    };
-  }, [data, intlLocale, props.enableAnimations, startIndex, todayIndex, tx, tz, xTickFormatter, xTicks, yMax, yTicks]);
 
   return (
     <div className="card learnkit-ana-card h-full overflow-visible p-4 flex flex-col gap-3">
@@ -840,12 +743,58 @@ export function StackedReviewButtonsChart(props: {
         </div>
       </div>
 
-      <ChartJsCanvas
-        className="w-full flex-1 learnkit-analytics-chart"
-        config={chartConfig}
-        height={250}
-        ariaLabel={tx("ui.analytics.stackedButtons.title", "Answer buttons")}
-      />
+      <div className="w-full flex-1 learnkit-analytics-chart">
+        <ResponsiveContainer width="100%" height={250}>
+          <BarChart isAnimationActive={false} data={data} margin={{ top: 12, right: 12, bottom: 12, left: 8 }}>
+            <XAxis
+              dataKey="dayIndex"
+              tickLine={false}
+              axisLine={{ stroke: "var(--border)" }}
+              interval={0}
+              ticks={xTicks}
+              tick={{ fontSize: 12 }}
+              tickFormatter={xTickFormatter}
+            />
+            <YAxis
+              tickLine={false}
+              axisLine={{ stroke: "var(--border)" }}
+              width={32}
+              tick={{ fontSize: 12 }}
+              ticks={yTicks}
+              domain={[0, yMax]}
+            />
+            <Tooltip content={<TooltipContent locale={props.locale} />} isAnimationActive={false} />
+            <Bar
+              dataKey="again"
+              stackId="a"
+              fill={COLORS.again}
+              radius={[0, 0, 0, 0]}
+              isAnimationActive={props.enableAnimations ?? true}
+            />
+            <Bar
+              dataKey="hard"
+              stackId="a"
+              fill={COLORS.hard}
+              radius={[0, 0, 0, 0]}
+              isAnimationActive={props.enableAnimations ?? true}
+            />
+            <Bar
+              dataKey="good"
+              stackId="a"
+              fill={COLORS.good}
+              radius={[0, 0, 0, 0]}
+              isAnimationActive={props.enableAnimations ?? true}
+            />
+            <Bar
+              dataKey="easy"
+              stackId="a"
+              fill={COLORS.easy}
+              radius={[0, 0, 0, 0]}
+              isAnimationActive={props.enableAnimations ?? true}
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
 
       <div className="flex flex-wrap gap-3 text-xs text-muted-foreground learnkit-ana-chart-legend">
         <div className="inline-flex items-center gap-2">

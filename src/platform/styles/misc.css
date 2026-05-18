@@ -19,7 +19,7 @@
 }
 .learnkit .learnkit-github-stars:hover {
   background: #222222;
-  text-decoration: none;
+  text-decoration-line: none;
   font-weight: 600;
   width: fit-content;
 }
@@ -94,7 +94,7 @@
 }
 .learnkit .learnkit-bmc:hover {
   background: #e2a800;
-  text-decoration: none;
+  text-decoration-line: none;
   font-weight: 600;
   width: fit-content;
 }
@@ -973,17 +973,15 @@
   margin: 0;
 }
 
-/* eslint-disable obsidianmd/no-unknown-type-selector */
 .learnkit .learnkit-pretty-card .MathJax[jax="CHTML"][display="true"],
 .learnkit .learnkit-pretty-card .MathJax[jax="CHTML"],
-.learnkit .learnkit-pretty-card mjx-math[display="true"],
+.learnkit .learnkit-pretty-card .MJX-TEX[display="true"],
 .learnkit .learnkit-pretty-card .MathJax,
 .learnkit .learnkit-pretty-card .MJX-TEX {
   margin: 0;
   margin-block-start: 0;
   margin-block-end: 0;
 }
-/* eslint-enable obsidianmd/no-unknown-type-selector */
 
 /* ---- Override theme math-block styling inside Sprout card views ---- */
 /* Themes like the user's may set background, padding, border-radius on

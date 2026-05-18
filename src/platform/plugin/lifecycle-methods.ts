@@ -40,7 +40,6 @@ import { isPlainObject, type FlashcardType } from "../core/utils";
 import { registerReadingViewPrettyCards, teardownReadingView } from "../../views/reading/reading-view";
 import { editDecorationExtension } from "../../views/study-assistant/editor/edit-decorations";
 import { removeAosErrorHandler } from "../core/aos-loader";
-import { initTooltipPositioner } from "../core/tooltip-positioner";
 import { initMobileKeyboardHandler, cleanupMobileKeyboardHandler } from "../core/mobile-keyboard-handler";
 import { loadFlagCacheFromDataJson } from "../flags/flag-tokens";
 
@@ -143,9 +142,6 @@ export function WithLifecycleMethods<T extends Constructor<LearnKitPluginBase>>(
       ensurePluginRuntimeState(this);
       try {
         this._initBasecoatRuntime();
-
-        this._disposeTooltipPositioner?.();
-        this._disposeTooltipPositioner = initTooltipPositioner();
 
         this._initButtonTooltipDefaults();
 
@@ -398,8 +394,6 @@ export function WithLifecycleMethods<T extends Constructor<LearnKitPluginBase>>(
         this._readingModeWatcherInterval = null;
       }
 
-      this._disposeTooltipPositioner?.();
-      this._disposeTooltipPositioner = null;
       this._unregisterReminderDevConsoleCommands();
       this._unregisterStudyAssistantDevConsoleCommands();
       this._reminderEngine?.stop();

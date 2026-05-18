@@ -12,8 +12,7 @@
 import {  } from "obsidian";
 
 import * as React from "react";
-import type { ChartConfiguration } from "chart.js";
-import { createXAxisTicks, formatAxisLabel } from "../chart-axis-utils";
+import { Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { generatorParameters, forgetting_curve } from "ts-fsrs";
 import type { CardRecord, CardState, ReviewLogEntry } from "../../../platform/core/store";
 import type { ReviewResult } from "../../../platform/types/review";
@@ -22,7 +21,6 @@ import { useAnalyticsPopoverZIndex } from "../filter-styles";
 import { cssClassForProps } from "../../../platform/core/ui";
 import { interfaceLocaleToIntlLocale } from "../../../platform/translations/locale-registry";
 import { t } from "../../../platform/translations/translator";
-import { ChartJsCanvas, resolveChartColor } from "./chartjs-canvas";
 
 function InfoIcon(props: { text: string }) {
   return (
@@ -234,6 +232,40 @@ function buildStabilityTimeline(
     timeline.push({ at: now, stability });
   }
   return timeline;
+}
+
+function CardCurveTooltip(props: {
+  active?: boolean;
+  payload?: Array<{ value?: number; name?: string; dataKey?: string; color?: string }>;
+  label?: number;
+  baseStart: number;
+  locale?: string;
+}) {
+  if (!props.active || !props.payload?.length) return null;
+  const dayIndex = typeof props.label === "number" ? props.label : 0;
+  const date = new Date(props.baseStart + dayIndex * MS_DAY).toLocaleDateString(props.locale, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+  return (
+    <div className="learnkit-data-tooltip-surface">
+      <div className="text-sm font-medium text-background">{date}</div>
+      {props.payload.map((entry) => {
+        const value = Number(entry?.value ?? 0);
+        const idLabel = String(entry?.name ?? entry?.dataKey ?? "");
+        return (
+          <div key={entry.dataKey} className="flex items-center gap-2">
+            <span
+              className={`inline-block size-2 rounded-full learnkit-ana-legend-dot ${cssClassForProps({ "--learnkit-legend-color": entry.color })}`}
+            />
+            <span className="text-background">{idLabel}</span>
+            <span className="text-background">{Math.round(value * 100)}%</span>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 export function ForgettingCurveChart(props: {
@@ -515,113 +547,6 @@ export function ForgettingCurveChart(props: {
     return new Date(ts).toLocaleDateString(intlLocale, { month: "short", day: "numeric" });
   };
   const yTickFormatter = (value: number) => `${Math.round(Number(value) * 100)}%`;
-  const xTicks = React.useMemo(() => createXAxisTicks(0, maxDays, todayDay), [maxDays, todayDay]);
-  const xTickFormatter = React.useCallback(
-    (value: number) =>
-      formatAxisLabel(
-        value,
-        todayDay,
-        (day) => tickFormatter(day),
-        tx("ui.view.coach.readiness.today", "Today"),
-      ),
-    [tickFormatter, todayDay, tx],
-  );
-
-  const chartConfig = React.useMemo<ChartConfiguration<"line">>(() => {
-    const axisColor = resolveChartColor("var(--border)");
-    const tickColor = resolveChartColor("var(--text-muted)");
-    const xTickSet = new Set(xTicks);
-
-    return {
-      type: "line",
-      data: {
-        datasets: curves.map((curve) => ({
-          label: curve.label,
-          data: data.map((row) => ({ x: row.day, y: row[curve.id] })),
-          parsing: false,
-          borderColor: resolveChartColor(curve.color),
-          borderWidth: 2,
-          tension: 0.3,
-          pointRadius: 0,
-          pointHoverRadius: 3,
-          spanGaps: false,
-        })),
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: props.enableAnimations ?? true,
-        interaction: { mode: "nearest", intersect: false },
-        scales: {
-          x: {
-            type: "linear",
-            min: 0,
-            max: maxDays,
-            border: { color: axisColor },
-            grid: { display: false },
-            ticks: {
-              color: tickColor,
-              font: { size: 11 },
-              callback: (value) => {
-                const day = Number(value);
-                if (!xTickSet.has(day)) return "";
-                return xTickFormatter(day);
-              },
-            },
-            afterBuildTicks: (axis) => {
-              axis.ticks = xTicks.map((value) => ({ value }));
-            },
-          },
-          y: {
-            type: "linear",
-            min: 0,
-            max: 1,
-            border: { color: axisColor },
-            grid: { display: false },
-            ticks: {
-              color: tickColor,
-              font: { size: 11 },
-              stepSize: 0.5,
-              callback: (value) => yTickFormatter(Number(value)),
-            },
-          },
-        },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              title: (items) => {
-                const day = Number(items[0]?.parsed.x ?? 0);
-                return new Date(baseStart + day * MS_DAY).toLocaleDateString(intlLocale, {
-                  weekday: "short",
-                  month: "short",
-                  day: "numeric",
-                });
-              },
-              label: (item) => {
-                const y = Number(item.parsed.y ?? 0);
-                return `${item.dataset.label ?? ""} ${Math.round(y * 100)}%`;
-              },
-            },
-          },
-          annotation: todayDay / Math.max(1, maxDays) > 0.1
-            ? {
-                annotations: {
-                  today: {
-                    type: "line",
-                    xMin: todayDay,
-                    xMax: todayDay,
-                    borderColor: axisColor,
-                    borderDash: [4, 4],
-                    borderWidth: 1,
-                  },
-                },
-              }
-            : undefined,
-        },
-      },
-    };
-  }, [baseStart, curves, data, intlLocale, maxDays, props.enableAnimations, todayDay, xTickFormatter, xTicks, yTickFormatter]);
 
   const legendItems = React.useMemo(() => {
     const items: Array<{ id: string; label: string; color: string; tooltip?: string; status?: string }> = [];
@@ -844,12 +769,50 @@ export function ForgettingCurveChart(props: {
       </div>
 
       {curves.length ? (
-        <ChartJsCanvas
-          className="learnkit-analytics-chart"
-          config={chartConfig}
-          height={250}
-          ariaLabel={tx("ui.analytics.forgettingCurve.title", "Forgetting curve")}
-        />
+        <div className="learnkit-analytics-chart">
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart isAnimationActive={false} data={data} margin={{ top: 28, right: 12, left: 16, bottom: 0 }}>
+              <XAxis
+                dataKey="day"
+                ticks={[0, maxDays / 2, maxDays]}
+                tickFormatter={tickFormatter}
+                tick={{ fontSize: 11, fill: "var(--text-muted)" }}
+                axisLine={{ stroke: "var(--border)" }}
+                tickLine={{ stroke: "var(--border)" }}
+                label={{ value: "", position: "insideBottomRight", offset: -6 }}
+              />
+              <YAxis
+                domain={[0, 1]}
+                ticks={[0, 0.5, 1]}
+                tickFormatter={yTickFormatter}
+                tick={{ fontSize: 11, fill: "var(--text-muted)" }}
+                axisLine={{ stroke: "var(--border)" }}
+                tickLine={{ stroke: "var(--border)" }}
+              />
+              <Tooltip content={<CardCurveTooltip baseStart={baseStart} locale={intlLocale} />} isAnimationActive={false} />
+              {todayDay / maxDays > 0.1 && (
+                <ReferenceLine
+                  x={todayDay}
+                  stroke="var(--border)"
+                  strokeDasharray="4 4"
+                  label={{ value: tx("ui.view.coach.readiness.today", "Today"), position: "top", fill: "var(--text-muted)", fontSize: 11 }}
+                />
+              )}
+              {curves.map((curve) => (
+                <Line
+                  key={curve.id}
+                  type="monotone"
+                  dataKey={curve.id}
+                  name={curve.label}
+                  stroke={curve.color}
+                  strokeWidth={2}
+                  dot={false}
+                  isAnimationActive={props.enableAnimations ?? true}
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       ) : (
         <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
           {selectedIds.length ? tx("ui.analytics.forgettingCurve.notStudied", "Selected cards have not been studied yet.") : tx("ui.analytics.forgettingCurve.searchPlaceholder", "Search for cards to plot forgetting curves.")}

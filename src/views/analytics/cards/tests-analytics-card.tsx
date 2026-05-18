@@ -8,13 +8,12 @@
 import {  } from "obsidian";
 
 import * as React from "react";
-import type { ChartConfiguration } from "chart.js";
+import { ComposedChart, Line, ResponsiveContainer, Scatter, Tooltip, XAxis, YAxis } from "recharts";
 import { createXAxisTicks, formatAxisLabel } from "../chart-axis-utils";
 import { useAnalyticsPopoverZIndex } from "../filter-styles";
 import { MS_DAY } from "../../../platform/core/constants";
 import { interfaceLocaleToIntlLocale } from "../../../platform/translations/locale-registry";
 import { t } from "../../../platform/translations/translator";
-import { ChartJsCanvas, resolveChartColor } from "../charts/chartjs-canvas";
 
 type AnalyticsExamAttemptEventLike = {
   kind?: string;
@@ -205,6 +204,34 @@ function toRows(
   return Array.from(deduped.values()).sort((a, b) => a.at - b.at);
 }
 
+function TestsTooltipContent(props: {
+  active?: boolean;
+  payload?: Array<{ dataKey?: string | number; payload?: unknown }>;
+  label?: number | string;
+  averagesByDay: Map<number, DailyAveragePoint>;
+  locale?: string;
+}) {
+  if (!props.active) return null;
+
+  const hoveredDayIndex =
+    typeof props.label === "number"
+      ? props.label
+      : Number(props.label);
+
+  if (!Number.isFinite(hoveredDayIndex)) return null;
+
+  const dailyDatum = props.averagesByDay.get(hoveredDayIndex);
+  if (!dailyDatum || dailyDatum.averageScore == null) return null;
+
+  return (
+    <div className="learnkit-data-tooltip-surface">
+      <div className="text-background">{t(props.locale, "ui.analytics.tests.tooltipDate", "Date: {date}", { date: dailyDatum.date })}</div>
+      <div className="text-background">{t(props.locale, "ui.analytics.tests.tooltipAttempts", "Tests completed: {count}", { count: dailyDatum.attempts })}</div>
+      <div className="text-background">{t(props.locale, "ui.analytics.tests.tooltipAvg", "Average result: {score}%", { score: dailyDatum.averageScore.toFixed(1) })}</div>
+    </div>
+  );
+}
+
 function buildScatterData(
   rows: ExamAttemptRow[],
   durationDays: number,
@@ -354,102 +381,6 @@ export function TestsAnalyticsCard(props: {
     setDurationOpen(false);
   }, []);
 
-  const chartConfig = React.useMemo<ChartConfiguration<"line">>(() => {
-    const axisColor = resolveChartColor("var(--border)");
-    const tickColor = resolveChartColor("var(--text-muted)");
-    const xTickSet = new Set(xTicks);
-
-    return {
-      type: "line",
-      data: {
-        datasets: [
-          {
-            type: "scatter",
-            label: "Score",
-            data: scatterData.map((point) => ({ x: point.dayIndex, y: point.score })),
-            parsing: false,
-            backgroundColor: resolveChartColor("var(--chart-accent-2)"),
-            pointRadius: 4,
-            pointHoverRadius: 5,
-          },
-          {
-            type: "line",
-            label: "Daily average",
-            data: dailyAverageSeries.map((point) => ({ x: point.dayIndex, y: point.averageScore })),
-            parsing: false,
-            borderColor: resolveChartColor("var(--chart-accent-3)"),
-            borderWidth: 2,
-            pointRadius: 0,
-            spanGaps: true,
-            tension: 0.3,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: { mode: "index", intersect: false },
-        scales: {
-          x: {
-            type: "linear",
-            min: startIdx,
-            max: todayIdx,
-            border: { color: axisColor },
-            grid: { display: false },
-            ticks: {
-              color: tickColor,
-              font: { size: 11 },
-              callback: (value) => {
-                const day = Number(value);
-                if (!xTickSet.has(day)) return "";
-                return xTickFormatter(day);
-              },
-            },
-          },
-          y: {
-            min: 0,
-            max: 100,
-            border: { color: axisColor },
-            grid: { display: false },
-            ticks: {
-              color: tickColor,
-              font: { size: 11 },
-              callback: (value) => `${Number(value)}%`,
-            },
-          },
-        },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              title: (items) => {
-                const day = Number(items[0]?.parsed.x ?? todayIdx);
-                const dailyDatum = averagesByDay.get(day);
-                const date = dailyDatum?.date ?? formatDayTitle(day, tz, intlLocale);
-                return t(props.locale, "ui.analytics.tests.tooltipDate", "Date: {date}", { date });
-              },
-              label: (item) => {
-                if (item.dataset.type === "scatter") {
-                  return `Score: ${Math.round(Number(item.parsed.y ?? 0))}%`;
-                }
-                return `Daily average: ${Number(item.parsed.y ?? 0).toFixed(1)}%`;
-              },
-              afterBody: (items) => {
-                const day = Number(items[0]?.parsed.x ?? todayIdx);
-                const dailyDatum = averagesByDay.get(day);
-                if (!dailyDatum || dailyDatum.averageScore == null) return [];
-                return [
-                  t(props.locale, "ui.analytics.tests.tooltipAttempts", "Tests completed: {count}", { count: dailyDatum.attempts }),
-                  t(props.locale, "ui.analytics.tests.tooltipAvg", "Average result: {score}%", { score: dailyDatum.averageScore.toFixed(1) }),
-                ];
-              },
-            },
-          },
-        },
-      },
-    };
-  }, [averagesByDay, dailyAverageSeries, intlLocale, props.locale, scatterData, startIdx, todayIdx, tz, xTickFormatter, xTicks]);
-
   return (
     <div className="card learnkit-ana-card h-full overflow-visible p-4 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
@@ -538,12 +469,49 @@ export function TestsAnalyticsCard(props: {
       ) : (
         <>
           <div className="w-full flex-1 learnkit-analytics-chart">
-            <ChartJsCanvas
-              className="w-full h-full"
-              config={chartConfig}
-              height={250}
-              ariaLabel={t(props.locale, "ui.analytics.tests.title", "Tests performance")}
-            />
+            <ResponsiveContainer width="100%" height={250}>
+              <ComposedChart isAnimationActive={false} margin={{ left: 8, right: 8, top: 12, bottom: 12 }}>
+                <XAxis
+                  dataKey="dayIndex"
+                  type="number"
+                  domain={[startIdx, todayIdx]}
+                  ticks={xTicks}
+                  tickFormatter={xTickFormatter}
+                  tick={{ fontSize: 11 }}
+                />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} width={30} tickFormatter={(v: number) => `${v}%`} />
+                <Tooltip
+                  content={(
+                    <TestsTooltipContent
+                      averagesByDay={averagesByDay}
+                      locale={props.locale}
+                    />
+                  )}
+                  isAnimationActive={false}
+                  animationDuration={0}
+                  wrapperStyle={{ transition: "none" }}
+                  cursor={{ stroke: "var(--border)", strokeDasharray: "3 3", strokeWidth: 1 }}
+                />
+                <Scatter
+                  data={scatterData}
+                  dataKey="score"
+                  name="Score"
+                  fill="var(--chart-accent-2)"
+                  fillOpacity={0.8}
+                />
+                <Line
+                  data={dailyAverageSeries}
+                  dataKey="averageScore"
+                  name="Daily average"
+                  type="monotoneX"
+                  stroke="var(--chart-accent-3)"
+                  strokeWidth={2}
+                  connectNulls
+                  dot={false}
+                  activeDot={false}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
           </div>
 
           <div className="flex flex-wrap gap-3 text-xs text-muted-foreground learnkit-ana-chart-legend">

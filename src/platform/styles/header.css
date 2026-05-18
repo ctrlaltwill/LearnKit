@@ -152,7 +152,7 @@ body:not(.is-phone) .workspace-leaf-content.mod-fade .learnkit .view-header.lear
   align-items: center;
   justify-content: center;
   color: inherit;
-  text-decoration: none;
+  text-decoration-line: none;
   cursor: default;
   overflow: visible;
 }

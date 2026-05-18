@@ -194,13 +194,14 @@ function withSharedChartDefaults(config: ChartConfiguration, canvas: HTMLCanvasE
   } else if (existingAnimation && typeof existingAnimation === "object") {
     // Explicit animation config supplied — merge with defaults, letting the caller override
     animation = {
-      duration: 800,
+      duration: 400,
       easing: "easeOutQuart",
+      resize: { duration: 0 },
       ...existingAnimation,
     };
   } else {
     // No explicit animation config — apply per-chart-type defaults for a recharts-like feel
-    const base = { duration: 800, easing: "easeOutQuart" } as const;
+    const base = { duration: 400, easing: "easeOutQuart", resize: { duration: 0 } } as const;
     const chartType = config.type as string;
     switch (chartType) {
       case "doughnut":
@@ -220,7 +221,7 @@ function withSharedChartDefaults(config: ChartConfiguration, canvas: HTMLCanvasE
       case "line":
         animation = {
           ...base,
-          duration: 1000,
+          duration: 500,
           // progressive X-axis reveal gives a sweep-left-to-right feel
         };
         break;

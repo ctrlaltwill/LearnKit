@@ -12,11 +12,10 @@
 import {  } from "obsidian";
 
 import * as React from "react";
-import type { ChartConfiguration } from "chart.js";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { endTruncateClass, useAnalyticsPopoverZIndex } from "../filter-styles";
 import type { CardState } from "../../../platform/types/scheduler";
 import { t } from "../../../platform/translations/translator";
-import { ChartJsCanvas, makeVerticalGradient, resolveChartColor, resolveChartColorWithAlpha } from "./chartjs-canvas";
 
 function InfoIcon(props: { text: string }) {
   return (
@@ -107,6 +106,19 @@ function formatStabilityLabel(
     return tx("ui.analytics.stability.unit.hours", "{count} hours", { count: hours });
   }
   return tx("ui.analytics.stability.unit.days", "{count} days", { count: Math.round(stability) });
+}
+
+function StabilityTooltip(props: { active?: boolean; payload?: Array<{ payload?: unknown }>; label?: number; locale?: string }) {
+  if (!props.active || !props.payload || !props.payload.length) return null;
+  const datum = props.payload[0]?.payload as StabilityBucket | undefined;
+  if (!datum) return null;
+  const tx = (token: string, fallback: string, vars?: Record<string, string | number>) => t(props.locale, token, fallback, vars);
+  return (
+    <div className="learnkit-data-tooltip-surface">
+      <div className="text-sm font-medium text-background">{formatStabilityLabel(Number(props.label ?? 0), [datum], tx)}</div>
+      <div className="text-background">{tx("ui.analytics.stability.tooltipCards", "Cards: {count}", { count: datum.count })}</div>
+    </div>
+  );
 }
 
 function createStabilityDistribution(
@@ -220,6 +232,21 @@ const typeLabels: Record<string, string> = {
 
 export function StabilityDistributionChart(props: StabilityDistributionChartProps) {
   const tx = React.useMemo(() => (token: string, fallback: string, vars?: Record<string, string | number>) => t(props.locale, token, fallback, vars), [props.locale]);
+  const renderStabilityLabel = React.useCallback((labelProps: unknown) => {
+    const viewBox = (labelProps as { viewBox?: Record<string, unknown> } | null)?.viewBox ?? {};
+    const x = typeof viewBox.x === "number" ? viewBox.x : 0;
+    const y = typeof viewBox.y === "number" ? viewBox.y : 0;
+    const width = typeof viewBox.width === "number" ? viewBox.width : 0;
+    const height = typeof viewBox.height === "number" ? viewBox.height : 0;
+    const cx = x + width / 2;
+    const cy = y + height + 16;
+    return (
+      <text x={cx} y={cy} textAnchor="middle" fill="var(--text-muted)">
+        <tspan fontSize={11}>{tx("ui.analytics.stability.axisLabel", "Stability")}</tspan>
+        <title>{tx("ui.analytics.stability.axisTooltip", "Stability is the expected retention interval (days, exponential scale)")}</title>
+      </text>
+    );
+  }, [tx]);
 
   const [selectedType, setSelectedType] = React.useState<string | null>(null);
   const [tagQuery, setTagQuery] = React.useState("");
@@ -352,98 +379,6 @@ export function StabilityDistributionChart(props: StabilityDistributionChartProp
       maxLabel: Math.round(maxStability).toString(),
     };
   }, [data]);
-
-  const chartConfig = React.useMemo<ChartConfiguration<"line">>(() => {
-    const axisColor = resolveChartColor("var(--border)");
-    const tickColor = resolveChartColor("var(--text-muted)");
-    const lineColor = resolveChartColor("var(--chart-accent-2)");
-
-    return {
-      type: "line",
-      data: {
-        datasets: [
-          {
-            label: tx("ui.analytics.stability.subtitle", "Cards by stability (days)"),
-            data: data.map((point) => ({ x: point.stabilityScaled, y: point.count })),
-            parsing: false,
-            borderColor: lineColor,
-            borderWidth: 2.5,
-            pointRadius: 0,
-            pointHoverRadius: 3,
-            tension: 0.3,
-            fill: true,
-            backgroundColor: (ctx) =>
-              makeVerticalGradient(
-                ctx.chart,
-                resolveChartColorWithAlpha("var(--chart-accent-2)", 0.32, ctx.chart.canvas),
-                resolveChartColorWithAlpha("var(--chart-accent-2)", 0.04, ctx.chart.canvas),
-              ),
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: props.enableAnimations ?? true,
-        interaction: { mode: "nearest", intersect: false },
-        scales: {
-          x: {
-            type: "linear",
-            min: xAxisConfig.min,
-            max: xAxisConfig.max,
-            border: { color: axisColor },
-            grid: { display: false },
-            ticks: {
-              color: tickColor,
-              font: { size: 11 },
-              callback: (value) => {
-                const num = Number(value);
-                if (!Number.isFinite(num)) return "";
-                if (Math.abs(num - xAxisConfig.min) < 0.01) return xAxisConfig.minLabel;
-                if (Math.abs(num - xAxisConfig.max) < 0.01) return xAxisConfig.maxLabel;
-                const original = num * num;
-                if (original < 1) return `${Math.round(original * 24)}h`;
-                return `${Math.round(original)}d`;
-              },
-            },
-            title: {
-              display: true,
-              text: tx("ui.analytics.stability.axisLabel", "Stability"),
-              color: tickColor,
-              font: { size: 11 },
-            },
-          },
-          y: {
-            type: "linear",
-            min: 0,
-            max: yAxisConfig.max,
-            border: { color: axisColor },
-            grid: { display: false },
-            ticks: {
-              color: tickColor,
-              font: { size: 12 },
-              callback: (value) => String(value),
-            },
-            afterBuildTicks: (axis) => {
-              axis.ticks = yAxisConfig.ticks.map((value) => ({ value }));
-            },
-          },
-        },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              title: (items) => {
-                const value = Number(items[0]?.parsed.x ?? 0);
-                return formatStabilityLabel(value, data, tx);
-              },
-              label: (item) => tx("ui.analytics.stability.tooltipCards", "Cards: {count}", { count: Number(item.parsed.y ?? 0) }),
-            },
-          },
-        },
-      },
-    };
-  }, [data, props.enableAnimations, tx, xAxisConfig.max, xAxisConfig.maxLabel, xAxisConfig.min, xAxisConfig.minLabel, yAxisConfig.max, yAxisConfig.ticks]);
 
   const toggleDeck = (deck: string) => {
     setSelectedDecks((prev) => {
@@ -654,12 +589,65 @@ export function StabilityDistributionChart(props: StabilityDistributionChartProp
         </div>
       </div>
 
-      <ChartJsCanvas
-        className={"w-full flex-1 learnkit-analytics-chart"}
-        config={chartConfig}
-        height={250}
-        ariaLabel={tx("ui.analytics.stability.title", "Stability distribution")}
-      />
+      <div className={"w-full flex-1 learnkit-analytics-chart"}>
+        <ResponsiveContainer width="100%" height={250}>
+          <AreaChart isAnimationActive={false} data={data} margin={{ top: 12, right: 12, bottom: 28, left: 8 }}>
+            <defs>
+              <linearGradient id="stabilityGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="var(--chart-accent-2)" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="var(--chart-accent-2)" stopOpacity={0.1} />
+              </linearGradient>
+            </defs>
+
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={true} horizontal={true} />
+
+            <XAxis
+              dataKey="stabilityScaled"
+              type="number"
+              tick={{ fontSize: 11, textAnchor: "end" }}
+              axisLine={{ stroke: "var(--border)" }}
+              ticks={[xAxisConfig.min, xAxisConfig.max]}
+              tickFormatter={(value: number) => {
+                const num = Number(value);
+                if (!Number.isFinite(num)) return "";
+                const absValue = Math.abs(num);
+                if (Math.abs(absValue - xAxisConfig.min) < 0.01) return xAxisConfig.minLabel;
+                if (Math.abs(absValue - xAxisConfig.max) < 0.01) return xAxisConfig.maxLabel;
+                const original = num * num;
+                if (original < 1) {
+                  // Show hours as integer
+                  const hours = Math.round(original * 24);
+                  return `${hours}h`;
+                }
+                // Show days as integer
+                return `${Math.round(original)}d`;
+              }}
+              label={{ position: "bottom", offset: 12, content: renderStabilityLabel }}
+              domain={[xAxisConfig.min, xAxisConfig.max]}
+            />
+
+            <YAxis
+              tickLine={false}
+              axisLine={{ stroke: "var(--border)" }}
+              width={32}
+              tick={{ fontSize: 12 }}
+              domain={[0, yAxisConfig.max]}
+              ticks={yAxisConfig.ticks}
+            />
+
+            <Tooltip content={<StabilityTooltip locale={props.locale} />} isAnimationActive={false} />
+
+            <Area
+              type="monotone"
+              dataKey="count"
+              stroke="var(--chart-accent-2)"
+              strokeWidth={3}
+              fill="url(#stabilityGradient)"
+              isAnimationActive={true}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }
