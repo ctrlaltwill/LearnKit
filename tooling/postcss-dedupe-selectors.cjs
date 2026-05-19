@@ -1,9 +1,10 @@
 /**
  * PostCSS plugin: deduplicate identical selectors within the same parent scope.
  *
- * Groups child Rules within each container (root, @media, @supports) by
- * normalized selector text and merges all declarations into the first
- * occurrence. Duplicate properties keep the last value (CSS cascade).
+ * Groups child Rules within each container (root, @layer, @media, @supports,
+ * @starting-style) by normalized selector text and merges all declarations
+ * into the first occurrence. Duplicate properties keep the last value (CSS
+ * cascade).
  *
  * Selector text is NEVER modified — only compared after normalization.
  *
@@ -94,10 +95,15 @@ module.exports = () => {
       // Root-level rules
       totalRemoved += dedupeRulesInContainer(root);
 
-      // @media and @supports blocks
+      // @layer, @media, @supports, and @starting-style blocks
       root.walkAtRules((atRule) => {
         const name = atRule.name.toLowerCase();
-        if (name === "media" || name === "supports") {
+        if (
+          name === "layer" ||
+          name === "media" ||
+          name === "supports" ||
+          name === "starting-style"
+        ) {
           totalRemoved += dedupeRulesInContainer(atRule);
         }
       });

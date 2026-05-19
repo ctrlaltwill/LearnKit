@@ -150,16 +150,14 @@ html {
 }
 
 /* Starlight search uses dark-first tokens for its dialog. Force a light surface in day theme only. */
-/* eslint-disable obsidianmd/no-unknown-type-selector */
-:root[data-theme="light"] site-search dialog,
-:root[data-theme="light"] site-search .dialog-frame {
+:root[data-theme="light"] [data-translations] dialog,
+:root[data-theme="light"] [data-translations] .dialog-frame {
   background-color: var(--background);
 }
 
-:root[data-theme="light"] site-search #starlight__search {
+:root[data-theme="light"] [data-translations] #starlight__search {
   --pagefind-ui-background: var(--background);
 }
-/* eslint-enable obsidianmd/no-unknown-type-selector */
 
 /* Scope table compaction to the Companion model compatibility table only. */
 .sl-markdown-content h2#compatibility-table + table {

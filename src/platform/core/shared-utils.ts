@@ -557,9 +557,13 @@ export function processClozeForMath(
   const buildBlankHtml = (content: string, hintText?: string | null): string => {
     const plainContent = stripInlineMarkdownMarkers(content || "");
     const w = Math.max(4, Math.min(40, plainContent.length || 6));
-    const widthPx = Math.max(30, (w * 8) - 20);
+    let widthPx = Math.max(30, (w * 8) - 20);
     if (hintText) {
-      return `<span class="learnkit-cloze-hint" style="width:${widthPx}px">${escapeHtml(stripInlineMarkdownMarkers(hintText))}</span>`;
+      const plainHint = stripInlineMarkdownMarkers(hintText);
+      const wh = Math.max(4, Math.min(40, plainHint.length || 6));
+      const hintWidthPx = Math.max(30, (wh * 8) - 20);
+      widthPx = Math.max(widthPx, hintWidthPx);
+      return `<span class="learnkit-cloze-hint" style="width:${widthPx}px">${escapeHtml(plainHint)}</span>`;
     }
     return `<span class="${blankClassName}" style="--learnkit-cloze-width:${widthPx}px"></span>`;
   };
@@ -584,7 +588,7 @@ export function processClozeForMath(
         } else if (options?.revealWrapper) {
           result += options.revealWrapper(answer);
         } else {
-          result += `**${answer}**`;
+          result += `<span class="learnkit-cloze-revealed">${escapeHtml(answer)}</span>`;
         }
       } else if (hint && useHintText) {
         result += inMath ? stripInlineMarkdownMarkers(hint) : buildBlankHtml(answer, hint);

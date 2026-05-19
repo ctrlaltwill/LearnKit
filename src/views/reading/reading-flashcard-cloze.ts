@@ -35,7 +35,9 @@ function computeReadingViewClozeWidthPx(content: string): number {
 }
 
 function buildReadingViewHintHtml(answer: string, hint: string): string {
-  const widthPx = computeReadingViewClozeWidthPx(answer || hint);
+  const answerWidth = computeReadingViewClozeWidthPx(answer);
+  const hintWidth = computeReadingViewClozeWidthPx(hint);
+  const widthPx = Math.max(answerWidth, hintWidth);
   return `<span class="learnkit-cloze-hint" style="width:${widthPx}px">${escapeHtml(stripInlineMarkdownMarkers(hint))}</span>`;
 }
 

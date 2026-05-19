@@ -48,10 +48,6 @@
 .learnkit .modal-container.mod-dim .modal-bg,
 .learnkit .lk-modal-dim .modal-bg,
 .learnkit .modal-container .modal-bg,
-.lk-modal-container .modal-bg,
-.modal-container.mod-dim .modal-bg,
-.lk-modal-dim .modal-bg,
-.modal-container .modal-bg,
 .modal-container.lk-modal-container.lk-modal-dim.mod-dim > .modal-bg,
 .modal-container.lk-modal-container.lk-modal-dim.learnkit.mod-dim > .modal-bg {
   position: absolute ;

@@ -37,7 +37,7 @@ describe("processClozeForMath", () => {
     const back = processClozeForMath(input, true, null);
 
     expect(front).toBe("The identity is <span class=\"sprout-cloze-blank hidden-cloze\" style=\"--learnkit-cloze-width:30px\"></span>.");
-    expect(back).toBe("The identity is **true**.");
+    expect(back).toBe("The identity is <span class=\"learnkit-cloze-revealed\">true</span>.");
   });
 
   it("shows the hint instead of a blank outside math", () => {
@@ -47,7 +47,7 @@ describe("processClozeForMath", () => {
     const back = processClozeForMath(input, true, null);
 
     expect(front).toBe("Mnemonic: <span class=\"learnkit-cloze-hint\" style=\"width:132px\">P</span>.");
-    expect(back).toBe("Mnemonic: **Psoriatic arthritis**.");
+    expect(back).toBe("Mnemonic: <span class=\"learnkit-cloze-revealed\">Psoriatic arthritis</span>.");
   });
 
   it("converts inline $$...$$ to $...$ when line has surrounding text", () => {

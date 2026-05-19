@@ -187,6 +187,7 @@
   background-color: color-mix(in srgb, var(--color-base-40) 8%, transparent 92%) ;
   color: var(--text-normal) ;
   border: 0.5px var(--color-base-40) solid ;
+  border-radius: var(--radius-md);
 }
 
 .learnkit .learnkit-btn-filter:is(:hover, :focus-visible, :focus-within, [aria-expanded="true"]) {

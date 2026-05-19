@@ -322,7 +322,9 @@ export function renderClozeFront(
           const hintSpan = activeDocument.createElement("span");
           hintSpan.className = "learnkit-cloze-hint";
           applyInlineMarkdownWithFlags(hintSpan, hint);
-          setCssProps(hintSpan, "width", `${computeBlankWidthPx(plainAns || plainHint)}px`);
+          const answerWidth = computeBlankWidthPx(plainAns);
+          const hintWidth = computeBlankWidthPx(plainHint);
+          setCssProps(hintSpan, "width", `${Math.max(answerWidth, hintWidth)}px`);
           parent.appendChild(hintSpan);
         } else {
           ensureSpaceBeforeBlank();

@@ -492,37 +492,45 @@ export function parseLearnKitCard(text: string): LearnKitCard | null {
   if (shorthandLineIndex >= 0) {
     const shorthandLine = lines[shorthandLineIndex].trim();
 
-    // Cloze shorthand (checked first to avoid :: collision with basic)
-    const cm = shorthandLine.match(CLOZE_SHORTHAND_RE);
-    if (cm) {
-      const body = cm[1].trim();
-      if (body) {
-        fields.CQ = autoNumberClozeTokens(body);
-        return { anchorId, type: "cloze", title: "", fields, comboMode: undefined };
+    // Only apply shorthand detection when the line is NOT a canonical
+    // pipe-delimited field start (e.g. "CQ | …", "Q | …").  Without
+    // this guard a single-line CQ card like
+    //   CQ | Here is a {{c1::question::hint}} |
+    // would be mis-parsed as basic shorthand because BASIC_SHORTHAND_RE
+    // matches the "::" inside the cloze token.
+    if (!matchKnownFieldStart(shorthandLine)) {
+      // Cloze shorthand (checked first to avoid :: collision with basic)
+      const cm = shorthandLine.match(CLOZE_SHORTHAND_RE);
+      if (cm) {
+        const body = cm[1].trim();
+        if (body) {
+          fields.CQ = autoNumberClozeTokens(body);
+          return { anchorId, type: "cloze", title: "", fields, comboMode: undefined };
+        }
       }
-    }
 
-    // Reversed shorthand (checked before basic to avoid ambiguity with :::)
-    const rm = shorthandLine.match(REVERSED_SHORTHAND_RE);
-    if (rm) {
-      const qText = rm[1].trim();
-      const aText = rm[2].trim();
-      if (qText && aText) {
-        fields.RQ = qText;
-        fields.A = aText;
-        return { anchorId, type: "reversed", title: "", fields, comboMode: undefined };
+      // Reversed shorthand (checked before basic to avoid ambiguity with :::)
+      const rm = shorthandLine.match(REVERSED_SHORTHAND_RE);
+      if (rm) {
+        const qText = rm[1].trim();
+        const aText = rm[2].trim();
+        if (qText && aText) {
+          fields.RQ = qText;
+          fields.A = aText;
+          return { anchorId, type: "reversed", title: "", fields, comboMode: undefined };
+        }
       }
-    }
 
-    // Basic shorthand
-    const sm = shorthandLine.match(BASIC_SHORTHAND_RE);
-    if (sm) {
-      const qText = sm[1].trim();
-      const aText = sm[2].trim();
-      if (qText && aText) {
-        fields.Q = qText;
-        fields.A = aText;
-        return { anchorId, type: "basic", title: "", fields, comboMode: undefined };
+      // Basic shorthand
+      const sm = shorthandLine.match(BASIC_SHORTHAND_RE);
+      if (sm) {
+        const qText = sm[1].trim();
+        const aText = sm[2].trim();
+        if (qText && aText) {
+          fields.Q = qText;
+          fields.A = aText;
+          return { anchorId, type: "basic", title: "", fields, comboMode: undefined };
+        }
       }
     }
   }

@@ -19,7 +19,6 @@
 }
 .learnkit .learnkit-github-stars:hover {
   background: #222222;
-  text-decoration-line: none;
   font-weight: 600;
   width: fit-content;
 }
@@ -94,7 +93,6 @@
 }
 .learnkit .learnkit-bmc:hover {
   background: #e2a800;
-  text-decoration-line: none;
   font-weight: 600;
   width: fit-content;
 }

@@ -456,7 +456,6 @@
   box-shadow: none;
   outline: none;
   outline-color: transparent;
-  text-decoration: none;
   filter: none;
   border-radius: 0;
   transition: opacity 0.15s;
@@ -808,13 +807,13 @@
 /* Internal links in reading view cards */
 .learnkit-pretty-card a.internal-link {
   color: var(--link-color);
-  text-decoration-line: none;
+  border-bottom: 1px solid transparent;
   cursor: pointer;
 }
 
 .learnkit-pretty-card a.internal-link:hover {
   color: var(--link-color-hover);
-  text-decoration-line: underline;
+  border-bottom-color: currentColor;
 }
 
 

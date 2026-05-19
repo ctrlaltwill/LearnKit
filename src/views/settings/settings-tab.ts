@@ -24,9 +24,10 @@ import {
   getSupportedInterfaceLocales,
   resolveInterfaceLocalePreference,
   resolveInterfaceLocale,
+  isBuiltinLocale,
 } from "../../platform/translations/locale-registry";
 import { getCircleFlagFallbackUrl, getCircleFlagUrl } from "../../platform/flags/flag-tokens";
-import { t } from "../../platform/translations/translator";
+import { t, loadCommunityLocale } from "../../platform/translations/translator";
 import { getLanguageOptions, getScriptLanguageGroups, getAvailableVoices, getTtsService } from "../../platform/integrations/tts/tts-service";
 import { clearTtsCache } from "../../platform/integrations/tts/tts-cache";
 import {
@@ -1132,6 +1133,22 @@ export class LearnKitSettingsTab extends PluginSettingTab {
           if (!this.plugin.settings.general) this.plugin.settings.general = {} as typeof this.plugin.settings.general;
           this.plugin.settings.general.interfaceLanguage = next;
           await this.plugin.saveAll();
+
+          // If the user selected a community (downloadable) locale, try to
+          // load its bundle before refreshing the UI.
+          const resolved = resolveInterfaceLocale(next);
+          if (!isBuiltinLocale(resolved)) {
+            const pluginDir = `${this.app.vault.configDir}/plugins/${this.plugin.manifest.id}`;
+            const ok = await loadCommunityLocale(pluginDir, resolved);
+            if (!ok) {
+              new Notice(
+                t(resolved, "ui.settings.localeDownloadFailed", "Could not load {locale} translation. Using English as fallback.", {
+                  locale: getInterfaceLocaleLabel(resolved),
+                }),
+              );
+            }
+          }
+
           const selectedLabel = getInterfaceLocaleLabel(next);
           this.queueSettingsNotice("general.interfaceLanguage", this._noticeLines.interfaceLanguage(selectedLabel));
           // Refresh all open views.

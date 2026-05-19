@@ -1759,9 +1759,9 @@ font-family: inherit;
 
 .learnkit-cloze-typed-wrong {
   background-color: color-mix(in srgb, var(--learnkit-again-bg) 10%, transparent);
+  background-image: linear-gradient(to bottom, transparent calc(50% - 0.5px), currentColor calc(50% - 0.5px), currentColor calc(50% + 0.5px), transparent calc(50% + 0.5px));
   color: var(--learnkit-again-bg);
   border: 0.5px solid var(--learnkit-again-bg);
-  text-decoration-line: line-through;
 }
 
 /* Mobile session card chrome spacing: 8px margin from card edge,

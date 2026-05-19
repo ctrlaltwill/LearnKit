@@ -72,6 +72,7 @@ import { ReminderEngine } from "../../views/reminders/reminder-engine";
 import { ensurePluginRuntimeState } from "./runtime-state";
 import { getTtsService } from "../integrations/tts/tts-service";
 import { getTtsCacheDirPath } from "../integrations/tts/tts-cache";
+import { setLocaleFileReader, loadLocaleBundlesAsync } from "../translations/translator";
 
 export function WithLifecycleMethods<T extends Constructor<LearnKitPluginBase>>(Base: T) {
   return class WithLifecycleMethods extends Base {
@@ -349,6 +350,21 @@ export function WithLifecycleMethods<T extends Constructor<LearnKitPluginBase>>(
 
           this._reminderEngine?.start();
         });
+
+        // Wire up locale file reader and preload any community locales
+        // that are shipped alongside the plugin (fr, ja, es).
+        {
+          const adapter = this.app?.vault?.adapter;
+          const configDir = this.app?.vault?.configDir;
+          const pluginId = this.manifest?.id;
+          if (adapter && configDir && pluginId) {
+            setLocaleFileReader((path: string) => adapter.read(path));
+            const pluginDir = `${configDir}/plugins/${pluginId}`;
+            void loadLocaleBundlesAsync(pluginDir).catch((e: unknown) =>
+              log.warn("Failed to preload community locales", e),
+            );
+          }
+        }
 
         await this.saveAll();
         void this.refreshGithubStars();

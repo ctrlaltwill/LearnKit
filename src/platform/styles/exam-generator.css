@@ -777,7 +777,7 @@
   width: 100%;
   justify-content: space-between;
   border: 0.5px solid var(--color-base-35) ;
-  background-color: color-mix(in srgb, var(--color-base-40) 8%, transparent 92%) ;
+  background-color: var(--color-base-05);
   color: var(--text-normal) ;
   box-shadow: none;
   -webkit-backdrop-filter: blur(12px);
@@ -786,9 +786,9 @@
 }
 
 .learnkit .learnkit-exam-generator-select-trigger:is(:hover, :focus-visible, [aria-expanded="true"]) {
-  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) ;
-  border-color: color-mix(in srgb, var(--color-base-70) 25%, transparent 75%) ;
-  color: var(--color-base-100) ;
+  background-color: var(--color-base-10);
+    border: 0.5px solid var(--color-base-35);
+    color: var(--color-base-100);
 }
 
 .learnkit .learnkit-exam-generator-select-trigger:active {
@@ -820,6 +820,7 @@
   transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
   margin: 1px 0;
   height: 32px;
+  color: var(--text-color);
 }
 
 .learnkit .learnkit-exam-generator-select-panel [role="menuitemradio"].group:is(:hover, :focus, :focus-visible, :active),

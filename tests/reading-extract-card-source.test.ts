@@ -224,6 +224,23 @@ describe("parseLearnKitCard", () => {
     expect(card?.fields.Q).toBe("What is 2+2?");
     expect(card?.fields.A).toBe("4");
   });
+
+  it("does not treat pipe-delimited CQ with cloze hints as basic shorthand", () => {
+    // The :: inside {{c1::answer::hint}} must not trigger BASIC_SHORTHAND_RE.
+    const source = [
+      "^learnkit-817769971",
+      "CQ | Short {{c1::Short::WITHWITHWITHWITHWITHWITHWITHWITH LONG HINT TO TEST}} |",
+    ].join("\n");
+
+    const card = parseLearnKitCard(source);
+
+    expect(card).not.toBeNull();
+    expect(card?.type).toBe("cloze");
+    expect(card?.fields.CQ).toBe("Short {{c1::Short::WITHWITHWITHWITHWITHWITHWITHWITH LONG HINT TO TEST}}");
+    // Must NOT have Q/A fields (which would indicate basic shorthand match)
+    expect(card?.fields.Q).toBeUndefined();
+    expect(card?.fields.A).toBeUndefined();
+  });
 });
 
 describe("extractCardFromSource with shorthands", () => {

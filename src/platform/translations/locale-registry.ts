@@ -22,6 +22,8 @@ export type InterfaceLocaleDefinition = {
   nativeLabel: string;
   flagCode?: string;
   status: "stable" | "community";
+  /** Whether the locale bundle is statically bundled (works offline immediately). */
+  builtin: boolean;
 };
 
 export const DEFAULT_INTERFACE_LOCALE = "en-gb";
@@ -37,6 +39,7 @@ const INTERFACE_LOCALE_REGISTRY: ReadonlyArray<InterfaceLocaleDefinition> = [
     nativeLabel: "Match Obsidian",
     flagCode: "checkered",
     status: "stable",
+    builtin: true,
   },
   {
     code: "en-gb",
@@ -44,6 +47,7 @@ const INTERFACE_LOCALE_REGISTRY: ReadonlyArray<InterfaceLocaleDefinition> = [
     nativeLabel: "English (United Kingdom)",
     flagCode: "en-gb",
     status: "stable",
+    builtin: true,
   },
   {
     code: "en-us",
@@ -51,6 +55,7 @@ const INTERFACE_LOCALE_REGISTRY: ReadonlyArray<InterfaceLocaleDefinition> = [
     nativeLabel: "English (United States)",
     flagCode: "en-us",
     status: "stable",
+    builtin: true,
   },
   {
     code: "zh-cn",
@@ -58,6 +63,7 @@ const INTERFACE_LOCALE_REGISTRY: ReadonlyArray<InterfaceLocaleDefinition> = [
     nativeLabel: "简体中文",
     flagCode: "cn",
     status: "community",
+    builtin: true,
   },
   {
     code: "fr",
@@ -65,6 +71,7 @@ const INTERFACE_LOCALE_REGISTRY: ReadonlyArray<InterfaceLocaleDefinition> = [
     nativeLabel: "Français",
     flagCode: "fr",
     status: "community",
+    builtin: false,
   },
   {
     code: "ja",
@@ -72,6 +79,7 @@ const INTERFACE_LOCALE_REGISTRY: ReadonlyArray<InterfaceLocaleDefinition> = [
     nativeLabel: "日本語",
     flagCode: "jp",
     status: "community",
+    builtin: false,
   },
   {
     code: "es",
@@ -79,6 +87,7 @@ const INTERFACE_LOCALE_REGISTRY: ReadonlyArray<InterfaceLocaleDefinition> = [
     nativeLabel: "Español",
     flagCode: "es",
     status: "community",
+    builtin: false,
   },
 ];
 
@@ -165,4 +174,25 @@ export function getInterfaceLocaleLabel(code: string): string {
   }
   const hit = INTERFACE_LOCALE_REGISTRY.find((locale) => locale.code === candidate);
   return (hit?.label ?? candidate) || "English (US)";
+}
+
+/**
+ * Returns true when the locale is bundled statically (no download needed).
+ * Non-builtin locales are shipped as separate JSON files in `locales/`
+ * and loaded on demand.
+ */
+export function isBuiltinLocale(code: string): boolean {
+  const candidate = normaliseInterfaceLocale(code);
+  if (candidate === FOLLOW_OBSIDIAN_INTERFACE_LOCALE) return true;
+  const hit = INTERFACE_LOCALE_REGISTRY.find((locale) => locale.code === candidate);
+  return hit?.builtin ?? true; // unknown locales fall back to English (builtin)
+}
+
+/**
+ * Lists community locale codes that can be downloaded.
+ */
+export function getDownloadableLocales(): string[] {
+  return INTERFACE_LOCALE_REGISTRY
+    .filter((l) => !l.builtin && l.code !== FOLLOW_OBSIDIAN_INTERFACE_LOCALE)
+    .map((l) => l.code);
 }

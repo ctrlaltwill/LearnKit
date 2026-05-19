@@ -32,4 +32,16 @@ describe("reading view flashcard cloze hints", () => {
     expect(html).toContain("cloze <span class=\"learnkit-reading-view-cloze\"><span class=\"learnkit-cloze-text\">test</span></span>");
     expect(html).not.toContain("{{c1::test}}");
   });
+
+  it("sizes hint width from the wider of answer and hint text", () => {
+    // Short answer "foo" (3 chars → ~30px), long hint "lorem ipsum dolor sit amet" (26 chars → 188px)
+    const input = "Alice checked {{c1::foo::lorem ipsum dolor sit amet}}.";
+
+    const front = buildReadingFlashcardCloze(input, "front");
+
+    expect(front).toContain("learnkit-cloze-hint");
+    expect(front).toContain("lorem ipsum dolor sit amet");
+    // Width should be based on the hint (188px), not the answer (~30px)
+    expect(front).toContain("width:188px");
+  });
 });

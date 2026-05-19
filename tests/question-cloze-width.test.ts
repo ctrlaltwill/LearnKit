@@ -66,4 +66,22 @@ describe("renderClozeFront cloze widths", () => {
     expect(revealed.querySelector(".learnkit-cloze-typed-wrong")).toBeNull();
     expect(revealed.querySelector(".learnkit-cloze-typed-correct")).not.toBeNull();
   });
+
+  it("sizes hint width from the wider of answer and hint text", async () => {
+    const rendered = renderClozeFront(
+      "Alice checked {{c1::foo::lorem ipsum dolor sit amet}}.",
+      false,
+      null,
+    );
+
+    document.body.appendChild(rendered);
+    const hints = Array.from(rendered.querySelectorAll<HTMLElement>(".learnkit-cloze-hint"));
+
+    expect(hints).toHaveLength(1);
+    // The hint "lorem ipsum dolor sit amet" is much longer than "foo",
+    // so the width should be larger than what "foo" alone would produce.
+    // "foo" alone gives ~30px (capped at minimum); the hint should be wider.
+    const widthPx = parseFloat(hints[0].style.width);
+    expect(widthPx).toBeGreaterThan(60); // substantially above the minimum
+  });
 });
