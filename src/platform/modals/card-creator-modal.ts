@@ -50,6 +50,7 @@ type PendingImage = {
 export class CardCreatorModal extends Modal {
   private plugin: LearnKitPlugin;
   private forcedType?: CardType;
+  private selectedText = "";
   private pendingImages: Map<string, PendingImage> = new Map();
   private _ioPasteHandler: ((ev: ClipboardEvent) => void) | null = null;
   private _ioBlobUrl: string | null = null;
@@ -58,10 +59,29 @@ export class CardCreatorModal extends Modal {
     return t(this.plugin.settings?.general?.interfaceLanguage, token, fallback, vars);
   }
 
-  constructor(app: App, plugin: LearnKitPlugin, forcedType?: CardType) {
+  constructor(app: App, plugin: LearnKitPlugin, forcedType?: CardType, selectedText?: string) {
     super(app);
     this.plugin = plugin;
     this.forcedType = forcedType;
+    this.selectedText = String(selectedText ?? "").trim();
+  }
+
+  private getPrefillSeedForType(type: CardType): { question?: string; answer?: string } {
+    const selectedText = String(this.selectedText || "").trim();
+    if (!selectedText) return {};
+
+    const prefillTarget = this.plugin.settings?.cards?.selectionPrefillTarget ?? "question";
+    if (prefillTarget === "disabled") return {};
+
+    if (prefillTarget === "answer") {
+      if (type === "basic" || type === "reversed") {
+        return { answer: selectedText };
+      }
+      // Card types without a simple answer textarea fall back to question/stem.
+      return { question: selectedText };
+    }
+
+    return { question: selectedText };
   }
 
   // ── Image paste handling ──────────────────────────────────────────────────
@@ -406,12 +426,15 @@ export class CardCreatorModal extends Modal {
     const renderCardEditor = () => {
       editorContainer.empty();
       try {
+        const prefillSeed = this.getPrefillSeedForType(currentType);
         cardEditor = createModalCardEditor({
           type: currentType === "reversed" ? "basic" : currentType,
           locationPath: path,
           locationTitle: path ? `Target: ${path}` : "Target: (no active note)",
           plugin: this.plugin,
           locale: this.plugin.settings?.general?.interfaceLanguage,
+          initialQuestionText: prefillSeed.question,
+          initialAnswerText: prefillSeed.answer,
           editableFieldHeights: {
             title: { min: 50, max: 150 },
             question: { min: 50, max: 150 },

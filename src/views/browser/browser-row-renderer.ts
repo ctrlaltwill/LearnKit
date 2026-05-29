@@ -191,7 +191,7 @@ export function buildPageTableBody(
 
     const idLink = activeDocument.createElement("a");
     idLink.href = sourceLink;
-    idLink.className = "text-[var(--learnkit-font-2xs)] leading-none no-underline inline-flex items-center gap-1 text-normal relative z-0 hover:underline";
+    idLink.className = "text-[var(--learnkit-font-2xs)] leading-none inline-flex items-center gap-1 text-normal relative z-0 lk-browser-id-link";
 
     if (isSuspended) {
       idLink.classList.add("text-red-500");

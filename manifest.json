@@ -1,7 +1,7 @@
 {
   "id": "learnkit",
   "name": "LearnKit",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "minAppVersion": "1.7.2",
   "description": "A native study system for your vault. LearnKit turns notes into durable knowledge with flashcards, spaced repetition, reviews, tests, and AI tools.",
   "author": "William Guy",

@@ -258,6 +258,35 @@ export function normaliseSettingsInPlace(s: SproutSettings): void {
   s.noteReview.fillFromFutureWhenUnderLimit =
     s.noteReview.fillFromFutureWhenUnderLimit ?? DEFAULT_SETTINGS.noteReview.fillFromFutureWhenUnderLimit;
 
+  s.cards ??= clonePlain(DEFAULT_SETTINGS.cards);
+  s.cards.clozeMode = s.cards.clozeMode === "typed" ? "typed" : "standard";
+  s.cards.clozeBgColor = String(s.cards.clozeBgColor ?? DEFAULT_SETTINGS.cards.clozeBgColor);
+  s.cards.clozeTextColor = String(s.cards.clozeTextColor ?? DEFAULT_SETTINGS.cards.clozeTextColor);
+  s.cards.multipleChoiceAutoGrade =
+    s.cards.multipleChoiceAutoGrade ?? DEFAULT_SETTINGS.cards.multipleChoiceAutoGrade;
+  s.cards.orderedQuestionsAutoGrade =
+    s.cards.orderedQuestionsAutoGrade ?? DEFAULT_SETTINGS.cards.orderedQuestionsAutoGrade;
+  const selectionPrefillTarget = String(
+    s.cards.selectionPrefillTarget ?? DEFAULT_SETTINGS.cards.selectionPrefillTarget,
+  ).toLowerCase();
+  s.cards.selectionPrefillTarget =
+    selectionPrefillTarget === "disabled" || selectionPrefillTarget === "answer" || selectionPrefillTarget === "question"
+      ? selectionPrefillTarget
+      : DEFAULT_SETTINGS.cards.selectionPrefillTarget;
+  const rawHotspotMode = String(s.cards.hotspotSingleInteractionMode ?? DEFAULT_SETTINGS.cards.hotspotSingleInteractionMode)
+    .trim()
+    .toLowerCase();
+  s.cards.hotspotSingleInteractionMode =
+    rawHotspotMode === "click"
+      ? "individual"
+      : rawHotspotMode === "drag-drop"
+        ? "all"
+        : rawHotspotMode === "individual" || rawHotspotMode === "all" || rawHotspotMode === "smart"
+          ? rawHotspotMode
+          : DEFAULT_SETTINGS.cards.hotspotSingleInteractionMode;
+  s.cards.hotspotShowDropLocationHint =
+    s.cards.hotspotShowDropLocationHint ?? DEFAULT_SETTINGS.cards.hotspotShowDropLocationHint;
+
   const legacyKeys = [
     "graduatingIntervalDays",
     "easyBonus",

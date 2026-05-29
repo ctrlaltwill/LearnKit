@@ -80,6 +80,17 @@
   --lk-browser-row-hover-border: var(--color-base-35);
 }
 
+/* Keep browser ID links visibly interactive without text-decoration properties. */
+.learnkit .lk-browser-id-link {
+  color: inherit;
+  box-shadow: inset 0 -1px 0 transparent;
+  transition: box-shadow 120ms ease;
+}
+
+.learnkit .lk-browser-id-link:is(:hover, :focus-visible) {
+  box-shadow: inset 0 -1px 0 currentColor;
+}
+
 /* Deterministic Browser entrance sequence: title strip first, shell second. */
 @keyframes lk-browser-fade-up {
   from {

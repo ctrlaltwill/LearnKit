@@ -36,4 +36,8 @@ describe("reading settings defaults", () => {
     expect(DEFAULT_SETTINGS.readingView.macroConfigs.custom.colours.cardBgLight).toBe("");
     expect(DEFAULT_SETTINGS.readingView.macroConfigs.custom.customCss).toBe("");
   });
+
+  it("defaults selected-text prefill target to question", () => {
+    expect(DEFAULT_SETTINGS.cards.selectionPrefillTarget).toBe("question");
+  });
 });

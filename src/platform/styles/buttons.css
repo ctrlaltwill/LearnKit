@@ -123,6 +123,19 @@
   opacity: 0.6;
 }
 
+/* Basecoat link variants: use inset shadow underline to avoid text-decoration usage. */
+.learnkit :is(.btn-link, .btn-sm-link, .btn-lg-link, .btn-icon-link, .btn-sm-icon-link, .btn-lg-icon-link) {
+  box-shadow: inset 0 -1px 0 transparent;
+}
+
+.learnkit :is(.btn-link, .btn-sm-link, .btn-lg-link, .btn-icon-link, .btn-sm-icon-link, .btn-lg-icon-link):is(:hover, :focus-visible, [aria-pressed="true"]) {
+  box-shadow: inset 0 -1px 0 currentColor;
+}
+
+.learnkit :is(.fieldset legend + p, .field > p, .field section > p) > a {
+  box-shadow: inset 0 -1px 0 currentColor;
+}
+
 /* ---- Outline buttons ---- */
 
 .learnkit .learnkit-btn-toolbar {

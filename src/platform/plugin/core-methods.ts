@@ -267,17 +267,19 @@ export function WithCoreMethods<T extends Constructor<LearnKitPluginBase>>(Base:
       });
     }
 
-    openAddFlashcardModal(forcedType?: FlashcardType): void {
+    openAddFlashcardModal(forcedType?: FlashcardType, selectedText?: string): void {
       const ok = this._ensureEditingNoteEditor();
       if (!ok) {
         new Notice(this._tx("ui.main.notice.mustEditNote", "Must be editing a note to add a flashcard"));
         return;
       }
 
+      const normalizedSelectedText = String(selectedText ?? ok.editor.getSelection?.() ?? "").trim();
+
       if (forcedType === "io" || forcedType === "hq") {
         new ImageOcclusionCreatorModal(this.app, this, forcedType).open();
       } else {
-        new CardCreatorModal(this.app, this, forcedType).open();
+        new CardCreatorModal(this.app, this, forcedType, normalizedSelectedText).open();
       }
     }
 
@@ -286,8 +288,8 @@ export function WithCoreMethods<T extends Constructor<LearnKitPluginBase>>(Base:
         app: this.app,
         registerEvent: this.registerEvent.bind(this),
         tx: this._tx.bind(this),
-        openAddFlashcardModal: (forcedType?: FlashcardType) => {
-          this.openAddFlashcardModal(forcedType);
+        openAddFlashcardModal: (forcedType?: FlashcardType, selectedText?: string) => {
+          this.openAddFlashcardModal(forcedType, selectedText);
         },
       });
     }

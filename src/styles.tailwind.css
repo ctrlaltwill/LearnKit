@@ -6,8 +6,8 @@
 
 /* Tailwind v4 auto-detects local sources; explicit @source removed for editor compatibility. */
 
-/* Basecoat (pick ONE approach: package OR CDN) */
-@import "basecoat-css"; /* preferred if you already installed it */
+/* Basecoat package stylesheet (non-CDN build avoids !important utility artifacts). */
+@import "../node_modules/basecoat-css/dist/basecoat.css";
 
 /* AOS animations */
 @import "aos/dist/aos.css";

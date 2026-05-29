@@ -66,18 +66,20 @@ export function registerEditorContextMenu(params: {
   app: App;
   registerEvent: (evt: EventRef) => void;
   tx: TxFn;
-  openAddFlashcardModal: (forcedType?: FlashcardType) => void;
+  openAddFlashcardModal: (forcedType?: FlashcardType, selectedText?: string) => void;
 }): void {
   const { app, registerEvent, tx, openAddFlashcardModal } = params;
 
   registerEvent(
-    app.workspace.on("editor-menu", (menu: Menu, _editor, view) => {
+    app.workspace.on("editor-menu", (menu: Menu, editor, view) => {
       if (!(view instanceof MarkdownView)) return;
 
       const mode = view.getMode();
       if (mode !== "source") return;
 
       if (!(view.file instanceof TFile)) return;
+
+      const selectedText = String(editor?.getSelection?.() ?? "").trim();
 
       let itemDom: HTMLElement | null = null;
 
@@ -87,25 +89,25 @@ export function registerEditorContextMenu(params: {
         const submenu = item.setSubmenu?.();
         if (submenu) {
           submenu.addItem((subItem: MenuItem) => {
-            subItem.setTitle(tx("ui.main.menu.basic", "Basic")).setIcon("file-text").onClick(() => openAddFlashcardModal("basic"));
+            subItem.setTitle(tx("ui.main.menu.basic", "Basic")).setIcon("file-text").onClick(() => openAddFlashcardModal("basic", selectedText));
           });
           submenu.addItem((subItem: MenuItem) => {
-            subItem.setTitle(tx("ui.main.menu.basicReversed", "Basic (reversed)")).setIcon("file-text").onClick(() => openAddFlashcardModal("reversed"));
+            subItem.setTitle(tx("ui.main.menu.basicReversed", "Basic (reversed)")).setIcon("file-text").onClick(() => openAddFlashcardModal("reversed", selectedText));
           });
           submenu.addItem((subItem: MenuItem) => {
-            subItem.setTitle(tx("ui.main.menu.cloze", "Cloze")).setIcon("file-minus").onClick(() => openAddFlashcardModal("cloze"));
+            subItem.setTitle(tx("ui.main.menu.cloze", "Cloze")).setIcon("file-minus").onClick(() => openAddFlashcardModal("cloze", selectedText));
           });
           submenu.addItem((subItem: MenuItem) => {
-            subItem.setTitle(tx("ui.main.menu.hotspot", "Hotspot")).setIcon("map-pin").onClick(() => openAddFlashcardModal("hq"));
+            subItem.setTitle(tx("ui.main.menu.hotspot", "Hotspot")).setIcon("map-pin").onClick(() => openAddFlashcardModal("hq", selectedText));
           });
           submenu.addItem((subItem: MenuItem) => {
-            subItem.setTitle(tx("ui.main.menu.imageOcclusion", "Image occlusion")).setIcon("image").onClick(() => openAddFlashcardModal("io"));
+            subItem.setTitle(tx("ui.main.menu.imageOcclusion", "Image occlusion")).setIcon("image").onClick(() => openAddFlashcardModal("io", selectedText));
           });
           submenu.addItem((subItem: MenuItem) => {
-            subItem.setTitle(tx("ui.main.menu.multipleChoice", "Multiple choice")).setIcon("list").onClick(() => openAddFlashcardModal("mcq"));
+            subItem.setTitle(tx("ui.main.menu.multipleChoice", "Multiple choice")).setIcon("list").onClick(() => openAddFlashcardModal("mcq", selectedText));
           });
           submenu.addItem((subItem: MenuItem) => {
-            subItem.setTitle(tx("ui.main.menu.orderedQuestion", "Ordered question")).setIcon("list-ordered").onClick(() => openAddFlashcardModal("oq"));
+            subItem.setTitle(tx("ui.main.menu.orderedQuestion", "Ordered question")).setIcon("list-ordered").onClick(() => openAddFlashcardModal("oq", selectedText));
           });
         }
 

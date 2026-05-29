@@ -175,6 +175,7 @@ export const DEFAULT_SETTINGS: LearnKitSettings = {
     clozeTextColor: "",
     multipleChoiceAutoGrade: true,
     orderedQuestionsAutoGrade: true,
+    selectionPrefillTarget: "question",
     hotspotSingleInteractionMode: "smart",
     hotspotShowDropLocationHint: true,
   },

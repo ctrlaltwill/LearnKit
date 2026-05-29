@@ -249,6 +249,8 @@ export interface ModalCardEditorConfig {
   plugin: LearnKitPlugin;
   locale?: string;
   editableFieldHeights?: Partial<Record<"title" | "question" | "answer" | "info", { min: number; max: number }>>;
+  initialQuestionText?: string;
+  initialAnswerText?: string;
 }
 
 export interface ModalCardEditorResult {
@@ -265,7 +267,16 @@ export interface ModalCardEditorResult {
  * Returns the root element, input map, and helpers for groups/MCQ.
  */
 export function createModalCardEditor(config: ModalCardEditorConfig): ModalCardEditorResult {
-  const { type, locationPath, locationTitle, plugin, locale, editableFieldHeights } = config;
+  const {
+    type,
+    locationPath,
+    locationTitle,
+    plugin,
+    locale,
+    editableFieldHeights,
+    initialQuestionText,
+    initialAnswerText,
+  } = config;
 
   // Build a minimal card record so the editor component can render
   const dummyCard: CardRecord = {
@@ -284,6 +295,19 @@ export function createModalCardEditor(config: ModalCardEditorConfig): ModalCardE
     sourceNotePath: locationPath || "",
     sourceStartLine: 0,
   };
+
+  const seededQuestion = String(initialQuestionText ?? "").trim();
+  const seededAnswer = String(initialAnswerText ?? "").trim();
+
+  if (seededQuestion.length > 0) {
+    if (type === "cloze") dummyCard.clozeText = seededQuestion;
+    else if (type === "mcq") dummyCard.stem = seededQuestion;
+    else dummyCard.q = seededQuestion;
+  }
+
+  if (seededAnswer.length > 0 && (type === "basic" || type === "reversed")) {
+    dummyCard.a = seededAnswer;
+  }
 
   const editor = createCardEditor({
     cards: [dummyCard],

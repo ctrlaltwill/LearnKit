@@ -117,7 +117,6 @@ export function WithLifecycleMethods<T extends Constructor<LearnKitPluginBase>>(
         { id: "add-basic-flashcard", name: tx("ui.command.open.addBasicToNote", "Add basic flashcard to note"), type: "basic" },
         { id: "add-basic-reversed-flashcard", name: tx("ui.command.open.addBasicReversedToNote", "Add basic (reversed) flashcard to note"), type: "reversed" },
         { id: "add-cloze-flashcard", name: tx("ui.command.open.addClozeToNote", "Add cloze flashcard to note"), type: "cloze" },
-        { id: "add-basic-flashcard", name: tx("ui.command.open.addBasicToNote", "Add basic flashcard to note"), type: "basic" },
         { id: "add-multiple-choice-flashcard", name: tx("ui.command.open.addMultipleChoiceToNote", "Add multiple choice flashcard to note"), type: "mcq" },
         { id: "add-ordered-question-flashcard", name: tx("ui.command.open.addOrderedQuestionToNote", "Add ordered question flashcard to note"), type: "oq" },
         { id: "add-hotspot-flashcard", name: tx("ui.command.open.addHotspotToNote", "Add hotspot flashcard to note"), type: "hq" },

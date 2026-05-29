@@ -281,6 +281,8 @@ export type LearnKitSettings = {
     multipleChoiceAutoGrade: boolean;
     /** Grade ordered questions immediately after submitting the user order. */
     orderedQuestionsAutoGrade: boolean;
+    /** Controls where selected editor text is prefilled in Add flashcard modal forms. */
+    selectionPrefillTarget: "disabled" | "question" | "answer";
     /**
      * Hotspot study style preference.
      * - individual: always study one hotspot at a time (click)

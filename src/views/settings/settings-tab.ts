@@ -1856,6 +1856,12 @@ export class LearnKitSettingsTab extends PluginSettingTab {
     new Setting(wrapper).setName(this._tx("ui.settings.sections.basicCards", "Basic cards")).setHeading();
 
     // Basic section
+    const cardsSettings = this.plugin.settings.cards ?? clonePlain(DEFAULT_SETTINGS.cards);
+
+    if (!this.plugin.settings.cards) {
+      (this.plugin.settings as Record<string, unknown>).cards = cardsSettings;
+    }
+
     {
       const item = wrapper.createDiv({ cls: "setting-item" });
       const info = item.createDiv({ cls: "setting-item-info" });
@@ -1865,15 +1871,38 @@ export class LearnKitSettingsTab extends PluginSettingTab {
       });
     }
 
+    new Setting(wrapper)
+      .setName(this._tx("ui.settings.cards.prefillTarget.name", "Selected-text prefill target"))
+      .setDesc(this._tx("ui.settings.cards.prefillTarget.desc", "When you add a flashcard with text selected in the editor, choose where the text is prefilled."))
+      .then((s) => {
+        this._addSimpleSelect(s.controlEl, {
+          options: [
+            {
+              value: "question",
+              label: this._tx("ui.settings.cards.prefillTarget.option.question", "Question / stem"),
+            },
+            {
+              value: "answer",
+              label: this._tx("ui.settings.cards.prefillTarget.option.answer", "Answer"),
+            },
+            {
+              value: "disabled",
+              label: this._tx("ui.settings.cards.prefillTarget.option.disabled", "Do not prefill"),
+            },
+          ],
+          value: cardsSettings.selectionPrefillTarget ?? "question",
+          onChange: (v) => {
+            void (async () => {
+              const next = v === "disabled" || v === "answer" || v === "question" ? v : "question";
+              cardsSettings.selectionPrefillTarget = next;
+              await this.plugin.saveAll();
+            })();
+          },
+        });
+      });
+
     // ── Cloze section ──
     new Setting(wrapper).setName(this._tx("ui.settings.sections.cloze", "Cloze")).setHeading();
-
-    const cardsSettings = this.plugin.settings.cards ??
-      { clozeMode: "standard" as const, clozeBgColor: "", clozeTextColor: "" };
-
-    if (!this.plugin.settings.cards) {
-      (this.plugin.settings as Record<string, unknown>).cards = cardsSettings;
-    }
 
     new Setting(wrapper)
       .setName(this._tx("ui.settings.cards.cloze.mode.name", "Cloze mode"))

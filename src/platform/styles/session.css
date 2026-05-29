@@ -682,13 +682,6 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
   font-weight: 600;
 }
 
-/* ---- Ensure session cards stay content-sized ---- */
-
-.learnkit .lk-session-card.card {
-  flex: 0 0 auto;
-  gap: 0rem;
-}
-
 /* ---- Session card header / quit button positioning ---- */
 
 /* Ensure session card is relative for quit button positioning */

@@ -68,7 +68,7 @@ export class LearnKitPluginBase extends Plugin {
   declare _ensureEditingNoteEditor: () => { view: MarkdownView; editor: Editor } | null;
   declare _applyClozeShortcutToEditor: (editor: Editor, clozeIndex?: number) => void;
   declare _registerMarkdownSourceClozeShortcuts: () => void;
-  declare openAddFlashcardModal: (forcedType?: FlashcardType) => void;
+  declare openAddFlashcardModal: (forcedType?: FlashcardType, selectedText?: string) => void;
   declare _registerEditorContextMenu: () => void;
   declare syncBank: () => Promise<void>;
   declare refreshAllViews: () => void;
