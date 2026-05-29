@@ -32,7 +32,7 @@
   "devDependencies": {
     "@tailwindcss/cli": "^4.2.1",
     "@types/node": "^25.5.0",
-    "@types/react": "^19.2.14",
+    "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
     "@types/sql.js": "^1.4.9",
     "@typescript-eslint/parser": "^8.58.0",
@@ -65,7 +65,7 @@
     "fflate": "^0.8.2",
     "interactjs": "^1.10.27",
     "marked": "^17.0.4",
-    "react": "^19.2.3",
+    "react": "^19.2.6",
     "react-dom": "^19.2.3",
     "recharts": "^3.8.1",
     "soundtouchjs": "^0.3.0",
