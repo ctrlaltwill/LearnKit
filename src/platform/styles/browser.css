@@ -421,7 +421,7 @@
 }
 
 .learnkit .lk-browser-contenteditable[data-placeholder]:empty::before {
-  content: attr(data-placeholder);
+  content: var(--learnkit-placeholder-content, "");
   color: var(--text-faint);
   pointer-events: none;
 }

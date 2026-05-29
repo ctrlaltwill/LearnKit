@@ -1,6 +1,6 @@
 {
   "name": "learnkit",
-  "version": "1.6.3",
+  "version": "1.6.4",
   "private": true,
   "type": "commonjs",
   "scripts": {
@@ -61,7 +61,7 @@
     "chartjs-plugin-annotation": "^3.1.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "dompurify": "^3.4.3",
+    "dompurify": "^3.4.7",
     "fflate": "^0.8.2",
     "interactjs": "^1.10.27",
     "marked": "^17.0.4",

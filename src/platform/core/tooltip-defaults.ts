@@ -36,9 +36,30 @@ function shouldPreserveExplicitTooltipPosition(el: HTMLElement): boolean {
   return el.hasAttribute("data-learnkit-tooltip-explicit");
 }
 
+const TOOLTIP_CONTENT_CSS_VAR = "--learnkit-tooltip-content";
+const PLACEHOLDER_CONTENT_CSS_VAR = "--learnkit-placeholder-content";
+
+function syncQuotedContentVar(el: HTMLElement, attrName: string, cssVarName: string): void {
+  const text = normalizeTooltipText(el.getAttribute(attrName) ?? "");
+  if (!text) {
+    el.style.removeProperty(cssVarName);
+    return;
+  }
+  el.style.setProperty(cssVarName, JSON.stringify(text));
+}
+
+function syncTooltipContentVar(el: HTMLElement): void {
+  syncQuotedContentVar(el, "data-tooltip", TOOLTIP_CONTENT_CSS_VAR);
+}
+
+function syncPlaceholderContentVar(el: HTMLElement): void {
+  syncQuotedContentVar(el, "data-placeholder", PLACEHOLDER_CONTENT_CSS_VAR);
+}
+
 function ensureTooltip(el: TooltipTarget): void {
   if (shouldSkipAutoTooltip(el)) {
     if (el.hasAttribute("title")) el.removeAttribute("title");
+    if (el.hasAttribute("data-tooltip")) syncTooltipContentVar(el);
     return;
   }
 
@@ -50,8 +71,14 @@ function ensureTooltip(el: TooltipTarget): void {
       if (!shouldPreserveExplicitTooltipPosition(el) && el.hasAttribute("data-tooltip-position")) {
         el.removeAttribute("data-tooltip-position");
       }
+      if (el.hasAttribute("data-tooltip")) syncTooltipContentVar(el);
       return;
     }
+    const ariaLabel = normalizeTooltipText(el.getAttribute("aria-label") ?? "");
+    if (ariaLabel && el.getAttribute("data-tooltip") !== ariaLabel) {
+      el.setAttribute("data-tooltip", ariaLabel);
+    }
+    if (el.hasAttribute("data-tooltip")) syncTooltipContentVar(el);
     if (!el.hasAttribute("data-tooltip-position")) el.setAttribute("data-tooltip-position", "top");
     return;
   }
@@ -64,6 +91,10 @@ function ensureTooltip(el: TooltipTarget): void {
   if (!tooltip) return;
 
   el.setAttribute("aria-label", tooltip);
+  if (el.getAttribute("data-tooltip") !== tooltip) {
+    el.setAttribute("data-tooltip", tooltip);
+  }
+  syncTooltipContentVar(el);
   if (isLabeledAnalyticsFilterButton(el)) {
     if (!shouldPreserveExplicitTooltipPosition(el) && el.hasAttribute("data-tooltip-position")) {
       el.removeAttribute("data-tooltip-position");
@@ -88,7 +119,18 @@ function markTooltipParent(el: Element): void {
 function markTooltipParentsInSubtree(root: ParentNode): void {
   const tooltipEls = (root as HTMLElement).querySelectorAll?.<HTMLElement>('[data-tooltip]');
   if (!tooltipEls) return;
-  tooltipEls.forEach((el) => markTooltipParent(el));
+  tooltipEls.forEach((el) => {
+    syncTooltipContentVar(el);
+    markTooltipParent(el);
+  });
+}
+
+function syncPlaceholdersInSubtree(root: ParentNode): void {
+  const placeholderEls = (root as HTMLElement).querySelectorAll?.<HTMLElement>(
+    '.lk-browser-contenteditable[data-placeholder]',
+  );
+  if (!placeholderEls) return;
+  placeholderEls.forEach((el) => syncPlaceholderContentVar(el));
 }
 
 function processNode(node: Node): void {
@@ -104,9 +146,14 @@ function processNode(node: Node): void {
 
   // Mark [data-tooltip] parents (for CSS tooltip overflow escalation)
   if (elementNode.hasAttribute('data-tooltip')) {
+    syncTooltipContentVar(elementNode);
     markTooltipParent(elementNode);
   }
+  if (elementNode.matches('.lk-browser-contenteditable[data-placeholder]')) {
+    syncPlaceholderContentVar(elementNode);
+  }
   markTooltipParentsInSubtree(elementNode);
+  syncPlaceholdersInSubtree(elementNode);
 }
 
 /**
@@ -121,15 +168,34 @@ export function initButtonTooltipDefaults(): () => void {
   // Initial pass (Obsidian loads views long after DOMContentLoaded)
   processNode(root);
   markTooltipParentsInSubtree(root);
+  syncPlaceholdersInSubtree(root);
 
   const obs = new MutationObserver((mutations) => {
     mutations.forEach((m) => {
-      m.addedNodes.forEach((n) => processNode(n));
-      // If attributes change (e.g., textContent updated later), callers should
-      // set `aria-label` explicitly; we intentionally don't observe characterData.
+      if (m.type === "attributes" && m.target instanceof HTMLElement) {
+        const target = m.target;
+        if (target.matches("button,[role='button']")) {
+          ensureTooltip(target as TooltipTarget);
+        }
+        if (target.hasAttribute("data-tooltip")) {
+          syncTooltipContentVar(target);
+          markTooltipParent(target);
+        }
+        if (target.matches('.lk-browser-contenteditable[data-placeholder]')) {
+          syncPlaceholderContentVar(target);
+        }
+      }
+      if (m.type === "childList") {
+        m.addedNodes.forEach((n) => processNode(n));
+      }
     });
   });
 
-  obs.observe(root, { childList: true, subtree: true });
+  obs.observe(root, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["aria-label", "data-tooltip", "data-placeholder"],
+  });
   return () => obs.disconnect();
 }

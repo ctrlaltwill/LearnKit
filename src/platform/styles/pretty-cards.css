@@ -636,16 +636,12 @@
   border-radius: var(--radius-md);
   margin: 0 0px;
   padding: 1.5px 6px;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
 }
 .learnkit-pretty-card.learnkit-macro-classic.theme .learnkit-cloze:not(.learnkit-md-block) {
   background-color: var(--alt-accent-color);
   border-radius: var(--radius-md);
   margin: 0 0px;
   padding: 1.5px 6px;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
 }
 .learnkit-pretty-card.learnkit-macro-classic.accent .learnkit-cloze-text {
   font-weight: 500;
@@ -659,11 +655,9 @@
 /* Generic cloze styling */
 .learnkit-cloze:not(.learnkit-md-block) {
   background-color: hsl(var(--accent-h), var(--accent-s), var(--accent-l), .12);
-    border-radius: var(--radius-md);
-    margin: 0 0px;
-    padding: 1.5px 6px;
-     -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
+  border-radius: var(--radius-md);
+  margin: 0 0px;
+  padding: 1.5px 6px;
 }
 
 .learnkit-cloze-text {
@@ -759,8 +753,6 @@
   border-radius: var(--radius-md);
   margin: 0 0px;
   padding: 1px 4px;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
 }
 
 .learnkit-reading-view-cloze .learnkit-cloze-text {
@@ -779,8 +771,6 @@
   border-radius: 0;
   padding: 0;
   margin: 0;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
 }
 
 /* When cloze contains only an image, use border instead of background span */

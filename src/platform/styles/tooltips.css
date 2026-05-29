@@ -11,7 +11,7 @@
 }
 
 .learnkit [data-tooltip]::after {
-  content: attr(data-tooltip);
+  content: var(--learnkit-tooltip-content, "");
   position: absolute;
   padding: 6px 10px;
   border-radius: var(--radius-md);

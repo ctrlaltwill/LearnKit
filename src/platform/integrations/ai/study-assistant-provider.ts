@@ -247,7 +247,8 @@ function cleanOpenRouterModelDisplayName(value: string): string {
 function formatOpenRouterModelLabel(model: string): string {
   const input = String(model || "").trim();
   if (!input) return "";
-  const base = input.includes("/") ? input.split("/").slice(1).join("/") : input;
+  const firstSlash = input.indexOf("/");
+  const base = firstSlash >= 0 ? input.slice(firstSlash + 1) : input;
   const clean = base.replace(/:free$/i, "");
   const parts = clean.split(/[\s._:/-]+/g).filter(Boolean);
   const acronyms = new Map<string, string>([
