@@ -23,6 +23,31 @@ type AdapterLike = {
   mkdir?: (path: string) => Promise<void>;
 };
 
+function toPathSegments(path: string): string[] {
+  return path
+    .replace(/\\/g, "/")
+    .replace(/\/+/g, "/")
+    .replace(/\/$/, "")
+    .split("/")
+    .filter((part) => part.length > 0);
+}
+
+async function ensureDirectoryPath(adapter: AdapterLike, dirPath: string): Promise<void> {
+  const segments = toPathSegments(dirPath);
+  let current = dirPath.startsWith("/") ? "/" : "";
+
+  for (const segment of segments) {
+    current = current === "/" ? `/${segment}` : current ? `${current}/${segment}` : segment;
+    if (await adapter.exists(current)) continue;
+
+    if (!adapter.mkdir) {
+      throw new Error(`Adapter does not support mkdir; cannot create directory: ${current}`);
+    }
+
+    await adapter.mkdir(current);
+  }
+}
+
 /**
  * Legacy configuration files that were previously used for partitioned
  * settings storage. Kept only so we can migrate them back into data.json
@@ -108,9 +133,7 @@ export async function persistApiKeysToDedicatedFile(params: {
       return true;
     }
 
-    if (!(await adapter.exists(dirPath))) {
-      await adapter.mkdir?.(dirPath);
-    }
+    await ensureDirectoryPath(adapter, dirPath);
 
     await adapter.write(filePath, `${JSON.stringify(apiKeys, null, 2)}\n`);
     return true;
@@ -206,9 +229,7 @@ export async function persistTtsApiKeysToDedicatedFile(params: {
       return true;
     }
 
-    if (!(await adapter.exists(dirPath))) {
-      await adapter.mkdir?.(dirPath);
-    }
+    await ensureDirectoryPath(adapter, dirPath);
 
     await adapter.write(filePath, `${JSON.stringify(apiKeys, null, 2)}\n`);
     return true;

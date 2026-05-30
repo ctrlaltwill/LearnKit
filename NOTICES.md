@@ -19,8 +19,8 @@ Host platform APIs (for example, Obsidian) are not redistributed by this plugin 
 | fflate | [101arrowz/fflate](https://github.com/101arrowz/fflate) | 0.8.2 | MIT | ZIP handling for Anki package import and export |
 | interactjs | [taye/interact.js](https://github.com/taye/interact.js) | 1.10.27 | MIT | Drag and resize interactions for image occlusion editor |
 | marked | [markedjs/marked](https://github.com/markedjs/marked) | 17.0.5 | MIT | Markdown parsing for AI and study assistant content rendering |
-| react | [facebook/react](https://github.com/facebook/react) | 19.2.4 | MIT | Component system for LearnKit interface views |
-| react-dom | [facebook/react](https://github.com/facebook/react) | 19.2.4 | MIT | DOM mounting and rendering for React views |
+| react | [facebook/react](https://github.com/facebook/react) | 19.2.6 | MIT | Component system for LearnKit interface views |
+| react-dom | [facebook/react](https://github.com/facebook/react) | 19.2.6 | MIT | DOM mounting and rendering for React views |
 | recharts | [recharts/recharts](https://github.com/recharts/recharts) | 3.8.1 | MIT | Charts and analytics visualizations |
 | sql.js | [sql-js/sql.js](https://github.com/sql-js/sql.js) | 1.14.1 | MIT | SQLite access for Anki import and export |
 | tailwind-merge | [dcastil/tailwind-merge](https://github.com/dcastil/tailwind-merge) | 3.5.0 | MIT | Resolving Tailwind utility class conflicts |
