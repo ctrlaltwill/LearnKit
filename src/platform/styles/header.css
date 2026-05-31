@@ -282,6 +282,31 @@ a.learnkit-header-center-brand-link:hover {
   background-color: transparent;
   color: var(--text-normal);
   border: 0.5px solid transparent;
+  border-radius: var(--radius-md);
+}
+
+/* Ensure the Tools trigger (btn-icon-outline + toolbar) matches other header actions in every state. */
+.learnkit .learnkit-header .lk-more-wrap .btn-icon-outline.learnkit-btn-toolbar:is(:hover, :focus, :focus-visible, :focus-within, :active, [aria-expanded="true"]) {
+  color: var(--color-base-100) ;
+  border-color: var(--color-base-35) ;
+  outline: none ;
+  box-shadow: none ;
+}
+
+.learnkit .learnkit-header .lk-more-wrap .btn-icon-outline.learnkit-btn-toolbar:hover {
+  background-color: color-mix(in srgb, var(--color-base-35) 20%, transparent 75%) ;
+}
+
+.learnkit .learnkit-header .lk-more-wrap .btn-icon-outline.learnkit-btn-toolbar:is(:focus, :focus-visible, :focus-within) {
+  background-color: color-mix(in srgb, var(--color-base-45) 17%, transparent 83%) ;
+}
+
+.learnkit .learnkit-header .lk-more-wrap .btn-icon-outline.learnkit-btn-toolbar:active {
+  background-color: color-mix(in srgb, var(--color-base-50) 19%, transparent 81%) ;
+}
+
+.learnkit .learnkit-header .lk-more-wrap .btn-icon-outline.learnkit-btn-toolbar[aria-expanded="true"] {
+  background-color: color-mix(in srgb, var(--color-base-40) 15%, transparent 85%) ;
 }
 
 /* Keep header actions icon-only (no hover expansion). */
@@ -294,7 +319,12 @@ a.learnkit-header-center-brand-link:hover {
   padding-left: 8px;
   padding-right: 8px;
   overflow: hidden;
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  margin: 0 3px;
+  background-color: transparent;
+  color: var(--text-normal);
+  border: 0.5px solid transparent;
+  border-radius: var(--radius-md);
+  transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out, border-color 0.15s ease-in-out;
 }
 
 .learnkit .learnkit-header .learnkit-actions-host .learnkit-btn-toolbar[aria-haspopup="menu"]:hover,

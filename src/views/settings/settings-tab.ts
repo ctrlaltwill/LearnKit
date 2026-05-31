@@ -1871,36 +1871,6 @@ export class LearnKitSettingsTab extends PluginSettingTab {
       });
     }
 
-    new Setting(wrapper)
-      .setName(this._tx("ui.settings.cards.prefillTarget.name", "Selected-text prefill target"))
-      .setDesc(this._tx("ui.settings.cards.prefillTarget.desc", "When you add a flashcard with text selected in the editor, choose where the text is prefilled."))
-      .then((s) => {
-        this._addSimpleSelect(s.controlEl, {
-          options: [
-            {
-              value: "question",
-              label: this._tx("ui.settings.cards.prefillTarget.option.question", "Question / stem"),
-            },
-            {
-              value: "answer",
-              label: this._tx("ui.settings.cards.prefillTarget.option.answer", "Answer"),
-            },
-            {
-              value: "disabled",
-              label: this._tx("ui.settings.cards.prefillTarget.option.disabled", "Do not prefill"),
-            },
-          ],
-          value: cardsSettings.selectionPrefillTarget ?? "question",
-          onChange: (v) => {
-            void (async () => {
-              const next = v === "disabled" || v === "answer" || v === "question" ? v : "question";
-              cardsSettings.selectionPrefillTarget = next;
-              await this.plugin.saveAll();
-            })();
-          },
-        });
-      });
-
     // ── Cloze section ──
     new Setting(wrapper).setName(this._tx("ui.settings.sections.cloze", "Cloze")).setHeading();
 
@@ -3296,7 +3266,12 @@ export class LearnKitSettingsTab extends PluginSettingTab {
             if (noteCfg.avoidFolderNotes !== false && isFolderNote(file)) return false;
             return true;
           }).length;
-          summaryEl.setText(this._tx("ui.settings.noteReview.filter.summary.included", "{count} {count, plural, one {note} other {notes}} included for note review", { count: included }));
+          summaryEl.setText(
+            this._tx("ui.settings.noteReview.filter.summary.included", "{count} note{suffix} included for note review", {
+              count: included,
+              suffix: included === 1 ? "" : "s",
+            }),
+          );
         };
 
         const getMatchedNoteCount = (ids: string[], includeFolderNotes: boolean): number => {

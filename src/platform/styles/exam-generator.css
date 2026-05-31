@@ -219,6 +219,17 @@
   min-height: 44px;
   padding: 0.7rem 0.85rem;
   align-items: flex-start;
+  border-radius: var(--radius-md);
+  border: 0.5px solid var(--color-base-35);
+  background-color: var(--color-base-20) ;
+  color: var(--color-base-100) ;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.learnkit .learnkit-exam-generator-runner-card .learnkit-exam-generator-option-button:is(:hover, :focus-visible, :focus-within, :active) {
+  background-color: var(--color-base-30) ;
+  color: var(--color-base-100) ;
+  border-color: var(--color-base-50) ;
 }
 
 .learnkit .learnkit-exam-generator-runner-card .learnkit-exam-generator-option-button .learnkit-mcq-option-text {

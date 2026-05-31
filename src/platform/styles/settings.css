@@ -2032,7 +2032,7 @@ td.learnkit-backup-cell.learnkit-backup-cell.learnkit-backup-actions.learnkit-ba
 }
 
 .learnkit :is(.learnkit-settings-layout-header .learnkit-settings-subtab-nav, .learnkit-release-nav) .learnkit-settings-subtab-btn {
-  font-weight: 500;
+  font-weight: 400;
   white-space: nowrap;
   line-height: 1.4;
   position: relative;
@@ -2697,8 +2697,7 @@ input.learnkit-ss-search-input {
   color: var(--text-normal);
   -webkit-user-select: none;
   user-select: none;
-  background-color: #000000;
-  border: .5px solid #000000;
+  border: .5px solid transparent;
   outline: none;
   align-items: center;
   gap: 2px;

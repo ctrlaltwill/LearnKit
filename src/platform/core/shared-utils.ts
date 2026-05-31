@@ -208,10 +208,65 @@ function escapeHtml(text: string): string {
 // ────────────────────────────────────────────
 
 /**
- * Regex that matches all math delimiter blocks in a string.
- * Used to determine whether a character position is inside a math block.
+ * Regex that matches display/explicit math delimiter blocks in a string.
+ * Single-dollar inline math is detected by a dedicated scanner so escaped
+ * dollar signs and `$$...$$` display blocks are handled safely.
  */
 const MATH_DELIM_RE = /\$\$[\s\S]+?\$\$|\\\([\s\S]+?\\\)|\\\[[\s\S]+?\\\]/g;
+
+function isEscapedCharAt(text: string, index: number): boolean {
+  let slashCount = 0;
+  let i = index - 1;
+  while (i >= 0 && text[i] === "\\") {
+    slashCount += 1;
+    i -= 1;
+  }
+  return slashCount % 2 === 1;
+}
+
+function collectInlineDollarMathRanges(
+  text: string,
+  blockedRanges: Array<[number, number]>,
+): Array<[number, number]> {
+  const ranges: Array<[number, number]> = [];
+  const isBlocked = (pos: number): boolean =>
+    blockedRanges.some(([start, end]) => pos >= start && pos < end)
+    || ranges.some(([start, end]) => pos >= start && pos < end);
+
+  for (let start = 0; start < text.length; start += 1) {
+    if (text[start] !== "$") continue;
+    if (isEscapedCharAt(text, start)) continue;
+    if (text[start + 1] === "$") {
+      start += 1;
+      continue;
+    }
+    if (isBlocked(start)) continue;
+
+    let end = -1;
+    for (let i = start + 1; i < text.length; i += 1) {
+      if (text[i] !== "$") continue;
+      if (isEscapedCharAt(text, i)) continue;
+      if (text[i + 1] === "$") {
+        i += 1;
+        continue;
+      }
+      end = i;
+      break;
+    }
+
+    if (end === -1) continue;
+
+    const inner = text.slice(start + 1, end);
+    const hasLeadingOrTrailingSpace = /^\s|\s$/.test(inner);
+    const isSingleLine = !/[\r\n]/.test(inner);
+    if (!hasLeadingOrTrailingSpace && isSingleLine && inner.trim().length > 0) {
+      ranges.push([start, end + 1]);
+      start = end;
+    }
+  }
+
+  return ranges;
+}
 
 interface ClozeTokenMatch {
   index: number;
@@ -280,6 +335,9 @@ function buildMathRangeChecker(text: string): (pos: number) => boolean {
   while ((m = MATH_DELIM_RE.exec(text)) !== null) {
     ranges.push([m.index, m.index + m[0].length]);
   }
+
+  ranges.push(...collectInlineDollarMathRanges(text, ranges));
+
   if (!ranges.length) return () => false;
   return (pos: number) => ranges.some(([s, e]) => pos >= s && pos < e);
 }

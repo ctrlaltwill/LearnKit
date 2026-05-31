@@ -56,4 +56,24 @@ describe("processClozeForMath", () => {
 
     expect(front).toBe("Identity: $\\sin^2 x + \\cos^2 x = \\underline{\\phantom{1}}$ always.");
   });
+
+  it("treats single-dollar inline math as math when replacing clozes", () => {
+    const input = "Equation: $i_{1}+{{c1::1}}=0$.";
+
+    const front = processClozeForMath(input, false, null);
+    const back = processClozeForMath(input, true, null);
+
+    expect(front).toBe("Equation: $i_{1}+\\underline{\\phantom{1}}=0$.");
+    expect(back).toBe("Equation: $i_{1}+1=0$.");
+  });
+
+  it("keeps matrix line-break backslashes intact inside single-dollar math", () => {
+    const input = "$\\begin{bmatrix}1&{{c1::1}}\\\\1&1\\end{bmatrix}$";
+
+    const front = processClozeForMath(input, false, null);
+    const back = processClozeForMath(input, true, null);
+
+    expect(front).toBe("$\\begin{bmatrix}1&\\underline{\\phantom{1}}\\\\1&1\\end{bmatrix}$");
+    expect(back).toBe("$\\begin{bmatrix}1&1\\\\1&1\\end{bmatrix}$");
+  });
 });

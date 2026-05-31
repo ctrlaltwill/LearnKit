@@ -943,6 +943,7 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
   display: flex;
   justify-content: flex-start;
   text-align: left;
+  border: 0.5px solid;
   background-color: var(--color-base-20) ;
     color: var(--color-base-100) ;
     border-color: var(--color-base-35) ;
@@ -1297,6 +1298,16 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
 
 .learnkit :is(.lk-session-card footer, .learnkit-gatekeeper-footer) .learnkit-btn-toolbar:not(.learnkit-btn-again):not(.learnkit-btn-hard):not(.learnkit-btn-good):not(.learnkit-btn-easy):is(:hover, :focus-visible, :active) :is(kbd, .kbd) {
   background-color: var(--color-base-30);
+}
+
+/* Keep study dock utility controls borderless. */
+.learnkit .lk-session-card > footer.learnkit-session-study-dock :is(
+  .learnkit-btn-toolbar:not(.learnkit-btn-again):not(.learnkit-btn-hard):not(.learnkit-btn-good):not(.learnkit-btn-easy),
+  .learnkit-btn-filter,
+  [id^="learnkit-menu-"] > button
+) {
+  border: none;
+  border-color: transparent;
 }
 
 .learnkit-btn-again {

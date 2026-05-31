@@ -41,4 +41,22 @@ describe("hydrateRenderedMathCloze", () => {
     expect(container.querySelector(".learnkit-cloze-typed-input")).toBeNull();
     expect(container.innerHTML).toContain("\\underline{\\phantom");
   });
+
+  it("does not hydrate typed inputs for clozes inside single-dollar inline math", () => {
+    const text = "$i_{1}+{{c1::1}}=0$";
+    const container = document.createElement("div");
+
+    container.innerHTML = processClozeForMath(text, false, 1, {
+      blankClassName: "learnkit-cloze-blank hidden-cloze",
+      useHintText: false,
+    });
+
+    hydrateRenderedMathCloze(container, text, false, 1, {
+      mode: "typed",
+      typedAnswers: new Map(),
+    });
+
+    expect(container.querySelector(".learnkit-cloze-typed-input")).toBeNull();
+    expect(container.innerHTML).toContain("\\underline{\\phantom{1}}");
+  });
 });
