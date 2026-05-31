@@ -1815,6 +1815,27 @@ export class SproutReviewerView extends ItemView {
     this.render();
   }
 
+  private _isPermutation(arr: unknown, expectedLength: number): arr is number[] {
+    if (!Array.isArray(arr) || arr.length !== expectedLength) return false;
+    const seen = new Array<boolean>(expectedLength).fill(false);
+    for (const raw of arr) {
+      const idx = Number(raw);
+      if (!Number.isInteger(idx) || idx < 0 || idx >= expectedLength) return false;
+      if (seen[idx]) return false;
+      seen[idx] = true;
+    }
+    return true;
+  }
+
+  private _readOqOrderFromDom(expectedLength: number): number[] | null {
+    if (!Number.isInteger(expectedLength) || expectedLength <= 0) return null;
+    const rows = Array.from(this.contentEl.querySelectorAll<HTMLElement>(".learnkit-oq-step-list .learnkit-oq-step-row[data-oq-orig-idx]"));
+    if (rows.length !== expectedLength) return null;
+
+    const parsed = rows.map((row) => Number.parseInt(row.dataset.oqOrigIdx || "", 10));
+    return this._isPermutation(parsed, expectedLength) ? parsed : null;
+  }
+
   private isMcqAutoGradeEnabled(): boolean {
     return this.plugin.settings.cards?.multipleChoiceAutoGrade !== false;
   }
@@ -2459,13 +2480,17 @@ export class SproutReviewerView extends ItemView {
         ev.preventDefault();
         ev.stopPropagation();
         closeMoreMenuImpl(this);
-        // Read the current order from the session oqOrderMap
+        const steps = Array.isArray(card.oqSteps) ? card.oqSteps : [];
+        const n = steps.length;
+        const identity = Array.from({ length: n }, (_, i) => i);
+
+        // Read the current order from the session oqOrderMap, with DOM/identity fallbacks.
         const s = this.session as unknown as { oqOrderMap?: Record<string, number[]> };
         const oqMap = s.oqOrderMap || {};
         const currentOrder = oqMap[id];
-        if (Array.isArray(currentOrder) && currentOrder.length > 0) {
-          void this.answerOq(currentOrder.slice());
-        }
+        const orderFromDom = this._readOqOrderFromDom(n);
+        const orderToSubmit = orderFromDom ?? (this._isPermutation(currentOrder, n) ? currentOrder.slice() : identity);
+        void this.answerOq(orderToSubmit);
         return;
       }
       if (isEnter && graded) {

@@ -488,6 +488,9 @@ function getOqShuffledOrder(session: Session, card: CardRecord, enabled: boolean
   if (!id) return identity;
 
   const map = ensureOqOrderMap(session);
+  const existing = map[id];
+  if (isPermutation(existing, n)) return existing;
+
   if (!enabled) {
     map[id] = identity;
     return identity;
@@ -510,6 +513,15 @@ function getOqShuffledOrder(session: Session, card: CardRecord, enabled: boolean
 
   map[id] = next;
   return next;
+}
+
+function readOqOrderFromStepList(root: ParentNode, expectedLength: number): number[] | null {
+  if (!Number.isInteger(expectedLength) || expectedLength <= 0) return null;
+  const rows = Array.from(root.querySelectorAll<HTMLElement>(".learnkit-oq-step-list .learnkit-oq-step-row[data-oq-orig-idx]"));
+  if (rows.length !== expectedLength) return null;
+
+  const parsed = rows.map((row) => Number.parseInt(row.dataset.oqOrigIdx || "", 10));
+  return isPermutation(parsed, expectedLength) ? parsed : null;
 }
 
 // --- Dropdown menu (optional header actions) ---------------------------------
@@ -1002,6 +1014,7 @@ function renderOqContent(ctx: CardRenderCtx): void {
         row.className = "flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1 learnkit-oq-step-row";
         row.draggable = true;
         row.dataset.oqIdx = String(displayIdx);
+        row.dataset.oqOrigIdx = String(origIdx);
 
         // Grip handle
         const grip = activeDocument.createElement("span");
@@ -1744,7 +1757,8 @@ export function renderSessionMode(args: Args) {
           onClick: () => {
             const oqMap = ensureOqOrderMap(args.session);
             const currentOrder = oqMap[String(card.id)];
-            const orderToSubmit = isPermutation(currentOrder, n) ? currentOrder.slice() : identity;
+            const orderFromDom = readOqOrderFromStepList(wrap, n);
+            const orderToSubmit = orderFromDom ?? (isPermutation(currentOrder, n) ? currentOrder.slice() : identity);
             void args.answerOq(orderToSubmit);
           },
           kbd: "↵",

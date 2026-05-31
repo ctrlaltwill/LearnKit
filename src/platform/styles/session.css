@@ -368,6 +368,10 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
   position: static;
   margin: 0.6rem 1.2rem 1.2rem;
   padding: 1.2rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  row-gap: 8px;
   border: 0.5px solid var(--color-base-35);
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--color-base-05) 74%, transparent);
@@ -405,6 +409,8 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
 .learnkit .lk-session-card > footer.learnkit-session-study-dock .learnkit-session-study-dock-left,
 .learnkit .lk-session-card > footer.learnkit-session-study-dock .learnkit-session-study-dock-right {
   display: flex;
+  flex: 0 0 auto;
+  min-width: 0;
   align-items: center;
 }
 
@@ -412,30 +418,38 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
   justify-content: flex-end;
 }
 
-.learnkit .lk-session-card > footer.learnkit-session-study-dock .learnkit-session-study-dock-center,
-.learnkit .lk-session-card > footer.learnkit-session-study-dock .learnkit-session-study-dock-buttons {
+.learnkit .lk-session-card > footer.learnkit-session-study-dock .learnkit-session-study-dock-center {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
   align-items: center;
   justify-content: center;
   gap: 8px;
 }
 
-/* Top-row reviewer actions should stretch across the dock width. */
 .learnkit .lk-session-card > footer.learnkit-session-study-dock .learnkit-session-study-dock-buttons {
-  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  flex: 0 1 auto;
+  width: auto;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .learnkit .lk-session-card > footer.learnkit-session-study-dock .learnkit-session-study-dock-buttons > :is(button, .btn, .learnkit-btn-toolbar) {
-  flex: 1 1 0;
+  flex: 0 1 auto;
   min-width: 0;
   justify-content: center;
 }
 
 .learnkit .lk-session-card > footer.learnkit-session-study-dock .learnkit-session-study-dock-grade-group {
   display: flex;
-  flex: 1 1 100%;
-  width: 100%;
+  flex-wrap: wrap;
+  flex: 0 1 auto;
+  width: auto;
   min-width: 0;
   align-items: stretch;
   justify-content: center;
@@ -443,8 +457,54 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
 }
 
 .learnkit .lk-session-card > footer.learnkit-session-study-dock .learnkit-session-study-dock-grade-group > :is(button, .btn) {
-  flex: 1 1 0;
+  flex: 0 1 auto;
   min-width: 0;
+}
+
+.learnkit .lk-session-card > footer.learnkit-session-study-dock :is(
+  .learnkit-session-study-dock-left,
+  .learnkit-session-study-dock-center,
+  .learnkit-session-study-dock-right,
+  .learnkit-session-study-dock-buttons,
+  .learnkit-session-study-dock-grade-group
+) :is(button, .btn, .learnkit-btn-toolbar, [id^="learnkit-menu-"] > button) {
+  white-space: nowrap;
+}
+
+@media (max-width: 1080px) {
+  .learnkit .lk-session-card > footer.learnkit-session-study-dock .learnkit-session-study-dock-left,
+  .learnkit .lk-session-card > footer.learnkit-session-study-dock .learnkit-session-study-dock-right {
+    order: 1;
+    flex: 1 1 calc(50% - 4px);
+    justify-content: stretch;
+  }
+
+  .learnkit .lk-session-card > footer.learnkit-session-study-dock .learnkit-session-study-dock-center,
+  .learnkit .lk-session-card > footer.learnkit-session-study-dock .learnkit-session-study-dock-buttons,
+  .learnkit .lk-session-card > footer.learnkit-session-study-dock .learnkit-session-study-dock-grade-group {
+    order: -1;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .learnkit .lk-session-card > footer.learnkit-session-study-dock .learnkit-session-study-dock-buttons > :is(button, .btn, .learnkit-btn-toolbar),
+  .learnkit .lk-session-card > footer.learnkit-session-study-dock .learnkit-session-study-dock-grade-group > :is(button, .btn) {
+    flex: 1 1 180px;
+  }
+
+  .learnkit .lk-session-card > footer.learnkit-session-study-dock .learnkit-session-study-dock-left > *,
+  .learnkit .lk-session-card > footer.learnkit-session-study-dock .learnkit-session-study-dock-right > * {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+  }
+
+  .learnkit .lk-session-card > footer.learnkit-session-study-dock .learnkit-session-study-dock-right > [id^="learnkit-menu-"] > button {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+  }
 }
 
 /* Restore subtle borders on session grading buttons. */
@@ -505,6 +565,9 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
 .learnkit .lk-session-card {
   --lk-session-body-font-size: 1rem;
   --lk-session-choice-font-size: 0.9rem;
+  --lk-session-cloze-control-height: 30px;
+  --lk-session-cloze-control-padding-x: 8px;
+  --lk-session-cloze-control-line-height: 1.5;
 }
 
 /* Keep session field body text consistent across Question/Answer/Extra info. */
@@ -1300,15 +1363,6 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
   background-color: var(--color-base-30);
 }
 
-/* Keep study dock utility controls borderless. */
-.learnkit .lk-session-card > footer.learnkit-session-study-dock :is(
-  .learnkit-btn-toolbar:not(.learnkit-btn-again):not(.learnkit-btn-hard):not(.learnkit-btn-good):not(.learnkit-btn-easy),
-  .learnkit-btn-filter,
-  [id^="learnkit-menu-"] > button
-) {
-  border: none;
-  border-color: transparent;
-}
 
 .learnkit-btn-again {
   background-color: var(--learnkit-again-bg);
@@ -1414,6 +1468,14 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
   --learnkit-btn-border-mix: 60%;
   --learnkit-btn-bg-hover-mix: 32%;
   --learnkit-btn-border-hover-mix: 68%;
+}
+
+.learnkit :is(.lk-session-card, .learnkit-gatekeeper-modal) .learnkit-btn-good {
+  --learnkit-btn-tint: var(--learnkit-good-bg);
+}
+
+.learnkit :is(.lk-session-card, .learnkit-gatekeeper-modal) .learnkit-btn-easy {
+  --learnkit-btn-tint: var(--learnkit-easy-bg);
 }
 
 .learnkit :is(.lk-session-card, .learnkit-gatekeeper-modal) :is(.learnkit-btn-again, .learnkit-btn-hard, .learnkit-btn-good, .learnkit-btn-easy):hover,
@@ -1536,6 +1598,7 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
 /* Match study dock Again/Good grading buttons to proposal reject/accept palette */
 .learnkit :is(.lk-session-card > footer.learnkit-session-study-dock, .learnkit-gatekeeper-footer)
   .learnkit-session-study-dock-grade-group > .learnkit-btn-again {
+  --learnkit-kbd-tint: var(--text-error, #b42318);
   color: var(--text-error, #b42318);
   background: color-mix(in srgb, var(--text-error, #b42318) 14%, var(--background-primary));
   border: 0.5px solid color-mix(in srgb, var(--text-error, #b42318) 40%, transparent) ;
@@ -1549,6 +1612,7 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
 
 .learnkit :is(.lk-session-card > footer.learnkit-session-study-dock, .learnkit-gatekeeper-footer)
   .learnkit-session-study-dock-grade-group > .learnkit-btn-good {
+  --learnkit-kbd-tint: var(--text-success, #16a34a);
   color: var(--text-success, #16a34a);
   background: color-mix(in srgb, var(--text-success, #16a34a) 14%, var(--background-primary));
   border: 0.5px solid color-mix(in srgb, var(--text-success, #16a34a) 40%, transparent) ;
@@ -1596,19 +1660,45 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
 
 /* Main study session: keep typed cloze inputs at a fixed single-line height. */
 .learnkit .lk-review-root[data-lk-review-mode="session"] .lk-session-card .learnkit-cloze-typed-wrap {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   margin: 1px 0;
+  min-width: 0;
+  max-width: 100%;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  vertical-align: baseline;
 }
 
 .learnkit .lk-review-root[data-lk-review-mode="session"] .lk-session-card .learnkit-cloze-typed-input {
-  height: 30px;
-  max-height: 30px;
+  min-height: var(--lk-session-cloze-control-height);
+  height: var(--lk-session-cloze-control-height);
+  max-height: var(--lk-session-cloze-control-height);
+  padding-inline: var(--lk-session-cloze-control-padding-x);
+  line-height: var(--lk-session-cloze-control-line-height);
+  min-width: 0;
+  max-width: 100% ;
+}
+
+.learnkit .lk-review-root[data-lk-review-mode="session"] .lk-session-card .learnkit-cloze-revealed,
+.learnkit .lk-review-root[data-lk-review-mode="session"] .lk-session-card :is(.learnkit-cloze-typed-correct, .learnkit-cloze-typed-wrong) {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-height: var(--lk-session-cloze-control-height);
+  margin: 1px 2px 1px 0;
+  padding: 2px var(--lk-session-cloze-control-padding-x);
+  border-radius: var(--radius-s);
+  font-size: var(--lk-session-body-font-size, 1rem);
+  font-weight: 500;
+  line-height: var(--lk-session-cloze-control-line-height);
+  vertical-align: baseline;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .learnkit .lk-review-root[data-lk-review-mode="session"] .lk-session-card :is(.learnkit-cloze-typed-correct, .learnkit-cloze-typed-wrong) {
-  height: 30px;
-  min-height: 30px;
-  max-height: 30px;
   margin-top: 1px;
   margin-bottom: 1px;
 }
@@ -1729,16 +1819,9 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
 
 .learnkit-cloze-typed-correct,
 .learnkit-cloze-typed-wrong {
-font-family: inherit;
-    font-size: var(--learnkit-font-xs);
-    border-radius: var(--radius-s);
-    box-sizing: border-box;
-    vertical-align: middle ;
-    min-height: 32px;
-    border: .5px solid #000000;
-    margin: 0 2px 0 4px;
-    padding: 4px 8px;
-    font-weight: 500;
+  font-family: inherit;
+  margin: 0 2px 0 4px;
+  padding: 2px var(--lk-session-cloze-control-padding-x);
   line-height: 1.5;
   display: inline-flex;
   align-items: center;
@@ -1976,7 +2059,7 @@ body.is-phone .learnkit .lk-session-card .learnkit-session-study-dock-center:emp
 
 body.is-phone .learnkit .lk-session-card .learnkit-session-study-dock-buttons {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   width: 100%;
   gap: 8px;
 }
@@ -1996,7 +2079,7 @@ body.is-phone .learnkit .lk-session-card .learnkit-session-study-dock-buttons .t
 }
 
 body.is-phone .learnkit .lk-session-card .learnkit-session-study-dock-buttons > * {
-  flex: 1 1 0;
+  flex: 1 1 140px;
   min-width: 0;
   justify-content: center;
 }

@@ -284,7 +284,6 @@
 .learnkit .learnkit-io-image-inline {
   max-height: 350px;
   cursor: zoom-in;
-  margin-top: 1rem;
 }
 
 .learnkit .learnkit-io-image-widget {
@@ -930,6 +929,12 @@
   color: #111111;
 }
 
+/* ---- Global muted text tone ---- */
+
+.learnkit .text-muted-foreground {
+  color: var(--color-base-50);
+}
+
 /* ---- Inline sorting icon hover ---- */
 
 .learnkit .inline-flex.text-muted-foreground.cursor-pointer {
@@ -1075,7 +1080,7 @@
 .learnkit input[type="search"]:not(.learnkit-ss-search-input):not(.learnkit-search-naked):focus,
 .learnkit input[type="number"]:focus,
 .learnkit select:focus {
-  border: 0.5px solid var(--color-base-70);
+  border: 0.5px solid;
   box-shadow: none;
   outline: none;
 }

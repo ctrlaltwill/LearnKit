@@ -127,4 +127,12 @@
   margin-bottom: 0px;
 }
 
+/* Keep [data-tooltip] selectors available for styling hooks, but suppress
+  the pseudo-element tooltip layer to avoid duplicate labels with Obsidian. */
+.learnkit [data-tooltip]::after,
+.theme-dark .learnkit [data-tooltip]::after {
+  content: none !important;
+  display: none !important;
+}
+
 

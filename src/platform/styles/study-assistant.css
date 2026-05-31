@@ -70,7 +70,7 @@
 .learnkit input[type=search]:not(.learnkit-ss-search-input):not(.learnkit-search-naked):focus,
 .learnkit input[type=number]:focus,
 .learnkit select:focus {
-  border: .5px solid var(--color-base-70);
+  border: 0.5px solid;
   box-shadow: none;
   outline: none;
 }
@@ -1526,6 +1526,7 @@
   right: 6px;
   top: 50%;
   transform: translateY(-50%);
+  margin: 0;
   width: 36px ;
   height: 36px ;
   min-width: 36px ;
@@ -1559,6 +1560,7 @@
 .learnkit-assistant-popup-send:hover:not(:disabled) {
   background: var(--background-modifier-hover, rgba(0, 0, 0, 0.06)) ;
   color: var(--text-normal);
+  transform: translateY(-50%);
 }
 
 .learnkit-assistant-popup-send.is-stop-enabled:hover:not(:disabled) {
@@ -1605,6 +1607,7 @@
   left: 6px;
   top: 50%;
   transform: translateY(-50%);
+  margin: 0;
   width: 36px ;
   height: 36px ;
   min-width: 36px ;
@@ -1626,16 +1629,24 @@
 .learnkit-assistant-popup-attach-btn:hover:not(:disabled) {
   background: var(--background-modifier-hover, rgba(0, 0, 0, 0.06)) ;
   color: var(--text-normal);
+  transform: translateY(-50%);
 }
 
 .learnkit-assistant-popup-attach-btn:focus-visible,
 .learnkit-assistant-popup-attach-btn:active {
   border-color: var(--color-base-40);
+  transform: translateY(-50%);
 }
 
 .learnkit-assistant-popup-attach-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+/* Keep tooltip-enabled composer action buttons absolutely centered in shell. */
+.learnkit-assistant-popup .learnkit-assistant-popup-attach-btn[data-tooltip],
+.learnkit-assistant-popup .learnkit-assistant-popup-send[data-tooltip] {
+  position: absolute;
 }
 
 .learnkit-assistant-popup-attach-btn .svg-icon {
