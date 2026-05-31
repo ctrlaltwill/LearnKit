@@ -30,7 +30,7 @@
     "css:hex:expand": "node tooling/expand-css-hex.mjs ./src/platform/styles ./src/styles.tailwind.css ./dist/styles.css"
   },
   "devDependencies": {
-    "@tailwindcss/cli": "^4.2.1",
+    "@tailwindcss/cli": "^4.3.0",
     "@types/node": "^25.5.0",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
