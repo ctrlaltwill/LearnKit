@@ -18,6 +18,7 @@
 import { type App, Modal, Notice, Setting, setIcon } from "obsidian";
 import type LearnKitPlugin from "../../main";
 import { log } from "../../platform/core/logger";
+import { createBodyPortalPopover, type BodyPortalPopoverHandle } from "../../platform/core/popover";
 import type { DataJsonBackupStats } from "../../platform/integrations/sync/backup";
 import { restoreFromDataJsonBackup, deleteDataJsonBackup } from "../../platform/integrations/sync/backup";
 import { scopeModalToWorkspace } from "../../platform/modals/modal-utils";
@@ -638,6 +639,8 @@ export class ConfirmSyncPrivilegesModal extends Modal {
   counts: AffectedCounts;
   onChoice: (choice: "cancel" | "off" | "simple-safe" | "simple-compat" | "full") => void;
   private _resolved = false;
+  private _modePopover: BodyPortalPopoverHandle | null = null;
+  private _selectedMode: "off" | "simple-safe" | "simple-compat" | "full" = "simple-safe";
 
   constructor(
     app: App,
@@ -697,7 +700,7 @@ export class ConfirmSyncPrivilegesModal extends Modal {
     // New to LearnKit? label
     body.createEl("label", {
       cls: "text-sm font-medium",
-      text: tx(locale, "ui.sync.modal.labelNewToLearnKit", "New to LearnKit?"),
+      text: tx(locale, "ui.sync.modal.labelNewToLearnKit", "Set your sync mode"),
     });
 
     // Intro paragraph
@@ -706,7 +709,7 @@ export class ConfirmSyncPrivilegesModal extends Modal {
       text: tx(
         locale,
         "ui.sync.modal.bodyIntro",
-        "This update introduces clearer sync modes. Choose how LearnKit should handle markdown changes. Your vault currently has {totalWithCards} notes containing flashcards.",
+        "Sync mode controls what LearnKit detects as a flashcard and what it can adjust in markdown. We recommend Simple mode for most new users who do not plan to use shorthand flashcards. You can change this anytime in Settings. Your vault currently has {totalWithCards} notes containing flashcards.",
         {
           totalWithCards: this.counts.totalWithCards,
         },
@@ -727,12 +730,13 @@ export class ConfirmSyncPrivilegesModal extends Modal {
         "Scans only canonical LearnKit syntax. It does not parse new shorthand :: codes, which helps avoid conflicts with other plugins. This is the safest sync option.",
       ),
     });
+    const simpleSafeRecommendation = tx(
+      locale,
+      "ui.sync.modal.bodySimpleSafeRecommendation",
+      "We strongly recommend this mode if you do not intend to use shorthand codes or migrate questions from other flashcard plugins.",
+    ).trimStart();
     simpleSafeDesc.createEl("strong", {
-      text: tx(
-        locale,
-        "ui.sync.modal.bodySimpleSafeRecommendation",
-        " We strongly recommend this mode if you do not intend to use shorthand codes or migrate questions from other flashcard plugins.",
-      ),
+      text: ` ${simpleSafeRecommendation}`,
     });
 
     // Comprehensive Sync – label + description
@@ -746,7 +750,7 @@ export class ConfirmSyncPrivilegesModal extends Modal {
       text: tx(
         locale,
         "ui.sync.modal.bodyFull",
-        "Scans canonical LearnKit syntax and shorthand codes, then converts shorthand into canonical LearnKit format. This can affect compatibility with other spaced-repetition plugins. In rare cases, other plugins that use :: codes may be matched and converted.",
+        "Scans canonical LearnKit syntax and shorthand codes, then converts shorthand into canonical LearnKit format. This can help migrate cards from plugins that use :: as a Q/A separator. After conversion, those cards are no longer backward-compatible with shorthand-based plugins, but they gain full LearnKit functionality. In rare cases, non-flashcard plugins that use :: in markdown may be matched and converted. If you do not need migration, we recommend Simple mode.",
       ),
     });
 
@@ -761,7 +765,7 @@ export class ConfirmSyncPrivilegesModal extends Modal {
       text: tx(
         locale,
         "ui.sync.modal.bodySimpleCompat",
-        "Scans canonical LearnKit syntax and shorthand codes, keeps existing shorthand structure, and appends LearnKit anchors where needed. This is usually more compatible with other spaced-repetition plugins, but in rare cases :: codes from other plugins may still be matched and anchored.",
+        "Scans canonical LearnKit syntax and shorthand codes, preserves shorthand structure, and appends LearnKit anchors where needed. This keeps stronger compatibility with other flashcard plugins while still allowing LearnKit sync. In rare cases, non-flashcard plugins that use :: in markdown may still be matched and anchored. If you do not need shorthand compatibility, we recommend Simple mode.",
       ),
     });
 
@@ -795,30 +799,115 @@ export class ConfirmSyncPrivilegesModal extends Modal {
 
     const actions = footer.createDiv({ cls: "learnkit-sync-privileges-actions" });
 
-    const modeSelect = actions.createEl("select", {
-      cls: "dropdown input learnkit-sync-privileges-select",
+    const modeOptions = [
+      { value: "off", label: tx(locale, "ui.sync.privileges.off", "Off") },
+      { value: "full", label: tx(locale, "ui.sync.privileges.full", "Full (Normalize)") },
+      { value: "simple-compat", label: tx(locale, "ui.sync.privileges.simpleCompat", "Full (Preserve)") },
+      { value: "simple-safe", label: tx(locale, "ui.sync.privileges.simpleSafe", "Simple") },
+    ] as const;
+
+    this._selectedMode = "simple-safe";
+
+    const modeTrigger = actions.createEl("button", {
+      cls: "learnkit-ss-trigger inline-flex items-center gap-2 h-9 px-3 text-sm learnkit-settings-action-btn learnkit-sync-privileges-trigger",
       attr: {
+        type: "button",
+        "aria-haspopup": "listbox",
+        "aria-expanded": "false",
         "aria-label": tx(locale, "ui.sync.modal.title", "Choose your sync mode"),
       },
     });
+    modeTrigger.setAttr("data-tooltip-position", "top");
 
-    modeSelect.createEl("option", {
-      value: "off",
-      text: tx(locale, "ui.sync.privileges.off", "Off"),
+    const triggerLabel = modeTrigger.createSpan({ cls: "learnkit-ss-trigger-label" });
+    const triggerChevron = modeTrigger.createSpan({ cls: "learnkit-ss-trigger-chevron" });
+    setIcon(triggerChevron, "chevron-down");
+
+    const labelFor = (value: "off" | "simple-safe" | "simple-compat" | "full") =>
+      modeOptions.find((opt) => opt.value === value)?.label ?? value;
+
+    const applyTriggerLabel = () => {
+      const label = labelFor(this._selectedMode);
+      triggerLabel.setText(label);
+      modeTrigger.setAttr("aria-label", label);
+      modeTrigger.setAttr("data-tooltip", label);
+    };
+    applyTriggerLabel();
+
+    this._modePopover?.close();
+    this._modePopover = createBodyPortalPopover({
+      trigger: modeTrigger,
+      align: "right",
+      overlayClasses: ["learnkit-ss-popover"],
+      panelClasses: ["learnkit-ss-panel", "learnkit-header-menu-panel"],
+      width: () => Math.max(220, modeTrigger.getBoundingClientRect().width),
+      buildContent: (panel, close) => {
+        const listbox = activeDocument.createElement("div");
+        listbox.setAttribute("role", "listbox");
+        listbox.className = "learnkit-ss-listbox";
+        panel.appendChild(listbox);
+
+        modeOptions.forEach((opt, idx) => {
+          const item = activeDocument.createElement("div");
+          item.setAttribute("role", "option");
+          item.setAttribute("aria-selected", opt.value === this._selectedMode ? "true" : "false");
+          item.tabIndex = 0;
+          item.className = "learnkit-ss-item";
+
+          const dotWrap = activeDocument.createElement("div");
+          dotWrap.className = "learnkit-ss-dot-wrap";
+          const dot = activeDocument.createElement("div");
+          dot.className = "learnkit-ss-dot";
+          if (opt.value === this._selectedMode) dot.classList.add("is-selected");
+          dotWrap.appendChild(dot);
+          item.appendChild(dotWrap);
+
+          const textWrap = activeDocument.createElement("div");
+          textWrap.className = "learnkit-ss-item-text";
+          const itemLabel = activeDocument.createElement("span");
+          itemLabel.className = "learnkit-ss-item-label";
+          itemLabel.textContent = opt.label;
+          textWrap.appendChild(itemLabel);
+          item.appendChild(textWrap);
+
+          const activate = () => {
+            this._selectedMode = opt.value;
+            applyTriggerLabel();
+            close();
+          };
+
+          item.addEventListener("click", (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            activate();
+          });
+
+          item.addEventListener("keydown", (ev: KeyboardEvent) => {
+            if (ev.key === "Enter" || ev.key === " ") {
+              ev.preventDefault();
+              ev.stopPropagation();
+              activate();
+            }
+          });
+
+          listbox.appendChild(item);
+
+          if (idx === 0) {
+            const sep = activeDocument.createElement("div");
+            sep.className = "learnkit-ss-separator";
+            sep.setAttribute("role", "separator");
+            listbox.appendChild(sep);
+          }
+        });
+      },
     });
-    modeSelect.createEl("option", {
-      value: "simple-safe",
-      text: tx(locale, "ui.sync.privileges.simpleSafe", "Simple"),
+
+    modeTrigger.addEventListener("pointerdown", (ev: PointerEvent) => {
+      if (ev.button !== 0) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      this._modePopover?.toggle();
     });
-    modeSelect.createEl("option", {
-      value: "simple-compat",
-      text: tx(locale, "ui.sync.privileges.simpleCompat", "Full (Preserve)"),
-    });
-    modeSelect.createEl("option", {
-      value: "full",
-      text: tx(locale, "ui.sync.privileges.full", "Full (Normalize)"),
-    });
-    modeSelect.value = "simple-safe";
 
     const saveBtn = actions.createEl("button", {
       cls: "learnkit-btn-toolbar learnkit-btn-toolbar learnkit-btn-accent learnkit-btn-accent h-9 inline-flex items-center gap-2 px-3 text-sm learnkit-sync-privileges-save-btn",
@@ -826,8 +915,7 @@ export class ConfirmSyncPrivilegesModal extends Modal {
     });
     saveBtn.createSpan({ text: common.save });
     saveBtn.onclick = () => {
-      const choice = modeSelect.value as "off" | "simple-safe" | "simple-compat" | "full";
-      this._resolve(choice);
+      this._resolve(this._selectedMode);
     };
   }
 
@@ -839,6 +927,8 @@ export class ConfirmSyncPrivilegesModal extends Modal {
   }
 
   onClose() {
+    this._modePopover?.close();
+    this._modePopover = null;
     if (!this._resolved) {
       this._resolved = true;
       this.onChoice("cancel");
