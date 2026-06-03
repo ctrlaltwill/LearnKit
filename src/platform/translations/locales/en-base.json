@@ -1611,6 +1611,7 @@
   "ui.sync.modal.bodySimple": "Simple sync only adds missing anchor IDs to flashcards to track them, without making any other changes to your notes. These are small invisible comments just above each flashcard in the style ^learnkit-123456789.",
   "ui.sync.modal.labelSimpleSafe": "Simple",
   "ui.sync.modal.bodySimpleSafe": "Scans only canonical LearnKit syntax. It does not parse new shorthand :: codes, which helps avoid conflicts with other plugins. This is the safest sync option.",
+  "ui.sync.modal.bodySimpleSafeRecommendation": "We strongly recommend this mode if you do not intend to use shorthand codes or migrate questions from other flashcard plugins.",
   "ui.sync.modal.labelSimpleCompat": "Full (Preserve)",
   "ui.sync.modal.bodySimpleCompat": "Scans canonical LearnKit syntax and shorthand codes, keeps existing shorthand structure, and appends LearnKit anchors where needed. This is usually more compatible with other spaced-repetition plugins, but in rare cases :: codes from other plugins may still be matched and anchored.",
   "ui.sync.modal.labelCanUndo": "Can I undo my choice here?",

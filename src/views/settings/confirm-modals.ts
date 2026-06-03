@@ -719,12 +719,20 @@ export class ConfirmSyncPrivilegesModal extends Modal {
       cls: "text-sm font-medium",
       text: tx(locale, "ui.sync.modal.labelSimpleSafe", "Simple"),
     });
-    simpleSafeSection.createEl("p", {
+    const simpleSafeDesc = simpleSafeSection.createEl("p", {
       cls: "text-sm text-muted-foreground learnkit-sync-privileges-desc",
       text: tx(
         locale,
         "ui.sync.modal.bodySimpleSafe",
         "Scans only canonical LearnKit syntax. It does not parse new shorthand :: codes, which helps avoid conflicts with other plugins. This is the safest sync option.",
+      ),
+    });
+    simpleSafeDesc.createText(" ");
+    simpleSafeDesc.createEl("strong", {
+      text: tx(
+        locale,
+        "ui.sync.modal.bodySimpleSafeRecommendation",
+        "We strongly recommend this mode if you do not intend to use shorthand codes or migrate questions from other flashcard plugins.",
       ),
     });
 

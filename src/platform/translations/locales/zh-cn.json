@@ -1934,6 +1934,7 @@
   "ui.sync.modal.bodySimple": "简单同步仅会为抽认卡添加缺失的锚点 ID 以追踪它们，不会对笔记进行任何其他更改。这些是每张抽认卡上方的小型不可见注释，格式为 ^learnkit-123456789。",
   "ui.sync.modal.labelSimpleSafe": "Simple",
   "ui.sync.modal.bodySimpleSafe": "仅扫描 LearnKit 规范语法。不会解析新的 :: 简写代码，可降低与其他插件冲突的风险。这是最安全的同步选项。",
+  "ui.sync.modal.bodySimpleSafeRecommendation": "如果您不打算使用简写代码，或不需要从其他抽认卡插件迁移题目，我们强烈建议使用此模式。",
   "ui.sync.modal.labelSimpleCompat": "Full（保留格式）",
   "ui.sync.modal.bodySimpleCompat": "扫描 LearnKit 规范语法与简写代码，保留现有简写结构，并在需要时补充 LearnKit 锚点。通常与其他间隔复习插件更兼容，但少数情况下其他插件的 :: 代码仍可能被匹配并加锚。",
   "ui.sync.modal.labelCanUndo": "我可以撤销此选择吗？",
