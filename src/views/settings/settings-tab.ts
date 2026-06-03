@@ -1093,7 +1093,21 @@ export class LearnKitSettingsTab extends PluginSettingTab {
     // Sync privileges dropdown
     this._addSearchablePopover(wrapper, {
       name: this._tx("ui.settings.appearance.syncPrivileges.name", "Sync privileges"),
-      description: this._tx("ui.settings.appearance.syncPrivileges.desc", "Choose how much Sync can change your markdown: Full modes include shorthand (::), Simple syncs canonical Q/A only, and Off disables sync."),
+      description: this._tx("ui.settings.appearance.syncPrivileges.desc", "Choose how much Sync can change your markdown."),
+      descriptionList: [
+        this._tx(
+          "ui.settings.appearance.syncPrivileges.bullet.fullNormalize",
+          "Full (Normalize): scans canonical + shorthand, converts shorthand into canonical LearnKit format, then appends anchors to all synced cards.",
+        ),
+        this._tx(
+          "ui.settings.appearance.syncPrivileges.bullet.fullPreserve",
+          "Full (Preserve): scans canonical + shorthand, preserves shorthand text, and appends anchors to both shorthand and canonical cards.",
+        ),
+        this._tx(
+          "ui.settings.appearance.syncPrivileges.bullet.simple",
+          "Simple: scans canonical LearnKit Q/A syntax only, appends anchors only to canonical cards, and ignores shorthand :: patterns.",
+        ),
+      ],
       options: [
         { value: "full", label: this._tx("ui.sync.privileges.full", "Full (Normalize)") },
         { value: "simple-compat", label: this._tx("ui.sync.privileges.simpleCompat", "Full (Preserve)") },
@@ -6446,6 +6460,7 @@ export class LearnKitSettingsTab extends PluginSettingTab {
     args: {
       name: string;
       description: string;
+      descriptionList?: string[];
       options: { value: string; label: string; description?: string; flagCode?: string; section?: string }[];
       value: string;
       onChange: (value: string) => void;
@@ -6454,6 +6469,13 @@ export class LearnKitSettingsTab extends PluginSettingTab {
     const id = `sprout-ss-${Math.random().toString(36).slice(2, 9)}`;
 
     const setting = new Setting(container).setName(args.name).setDesc(args.description);
+
+    if (args.descriptionList?.length) {
+      const descriptionListEl = setting.descEl.createEl("ul", { cls: "learnkit-ss-description-list" });
+      for (const entry of args.descriptionList) {
+        descriptionListEl.createEl("li", { text: entry });
+      }
+    }
 
     // ── Trigger button ──
     const trigger = activeDocument.createElement("button");

@@ -1671,7 +1671,7 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
 }
 
 .learnkit .lk-review-root[data-lk-review-mode="session"] .lk-session-card .learnkit-cloze-typed-input {
-  min-height: var(--lk-session-cloze-control-height);
+  min-height: var(--lk-session-cloze-control-height); 
   height: var(--lk-session-cloze-control-height);
   max-height: var(--lk-session-cloze-control-height);
   padding-inline: var(--lk-session-cloze-control-padding-x);

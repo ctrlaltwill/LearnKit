@@ -1950,6 +1950,9 @@
   "ui.sync.privileges.simpleSafe": "Simple",
   "ui.sync.privileges.off": "关闭",
   "ui.settings.appearance.syncPrivileges.name": "同步权限",
-  "ui.settings.appearance.syncPrivileges.desc": "控制同步允许在您的 Markdown 笔记中修改哪些内容。",
+  "ui.settings.appearance.syncPrivileges.desc": "选择同步可对您的 Markdown 做出多大程度的更改。",
+  "ui.settings.appearance.syncPrivileges.bullet.fullNormalize": "Full（规范化）：扫描规范语法 + 简写，将简写转换为 LearnKit 规范格式，并为所有同步卡片补充锚点。",
+  "ui.settings.appearance.syncPrivileges.bullet.fullPreserve": "Full（保留格式）：扫描规范语法 + 简写，保留简写文本，并为简写与规范卡片都补充锚点。",
+  "ui.settings.appearance.syncPrivileges.bullet.simple": "Simple：仅扫描 LearnKit 规范 Q/A 语法，只为规范卡片补充锚点，并忽略 :: 简写模式。",
   "ui.settings.appearance.syncPrivileges.explainer": "Full（规范化）— 扫描 LearnKit 规范语法与简写，并将简写转换为规范格式；可能影响使用 :: 模式的其他插件。Full（保留格式）— 扫描规范语法与简写，保留简写结构并补充 LearnKit 锚点；通常更兼容，但其他插件的 :: 仍可能被加锚。Simple — 仅扫描 LearnKit 规范语法并忽略新的 :: 简写，是最安全选项。关闭 — 禁用同步。"
 }

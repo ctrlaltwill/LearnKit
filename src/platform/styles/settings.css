@@ -2199,6 +2199,18 @@ td.learnkit-backup-cell.learnkit-backup-cell.learnkit-backup-actions.learnkit-ba
   margin-top: 0.45em;
 }
 
+.learnkit-settings-tab-content .setting-item-description .learnkit-ss-description-list,
+.learnkit-settings-layout-content .setting-item-description .learnkit-ss-description-list {
+  margin: 0.35em 0 0;
+  padding-left: 1.2em;
+  list-style-type: disc;
+}
+
+.learnkit-settings-tab-content .setting-item-description .learnkit-ss-description-list > li,
+.learnkit-settings-layout-content .setting-item-description .learnkit-ss-description-list > li {
+  margin: 0.2em 0;
+}
+
 /* ---- Guide-like typography for settings content ---- */
 
 .learnkit-settings-layout-content .setting-item-name {
