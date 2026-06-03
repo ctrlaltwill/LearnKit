@@ -2819,3 +2819,28 @@ z-index: 11;
 .learnkit-sync-privileges-desc {
   margin: 0.4rem auto 0.8rem;
 }
+
+.learnkit .lk-modal-footer.learnkit-sync-privileges-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.learnkit .lk-modal-footer.learnkit-sync-privileges-footer > button {
+  flex: 0 1 auto;
+  max-width: 100%;
+}
+
+@media (max-width: 860px) {
+  .learnkit .lk-modal-footer.learnkit-sync-privileges-footer > button {
+    flex: 1 1 calc(50% - 0.3rem);
+    min-width: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .learnkit .lk-modal-footer.learnkit-sync-privileges-footer > button {
+    flex-basis: 100%;
+  }
+}
