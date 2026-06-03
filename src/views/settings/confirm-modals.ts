@@ -727,12 +727,11 @@ export class ConfirmSyncPrivilegesModal extends Modal {
         "Scans only canonical LearnKit syntax. It does not parse new shorthand :: codes, which helps avoid conflicts with other plugins. This is the safest sync option.",
       ),
     });
-    simpleSafeDesc.createText(" ");
     simpleSafeDesc.createEl("strong", {
       text: tx(
         locale,
         "ui.sync.modal.bodySimpleSafeRecommendation",
-        "We strongly recommend this mode if you do not intend to use shorthand codes or migrate questions from other flashcard plugins.",
+        " We strongly recommend this mode if you do not intend to use shorthand codes or migrate questions from other flashcard plugins.",
       ),
     });
 
