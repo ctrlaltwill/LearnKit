@@ -2822,25 +2822,56 @@ z-index: 11;
 
 .learnkit .lk-modal-footer.learnkit-sync-privileges-footer {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.6rem;
 }
 
-.learnkit .lk-modal-footer.learnkit-sync-privileges-footer > button {
-  flex: 0 1 auto;
+.learnkit .learnkit-sync-privileges-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-left: auto;
+}
+
+.learnkit .learnkit-sync-privileges-select {
+  min-width: 220px;
   max-width: 100%;
+  height: 36px;
 }
 
 @media (max-width: 860px) {
-  .learnkit .lk-modal-footer.learnkit-sync-privileges-footer > button {
-    flex: 1 1 calc(50% - 0.3rem);
+  .learnkit .lk-modal-footer.learnkit-sync-privileges-footer {
+    flex-wrap: wrap;
+  }
+
+  .learnkit .learnkit-sync-privileges-actions {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .learnkit .learnkit-sync-privileges-select {
+    flex: 1 1 auto;
     min-width: 0;
   }
 }
 
 @media (max-width: 560px) {
+  .learnkit .lk-modal-footer.learnkit-sync-privileges-footer {
+    align-items: stretch;
+  }
+
   .learnkit .lk-modal-footer.learnkit-sync-privileges-footer > button {
-    flex-basis: 100%;
+    width: 100%;
+  }
+
+  .learnkit .learnkit-sync-privileges-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .learnkit .learnkit-sync-privileges-actions > button {
+    width: 100%;
   }
 }

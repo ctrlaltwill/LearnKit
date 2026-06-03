@@ -46,7 +46,7 @@ interface AffectedCounts {
   totalNeedingUpdate: number;
 }
 
-type SyncPrivilegeChoice = "full" | "simple-safe" | "simple-compat";
+type SyncPrivilegeChoice = "full" | "simple-safe" | "simple-compat" | "off";
 
 function resolveConfiguredSyncMode(priv: unknown): SyncPrivilegeChoice {
   if (priv === "simple-safe") return "simple-safe";
@@ -123,6 +123,10 @@ export function WithDataSyncMethods<T extends Constructor<LearnKitPluginBase>>(B
         this.settings.general.syncPrivileges = choice;
         this.settings.general.syncPrivilegesChoiceVersion = CURRENT_SYNC_PRIVILEGES_CHOICE_VERSION;
         await this.saveAll();
+        if (choice === "off") {
+          new Notice(this._tx("ui.sync.notice.syncOff", "Sync is currently turned off. Update your preferences in Settings → User Details → Sync privileges to sync flashcards."));
+          return;
+        }
         if (choice !== "full") {
           const res = await syncQuestionBank(this as unknown as LearnKitPlugin, { syncMode: choice });
           this._showSyncResult(res);
@@ -197,6 +201,10 @@ export function WithDataSyncMethods<T extends Constructor<LearnKitPluginBase>>(B
         this.settings.general.syncPrivileges = choice;
         this.settings.general.syncPrivilegesChoiceVersion = CURRENT_SYNC_PRIVILEGES_CHOICE_VERSION;
         await this.saveAll();
+        if (choice === "off") {
+          new Notice(this._tx("ui.sync.notice.syncOff", "Sync is currently turned off. Update your preferences in Settings → User Details → Sync privileges to sync flashcards."));
+          return;
+        }
         if (choice !== "full") {
           const res = await syncOneFile(this as unknown as LearnKitPlugin, file, { pruneGlobalOrphans: false, syncMode: choice });
           new Notice(this._formatCurrentNoteSyncNotice(file.basename, res));

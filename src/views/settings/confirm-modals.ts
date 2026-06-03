@@ -636,14 +636,14 @@ interface AffectedCounts {
 export class ConfirmSyncPrivilegesModal extends Modal {
   plugin: LearnKitPlugin;
   counts: AffectedCounts;
-  onChoice: (choice: "cancel" | "simple-safe" | "simple-compat" | "full") => void;
+  onChoice: (choice: "cancel" | "off" | "simple-safe" | "simple-compat" | "full") => void;
   private _resolved = false;
 
   constructor(
     app: App,
     plugin: LearnKitPlugin,
     counts: AffectedCounts,
-    onChoice: (choice: "cancel" | "simple-safe" | "simple-compat" | "full") => void,
+    onChoice: (choice: "cancel" | "off" | "simple-safe" | "simple-compat" | "full") => void,
   ) {
     super(app);
     this.plugin = plugin;
@@ -787,38 +787,51 @@ export class ConfirmSyncPrivilegesModal extends Modal {
 
     const cancelBtn = footer.createEl("button", {
       cls: "learnkit-btn-toolbar learnkit-btn-toolbar learnkit-btn-filter learnkit-btn-filter inline-flex items-center gap-2 h-9 px-3 text-sm",
-      attr: { type: "button", "aria-label": tx(locale, "ui.sync.modal.cancelSync", "Cancel Sync") },
+      attr: { type: "button", "aria-label": common.close },
     });
     cancelBtn.setAttr("data-tooltip-position", "top");
-    cancelBtn.createSpan({ text: tx(locale, "ui.sync.modal.cancelSync", "Cancel Sync") });
+    cancelBtn.createSpan({ text: common.close });
     cancelBtn.onclick = () => this._resolve("cancel");
 
-    const safeBtn = footer.createEl("button", {
-      cls: "learnkit-btn-toolbar learnkit-btn-toolbar learnkit-btn-accent learnkit-btn-accent h-9 inline-flex items-center gap-2",
-      attr: { type: "button", "aria-label": tx(locale, "ui.sync.modal.allowSimpleSafe", "Use Simple") },
-    });
-    safeBtn.setAttr("data-tooltip-position", "top");
-    safeBtn.createSpan({ text: tx(locale, "ui.sync.modal.allowSimpleSafe", "Use Simple") });
-    safeBtn.onclick = () => this._resolve("simple-safe");
+    const actions = footer.createDiv({ cls: "learnkit-sync-privileges-actions" });
 
-    const compatBtn = footer.createEl("button", {
-      cls: "learnkit-btn-toolbar learnkit-btn-toolbar learnkit-btn-filter learnkit-btn-filter inline-flex items-center gap-2 h-9 px-3 text-sm",
-      attr: { type: "button", "aria-label": tx(locale, "ui.sync.modal.allowSimpleCompat", "Use Full (Preserve)") },
+    const modeSelect = actions.createEl("select", {
+      cls: "dropdown input learnkit-sync-privileges-select",
+      attr: {
+        "aria-label": tx(locale, "ui.sync.modal.title", "Choose your sync mode"),
+      },
     });
-    compatBtn.setAttr("data-tooltip-position", "top");
-    compatBtn.createSpan({ text: tx(locale, "ui.sync.modal.allowSimpleCompat", "Use Full (Preserve)") });
-    compatBtn.onclick = () => this._resolve("simple-compat");
 
-    const fullBtn = footer.createEl("button", {
-      cls: "learnkit-btn-toolbar learnkit-btn-toolbar learnkit-btn-filter learnkit-btn-filter learnkit-sync-privileges-full-btn learnkit-sync-privileges-full-btn inline-flex items-center gap-2 h-9 px-3 text-sm",
-      attr: { type: "button", "aria-label": tx(locale, "ui.sync.modal.allowFull", "Use Full (Normalize)") },
+    modeSelect.createEl("option", {
+      value: "off",
+      text: tx(locale, "ui.sync.privileges.off", "Off"),
     });
-    fullBtn.setAttr("data-tooltip-position", "top");
-    fullBtn.createSpan({ text: tx(locale, "ui.sync.modal.allowFull", "Use Full (Normalize)") });
-    fullBtn.onclick = () => this._resolve("full");
+    modeSelect.createEl("option", {
+      value: "simple-safe",
+      text: tx(locale, "ui.sync.privileges.simpleSafe", "Simple"),
+    });
+    modeSelect.createEl("option", {
+      value: "simple-compat",
+      text: tx(locale, "ui.sync.privileges.simpleCompat", "Full (Preserve)"),
+    });
+    modeSelect.createEl("option", {
+      value: "full",
+      text: tx(locale, "ui.sync.privileges.full", "Full (Normalize)"),
+    });
+    modeSelect.value = "simple-safe";
+
+    const saveBtn = actions.createEl("button", {
+      cls: "learnkit-btn-toolbar learnkit-btn-toolbar learnkit-btn-accent learnkit-btn-accent h-9 inline-flex items-center gap-2 px-3 text-sm learnkit-sync-privileges-save-btn",
+      attr: { type: "button", "aria-label": common.save },
+    });
+    saveBtn.createSpan({ text: common.save });
+    saveBtn.onclick = () => {
+      const choice = modeSelect.value as "off" | "simple-safe" | "simple-compat" | "full";
+      this._resolve(choice);
+    };
   }
 
-  private _resolve(choice: "cancel" | "simple-safe" | "simple-compat" | "full") {
+  private _resolve(choice: "cancel" | "off" | "simple-safe" | "simple-compat" | "full") {
     if (this._resolved) return;
     this._resolved = true;
     this.close();
