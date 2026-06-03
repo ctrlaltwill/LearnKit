@@ -108,6 +108,16 @@ export type ParsedCard = {
   errors: string[];
 };
 
+export type ParseCardsFromTextOptions = {
+  /**
+   * Controls whether shorthand syntax (`::`, `:::`, `cloze::`) is parsed.
+   * - "all": parse all shorthand cards (default, legacy behavior)
+   * - "anchored-only": parse shorthand only when immediately preceded by a card anchor
+   * - "off": never parse shorthand cards
+   */
+  shorthandMode?: "all" | "anchored-only" | "off";
+};
+
 type CurrentFieldKey =
   | "title"
   | "q"
@@ -177,6 +187,15 @@ function parseGroups(raw: string | null): string[] | null {
 
 function validateClozeText(text: string): string[] {
   return validateClozeTextCompat(text);
+}
+
+function canParseShorthand(
+  shorthandMode: ParseCardsFromTextOptions["shorthandMode"],
+  pendingId: string | null,
+): boolean {
+  if (shorthandMode === "off") return false;
+  if (shorthandMode === "anchored-only") return !!pendingId;
+  return true;
 }
 
 /**
@@ -289,9 +308,11 @@ export function parseCardsFromText(
   notePath: string,
   text: string,
   ignoreFences = true,
+  options?: ParseCardsFromTextOptions,
 ): { cards: ParsedCard[] } {
   let lines = text.split(/\r?\n/);
   const fenceMask = ignoreFences ? computeFenceMask(lines) : new Array<boolean>(lines.length).fill(false);
+  const shorthandMode = options?.shorthandMode ?? "all";
 
   // ── Pre-process: SR cloze deletions → LearnKit shorthand ───────────
   // Convert ==text==^[hint][^N] to cloze::{{cN::text::hint}} shorthand
@@ -901,7 +922,7 @@ export function parseCardsFromText(
     }
 
     // 11a) Shorthand cloze card: cloze::text with {{hidden}}  /  cq::...  /  CQ::...
-    if (!isMarkdownHeading(line)) {
+    if (!isMarkdownHeading(line) && canParseShorthand(shorthandMode, pendingId)) {
       const cm = line.match(CLOZE_SHORTHAND_RE);
       if (cm) {
         const body = cm[1].trim();
@@ -924,7 +945,7 @@ export function parseCardsFromText(
     }
 
     // 11b) Shorthand basic card: Question::Answer
-    if (!isMarkdownHeading(line)) {
+    if (!isMarkdownHeading(line) && canParseShorthand(shorthandMode, pendingId)) {
       const sm = line.match(BASIC_SHORTHAND_RE);
       if (sm) {
         const qText = sm[1].trim();
@@ -949,7 +970,7 @@ export function parseCardsFromText(
     }
 
     // 11c) Shorthand reversed (bidirectional) card: Question:::Answer
-    if (!isMarkdownHeading(line)) {
+    if (!isMarkdownHeading(line) && canParseShorthand(shorthandMode, pendingId)) {
       const rm = line.match(REVERSED_SHORTHAND_RE);
       if (rm) {
         const qText = rm[1].trim();

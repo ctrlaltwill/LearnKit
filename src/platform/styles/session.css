@@ -1680,6 +1680,7 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
   max-width: 100% ;
 }
 
+
 .learnkit .lk-review-root[data-lk-review-mode="session"] .lk-session-card .learnkit-cloze-revealed,
 .learnkit .lk-review-root[data-lk-review-mode="session"] .lk-session-card :is(.learnkit-cloze-typed-correct, .learnkit-cloze-typed-wrong) {
   display: inline-flex;
@@ -1690,7 +1691,6 @@ body.is-phone .learnkit .lk-review-title-strip-session .lk-review-title-timer-ho
   padding: 2px var(--lk-session-cloze-control-padding-x);
   border-radius: var(--radius-s);
   font-size: var(--lk-session-body-font-size, 1rem);
-  font-weight: 500;
   line-height: var(--lk-session-cloze-control-line-height);
   vertical-align: baseline;
   min-width: 0;

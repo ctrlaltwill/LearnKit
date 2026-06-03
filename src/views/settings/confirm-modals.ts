@@ -625,9 +625,10 @@ interface AffectedCounts {
 
 /**
  * One-time modal shown when a user first attempts to sync before choosing
- * a sync-privilege level.  Offers three choices:
+ * a sync-privilege level. Offers four choices:
  * - Cancel Sync (dismisses; setting stays undefined)
- * - Allow Simple Sync (anchor IDs only)
+ * - Allow Simple (safe) Sync (anchor IDs for structured cards, no new shorthand parsing)
+ * - Allow Simple (compatibility) Sync (legacy simple behavior)
  * - Allow Full Sync (all normalizations)
  *
  * Closing via X, Esc, or click-outside is equivalent to Cancel.
@@ -635,14 +636,14 @@ interface AffectedCounts {
 export class ConfirmSyncPrivilegesModal extends Modal {
   plugin: LearnKitPlugin;
   counts: AffectedCounts;
-  onChoice: (choice: "cancel" | "simple" | "full") => void;
+  onChoice: (choice: "cancel" | "simple-safe" | "simple-compat" | "full") => void;
   private _resolved = false;
 
   constructor(
     app: App,
     plugin: LearnKitPlugin,
     counts: AffectedCounts,
-    onChoice: (choice: "cancel" | "simple" | "full") => void,
+    onChoice: (choice: "cancel" | "simple-safe" | "simple-compat" | "full") => void,
   ) {
     super(app);
     this.plugin = plugin;
@@ -705,40 +706,55 @@ export class ConfirmSyncPrivilegesModal extends Modal {
       text: tx(
         locale,
         "ui.sync.modal.bodyIntro",
-        "Syncing updates your flashcard database from your markdown notes. This is a two-way sync. Your vault currently has {totalWithCards} notes containing flashcards.",
+        "This update introduces clearer sync modes. Choose how LearnKit should handle markdown changes. Your vault currently has {totalWithCards} notes containing flashcards.",
         {
           totalWithCards: this.counts.totalWithCards,
         },
       ),
     });
 
-    // Full Sync – label + description
+    // Recommended Sync – label + description
+    const simpleSafeSection = body.createDiv({ cls: "flex flex-col gap-1" });
+    simpleSafeSection.createEl("label", {
+      cls: "text-sm font-medium",
+      text: tx(locale, "ui.sync.modal.labelSimpleSafe", "Simple"),
+    });
+    simpleSafeSection.createEl("p", {
+      cls: "text-sm text-muted-foreground learnkit-sync-privileges-desc",
+      text: tx(
+        locale,
+        "ui.sync.modal.bodySimpleSafe",
+        "Scans only canonical LearnKit syntax. It does not parse new shorthand :: codes, which helps avoid conflicts with other plugins. This is the safest sync option.",
+      ),
+    });
+
+    // Comprehensive Sync – label + description
     const fullSection = body.createDiv({ cls: "flex flex-col gap-1" });
     fullSection.createEl("label", {
       cls: "text-sm font-medium",
-      text: tx(locale, "ui.sync.modal.labelFull", "Allow full syncing"),
+      text: tx(locale, "ui.sync.modal.labelFull", "Full (Normalize)"),
     });
     fullSection.createEl("p", {
       cls: "text-sm text-muted-foreground learnkit-sync-privileges-desc",
       text: tx(
         locale,
         "ui.sync.modal.bodyFull",
-        "Full sync adds anchor IDs, normalises your group fields and migrates shorthand to LearnKit syntax. This keeps everything tidy and future-proof. It doesn\u2019t touch any other part of your notes. This will also migrate Obsidian Spaced Repetition style shorthand into the LearnKit syntax.",
+        "Scans canonical LearnKit syntax and shorthand codes, then converts shorthand into canonical LearnKit format. This can affect compatibility with other spaced-repetition plugins. In rare cases, other plugins that use :: codes may be matched and converted.",
       ),
     });
 
-    // Simple Sync – label + description
-    const simpleSection = body.createDiv({ cls: "flex flex-col gap-1" });
-    simpleSection.createEl("label", {
+    // Legacy Sync – label + description
+    const simpleCompatSection = body.createDiv({ cls: "flex flex-col gap-1" });
+    simpleCompatSection.createEl("label", {
       cls: "text-sm font-medium",
-      text: tx(locale, "ui.sync.modal.labelSimple", "Allow simple syncing"),
+      text: tx(locale, "ui.sync.modal.labelSimpleCompat", "Full (Preserve)"),
     });
-    simpleSection.createEl("p", {
+    simpleCompatSection.createEl("p", {
       cls: "text-sm text-muted-foreground learnkit-sync-privileges-desc",
       text: tx(
         locale,
-        "ui.sync.modal.bodySimple",
-        "Simple sync only adds missing anchor IDs to flashcards to track them, without making any other changes to your notes. These are small invisible comments just above each flashcard in the style ^learnkit-123456789.",
+        "ui.sync.modal.bodySimpleCompat",
+        "Scans canonical LearnKit syntax and shorthand codes, keeps existing shorthand structure, and appends LearnKit anchors where needed. This is usually more compatible with other spaced-repetition plugins, but in rare cases :: codes from other plugins may still be matched and anchored.",
       ),
     });
 
@@ -770,24 +786,32 @@ export class ConfirmSyncPrivilegesModal extends Modal {
     cancelBtn.createSpan({ text: tx(locale, "ui.sync.modal.cancelSync", "Cancel Sync") });
     cancelBtn.onclick = () => this._resolve("cancel");
 
-    const simpleBtn = footer.createEl("button", {
-      cls: "learnkit-btn-toolbar learnkit-btn-toolbar learnkit-btn-filter learnkit-btn-filter inline-flex items-center gap-2 h-9 px-3 text-sm",
-      attr: { type: "button", "aria-label": tx(locale, "ui.sync.modal.allowSimple", "Allow Simple Syncing") },
+    const safeBtn = footer.createEl("button", {
+      cls: "learnkit-btn-toolbar learnkit-btn-toolbar learnkit-btn-accent learnkit-btn-accent h-9 inline-flex items-center gap-2",
+      attr: { type: "button", "aria-label": tx(locale, "ui.sync.modal.allowSimpleSafe", "Use Simple") },
     });
-    simpleBtn.setAttr("data-tooltip-position", "top");
-    simpleBtn.createSpan({ text: tx(locale, "ui.sync.modal.allowSimple", "Allow Simple Syncing") });
-    simpleBtn.onclick = () => this._resolve("simple");
+    safeBtn.setAttr("data-tooltip-position", "top");
+    safeBtn.createSpan({ text: tx(locale, "ui.sync.modal.allowSimpleSafe", "Use Simple") });
+    safeBtn.onclick = () => this._resolve("simple-safe");
+
+    const compatBtn = footer.createEl("button", {
+      cls: "learnkit-btn-toolbar learnkit-btn-toolbar learnkit-btn-filter learnkit-btn-filter inline-flex items-center gap-2 h-9 px-3 text-sm",
+      attr: { type: "button", "aria-label": tx(locale, "ui.sync.modal.allowSimpleCompat", "Use Full (Preserve)") },
+    });
+    compatBtn.setAttr("data-tooltip-position", "top");
+    compatBtn.createSpan({ text: tx(locale, "ui.sync.modal.allowSimpleCompat", "Use Full (Preserve)") });
+    compatBtn.onclick = () => this._resolve("simple-compat");
 
     const fullBtn = footer.createEl("button", {
-      cls: "learnkit-btn-toolbar learnkit-btn-toolbar learnkit-btn-accent learnkit-btn-accent learnkit-sync-privileges-full-btn learnkit-sync-privileges-full-btn h-9 inline-flex items-center gap-2",
-      attr: { type: "button", "aria-label": tx(locale, "ui.sync.modal.allowFull", "Allow Full Syncing") },
+      cls: "learnkit-btn-toolbar learnkit-btn-toolbar learnkit-btn-filter learnkit-btn-filter learnkit-sync-privileges-full-btn learnkit-sync-privileges-full-btn inline-flex items-center gap-2 h-9 px-3 text-sm",
+      attr: { type: "button", "aria-label": tx(locale, "ui.sync.modal.allowFull", "Use Full (Normalize)") },
     });
     fullBtn.setAttr("data-tooltip-position", "top");
-    fullBtn.createSpan({ text: tx(locale, "ui.sync.modal.allowFull", "Allow Full Syncing") });
+    fullBtn.createSpan({ text: tx(locale, "ui.sync.modal.allowFull", "Use Full (Normalize)") });
     fullBtn.onclick = () => this._resolve("full");
   }
 
-  private _resolve(choice: "cancel" | "simple" | "full") {
+  private _resolve(choice: "cancel" | "simple-safe" | "simple-compat" | "full") {
     if (this._resolved) return;
     this._resolved = true;
     this.close();

@@ -96,6 +96,22 @@ type SyncMutationEvent = {
   reason?: string;
 };
 
+type SyncMode = "full" | "simple-safe" | "simple-compat";
+type SyncModeInput = SyncMode | "simple";
+
+function resolveSyncMode(mode: SyncModeInput | undefined, syncPrivileges: unknown): SyncMode {
+  if (mode === "full" || mode === "simple-safe" || mode === "simple-compat") return mode;
+  if (mode === "simple") return "simple-compat";
+
+  if (syncPrivileges === "simple-safe") return "simple-safe";
+  if (syncPrivileges === "simple-compat" || syncPrivileges === "simple") return "simple-compat";
+  return "full";
+}
+
+function parseShorthandModeForSync(syncMode: SyncMode): "all" | "anchored-only" {
+  return syncMode === "simple-safe" ? "anchored-only" : "all";
+}
+
 // ────────────────────────────────────────────
 // Concurrency guards (per-file + vault)
 // ────────────────────────────────────────────
@@ -1888,10 +1904,11 @@ async function pruneTtsCacheForCards(plugin: LearnKitPlugin, cardIds: readonly s
 export async function syncOneFile(
   plugin: LearnKitPlugin,
   file: TFile,
-  options?: { pruneGlobalOrphans?: boolean; sourceTextOverride?: string; syncMode?: "full" | "simple" },
+  options?: { pruneGlobalOrphans?: boolean; sourceTextOverride?: string; syncMode?: SyncModeInput },
 ) {
   return withFileSyncLock(file.path, async () => {
-    const syncMode = options?.syncMode ?? (plugin.settings?.general?.syncPrivileges === "simple" ? "simple" : "full");
+    const syncMode = resolveSyncMode(options?.syncMode, plugin.settings?.general?.syncPrivileges);
+    const shorthandMode = parseShorthandModeForSync(syncMode);
     const vault = plugin.app.vault;
     const now = Date.now();
 
@@ -1926,7 +1943,9 @@ export async function syncOneFile(
     const pruneGlobalOrphans = options?.pruneGlobalOrphans ?? true;
 
     const parseText = normaliseTextForParsing(processedText);
-    const { cards } = parseCardsFromText(file.path, parseText, plugin.settings.indexing.ignoreInCodeFences);
+    const { cards } = parseCardsFromText(file.path, parseText, plugin.settings.indexing.ignoreInCodeFences, {
+      shorthandMode,
+    });
 
     // If store is empty but we parsed cards, attempt recovery of scheduling snapshot BEFORE we start creating states.
     const schedulingSnapshot = isLikelyRecoveryScenario(plugin, cards.length) ? await loadBestSchedulingSnapshot(plugin) : null;
@@ -1983,7 +2002,7 @@ export async function syncOneFile(
         const shorthandLine = c.sourceEndLine;
         const prefix = inferPrefixAt(lines, shorthandLine);
 
-        if (syncMode === "simple") {
+        if (syncMode !== "full") {
           if (!existingAnchorIds.has(id)) {
             const insertAt = findAnchorInsertLineIndex(lines, c.sourceStartLine);
             edits.push({ lineIndex: insertAt, insertText: `${prefix}${buildPrimaryCardAnchor(id)}` });
@@ -2023,7 +2042,7 @@ export async function syncOneFile(
         edits.push({ lineIndex: insertAt, insertText: `${prefix}${buildPrimaryCardAnchor(id)}` });
         idsInserted += 1;
         existingAnchorIds.add(id);
-      } else if (syncMode !== "simple") {
+      } else if (syncMode === "full") {
         // Full sync: apply normalisation edits for existing anchored cards
         queueCanonicalGroupFieldEdit(lines, edits, c);
         queueStripHiddenFields(lines, edits, c);
@@ -2049,7 +2068,9 @@ export async function syncOneFile(
           // the editor's current state (mirrors syncQuestionBank behaviour).
           log.warn(`syncOneFile: file "${file.path}" changed during sync; re-parsing from live content`);
           const freshParseText = normaliseTextForParsing(data);
-          const { cards: freshCards } = parseCardsFromText(file.path, freshParseText, plugin.settings.indexing.ignoreInCodeFences);
+          const { cards: freshCards } = parseCardsFromText(file.path, freshParseText, plugin.settings.indexing.ignoreInCodeFences, {
+            shorthandMode,
+          });
           cards.length = 0;
           cards.push(...freshCards);
           keepIds.clear();
@@ -2433,9 +2454,10 @@ export async function syncOneFile(
  * card database, inserts missing anchors, removes stale entries,
  * and cleans up orphaned IO images.
  */
-export async function syncQuestionBank(plugin: LearnKitPlugin, options?: { syncMode?: "full" | "simple" }) {
+export async function syncQuestionBank(plugin: LearnKitPlugin, options?: { syncMode?: SyncModeInput }) {
   return withVaultSyncLock(async () => {
-    const syncMode = options?.syncMode ?? (plugin.settings?.general?.syncPrivileges === "simple" ? "simple" : "full");
+    const syncMode = resolveSyncMode(options?.syncMode, plugin.settings?.general?.syncPrivileges);
+    const shorthandMode = parseShorthandModeForSync(syncMode);
     const now = Date.now();
 
     const groupsBefore = collectGroupKeys(plugin.store.data.cards || {});
@@ -2501,7 +2523,9 @@ export async function syncQuestionBank(plugin: LearnKitPlugin, options?: { syncM
       const lines = processedText.split(/\r?\n/);
 
       const parseText = normaliseTextForParsing(processedText);
-      const { cards } = parseCardsFromText(file.path, parseText, plugin.settings.indexing.ignoreInCodeFences);
+      const { cards } = parseCardsFromText(file.path, parseText, plugin.settings.indexing.ignoreInCodeFences, {
+        shorthandMode,
+      });
 
       const existingAnchorIds = collectAnchorIdsFromLines(lines);
 
@@ -2560,7 +2584,7 @@ export async function syncQuestionBank(plugin: LearnKitPlugin, options?: { syncM
           const shorthandLine = c.sourceEndLine;
           const prefix = inferPrefixAt(lines, shorthandLine);
 
-          if (syncMode === "simple") {
+          if (syncMode !== "full") {
             if (!existingAnchorIds.has(id)) {
               const insertAt = findAnchorInsertLineIndex(lines, c.sourceStartLine);
               edits.push({ lineIndex: insertAt, insertText: `${prefix}${buildPrimaryCardAnchor(id)}` });
@@ -2600,7 +2624,7 @@ export async function syncQuestionBank(plugin: LearnKitPlugin, options?: { syncM
           edits.push({ lineIndex: insertAt, insertText: `${prefix}${buildPrimaryCardAnchor(id)}` });
           planInserted += 1;
           existingAnchorIds.add(id);
-        } else if (syncMode !== "simple") {
+        } else if (syncMode === "full") {
           // Full sync: apply normalisation edits for existing anchored cards
           queueCanonicalGroupFieldEdit(lines, edits, c);
           queueStripHiddenFields(lines, edits, c);

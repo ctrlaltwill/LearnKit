@@ -36,8 +36,14 @@ export type LearnKitSettings = {
     /** "off" disables card styling; "accent" uses theme accent colour; "theme" uses background/text alt colours. */
     prettifyCards: string;
     /** Controls what sync commands are allowed to modify in markdown files.
-     * `undefined` = not yet chosen (modal will prompt). */
-    syncPrivileges?: "full" | "simple" | "off";
+     * `undefined` = not yet chosen (modal will prompt).
+     *
+     * Legacy value "simple" is still accepted for backward compatibility
+     * and normalized to "simple-compat" at load time.
+     */
+    syncPrivileges?: "full" | "simple-safe" | "simple-compat" | "off" | "simple";
+    /** Last release version for which sync privileges were explicitly confirmed. */
+    syncPrivilegesChoiceVersion?: number;
   };
 
   // Study — reviewer behaviour, limits, deck scope

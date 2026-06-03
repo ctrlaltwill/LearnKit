@@ -937,6 +937,7 @@
 
 /* ---- Inline sorting icon hover ---- */
 
+
 .learnkit .inline-flex.text-muted-foreground.cursor-pointer {
   transition: color 0.15s, fill 0.15s;
 }

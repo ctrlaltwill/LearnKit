@@ -36,7 +36,8 @@ export const DEFAULT_SETTINGS: LearnKitSettings = {
     showLaunchNoticeModal: true,
     enableReadingStyles: true,
     prettifyCards: "accent", // default to 'accent', options: 'off' | 'accent' | 'theme'
-    syncPrivileges: "off", // "off" | "simple" | "full" — modal prompts on first sync
+    syncPrivileges: "off", // "off" | "simple-safe" | "simple-compat" | "full" — modal prompts on first sync
+    syncPrivilegesChoiceVersion: 0,
   },
 
   study: {

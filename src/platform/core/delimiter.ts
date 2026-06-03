@@ -101,13 +101,88 @@ export function escapeDelimiterText(s: string): string {
  * `\\`  →  `\`
  * `\<delim>`  →  `<delim>`
  */
+function shouldCollapseEscapedBackslashes(text: string, delim: DelimiterChar): boolean {
+  // Legacy writer mode escaped every backslash, so non-delimiter runs were always even.
+  // Raw markdown authored directly by users can contain odd runs (for example
+  // TeX commands like \begin), which must be preserved.
+  let hasLegacySignal = false;
+  let hasRawSignal = false;
+
+  for (let i = 0; i < text.length;) {
+    if (text[i] !== "\\") {
+      i += 1;
+      continue;
+    }
+
+    let j = i;
+    while (j < text.length && text[j] === "\\") j += 1;
+
+    const slashCount = j - i;
+    const nextChar = text[j] ?? "";
+
+    // Runs before delimiter are handled by delimiter unescaping semantics.
+    // Ignore them for mode detection.
+    if (nextChar !== delim) {
+      if (slashCount % 2 === 1) {
+        hasRawSignal = true;
+      }
+
+      // Legacy escaped text tends to include doubled command prefixes
+      // (e.g. \\begin) and/or quadrupled linebreaks (e.g. \\\\ + newline).
+      if (
+        slashCount >= 4
+        || (slashCount === 2 && /[A-Za-z]/.test(nextChar))
+      ) {
+        hasLegacySignal = true;
+      }
+    }
+
+    i = j;
+  }
+
+  return hasLegacySignal && !hasRawSignal;
+}
+
 export function unescapeDelimiterText(s: string): string {
   const d = _delim;
-  const escaped = escapeDelimiterRe(d);
-  return s
-    .replace(/\\\\/g, "\x00")                          // placeholder for literal backslash
-    .replace(new RegExp(`\\\\${escaped}`, "g"), d)       // \<delim> → <delim>
-    .replace(/\0/g, "\\");                               // placeholder → backslash
+  const text = String(s ?? "");
+  const collapseEscapedBackslashes = shouldCollapseEscapedBackslashes(text, d);
+  let out = "";
+
+  for (let i = 0; i < text.length;) {
+    if (text[i] !== "\\") {
+      out += text[i];
+      i += 1;
+      continue;
+    }
+
+    let j = i;
+    while (j < text.length && text[j] === "\\") j += 1;
+
+    const slashCount = j - i;
+    const nextChar = text[j] ?? "";
+
+    if (nextChar === d) {
+      // Delimiter escape semantics: pairs of backslashes are literal,
+      // the remaining odd slash escapes the delimiter.
+      out += "\\".repeat(Math.floor(slashCount / 2));
+      out += d;
+      i = j + 1;
+      continue;
+    }
+
+    if (collapseEscapedBackslashes) {
+      // Legacy mode: collapse doubled backslashes back to their authored form.
+      out += "\\".repeat(Math.ceil(slashCount / 2));
+    } else {
+      // Raw mode: preserve non-delimiter backslashes exactly as written.
+      out += "\\".repeat(slashCount);
+    }
+
+    i = j;
+  }
+
+  return out;
 }
 
 // ── Closing-delimiter detection ─────────────────────────────────────

@@ -10,6 +10,7 @@
 
 import { DEFAULT_SETTINGS, type SproutSettings } from "../../../platform/core/constants";
 import { clamp, cleanPositiveNumberArray, clonePlain } from "../../../platform/core/utils";
+import { normaliseSyncPrivilegesChoiceVersion } from "../../../platform/integrations/sync/sync-privileges";
 import { resolveInterfaceLocalePreference } from "../../../platform/translations/locale-registry";
 
 function normaliseHexColorOrEmpty(value: unknown): string {
@@ -66,9 +67,19 @@ export function normaliseSettingsInPlace(s: SproutSettings): void {
   s.general.themeAccentOverride = normaliseHexColorOrEmpty(
     s.general.themeAccentOverride ?? DEFAULT_SETTINGS.general.themeAccentOverride,
   );
-  s.general.syncPrivileges = (s.general.syncPrivileges === "full" || s.general.syncPrivileges === "simple" || s.general.syncPrivileges === "off")
-    ? s.general.syncPrivileges
-    : DEFAULT_SETTINGS.general.syncPrivileges;
+  if (s.general.syncPrivileges === "simple") {
+    s.general.syncPrivileges = "simple-compat";
+  }
+  s.general.syncPrivileges =
+    s.general.syncPrivileges === "full" ||
+    s.general.syncPrivileges === "simple-safe" ||
+    s.general.syncPrivileges === "simple-compat" ||
+    s.general.syncPrivileges === "off"
+      ? s.general.syncPrivileges
+      : DEFAULT_SETTINGS.general.syncPrivileges;
+  s.general.syncPrivilegesChoiceVersion = normaliseSyncPrivilegesChoiceVersion(
+    s.general.syncPrivilegesChoiceVersion,
+  );
 
   s.studyAssistant ??= {} as SproutSettings["studyAssistant"];
   s.studyAssistant.enabled ??= DEFAULT_SETTINGS.studyAssistant.enabled;

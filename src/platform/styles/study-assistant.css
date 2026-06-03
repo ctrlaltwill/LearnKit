@@ -776,7 +776,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px;
-  border-bottom: .5px solid var(--color-base-35);
+  border-bottom: .5px solid var(--color-base-25);
   flex: 0 0 auto;
   overflow: visible;
 }
@@ -1439,7 +1439,7 @@
 /* ---- Composer (Ask mode input) ---- */
 .learnkit-assistant-popup-composer {
   position: relative;
-  padding: 10px 14px 14px;
+  padding: 10px;
   border-top: none;
   flex: 0 0 auto;
   z-index: 3;
@@ -1761,7 +1761,7 @@
 
 .learnkit-assistant-popup.is-modal-location:not(.learnkit-assistant-popup-embedded) .learnkit-assistant-popup-message-bubble.is-user {
   background: var(--background-secondary, #f5f5f5);
-  border-color: var(--color-base-40);
+  border-color: var(--color-base-25);
 }
 
 .learnkit-assistant-popup.is-modal-location:not(.learnkit-assistant-popup-embedded) .learnkit-assistant-popup-composer-shell {

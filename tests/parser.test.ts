@@ -14,18 +14,18 @@
 
 import { describe, it, expect } from "vitest";
 import { parseCardsFromText } from "../src/engine/parser/parser";
-import type { ParsedCard } from "../src/engine/parser/parser";
+import type { ParseCardsFromTextOptions, ParsedCard } from "../src/engine/parser/parser";
 import { preprocessSrText, isMarkdownHeading, ANY_HEADER_DELIM_RE } from "../src/platform/core/delimiter";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
-function parse(text: string): ParsedCard[] {
+function parse(text: string, options?: ParseCardsFromTextOptions): ParsedCard[] {
   // Pre-process SR multi-line blocks so the parser sees :: / ::: shorthand.
   // This is a no-op when no SR markers are present.
   const processed = preprocessSrText(text, true, (ln: string) =>
     ANY_HEADER_DELIM_RE().test(ln) || isMarkdownHeading(ln),
   );
-  return parseCardsFromText("test-note.md", processed).cards;
+  return parseCardsFromText("test-note.md", processed, true, options).cards;
 }
 
 function parseOne(text: string): ParsedCard {
@@ -314,6 +314,40 @@ line4
     expect(card.type).toBe("cloze");
     expect(card.clozeText).toContain("line1");
     expect(card.clozeText).toContain("line4");
+    expect(card.errors).toHaveLength(0);
+  });
+
+  it("preserves raw LaTeX matrix row breaks in cloze fields", () => {
+    const card = parseOne(
+      `CQ | $$
+\\begin{bmatrix}
+1 & 1\\\\
+1 & {{c1::1}}
+\\end{bmatrix}
+$$ |`
+    );
+
+    expect(card.type).toBe("cloze");
+    expect(card.clozeText).toContain("\\begin{bmatrix}");
+    expect(card.clozeText).toContain("1 & 1\\\\");
+    expect(card.clozeText).toContain("\\end{bmatrix}");
+    expect(card.errors).toHaveLength(0);
+  });
+
+  it("decodes legacy escaped LaTeX matrix content written by older save flows", () => {
+    const card = parseOne(
+      `CQ | $$
+\\\\begin{bmatrix}
+1 & 1\\\\\\\\
+1 & {{c1::1}}
+\\\\end{bmatrix}
+$$ |`
+    );
+
+    expect(card.type).toBe("cloze");
+    expect(card.clozeText).toContain("\\begin{bmatrix}");
+    expect(card.clozeText).toContain("1 & 1\\\\");
+    expect(card.clozeText).toContain("\\end{bmatrix}");
     expect(card.errors).toHaveLength(0);
   });
 });
@@ -767,6 +801,32 @@ cloze::text with {{hidden}}
     expect(cards[0].type).toBe("basic");
     expect(cards[1].type).toBe("cloze");
     expect(cards[1].clozeText).toBe("text {{c1::hidden}}");
+  });
+});
+
+describe("shorthand parsing modes", () => {
+  it("ignores shorthand when shorthandMode is off", () => {
+    const cards = parse("Capital::Paris", { shorthandMode: "off" });
+    expect(cards).toHaveLength(0);
+  });
+
+  it("parses only anchored shorthand when shorthandMode is anchored-only", () => {
+    const cards = parse(
+      [
+        "Capital::Paris",
+        "",
+        "^learnkit-123456789",
+        "HQ:::High quality",
+      ].join("\n"),
+      { shorthandMode: "anchored-only" },
+    );
+
+    expect(cards).toHaveLength(1);
+    expect(cards[0].id).toBe("123456789");
+    expect(cards[0].type).toBe("reversed");
+    expect(cards[0].q).toBe("HQ");
+    expect(cards[0].a).toBe("High quality");
+    expect(cards[0].isShorthand).toBe(true);
   });
 });
 

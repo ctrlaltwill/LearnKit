@@ -25,6 +25,10 @@ import { NoteReviewSqlite } from "../core/note-review-sqlite";
 import { resetCardScheduling, type CardState } from "../../engine/scheduler/scheduler";
 import { joinPath, safeStatMtime, createDataJsonBackupNow } from "../integrations/sync/backup";
 import { formatSyncNotice, syncOneFile, syncQuestionBank, shouldSyncFile, type SyncNoticeCounts } from "../integrations/sync/sync-engine";
+import {
+  CURRENT_SYNC_PRIVILEGES_CHOICE_VERSION,
+  requiresSyncPrivilegesChoice,
+} from "../integrations/sync/sync-privileges";
 import { ParseErrorModal } from "../modals/parse-error-modal";
 import { formatCurrentNoteSyncNotice } from "../integrations/sync/sync-notices";
 import { isAnchorLine } from "../../views/settings/settings-utils";
@@ -40,6 +44,14 @@ interface AffectedCounts {
   totalWithCards: number;
   totalNeedingAnchors: number;
   totalNeedingUpdate: number;
+}
+
+type SyncPrivilegeChoice = "full" | "simple-safe" | "simple-compat";
+
+function resolveConfiguredSyncMode(priv: unknown): SyncPrivilegeChoice {
+  if (priv === "simple-safe") return "simple-safe";
+  if (priv === "simple-compat" || priv === "simple") return "simple-compat";
+  return "full";
 }
 
 /**
@@ -97,24 +109,38 @@ export function WithDataSyncMethods<T extends Constructor<LearnKitPluginBase>>(B
     _runSync = async (): Promise<void> => {
       // ── Sync privileges gate ──
       const priv = this.settings.general.syncPrivileges;
+      const shouldPrompt =
+        priv === undefined ||
+        requiresSyncPrivilegesChoice(this.settings.general.syncPrivilegesChoiceVersion);
 
-      // undefined or "off" → show modal so the user can choose
-      if (priv === undefined || priv === "off") {
+      // Undefined / upgrade path → show modal so the user can choose
+      if (shouldPrompt) {
         const counts = await countAffectedFiles(this);
-        const choice = await new Promise<"cancel" | "simple" | "full">((resolve) => {
+        const choice = await new Promise<"cancel" | SyncPrivilegeChoice>((resolve) => {
           new ConfirmSyncPrivilegesModal(this.app, this as unknown as LearnKitPlugin, counts, resolve).open();
         });
-        if (choice === "cancel") return; // setting unchanged, modal re-appears next time
+        if (choice === "cancel") return; // modal re-appears next time
         this.settings.general.syncPrivileges = choice;
+        this.settings.general.syncPrivilegesChoiceVersion = CURRENT_SYNC_PRIVILEGES_CHOICE_VERSION;
         await this.saveAll();
         if (choice !== "full") {
-          const res = await syncQuestionBank(this as unknown as LearnKitPlugin, { syncMode: "simple" });
+          const res = await syncQuestionBank(this as unknown as LearnKitPlugin, { syncMode: choice });
           this._showSyncResult(res);
           return;
         }
         // full sync falls through to existing logic
-      } else if (priv === "simple") {
-        const res = await syncQuestionBank(this as unknown as LearnKitPlugin, { syncMode: "simple" });
+      }
+
+      const activePriv = this.settings.general.syncPrivileges;
+      if (activePriv === "off") {
+        new Notice(this._tx("ui.sync.notice.syncOff", "Sync is currently turned off. Update your preferences in Settings → User Details → Sync privileges to sync flashcards."));
+        return;
+      }
+
+      if (resolveConfiguredSyncMode(activePriv) !== "full") {
+        const res = await syncQuestionBank(this as unknown as LearnKitPlugin, {
+          syncMode: resolveConfiguredSyncMode(activePriv),
+        });
         this._showSyncResult(res);
         return;
       }
@@ -158,17 +184,21 @@ export function WithDataSyncMethods<T extends Constructor<LearnKitPluginBase>>(B
 
       // ── Sync privileges gate ──
       const priv = this.settings.general.syncPrivileges;
+      const shouldPrompt =
+        priv === undefined ||
+        requiresSyncPrivilegesChoice(this.settings.general.syncPrivilegesChoiceVersion);
 
-      if (priv === undefined || priv === "off") {
+      if (shouldPrompt) {
         const counts = await countAffectedFiles(this);
-        const choice = await new Promise<"cancel" | "simple" | "full">((resolve) => {
+        const choice = await new Promise<"cancel" | SyncPrivilegeChoice>((resolve) => {
           new ConfirmSyncPrivilegesModal(this.app, this as unknown as LearnKitPlugin, counts, resolve).open();
         });
         if (choice === "cancel") return;
         this.settings.general.syncPrivileges = choice;
+        this.settings.general.syncPrivilegesChoiceVersion = CURRENT_SYNC_PRIVILEGES_CHOICE_VERSION;
         await this.saveAll();
         if (choice !== "full") {
-          const res = await syncOneFile(this as unknown as LearnKitPlugin, file, { pruneGlobalOrphans: false, syncMode: "simple" });
+          const res = await syncOneFile(this as unknown as LearnKitPlugin, file, { pruneGlobalOrphans: false, syncMode: choice });
           new Notice(this._formatCurrentNoteSyncNotice(file.basename, res));
           if (res.quarantinedCount > 0) {
             new ParseErrorModal(this.app, this as unknown as LearnKitPlugin, res.quarantinedIds).open();
@@ -176,8 +206,19 @@ export function WithDataSyncMethods<T extends Constructor<LearnKitPluginBase>>(B
           this.notifyWidgetCardsSynced();
           return;
         }
-      } else if (priv === "simple") {
-        const res = await syncOneFile(this as unknown as LearnKitPlugin, file, { pruneGlobalOrphans: false, syncMode: "simple" });
+      }
+
+      const activePriv = this.settings.general.syncPrivileges;
+      if (activePriv === "off") {
+        new Notice(this._tx("ui.sync.notice.syncOff", "Sync is currently turned off. Update your preferences in Settings → User Details → Sync privileges to sync flashcards."));
+        return;
+      }
+
+      if (resolveConfiguredSyncMode(activePriv) !== "full") {
+        const res = await syncOneFile(this as unknown as LearnKitPlugin, file, {
+          pruneGlobalOrphans: false,
+          syncMode: resolveConfiguredSyncMode(activePriv),
+        });
         new Notice(this._formatCurrentNoteSyncNotice(file.basename, res));
         if (res.quarantinedCount > 0) {
           new ParseErrorModal(this.app, this as unknown as LearnKitPlugin, res.quarantinedIds).open();

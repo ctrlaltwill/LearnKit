@@ -124,7 +124,9 @@ Lines that already contain LearnKit pipe-delimited headers (`Q |`, `RQ |`, `CQ |
 
 ### Accidental `::` In Prose
 
-When `::` appears between two words in running prose (e.g. `email::address`), it **will** be treated as a basic card. This matches Obsidian Spaced Repetition's behaviour and cannot be distinguished from legitimate shorthand like `synonym::antonym`. If you have prose that accidentally triggers this, reword the line or wrap the `::` in backticks.
+In modes that parse shorthand (`Full (Normalize)` and `Full (Preserve)`), `::` appearing between two words in prose (e.g. `email::address`) can be treated as a basic card. This matches Obsidian Spaced Repetition's behavior and cannot always be distinguished from legitimate shorthand like `synonym::antonym`.
+
+If this is a risk in your notes, switch to `Simple` sync privileges. That mode scans canonical LearnKit syntax only and ignores new shorthand `::` patterns.
 
 ## After Migration
 

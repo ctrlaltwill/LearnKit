@@ -61,15 +61,16 @@ If a card has invalid syntax, LearnKit quarantines it instead of silently deleti
 
 Sync privileges control what sync is allowed to modify in your Markdown notes. You can set this in **Settings → User Details → Sync privileges**.
 
-Three levels are available:
+Four levels are available:
 
 | Level | Behaviour |
 |-------|-----------|
-| **Full** | Rewrites flashcards into canonical format — adds anchor IDs, normalises group fields, strips hidden storage fields from IO/HQ cards, and migrates legacy shorthand. This keeps everything tidy and future-proof. |
-| **Simple** | Only adds missing anchor IDs to flashcards that lack them, without making any other changes to your notes. |
+| **Full (Normalize)** | Scans canonical LearnKit syntax and shorthand codes, then converts shorthand into canonical LearnKit format. This can affect compatibility with other spaced-repetition plugins. In rare cases, other plugins that use `::` codes may be matched and converted. |
+| **Full (Preserve)** | Scans canonical LearnKit syntax and shorthand codes, keeps existing shorthand structure, and appends LearnKit anchors. This is usually more compatible with other spaced-repetition plugins, but in rare cases `::` codes from other plugins may still be matched and anchored. |
+| **Simple** | Scans canonical LearnKit syntax only and ignores new shorthand `::` patterns. This is the safest option for avoiding cross-plugin conflicts. |
 | **Off** | Blocks all sync operations. You will see a notice directing you back to Settings if you try to sync. |
 
-If you have never chosen a privilege level, the first sync attempt will show a one-time modal asking you to pick one. You can change your choice at any time.
+If you have never chosen a privilege level, the first sync attempt will show a one-time modal asking you to pick one. After this release, existing installs are also prompted once to confirm one of the updated mode names and descriptions.
 
 ### Editing Individual Cards
 
@@ -81,9 +82,10 @@ The sync privilege you have chosen controls what else happens during the save:
 
 | Privilege | Behaviour on card save |
 |-----------|------------------------|
-| **Full** | The whole note is normalised — other cards in the same file may be updated to canonical format as well. |
-| **Simple** | Only the card you edited is updated. Other cards in the same note are left untouched. |
-| **Off** | Same as Simple — the edited card is saved, but nothing else in the note is changed. |
+| **Full (Normalize)** | The whole note can be normalised — other cards in the same file may be updated to canonical LearnKit format as well. |
+| **Full (Preserve)** | Keeps shorthand structure and appends LearnKit anchors where needed instead of converting shorthand to canonical format. |
+| **Simple** | Processes canonical LearnKit syntax only and ignores new shorthand `::` parsing. |
+| **Off** | The edited card is saved, but nothing else in the note is changed. |
 
 ## What Sync Ignores
 
@@ -109,4 +111,4 @@ The normal workflow is:
 
 ---
 
-Last modified: 30/03/2026
+Last modified: 03/06/2026

@@ -16,6 +16,70 @@ type Opts = {
   maxHeightPx?: number;
 };
 
+function protectMathLineBreakPairs(body: string): string {
+  const source = String(body ?? "");
+  if (!source.includes("\\\\")) return source;
+
+  let out = "";
+  for (let i = 0; i < source.length; i += 1) {
+    const ch = source[i];
+    if (ch !== "\\") {
+      out += ch;
+      continue;
+    }
+
+    const prev = i > 0 ? source[i - 1] : "";
+    const next = source[i + 1] ?? "";
+    if (next !== "\\") {
+      out += ch;
+      continue;
+    }
+
+    const afterPair = source[i + 2] ?? "";
+    const exactPair = prev !== "\\" && afterPair !== "\\";
+    const commandLike = /[A-Za-z]/.test(afterPair);
+    if (exactPair && !commandLike) {
+      // Markdown may collapse `\\` inside math to `\`. Expand exact row-break
+      // pairs to preserve a final `\\` after markdown parsing.
+      out += "\\\\\\\\";
+      i += 1;
+      continue;
+    }
+
+    out += "\\\\";
+    i += 1;
+  }
+
+  return out;
+}
+
+export function preserveMathLineBreakBackslashes(md: string): string {
+  const source = String(md ?? "");
+  if (!source.includes("\\")) return source;
+
+  const mathBlockRe = /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\)|\$[^\r\n$]+\$)/g;
+
+  return source.replace(mathBlockRe, (segment) => {
+    if (segment.startsWith("$$") && segment.endsWith("$$")) {
+      const inner = segment.slice(2, -2);
+      return `$$${protectMathLineBreakPairs(inner)}$$`;
+    }
+    if (segment.startsWith("\\[") && segment.endsWith("\\]")) {
+      const inner = segment.slice(2, -2);
+      return `\\[${protectMathLineBreakPairs(inner)}\\]`;
+    }
+    if (segment.startsWith("\\(") && segment.endsWith("\\)")) {
+      const inner = segment.slice(2, -2);
+      return `\\(${protectMathLineBreakPairs(inner)}\\)`;
+    }
+    if (segment.startsWith("$") && segment.endsWith("$")) {
+      const inner = segment.slice(1, -1);
+      return `$${protectMathLineBreakPairs(inner)}$`;
+    }
+    return segment;
+  });
+}
+
 export class SproutMarkdownHelper {
   private app: App;
   private owner: Component;
@@ -156,7 +220,8 @@ export class SproutMarkdownHelper {
     (containerEl as HTMLElement & { empty?(): void }).empty?.();
 
     const srcPath = String(sourcePath || "");
-    const expanded = this.expandImagesToRealMarkdown(md ?? "", srcPath);
+  const normalizedMath = preserveMathLineBreakBackslashes(md ?? "");
+  const expanded = this.expandImagesToRealMarkdown(normalizedMath, srcPath);
 
     await MarkdownRenderer.render(this.app, expanded, containerEl, srcPath, this.owner);
 

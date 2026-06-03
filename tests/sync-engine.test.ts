@@ -855,6 +855,71 @@ describe("sync engine", () => {
     expect(content).not.toContain(":::");
   });
 
+  it("simple-safe mode ignores unanchored shorthand lines", async () => {
+    const vault = new MemoryVault();
+    const file = await vault.create("Notes/SafeIgnore.md", "Capital:::Paris");
+    const plugin = makePlugin(vault);
+
+    const res = await syncOneFile(plugin, file, { syncMode: "simple-safe" });
+    const content = await vault.read(file);
+
+    expect(res.newCount).toBe(0);
+    expect(res.idsInserted).toBe(0);
+    expect(Object.keys(plugin.store.data.cards)).toHaveLength(0);
+    expect(content).toBe("Capital:::Paris");
+  });
+
+  it("simple-safe mode preserves existing anchored shorthand cards", async () => {
+    const vault = new MemoryVault();
+    const file = await vault.create(
+      "Notes/SafeAnchored.md",
+      "^learnkit-123456789\nCapital:::Paris",
+    );
+    const plugin = makePlugin(vault);
+
+    const res = await syncOneFile(plugin, file, { syncMode: "simple-safe" });
+    const content = await vault.read(file);
+
+    expect(res.newCount).toBe(1);
+    expect(res.idsInserted).toBe(0);
+    expect(content).toContain("^learnkit-123456789");
+    expect(content).toContain("Capital:::Paris");
+    expect(content).not.toContain("Q | Capital |");
+    expect(plugin.store.data.cards["123456789"]?.type).toBe("reversed");
+  });
+
+  it("simple-compat mode keeps shorthand text and inserts missing anchors", async () => {
+    const vault = new MemoryVault();
+    const file = await vault.create("Notes/Compat.md", "Capital:::Paris");
+    const plugin = makePlugin(vault);
+    setCryptoSequence([0]);
+
+    const res = await syncOneFile(plugin, file, { syncMode: "simple-compat" });
+    const content = await vault.read(file);
+
+    expect(res.newCount).toBe(1);
+    expect(res.idsInserted).toBe(1);
+    expect(content).toContain("^learnkit-100000000");
+    expect(content).toContain("Capital:::Paris");
+    expect(content).not.toContain("Q | Capital |");
+  });
+
+  it("maps legacy simple syncMode to simple-compat behavior", async () => {
+    const vault = new MemoryVault();
+    const file = await vault.create("Notes/LegacySimple.md", "Capital:::Paris");
+    const plugin = makePlugin(vault);
+    setCryptoSequence([0]);
+
+    const res = await syncOneFile(plugin, file, { syncMode: "simple" });
+    const content = await vault.read(file);
+
+    expect(res.newCount).toBe(1);
+    expect(res.idsInserted).toBe(1);
+    expect(content).toContain("^learnkit-100000000");
+    expect(content).toContain("Capital:::Paris");
+    expect(content).not.toContain("Q | Capital |");
+  });
+
   // ── syncOneFile: idempotent re-sync ─────────────────────────────────────
 
   it("re-syncing the same file is idempotent", async () => {

@@ -37,6 +37,7 @@ import {
   verifyDataJsonBackupIntegrity,
   type DataJsonBackupStats,
 } from "../../platform/integrations/sync/backup";
+import { CURRENT_SYNC_PRIVILEGES_CHOICE_VERSION } from "../../platform/integrations/sync/sync-privileges";
 
 import {
   ConfirmResetSchedulingModal,
@@ -1092,16 +1093,23 @@ export class LearnKitSettingsTab extends PluginSettingTab {
     // Sync privileges dropdown
     this._addSearchablePopover(wrapper, {
       name: this._tx("ui.settings.appearance.syncPrivileges.name", "Sync privileges"),
-      description: this._tx("ui.settings.appearance.syncPrivileges.desc", "Controls what sync is allowed to modify in your markdown notes."),
+      description: this._tx("ui.settings.appearance.syncPrivileges.desc", "Choose how much Sync can change your markdown: Full modes include shorthand (::), Simple syncs canonical Q/A only, and Off disables sync."),
       options: [
-        { value: "full", label: this._tx("ui.sync.privileges.full", "Full") },
-        { value: "simple", label: this._tx("ui.sync.privileges.simple", "Simple") },
+        { value: "full", label: this._tx("ui.sync.privileges.full", "Full (Normalize)") },
+        { value: "simple-compat", label: this._tx("ui.sync.privileges.simpleCompat", "Full (Preserve)") },
+        { value: "simple-safe", label: this._tx("ui.sync.privileges.simpleSafe", "Simple") },
         { value: "off", label: this._tx("ui.sync.privileges.off", "Off") },
       ],
-      value: this.plugin.settings.general.syncPrivileges ?? "off",
+      value: this.plugin.settings.general.syncPrivileges === "simple"
+        ? "simple-compat"
+        : (this.plugin.settings.general.syncPrivileges ?? "off"),
       onChange: (value: string) => {
         void (async () => {
-          this.plugin.settings.general.syncPrivileges = value === "full" ? "full" : value === "simple" ? "simple" : "off";
+          this.plugin.settings.general.syncPrivileges =
+            value === "full" || value === "simple-compat" || value === "simple-safe"
+              ? value
+              : "off";
+          this.plugin.settings.general.syncPrivilegesChoiceVersion = CURRENT_SYNC_PRIVILEGES_CHOICE_VERSION;
           await this.plugin.saveAll();
         })();
       },
