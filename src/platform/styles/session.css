@@ -1869,68 +1869,116 @@ body.is-phone .learnkit .lk-review-root[data-lk-review-mode="session"] > .lk-rev
   z-index: 10;
 }
 
-body.is-phone .learnkit .lk-review-root[data-lk-review-mode="session"] {
+/* iOS: flex card with section scroll; lock ancestors to avoid Obsidian Quick Action. */
+body.is-phone .workspace-leaf-content.learnkit[data-type="learnkit-reviewer"],
+body.is-mobile .workspace-leaf-content.learnkit[data-type="learnkit-reviewer"] {
+  overflow: hidden;
+  min-height: 0;
+  overscroll-behavior: none;
+}
+
+body.is-phone .workspace-leaf-content.learnkit[data-type="learnkit-reviewer"] > .view-content,
+body.is-mobile .workspace-leaf-content.learnkit[data-type="learnkit-reviewer"] > .view-content {
+  flex: 1 1 0%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* App header clearance: session mode must not zero layout.css mobile padding-top (60px). */
+body.is-phone .learnkit .learnkit-view-content.lk-review-root[data-lk-review-mode="session"],
+body.is-mobile .learnkit .learnkit-view-content.lk-review-root[data-lk-review-mode="session"] {
+  overflow-x: hidden;
+  overflow-y: hidden;
+  min-height: 0;
+  flex: 1 1 0%;
+  display: flex;
+  flex-direction: column;
+  padding-top: max(72px, var(--learnkit-app-header-clearance, 94px));
+  box-sizing: border-box;
+  overscroll-behavior: none;
+}
+
+body.is-phone .learnkit .lk-review-root[data-lk-review-mode="session"],
+body.is-mobile .learnkit .lk-review-root[data-lk-review-mode="session"] {
   display: flex;
   flex-direction: column;
   overflow: hidden ;
-  margin-top: 16px;
+  margin-top: 0;
   padding-left: 0 ;
   padding-right: 0 ;
   padding-bottom: 100px ;
+  overscroll-behavior: none;
 }
 
-body.is-phone .learnkit .lk-review-root[data-lk-review-mode="session"] > .lk-review-content-shell {
-  flex: 1 1 auto;
+body.is-phone .learnkit .lk-review-root[data-lk-review-mode="session"] > .lk-review-content-shell,
+body.is-mobile .learnkit .lk-review-root[data-lk-review-mode="session"] > .lk-review-content-shell {
+  flex: 1 1 0%;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: visible ;
-  margin-top: 40px;
+  overflow: hidden;
+  margin-top: 12px;
   padding: 0 ;
+  overscroll-behavior: none;
 }
 
-body.is-phone .learnkit .lk-review-root[data-lk-review-mode="session"] .lk-session-column {
-  flex: 1 1 auto;
+body.is-phone .learnkit .lk-review-root[data-lk-review-mode="session"] .lk-session-column,
+body.is-mobile .learnkit .lk-review-root[data-lk-review-mode="session"] .lk-session-column {
+  flex: 1 1 0%;
   min-height: 0;
   display: flex;
   flex-direction: column;
 }
 
-body.is-phone .learnkit .lk-review-root[data-lk-review-mode="session"] :is(.lk-session-card, .lk-session-card.card) {
-  --learnkit-session-topbar-clearance: 60px;
-  --learnkit-session-dock-clearance: 120px;
-  position: relative;
-  flex: 1 1 auto;
+body.is-phone .learnkit .lk-review-root[data-lk-review-mode="session"] :is(.lk-session-card, .lk-session-card.card),
+body.is-mobile .learnkit .lk-review-root[data-lk-review-mode="session"] :is(.lk-session-card, .lk-session-card.card) {
+  --learnkit-session-topbar-offset: 10px;
+  flex: 1 1 0%;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
-  height: auto;
   max-height: none;
   align-self: stretch;
-  overflow: hidden ;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   padding: 0 ;
+  transition: none;
 }
 
-/* Note-review-style overlay layout: header & footer float absolute over
-   the section, which scrolls behind them with padding clearance. */
-body.is-phone .learnkit .lk-review-root[data-lk-review-mode="session"] .lk-session-card > header {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+body.is-phone .learnkit .lk-review-root[data-lk-review-mode="session"] .lk-session-card > header.learnkit-session-topbar:not(.learnkit-session-topbar-hidden),
+body.is-mobile .learnkit .lk-review-root[data-lk-review-mode="session"] .lk-session-card > header.learnkit-session-topbar:not(.learnkit-session-topbar-hidden) {
+  flex: 0 0 auto;
+  position: static;
   z-index: 5;
-  background: color-mix(in oklab, var(--background) 80%, transparent 20%);
+  margin: var(--learnkit-session-topbar-offset) 0 0;
+  background: color-mix(in oklab, var(--background) 88%, transparent 12%);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }
 
-body.is-phone .learnkit .lk-review-root[data-lk-review-mode="session"] .lk-session-card > section {
+body.is-phone .learnkit .lk-review-root[data-lk-review-mode="session"] .lk-session-card > section,
+body.is-mobile .learnkit .lk-review-root[data-lk-review-mode="session"] .lk-session-card > section {
   flex: 1 1 auto;
   min-height: 0;
+  margin: 0 8px;
+  overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding-top: var(--learnkit-session-topbar-clearance);
-  padding-bottom: var(--learnkit-session-dock-clearance);
+  touch-action: pan-y;
+  overscroll-behavior: none;
+  padding: 8px 0;
+}
+
+body.is-phone .learnkit .lk-review-root[data-lk-review-mode="session"] .lk-session-card.learnkit-session-has-dock > section,
+body.is-mobile .learnkit .lk-review-root[data-lk-review-mode="session"] .lk-session-card.learnkit-session-has-dock > section {
+  padding-bottom: 8px;
+}
+
+body.is-phone .learnkit .lk-review-root[data-lk-review-mode="session"] .lk-session-card > header.learnkit-session-topbar-hidden + section,
+body.is-mobile .learnkit .lk-review-root[data-lk-review-mode="session"] .lk-session-card > header.learnkit-session-topbar-hidden + section {
+  padding-top: 8px;
 }
 
 /* Keep scrolling at the section level on phone; avoid nested vertical scrollboxes in content blocks.
@@ -1946,12 +1994,12 @@ body.is-phone .learnkit .lk-review-root[data-lk-review-mode="session"] .lk-sessi
   overflow: visible ;
 }
 
-body.is-phone .learnkit .lk-review-root[data-lk-review-mode="session"] .lk-session-card > footer.learnkit-session-study-dock {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+body.is-phone .learnkit .lk-review-root[data-lk-review-mode="session"] .lk-session-card > footer.learnkit-session-study-dock,
+body.is-mobile .learnkit .lk-review-root[data-lk-review-mode="session"] .lk-session-card > footer.learnkit-session-study-dock {
+  flex: 0 0 auto;
+  position: static;
   z-index: 5;
+  margin: 0 8px 8px;
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }

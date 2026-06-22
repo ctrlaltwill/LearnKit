@@ -1053,33 +1053,55 @@ function renderOqContent(ctx: CardRenderCtx): void {
           previewController.endDrag();
         });
 
-        // Touch drag support for mobile
+        // Touch drag support for mobile — defer preventDefault until reorder drag commits
+        // so vertical swipes can still scroll the session card on iOS.
+        let touchStartY = 0;
+        let touchStartX = 0;
+        let touchReorderActive = false;
+        const touchDragThresholdPx = 10;
+
         row.addEventListener("touchstart", (e) => {
           const touch = e.touches[0];
           if (!touch) return;
-          previewController.beginDrag({
-            fromIdx: displayIdx,
-            row,
-          });
-          previewController.updatePointer(touch.clientY);
+          touchStartY = touch.clientY;
+          touchStartX = touch.clientX;
+          touchReorderActive = false;
         }, { passive: true });
 
         row.addEventListener("touchmove", (e) => {
           const touch = e.touches[0];
           if (!touch) return;
+
+          const deltaY = touch.clientY - touchStartY;
+          const deltaX = touch.clientX - touchStartX;
+          if (!touchReorderActive) {
+            if (Math.abs(deltaY) < touchDragThresholdPx && Math.abs(deltaX) < touchDragThresholdPx) {
+              return;
+            }
+            touchReorderActive = true;
+            previewController.beginDrag({
+              fromIdx: displayIdx,
+              row,
+            });
+          }
+
           e.preventDefault();
           previewController.updatePointer(touch.clientY);
         }, { passive: false });
 
         row.addEventListener("touchend", () => {
+          if (!touchReorderActive) return;
           const pending = previewController.getPendingMove();
           previewController.endDrag();
+          touchReorderActive = false;
           if (!pending) return;
           commitReorder(pending.fromIdx, pending.toIdx);
         });
 
         row.addEventListener("touchcancel", () => {
+          if (!touchReorderActive) return;
           previewController.endDrag();
+          touchReorderActive = false;
         });
 
         listWrap.appendChild(row);

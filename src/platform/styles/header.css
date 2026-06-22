@@ -6,6 +6,12 @@
   --learnkit-app-header-inset: 10px;
   --learnkit-app-header-top: 8px;
   --learnkit-app-header-overlay-height: 64px;
+  --learnkit-app-header-clearance: calc(
+    env(safe-area-inset-top, 0px) +
+    var(--learnkit-app-header-top) +
+    var(--learnkit-app-header-overlay-height) +
+    20px
+  );
   background: transparent;
   background-color: transparent;
   position: absolute;

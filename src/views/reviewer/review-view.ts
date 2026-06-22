@@ -11,6 +11,7 @@ import { ItemView, Notice, type WorkspaceLeaf, TFile, setIcon } from "obsidian";
 import { MAX_CONTENT_WIDTH, MAX_CONTENT_WIDTH_PX, VIEW_TYPE_REVIEWER } from "../../platform/core/constants";
 import { log } from "../../platform/core/logger";
 import { queryFirst, setCssProps } from "../../platform/core/ui";
+import { installMobileSessionScroll } from "../../platform/core/mobile-session-scroll";
 import { createTitleStripFrame } from "../../platform/core/view-primitives";
 import { SPROUT_HOME_CONTENT_SHELL_CLASS } from "../../platform/core/ui-classes";
 import { gradeCard } from "../../platform/services/grading-service";
@@ -160,6 +161,13 @@ export class SproutReviewerView extends ItemView {
     else this.containerEl.focus({ preventScroll: true });
   }
 
+  private _syncMobileSessionScroll(): void {
+    this._mobileSessionScrollCleanup?.();
+    this._mobileSessionScrollCleanup = null;
+    if (this.mode !== "session") return;
+    this._mobileSessionScrollCleanup = installMobileSessionScroll(this.contentEl);
+  }
+
   // Add shared header instance
   private _header: SproutHeader | null = null;
   private _titleStripEl: HTMLElement | null = null;
@@ -172,6 +180,7 @@ export class SproutReviewerView extends ItemView {
   private _pendingManualGrade: { cardId: string; meta: Record<string, unknown> } | null = null;
   private _pendingHotspotAttempts = new Map<string, HotspotAttemptState[]>();
   private _lastAppliedHotspotStudyMode: "individual" | "all" | "smart" = "smart";
+  private _mobileSessionScrollCleanup: (() => void) | null = null;
 
   // Typed cloze state: stores what the user typed for each cloze occurrence on the current card
   private _typedClozeAnswers = new Map<string, string>();
@@ -2698,6 +2707,10 @@ export class SproutReviewerView extends ItemView {
 
   render() {
     const root = this.contentEl;
+    if (this.mode !== "session") {
+      this._mobileSessionScrollCleanup?.();
+      this._mobileSessionScrollCleanup = null;
+    }
     const suppressEntranceAos = this._suppressEntranceAosOnce;
     this._suppressEntranceAosOnce = false;
     const coachShellMode = this._returnToCoach || this._isCoachSession;
@@ -2865,6 +2878,7 @@ export class SproutReviewerView extends ItemView {
         // TTS: speak front after render
         if (activeCard && !this.showAnswer) this._speakCardFront(activeCard);
 
+        this._syncMobileSessionScroll();
         this._restoreFocus();
         return;
       }
@@ -3196,6 +3210,8 @@ export class SproutReviewerView extends ItemView {
       this._firstSessionRender = false;
       this.armTimer();
     }
+
+    this._syncMobileSessionScroll();
 
     this._restoreFocus();
   }
