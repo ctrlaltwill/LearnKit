@@ -58,10 +58,10 @@ export function resolveChartColor(input: string, sourceElement?: Element | null)
 
   const styleTargets: Element[] = [];
   if (sourceElement) styleTargets.push(sourceElement);
-  const scopedRoot = document.querySelector(".learnkit");
+  const scopedRoot = activeDocument.querySelector(".learnkit");
   if (scopedRoot && sourceElement !== scopedRoot) styleTargets.push(scopedRoot);
-  if (document.body && sourceElement !== document.body) styleTargets.push(document.body);
-  if (sourceElement !== document.documentElement) styleTargets.push(document.documentElement);
+  if (activeDocument.body && sourceElement !== activeDocument.body) styleTargets.push(activeDocument.body);
+  if (sourceElement !== activeDocument.documentElement) styleTargets.push(activeDocument.documentElement);
 
   for (const target of styleTargets) {
     const resolved = getComputedStyle(target).getPropertyValue(parsed.variableName).trim();

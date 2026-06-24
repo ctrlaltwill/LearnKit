@@ -172,8 +172,8 @@ export function initButtonTooltipDefaults(): () => void {
 
   const obs = new MutationObserver((mutations) => {
     mutations.forEach((m) => {
-      if (m.type === "attributes" && m.target instanceof HTMLElement) {
-        const target = m.target;
+      if (m.type === "attributes" && m.target.nodeType === Node.ELEMENT_NODE) {
+        const target = m.target as HTMLElement;
         if (target.matches("button,[role='button']")) {
           ensureTooltip(target as TooltipTarget);
         }

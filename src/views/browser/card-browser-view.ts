@@ -388,7 +388,7 @@ export class SproutCardBrowserView extends ItemView {
 
   private _queuePersistBrowserPrefs() {
     if (this._browserPrefsSaveTimer !== null) return;
-    this._browserPrefsSaveTimer = setTimeout(() => {
+    this._browserPrefsSaveTimer = window.setTimeout(() => {
       void (async () => {
       this._browserPrefsSaveTimer = null;
       try {

@@ -440,8 +440,7 @@ function renderClozeCard(
         "$1",
       );
       html = restoreFences(html);
-      // eslint-disable-next-line @microsoft/sdl/no-inner-html
-      clozeContent.innerHTML = html;
+      replaceChildrenWithHTML(clozeContent, html);
       hydrateRenderedMathCloze(clozeContent, text, reveal, targetIndex, clozeOpts);
     });
     body.appendChild(clozeEl);

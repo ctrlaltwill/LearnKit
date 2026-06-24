@@ -22,6 +22,7 @@ import { hydrateRenderedMathCloze, type ClozeRenderOptions } from "./question-cl
 import { openCardAnchorInNote } from "../../platform/core/open-card-anchor";
 import { processClozeForMath, convertInlineDisplayMath, forceSingleLineDisplayMathInline } from "../../platform/core/shared-utils";
 import { protectCodeFences, FENCE_PH } from "../reading/reading-flashcard-cloze";
+import { replaceChildrenWithHTML } from "../../platform/core/ui";
 import { hydrateCircleFlagsInElement, processCircleFlagsInMarkdown } from "../../platform/flags/flag-tokens";
 import { t } from "../../platform/translations/translator";
 import { getRatingIntervalPreview } from "../../platform/core/grade-intervals";
@@ -1493,8 +1494,7 @@ export function renderSessionMode(args: Args) {
         "$1",
       );
       html = restoreFences(html);
-      // eslint-disable-next-line @microsoft/sdl/no-inner-html
-      clozContainer.innerHTML = html;
+      replaceChildrenWithHTML(clozContainer, html);
 
       setupLinkHandlers(clozContainer, sourcePath);
       hydrateRenderedMathCloze(clozContainer, text, reveal, targetIndex, clozeOpts);

@@ -24,6 +24,7 @@ import {
   type CardRef,
 } from "./modal-utils";
 import { getDelimiter } from "../core/delimiter";
+import { replaceChildrenWithHTML } from "../core/ui";
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Error → hint mapping
@@ -191,8 +192,7 @@ export class ParseErrorModal extends Modal {
           const hintBox = row.createDiv({ cls: "learnkit-parse-hints text-xs flex flex-col gap-0.5" });
           for (const h of unique) {
             const hintEl = hintBox.createDiv({ cls: "text-red-500" });
-            // eslint-disable-next-line @microsoft/sdl/no-inner-html
-            hintEl.innerHTML = h;
+            replaceChildrenWithHTML(hintEl, h);
           }
         }
       }

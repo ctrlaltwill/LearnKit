@@ -693,8 +693,7 @@ export class GatekeeperModal extends Modal {
           "$1",
         );
         html = restoreFences(html);
-      // eslint-disable-next-line @microsoft/sdl/no-inner-html
-      clozeEl.innerHTML = html;
+      replaceChildrenWithHTML(clozeEl, html);
         hydrateRenderedMathCloze(clozeEl, text, this.reveal, targetIndex, clozeOpts);
       });
       body.appendChild(clozeEl);
