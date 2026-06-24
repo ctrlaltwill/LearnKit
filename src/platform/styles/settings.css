@@ -3343,3 +3343,17 @@ body.is-phone .learnkit .learnkit-about-links-row {
   flex: 1;
 }
 
+/* ── Custom delimiter input ── */
+
+.learnkit-custom-delimiter-input {
+  margin-top: 8px;
+}
+
+.learnkit-custom-delimiter-input.is-hidden {
+  display: none;
+}
+
+.learnkit-custom-delimiter-hint {
+  margin-top: 4px;
+}
+

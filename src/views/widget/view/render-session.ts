@@ -22,6 +22,7 @@ import {
 import { processMarkdownFeatures, setupInternalLinkHandlers } from "./markdown";
 import { openCardAnchorInNote } from "../../../platform/core/open-card-anchor";
 import { processClozeForMath, convertInlineDisplayMath, forceSingleLineDisplayMathInline } from "../../../platform/core/shared-utils";
+import { protectCodeFences, FENCE_PH } from "../../reading/reading-flashcard-cloze";
 import { MarkdownView } from "obsidian";
 import { t } from "../../../platform/translations/translator";
 import { getRatingIntervalPreview } from "../../../platform/core/grade-intervals";
@@ -422,12 +423,25 @@ function renderClozeCard(
         }
       },
     };
-    const processedText = processClozeForMath(text, reveal, targetIndex, {
+    const fenceOpts = reveal
+      ? { blankClass: "", revealClass: "learnkit-cloze-revealed" }
+      : { blankClass: "learnkit-cloze-blank hidden-cloze", revealClass: "" };
+    const { text: fenceFree, restore: restoreFences } = protectCodeFences(text, fenceOpts);
+    const processedText = processClozeForMath(fenceFree, reveal, targetIndex, {
       blankClassName: "learnkit-cloze-blank hidden-cloze",
       useHintText: clozeMode !== "typed",
     });
 
     void view.renderMarkdownInto(clozeContent, processedText, sourcePath).then(() => {
+      let html = clozeContent.innerHTML;
+      const phEscaped = FENCE_PH.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      html = html.replace(
+        new RegExp(`<p>(${phEscaped}\\d+@@)</p>`, "g"),
+        "$1",
+      );
+      html = restoreFences(html);
+      // eslint-disable-next-line @microsoft/sdl/no-inner-html
+      clozeContent.innerHTML = html;
       hydrateRenderedMathCloze(clozeContent, text, reveal, targetIndex, clozeOpts);
     });
     body.appendChild(clozeEl);

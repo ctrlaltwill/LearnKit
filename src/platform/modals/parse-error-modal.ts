@@ -18,12 +18,83 @@ import {
 } from "../core/identity";
 
 import {
-  mkDangerCallout,
   isStringArray,
   setModalTitle,
   scopeModalToWorkspace,
   type CardRef,
 } from "./modal-utils";
+import { getDelimiter } from "../core/delimiter";
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Error → hint mapping
+// ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Maps a raw parse-error string to a concise, actionable hint that uses the
+ * user's current delimiter so the advice matches their actual card format.
+ * Returns `null` when no specific hint is available.
+ */
+function errorHint(err: string, d: string): string | null {
+  const cd = (s: string) => `<code>${s}</code>`;
+  // ── Missing fields ──────────────────────────────────────────────────────
+  if (/^Missing Q[:\s]/.test(err)) return `Add a question: ${cd(`Q ${d} your question ${d}`)}`;
+  if (/^Missing A[:\s]/.test(err)) return `Add an answer: ${cd(`A ${d} your answer ${d}`)}`;
+  if (/^Missing CQ[:\s]/.test(err)) return `Add a cloze: ${cd(`CQ ${d} text with {{c1::cloze}} ${d}`)}`;
+  if (/^Missing MCQ[:\s]/.test(err)) return `Add a stem: ${cd(`MCQ ${d} your question ${d}`)}`;
+  if (/^Missing OQ/.test(err)) return `Add an ordered question: ${cd(`OQ ${d} your question ${d}`)}`;
+
+  // ── MCQ ─────────────────────────────────────────────────────────────────
+  if (/MCQ requires at least one A/.test(err))
+    return `Add a correct answer: ${cd(`A ${d} correct ${d}`)}`;
+  if (/MCQ requires at least one O/.test(err))
+    return `Add a wrong option: ${cd(`O ${d} wrong ${d}`)}`;
+
+  // ── IO / HQ image ───────────────────────────────────────────────────────
+  if (/IO card requires: IO/.test(err) || /IO card requires an embedded image/.test(err))
+    return `Start with an image: ${cd(`IO ${d} ![[your-image.png]] ${d}`)}`;
+  if (/HQ card requires: HQ/.test(err) || /HQ card requires an embedded image/.test(err))
+    return `Start with an image: ${cd(`HQ ${d} ![[your-image.png]] ${d}`)}`;
+  if (/IO occlusions must be a JSON array/.test(err))
+    return `${cd("O")} must be a JSON array of occlusion regions`;
+  if (/IO occlusions JSON is invalid/.test(err))
+    return `Check ${cd("O")} for valid JSON syntax`;
+  if (/IO mask mode must be/.test(err))
+    return `${cd("C")} must be "solo" or "all"`;
+  if (/HQ interaction mode must be/.test(err))
+    return `${cd("M")} must be "click" or "drag-drop"`;
+
+  // ── OQ ─────────────────────────────────────────────────────────────────
+  if (/OQ requires at least 2/.test(err))
+    return `Number your steps: ${cd(`1 ${d} first ${d}`)}, ${cd(`2 ${d} second ${d}`)}`;
+  if (/OQ supports a maximum/.test(err))
+    return `Too many steps — use 20 or fewer`;
+
+  // ── Unrecognised fields ─────────────────────────────────────────────────
+  if (/Unrecognised field in IO card/.test(err))
+    return `This field doesn't belong in an IO card. If it's for a different card type, split it into its own ${cd("^learnkit-…")} block. Also check your ${cd(`IO ${d} … ${d}`)} line closes properly.`;
+  if (/Unrecognised field in HQ card/.test(err))
+    return `This field doesn't belong in an HQ card. Split non-HQ fields into a separate ${cd("^learnkit-…")} block.`;
+  if (/Unrecognised field in card/.test(err))
+    return `Unrecognized field for this card type. Check the allowed fields.`;
+
+  // ── Combo ──────────────────────────────────────────────────────────────
+  if (/Combo card requires at least one question variant/.test(err))
+    return `Add a ${cd("Q")} field. Separate variants with ${cd(":::")} (zip) or ${cd("::")} (product).`;
+  if (/Combo card requires at least one answer variant/.test(err))
+    return `Add an ${cd("A")} field. Separate variants with ${cd(":::")} (zip) or ${cd("::")} (product).`;
+  if (/mismatched variant counts/.test(err))
+    return `${cd("Q")} and ${cd("A")} variant counts must match in zip mode.`;
+
+  // ── Unrecognised line ──────────────────────────────────────────────────
+  if (/Unrecognised line inside card/.test(err))
+    return `This line doesn't match ${cd(`KEY ${d} value ${d}`)} format.`;
+
+  // ── Image not found (quarantine reason from sync-engine) ────────────────
+  if (/Image file not found/i.test(err))
+    return `Image not found. Check the path in your ${cd("![[embed]]")}.`;
+
+  return null;
+}
 
 // ──────────────────────────────────────────────────────────────────────────────
 // ParseErrorModal
@@ -61,25 +132,15 @@ export class ParseErrorModal extends Modal {
 
     const root = contentEl.createDiv({ cls: "flex flex-col gap-4" });
 
-    // Callout with common parsing fixes
-    mkDangerCallout(
-      root,
-      [
-        "Typical fixes:",
-        "• Ensure each card has exactly one start line: Q | ... |  or  MCQ | ... |  or  CQ | ... |  or  IO | ... |.",
-        "• Pipe-format fields (T | ... |, A | ... |, I | ... |, etc.) must end with a closing | (unless intentionally multiline, then close later).",
-        "• MCQ supports:",
-        "  - New format: O | wrong | (>=1) and A | correct | (exactly 1)",
-        "  - Legacy: O: opt1 | **correct** | opt3",
-        "• Cloze requires at least one {{cN::...}} token.",
-        "• IO requires a valid image embed on the IO line.",
-        "",
-        "Use Open to jump to the exact ^sprout- anchor, or Edit to quick-fix the card.",
-      ].join("\n"),
+    // Brief intro
+    const intro = root.createDiv({ cls: "text-sm text-muted-foreground" });
+    intro.setText(
+      "These cards couldn't be parsed during sync. Each card lists the specific issue and a suggested fix below.",
     );
 
     // Render each quarantined card
-    const list = root.createDiv({ cls: "flex flex-col gap-3" });
+    const list = root.createDiv({ cls: "flex flex-col gap-2" });
+    const d = getDelimiter();
 
     for (const id of this.quarantinedIds) {
       const ref = this.resolveCardRef(id);
@@ -115,6 +176,25 @@ export class ParseErrorModal extends Modal {
         for (const e of errs) ul.createEl("li", { text: e });
       } else {
         row.createDiv({ text: "No error details available.", cls: "text-muted-foreground text-sm" });
+      }
+
+      // ── Per-card targeted hints ──────────────────────────────────────────
+      if (errs.length) {
+        const hints = errs
+          .map((e) => errorHint(e, d))
+          .filter((h): h is string => h !== null);
+
+        // Deduplicate
+        const unique = [...new Set(hints)];
+
+        if (unique.length) {
+          const hintBox = row.createDiv({ cls: "learnkit-parse-hints text-xs flex flex-col gap-0.5" });
+          for (const h of unique) {
+            const hintEl = hintBox.createDiv({ cls: "text-red-500" });
+            // eslint-disable-next-line @microsoft/sdl/no-inner-html
+            hintEl.innerHTML = h;
+          }
+        }
       }
     }
 

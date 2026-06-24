@@ -683,6 +683,23 @@ export function convertInlineDisplayMath(text: string): string {
   return source.replace(/\$\$([\s\S]+?)\$\$/g, (match, inner: string, offset: number, full: string) => {
     const hasExplicitMultiline = /\\\r?\n/.test(inner) || /\r?\n/.test(inner);
 
+    // Markdown engines are stricter with multiline display math than MathJax itself:
+    // keep multiline $$ blocks wrapped on dedicated lines so they render reliably.
+    if (hasExplicitMultiline) {
+      let normalizedInner = inner;
+      const hasOpeningLineBreak = /^[ \t]*\r?\n/.test(normalizedInner);
+      const hasClosingLineBreak = /\r?\n[ \t]*$/.test(normalizedInner);
+
+      if (!hasOpeningLineBreak) {
+        normalizedInner = `\n${normalizedInner.replace(/^[ \t]+/, "")}`;
+      }
+      if (!hasClosingLineBreak) {
+        normalizedInner = `${normalizedInner.replace(/[ \t]+$/, "")}\n`;
+      }
+
+      return `$$${normalizedInner}$$`;
+    }
+
     const lineStart = full.lastIndexOf("\n", offset - 1) + 1;
     const lineEndRaw = full.indexOf("\n", offset + match.length);
     const lineEnd = lineEndRaw === -1 ? full.length : lineEndRaw;

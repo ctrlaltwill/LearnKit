@@ -15,8 +15,7 @@ import {
   buildPrimaryCardAnchor,
   extractCardAnchorId,
 } from "../../platform/core/identity";
-import { escapePipes } from "./fields";
-import { COMBO_VARIANT_SEPARATOR } from "../../platform/core/delimiter";
+import { COMBO_VARIANT_SEPARATOR, escapeDelimiterText } from "../../platform/core/delimiter";
 
 /**
  * Canonical marker is ONLY ^sprout-#########.
@@ -145,6 +144,19 @@ export function buildCardBlockMarkdown(id: string, rec: CardRecord): string[] {
 
   const startsWithListMarker = (line: string): boolean => /^\s*(?:[-+*]|\d+[.)])\s+/.test(String(line ?? ''));
 
+  const escapeLine = (line: string): string =>
+    escapeDelimiterText(line, { escapeBackslashes: false });
+
+  const pushFinalLine = (line: string) => {
+    const escaped = escapeLine(line);
+    if (String(line ?? "").trim() === "$$") {
+      out.push(escaped);
+      out.push("|");
+      return;
+    }
+    out.push(`${escaped} |`);
+  };
+
   const pushPipeField = (key: string, value: string) => {
     const raw = String(value ?? "");
     const lines = raw.split(/\r?\n/);
@@ -153,21 +165,21 @@ export function buildCardBlockMarkdown(id: string, rec: CardRecord): string[] {
       return;
     }
     if (lines.length === 1 && !startsWithListMarker(lines[0])) {
-      out.push(`${key} | ${escapePipes(lines[0])} |`);
+      out.push(`${key} | ${escapeLine(lines[0])} |`);
       return;
     }
 
     const startOnNewLine = startsWithListMarker(lines[0]);
     if (startOnNewLine) {
       out.push(`${key} |`);
-      for (let i = 0; i < lines.length - 1; i++) out.push(escapePipes(lines[i]));
-      out.push(`${escapePipes(lines[lines.length - 1])} |`);
+      for (let i = 0; i < lines.length - 1; i++) out.push(escapeLine(lines[i]));
+      pushFinalLine(lines[lines.length - 1]);
       return;
     }
 
-    out.push(`${key} | ${escapePipes(lines[0])}`);
-    for (let i = 1; i < lines.length - 1; i++) out.push(escapePipes(lines[i]));
-    out.push(`${escapePipes(lines[lines.length - 1])} |`);
+    out.push(`${key} | ${escapeLine(lines[0])}`);
+    for (let i = 1; i < lines.length - 1; i++) out.push(escapeLine(lines[i]));
+    pushFinalLine(lines[lines.length - 1]);
   };
 
   const title = (rec.title || "").trim();

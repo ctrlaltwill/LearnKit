@@ -98,7 +98,7 @@ export class AnkiImportModal extends Modal {
     const body = root.createDiv({ cls: "flex flex-col gap-4" });
 
     body.createDiv({
-      text: "Select an Anki .apkg file to import. Image occlusion cards will be skipped.",
+      text: "Select an Anki file to import. Supports .apkg and .colpkg formats. Image occlusion cards will be skipped.",
       cls: "text-sm text-muted-foreground",
     });
 
@@ -106,17 +106,17 @@ export class AnkiImportModal extends Modal {
 
     const fileInput = activeDocument.createElement("input");
     fileInput.type = "file";
-    fileInput.accept = ".apkg";
+    fileInput.accept = ".apkg,.colpkg";
     fileInput.classList.add("learnkit-hidden-important", "learnkit-hidden-important");
     fileRow.appendChild(fileInput);
 
     const pickBtn = fileRow.createEl("button", {
       cls: "learnkit-btn-toolbar learnkit-btn-toolbar inline-flex items-center gap-2 h-9 px-3 text-sm",
-      attr: { type: "button", "aria-label": this.tx("ui.anki.import.aria.chooseApkg", "Choose an Anki .apkg file from your computer") },
+      attr: { type: "button", "aria-label": this.tx("ui.anki.import.aria.chooseAnkiFile", "Choose an Anki file from your computer") },
     });
     const pickIcon = pickBtn.createEl("span", { cls: "inline-flex items-center justify-center [&_svg]:size-4" });
     setIcon(pickIcon, "file-up");
-    pickBtn.createSpan({ text: this.tx("ui.anki.import.action.chooseApkg", "Choose .apkg file") });
+    pickBtn.createSpan({ text: this.tx("ui.anki.import.action.chooseAnkiFile", "Choose Anki file") });
 
     const fileLabel = fileRow.createEl("span", {
       text: "No file selected",
@@ -160,7 +160,7 @@ export class AnkiImportModal extends Modal {
         this.renderPreviewStep(root);
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
-        new Notice(this.tx("ui.anki.import.error.readApkg", "Failed to read .apkg — {message}", { message: msg }));
+        new Notice(this.tx("ui.anki.import.error.readAnkiFile", "Failed to read Anki file — {message}", { message: msg }));
         nextBtn.disabled = false;
         if (nextSpan) nextSpan.textContent = common.next;
       }

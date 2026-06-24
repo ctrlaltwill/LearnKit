@@ -21,6 +21,7 @@ import { getCorrectIndices, isMultiAnswerMcq } from "../../platform/types/card";
 import { hydrateRenderedMathCloze, type ClozeRenderOptions } from "./question-cloze";
 import { openCardAnchorInNote } from "../../platform/core/open-card-anchor";
 import { processClozeForMath, convertInlineDisplayMath, forceSingleLineDisplayMathInline } from "../../platform/core/shared-utils";
+import { protectCodeFences, FENCE_PH } from "../reading/reading-flashcard-cloze";
 import { hydrateCircleFlagsInElement, processCircleFlagsInMarkdown } from "../../platform/flags/flag-tokens";
 import { t } from "../../platform/translations/translator";
 import { getRatingIntervalPreview } from "../../platform/core/grade-intervals";
@@ -1469,12 +1470,32 @@ export function renderSessionMode(args: Args) {
     const clozContainer = activeDocument.createElement("div");
     clozContainer.className = "learnkit-cloze whitespace-pre-wrap break-words learnkit-md-block";
 
+    // Protect code fences before cloze processing so that Obsidian's
+    // MarkdownRenderer doesn't HTML-escape cloze spans inside <pre><code>.
+    const fenceOpts = reveal
+      ? { blankClass: "", revealClass: "learnkit-cloze-revealed" }
+      : { blankClass: "learnkit-cloze-blank hidden-cloze", revealClass: "" };
+    const { text: fenceFree, restore: restoreFences } = protectCodeFences(text, fenceOpts);
+
     const clozeOpts = args.getClozeRenderOptions();
-    const processedText = processClozeForMath(text, reveal, targetIndex, {
+    const processedText = processClozeForMath(fenceFree, reveal, targetIndex, {
       blankClassName: "learnkit-cloze-blank hidden-cloze",
       useHintText: clozeOpts.mode !== "typed",
     });
     void args.renderMarkdownInto(clozContainer, processedText, sourcePath).then(() => {
+      // Restore code fence HTML after MarkdownRenderer.
+      // MarkdownRenderer wraps standalone placeholders in <p> tags,
+      // so unwrap them before restoring.
+      let html = clozContainer.innerHTML;
+      const phEscaped = FENCE_PH.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      html = html.replace(
+        new RegExp(`<p>(${phEscaped}\\d+@@)</p>`, "g"),
+        "$1",
+      );
+      html = restoreFences(html);
+      // eslint-disable-next-line @microsoft/sdl/no-inner-html
+      clozContainer.innerHTML = html;
+
       setupLinkHandlers(clozContainer, sourcePath);
       hydrateRenderedMathCloze(clozContainer, text, reveal, targetIndex, clozeOpts);
     });

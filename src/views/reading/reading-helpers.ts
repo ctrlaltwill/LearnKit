@@ -283,6 +283,17 @@ export function extractRawTextFromParagraph(el: HTMLElement): string {
   const doc = parser.parseFromString(html, 'text/html');
   const temp = doc.body;
   
+  // Replace <pre><code> blocks with triple-backtick fence notation
+  temp.querySelectorAll('pre > code').forEach((codeEl) => {
+    const langClass = Array.from(codeEl.classList).find(c => c.startsWith('language-'));
+    const lang = langClass ? langClass.replace('language-', '') : '';
+    const codeText = codeEl.textContent || '';
+    const fence = '```' + lang;
+    codeEl.parentElement!.replaceWith(
+      activeDocument.createTextNode(`\n${fence}\n${codeText}\n\`\`\`\n`)
+    );
+  });
+  
   // Replace math elements with LaTeX delimiters
   temp.querySelectorAll('.math.math-inline').forEach((mathEl) => {
     const latexSource = extractLaTeXFromMathJax(mathEl);

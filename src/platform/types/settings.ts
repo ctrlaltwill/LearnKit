@@ -261,11 +261,14 @@ export type LearnKitSettings = {
      * Default is `|` (pipe). Advanced users may change this to avoid conflicts
      * with LaTeX, Markdown tables, or code blocks.
      *
+     * Custom single non-alphanumeric, non-whitespace Unicode characters
+     * (e.g. `⚵`) are also supported via the settings UI.
+     *
      * **Warning:** changing this does NOT convert existing cards. Cards written
      * with the previous delimiter will no longer be parsed and their scheduling
      * data will be lost on the next sync.
      */
-    delimiter: "|" | "@" | "~" | ";";
+    delimiter: string;
     /**
      * Scope-based file filter for flashcard sync.
      * Same query format as note review: space-separated tokens like

@@ -22,6 +22,7 @@ import { log } from "../../platform/core/logger";
 import { processMarkdownFeatures, setupInternalLinkHandlers } from "../../views/widget/view/markdown";
 import { getRatingIntervalPreview } from "../../platform/core/grade-intervals";
 import { processClozeForMath, convertInlineDisplayMath, forceSingleLineDisplayMathInline } from "../../platform/core/shared-utils";
+import { protectCodeFences, FENCE_PH } from "../reading/reading-flashcard-cloze";
 import { processCircleFlagsInMarkdown, hydrateCircleFlagsInElement } from "../../platform/flags/flag-tokens";
 import { getCorrectIndices, isMultiAnswerMcq, normalizeCardOptions } from "../../platform/types/card";
 import { renderImageOcclusionReviewInto } from "../../platform/image-occlusion/image-occlusion-review-render";
@@ -676,11 +677,24 @@ export class GatekeeperModal extends Modal {
         clozeBgColor,
         clozeTextColor,
       };
-      const processedText = processClozeForMath(text, this.reveal, targetIndex, {
+      const fenceOpts = this.reveal
+        ? { blankClass: "", revealClass: "learnkit-cloze-revealed" }
+        : { blankClass: "learnkit-cloze-blank hidden-cloze", revealClass: "" };
+      const { text: fenceFree, restore: restoreFences } = protectCodeFences(text, fenceOpts);
+      const processedText = processClozeForMath(fenceFree, this.reveal, targetIndex, {
         blankClassName: "learnkit-cloze-blank hidden-cloze",
         useHintText: clozeMode !== "typed",
       });
       void this.renderMarkdownInto(clozeEl, processedText, sourcePath).then(() => {
+        let html = clozeEl.innerHTML;
+        const phEscaped = FENCE_PH.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        html = html.replace(
+          new RegExp(`<p>(${phEscaped}\\d+@@)</p>`, "g"),
+          "$1",
+        );
+        html = restoreFences(html);
+      // eslint-disable-next-line @microsoft/sdl/no-inner-html
+      clozeEl.innerHTML = html;
         hydrateRenderedMathCloze(clozeEl, text, this.reveal, targetIndex, clozeOpts);
       });
       body.appendChild(clozeEl);

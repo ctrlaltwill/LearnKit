@@ -549,7 +549,10 @@ export function parseCardsFromText(
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (ignoreFences && fenceMask[i]) continue;
+    // Fence skipping only applies outside of cards. Once a card has
+    // started (current !== null), code fences inside fields are part
+    // of the card content and must not be skipped.
+    if (ignoreFences && fenceMask[i] && !current) continue;
 
     // 0) Anchor line
     const am = line.trim().match(ANCHOR_RE);
@@ -557,9 +560,14 @@ export function parseCardsFromText(
       const id = am[1];
 
       if (current) {
-        if (!current.id) current.id = id;
-        else if (current.id !== id) {
-          current.errors.push(`Conflicting anchors in same card block: ^sprout-${current.id} vs ^sprout-${id}`);
+        if (!current.id) {
+          current.id = id;
+        } else if (current.id !== id) {
+          // Different anchor while inside a card — this anchor
+          // belongs to the next card. Flush the current one first.
+          flush();
+          pendingId = id;
+          pendingIdLine = i;
         }
       } else {
         pendingId = id;
@@ -615,14 +623,18 @@ export function parseCardsFromText(
       continue;
     }
 
-    // 4) Blank line ends card and clears pending meta
+    // 4) Blank line — only flush (end card) when outside a card.
+    // Blank lines inside a card (e.g. between a closing | and the
+    // next field header) are just spacing and must not end the card.
     if (line.trim().length === 0) {
-      flush();
-      pendingId = null;
-      pendingIdLine = null;
-      pendingTitle = null;
-      pendingTitleFieldOpen = false;
-      pendingTitlePipeOpen = false;
+      if (!current) {
+        flush();
+        pendingId = null;
+        pendingIdLine = null;
+        pendingTitle = null;
+        pendingTitleFieldOpen = false;
+        pendingTitlePipeOpen = false;
+      }
       continue;
     }
 

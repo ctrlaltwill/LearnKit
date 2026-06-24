@@ -61,6 +61,8 @@ If a card has invalid syntax, LearnKit quarantines it instead of silently deleti
 
 Sync privileges control what sync is allowed to modify in your Markdown notes. You can set this in **Settings → User Details → Sync privileges**.
 
+The first time you sync, LearnKit shows a mode picker dropdown with **Simple** pre-selected as the recommended default. You can change your choice anytime.
+
 Four levels are available:
 
 | Level | Behaviour |
@@ -111,4 +113,4 @@ The normal workflow is:
 
 ---
 
-Last modified: 03/06/2026
+Last modified: 24/06/2026

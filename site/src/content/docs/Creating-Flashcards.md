@@ -114,6 +114,8 @@ LearnKit has **three preferred shorthand prefixes**:
 
 Quick Cards are detected on **unindented prose lines only**. Markdown headings (`#`, `##`, etc.) and content inside code fences are never parsed as flashcards, so your section titles and code samples are safe.
 
+That rule is about **card detection**. For cloze content, `{{cN::...}}` inside fenced code blocks (``` ... ```) is not currently supported.
+
 ### Basic
 
 ```

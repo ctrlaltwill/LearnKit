@@ -334,6 +334,24 @@ $$ |`
     expect(card.errors).toHaveLength(0);
   });
 
+  it("parses multiline cloze math when closing delimiter is on its own line", () => {
+    const card = parseOne(
+      `CQ | $$
+\\begin{bmatrix}
+1 & 1\\\\
+1 & {{c1::1}}
+\\end{bmatrix}
+$$
+|`
+    );
+
+    expect(card.type).toBe("cloze");
+    expect(card.clozeText).toContain("\\begin{bmatrix}");
+    expect(card.clozeText).toContain("1 & 1\\\\");
+    expect(card.clozeText).toContain("\\end{bmatrix}");
+    expect(card.errors).toHaveLength(0);
+  });
+
   it("decodes legacy escaped LaTeX matrix content written by older save flows", () => {
     const card = parseOne(
       `CQ | $$
@@ -494,6 +512,43 @@ A | Real answer |`
 
     expect(cards).toHaveLength(1);
     expect(cards[0].q).toBe("Real card");
+  });
+
+  it("parses code fences inside a multi-line CQ field", () => {
+    const cards = parse(
+      `^learnkit-000000001
+CQ |
+\`\`\`
+print("Hello {{c1::World}}")
+\`\`\`
+|`
+    );
+
+    expect(cards).toHaveLength(1);
+    expect(cards[0].type).toBe("cloze");
+    expect(cards[0].clozeText).toContain("```");
+    expect(cards[0].clozeText).toContain('print("Hello {{c1::World}}")');
+    expect(cards[0].errors).toHaveLength(0);
+  });
+
+  it("parses code fences inside a multi-line Q field", () => {
+    const cards = parse(
+      `^learnkit-000000002
+Q |
+\`\`\`python
+print("hello")
+\`\`\`
+|
+A | It prints hello |
+T | Code question |`
+    );
+
+    expect(cards).toHaveLength(1);
+    expect(cards[0].type).toBe("basic");
+    expect(cards[0].q).toContain("```python");
+    expect(cards[0].q).toContain('print("hello")');
+    expect(cards[0].a).toBe("It prints hello");
+    expect(cards[0].errors).toHaveLength(0);
   });
 });
 

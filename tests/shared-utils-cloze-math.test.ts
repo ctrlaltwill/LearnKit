@@ -7,7 +7,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { processClozeForMath } from "../src/platform/core/shared-utils";
+import { convertInlineDisplayMath, processClozeForMath } from "../src/platform/core/shared-utils";
 
 describe("processClozeForMath", () => {
   it("keeps LaTeX valid for clozes with nested braces", () => {
@@ -75,5 +75,44 @@ describe("processClozeForMath", () => {
 
     expect(front).toBe("$\\begin{bmatrix}1&\\underline{\\phantom{1}}\\\\1&1\\end{bmatrix}$");
     expect(back).toBe("$\\begin{bmatrix}1&1\\\\1&1\\end{bmatrix}$");
+  });
+
+  it("normalizes multiline $$ blocks even when delimiters share lines with content", () => {
+    const input = String.raw`$$ \begin{bmatrix}
+1 & 1\\
+1 & 1
+\end{bmatrix} $$`;
+
+    const output = convertInlineDisplayMath(input);
+
+    expect(output).toBe(String.raw`$$
+\begin{bmatrix}
+1 & 1\\
+1 & 1
+\end{bmatrix}
+$$`);
+  });
+
+  it("applies cloze replacements inside normalized multiline $$ blocks", () => {
+    const input = String.raw`$$ \begin{bmatrix}
+1 & {{c1::1}}\\
+1 & 1
+\end{bmatrix} $$`;
+
+    const front = processClozeForMath(input, false, null);
+    const back = processClozeForMath(input, true, null);
+
+    expect(front).toBe(String.raw`$$
+\begin{bmatrix}
+1 & \underline{\phantom{1}}\\
+1 & 1
+\end{bmatrix}
+$$`);
+    expect(back).toBe(String.raw`$$
+\begin{bmatrix}
+1 & 1\\
+1 & 1
+\end{bmatrix}
+$$`);
   });
 });

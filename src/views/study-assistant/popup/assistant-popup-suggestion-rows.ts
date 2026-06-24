@@ -11,7 +11,7 @@
  *  - rewriteIoNoteRows
  */
 
-import { pushDelimitedField } from "../../../platform/core/delimiter";
+import { escapeDelimiterRe, getDelimiter, pushDelimitedField } from "../../../platform/core/delimiter";
 import type { StudyAssistantSuggestion } from "../../../platform/integrations/ai/study-assistant-types";
 import { normalizeGroups } from "../../../engine/indexing/group-format";
 import { trimLine, trimList } from "./assistant-popup-text";
@@ -55,8 +55,13 @@ export function parseSuggestionRows(suggestion: StudyAssistantSuggestion): Parse
     out.steps = [];
   }
 
+  const _rowRe = (() => {
+    const d = escapeDelimiterRe(getDelimiter());
+    return new RegExp(`^\\s*([^${d}]+?)\\s*${d}\\s*(.*?)\\s*(?:${d}\\s*)?$`, "u");
+  })();
+
   for (const row of noteRows) {
-    const m = String(row ?? "").match(/^\s*([^|]+?)\s*\|\s*(.*?)\s*(?:\|\s*)?$/);
+    const m = String(row ?? "").match(_rowRe);
     if (!m) continue;
     const key = String(m[1] || "").trim().toUpperCase();
     const value = trimLine(m[2]);
@@ -104,8 +109,13 @@ export function normalizeOptionalGeneratorRows(
   let infoFromRows = "";
   let groupsFromRows: string[] = [];
 
+  const _rowRe2 = (() => {
+    const d = escapeDelimiterRe(getDelimiter());
+    return new RegExp(`^\\s*([^${d}]+?)\\s*${d}\\s*(.*?)\\s*(?:${d}\\s*)?$`, "u");
+  })();
+
   for (const row of explicitRows) {
-    const m = String(row || "").match(/^\s*([^|]+?)\s*\|\s*(.*?)\s*(?:\|\s*)?$/);
+    const m = String(row || "").match(_rowRe2);
     if (!m) {
       coreRows.push(row);
       continue;
@@ -226,9 +236,11 @@ export function buildSuggestionMarkdownLines(
 }
 
 export function rewriteIoNoteRows(noteRows: string[], ioSrc: string): string[] {
+  const d = escapeDelimiterRe(getDelimiter());
+  const re = new RegExp(`^(\\s*([^${d}]+?)\\s*${d}\\s*)(.*?)(\\s*(?:${d}\\s*)?)$`, "u");
   return noteRows.map((row) => {
     const raw = String(row ?? "");
-    const m = raw.match(/^(\s*([^|]+?)\s*\|\s*)(.*?)(\s*(?:\|\s*)?)$/);
+    const m = raw.match(re);
     if (!m) return raw;
     const key = trimLine(m[2]).toUpperCase();
     if (key !== "IO") return raw;

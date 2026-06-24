@@ -3,7 +3,7 @@ title: "Flashcard Formatting"
 ---
 
 
-LearnKit flashcard content supports standard Markdown formatting, code, links, images, and math.
+LearnKit flashcard content supports standard Markdown formatting, inline code, links, images, and math.
 
 This page is about presentation inside flashcards. For field structure and raw syntax, start with [Creating Flashcards](../Creating-Flashcards).
 
@@ -16,6 +16,12 @@ You can use:
 - links
 - images
 - math
+- multiline display math with `$$ ... $$` whether delimiters are on their own lines or on the same lines as content (LearnKit normalizes it before rendering)
+
+## Current Limitation
+
+- cloze tokens inside fenced code blocks (``` ... ```) are not currently supported
+- if you need cloze + code together today, prefer inline code formatting in the cloze text
 
 ## Formatting Advice
 

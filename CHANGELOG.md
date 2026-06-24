@@ -2,6 +2,27 @@
 
 All notable changes to LearnKit are summarized here.
 
+## 1.7.0 (2026-06-24)
+
+### Added
+- Redesigned sync mode picker with dropdown and four modes: Simple (recommended), Full (Normalize), Full (Preserve), Off.
+- Simple sync mode: scans only canonical LearnKit syntax, skipping shorthand `::` patterns to avoid plugin conflicts.
+- `shorthandMode` parser option (`all` / `anchored-only` / `off`) for controlling shorthand detection.
+- Sync privilege choice versioning helpers for upgrade detection.
+
+### Changed
+- Sync modal intro now recommends Simple mode as the default for new users.
+- Sync mode descriptions rewritten for clarity.
+- Session dock layout now adapts responsively at narrow window sizes.
+
+### Fixed
+- Math `\\` line breaks inside LaTeX blocks no longer collapsed during markdown rendering.
+- Open Question submit button now responds reliably.
+- TeX commands (like `\begin`) in card fields no longer mangled on read-back.
+- Stale i18n audio keys cleaned from en-gb, en-us, zh-cn locales.
+- Hardcoded hint label in parse error modal now routed through translation system.
+- Lint: 8 errors fixed (style assignments, innerHTML usage, unnecessary assertion).
+
 ## Unreleased
 
 - Draft release notes for `1.2.0`: see [release/1.2.0/RELEASE_NOTES.md](release/1.2.0/RELEASE_NOTES.md)

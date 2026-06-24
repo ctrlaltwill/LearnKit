@@ -5,16 +5,18 @@
  * instead of hard-coding the `|` character.
  *
  * The active delimiter is configured via `indexing.delimiter` in SproutSettings.
- * Allowed values: `|` (default), `@`, `~`, `;`.
+ * Presets: `|` (default), `@`, `~`, `;`. Custom single non-alphanumeric
+ * Unicode characters (e.g. `⚵`) are also supported.
  *
  * **Warning:** changing the delimiter does NOT migrate existing cards.
  * Cards written with the previous delimiter will no longer parse, and their
  * scheduling data will be lost on the next sync.
  *
  * @exports
- *   - DelimiterChar              — union type of allowed delimiter characters
- *   - DELIMITER_OPTIONS          — allowed delimiter values used by settings UIs
+ *   - DelimiterChar              — type alias for delimiter strings
+ *   - DELIMITER_OPTIONS          — preset delimiter values used by settings UIs
  *   - DELIMITER_OPTION_TOKENS    — i18n token keys for delimiter option labels
+ *   - isValidDelimiterChar       — validates a single non-alphanumeric, non-whitespace char
  *   - getDelimiter               — returns the currently active delimiter character
  *   - setDelimiter               — sets the active delimiter (called from settings load)
  *   - escapeDelimiterRe          — regex-safe escaped version of the active delimiter
@@ -36,17 +38,35 @@
 
 // ── Types ────────────────────────────────────────────────────────────
 
-export type DelimiterChar = "|" | "@" | "~" | ";";
+/** Type alias for delimiter strings. Any non-alphanumeric, non-whitespace single character is valid. */
+export type DelimiterChar = string;
 
-/** Supported delimiter values for settings dropdowns and validators. */
+/**
+ * Validates that a character is a valid delimiter:
+ * - exactly one character (not empty, not multi-char)
+ * - not whitespace
+ * - not alphanumeric (A-Z, a-z, 0-9)
+ *
+ * This prevents collision with field prefix letters (Q, A, T, CQ, etc.)
+ * and ensures the delimiter is visually distinct from prose text.
+ */
+export function isValidDelimiterChar(c: string): boolean {
+  return /^[^\s\w]$/u.test(String(c ?? ""));
+}
+
+/** Supported preset delimiter values for settings dropdowns. */
 export const DELIMITER_OPTIONS: DelimiterChar[] = ["|", "@", "~", ";"];
 
-/** i18n token keys used to label each delimiter option in settings UIs. */
-export const DELIMITER_OPTION_TOKENS: Record<DelimiterChar, string> = {
+/**
+ * i18n token keys used to label each preset delimiter option in settings UIs.
+ * The `"custom"` key is used when the active delimiter is not one of the presets.
+ */
+export const DELIMITER_OPTION_TOKENS: Record<string, string> = {
   "|": "ui.settings.sync.delimiterOptions.pipe",
   "@": "ui.settings.sync.delimiterOptions.atSign",
   "~": "ui.settings.sync.delimiterOptions.tilde",
   ";": "ui.settings.sync.delimiterOptions.semicolon",
+  custom: "ui.settings.sync.delimiterOptions.custom",
 };
 
 // ── Active delimiter state ───────────────────────────────────────────
@@ -61,9 +81,12 @@ export function getDelimiter(): DelimiterChar {
 /**
  * Sets the active delimiter. Called once during plugin load (from settings)
  * and again if the user changes the setting.
+ *
+ * Accepts any valid non-alphanumeric, non-whitespace single character.
+ * Falls back to `"|"` if the value is invalid.
  */
 export function setDelimiter(d: DelimiterChar) {
-  if (d !== "|" && d !== "@" && d !== "~" && d !== ";") d = "|";
+  if (!isValidDelimiterChar(d)) d = "|";
   _delim = d;
   // Rebuild all cached regexes
   _rebuildRegexes();
@@ -82,17 +105,24 @@ export function escapeDelimiterRe(d: string = _delim): string {
  * Escapes backslashes and the active delimiter in field content so the
  * text can safely appear inside a delimited field.
  *
- * `\`  →  `\\`
+ * By default this keeps legacy behaviour (`\\` -> `\\\\`) because
+ * some callsites expect fully escaped output.
+ *
+ * For note-writing field serializers, pass `{ escapeBackslashes: false }`
+ * to preserve authored backslashes (for example LaTeX like `\begin`).
+ *
+ * `\`  →  `\\` (legacy/default mode)
  * `<delim>`  →  `\<delim>`
  */
-export function escapeDelimiterText(s: string): string {
+export function escapeDelimiterText(s: string, opts?: { escapeBackslashes?: boolean }): string {
   const d = _delim;
-  let out = String(s ?? "").replace(/\\/g, "\\\\");
+  const escapeBackslashes = opts?.escapeBackslashes !== false;
+  let out = String(s ?? "");
+  if (escapeBackslashes) out = out.replace(/\\/g, "\\\\");
   // Only escape the delimiter character itself
-  if (d === "|") out = out.replace(/\|/g, "\\|");
-  else if (d === "@") out = out.replace(/@/g, "\\@");
-  else if (d === "~") out = out.replace(/~/g, "\\~");
-  else if (d === ";") out = out.replace(/;/g, "\\;");
+  // Escape the delimiter character — use a dynamic regex so any Unicode
+  // delimiter (including custom chars like ⚵) is handled correctly.
+  out = out.replace(new RegExp(escapeDelimiterRe(d), "g"), `\\${d}`);
   return out;
 }
 
@@ -290,41 +320,44 @@ function _rebuildRegexes() {
   const d = escapeDelimiterRe(_delim);
 
   // parser.ts — card start: ^(RQ|Q|MCQ|CQ|IO|HQ|OQ|QX)\s*<d>\s*(.*)$
-  _CARD_START_DELIM_RE = new RegExp(`^(RQ|Q|MCQ|CQ|IO|HQ|OQ|QX)\\s*${d}\\s*(.*)$`);
+  _CARD_START_DELIM_RE = new RegExp(`^(RQ|Q|MCQ|CQ|IO|HQ|OQ|QX)\\s*${d}\\s*(.*)$`, "u");
 
   // parser.ts — field: ^(T|A|O|I|G|C|M|AX|\d{1,2})\s*<d>\s*(.*)$
-  _FIELD_DELIM_RE = new RegExp(`^(T|A|O|I|G|C|M|AX|\\d{1,2})\\s*${d}\\s*(.*)$`);
+  _FIELD_DELIM_RE = new RegExp(`^(T|A|O|I|G|C|M|AX|\\d{1,2})\\s*${d}\\s*(.*)$`, "u");
 
   // parser.ts — title outside card: ^T\s*<d>\s*(.*)$
-  _TITLE_OUTSIDE_DELIM_RE = new RegExp(`^T\\s*${d}\\s*(.*)$`);
+  _TITLE_OUTSIDE_DELIM_RE = new RegExp(`^T\\s*${d}\\s*(.*)$`, "u");
 
   // parser.ts — any header/anchor: ^(?:^learnkit-\d{9}|^sprout-\d{9}|(?:RQ|Q|MCQ|CQ|IO|HQ|OQ|QX|T|A|O|I|G|C|M|AX|\d{1,2})\s*<d>)\s*
   _ANY_HEADER_DELIM_RE = new RegExp(
     `^(?:\\^${ANCHOR_PREFIX_PATTERN}-\\d{9}|(?:RQ|Q|MCQ|CQ|IO|HQ|OQ|QX|T|A|O|I|G|C|M|AX|\\d{1,2})\\s*${d})\\s*`,
+    "u",
   );
 
   // reading-helpers.ts — field start (relaxed): ^([A-Za-z]+|\d{1,2})\s*<d>\s*(.*)$
-  _FIELD_START_READING_RE = new RegExp(`^([A-Za-z]+|\\d{1,2})\\s*${d}\\s*(.*)$`);
+  _FIELD_START_READING_RE = new RegExp(`^([A-Za-z]+|\\d{1,2})\\s*${d}\\s*(.*)$`, "u");
 
   // settings-utils.ts — card start (also accepts colon for legacy):
   //   ^(RQ|Q|MCQ|CQ|OQ|QX)\s*(?::|<d>)\s*.*$|^(IO|HQ)\s*<d>\s*.*$
   _CARD_START_SETTINGS_RE = new RegExp(
     `^(RQ|Q|MCQ|CQ|OQ|QX)\\s*(?::|${d})\\s*.*$|^(IO|HQ)\\s*${d}\\s*.*$`,
+    "u",
   );
 
   // settings-utils.ts — field line:
   //   ^(T|A|I|O|G|M|AX|\d{1,2})\s*(?::|<d>)\s*.*$|^(C|K)\s*(?::|<d>)\s*.*$
   _FIELD_LINE_SETTINGS_RE = new RegExp(
     `^(T|A|I|O|G|M|AX|\\d{1,2})\\s*(?::|${d})\\s*.*$|^(C|K)\\s*(?::|${d})\\s*.*$`,
+    "u",
   );
 
   // sync-engine.ts — flashcard header (card types):
   //   ^(RQ|Q|MCQ|CQ|IO|HQ|OQ|QX)\s*(?::|<d>)\s*
-  _FLASHCARD_HEADER_CARD_RE = new RegExp(`^(RQ|Q|MCQ|CQ|IO|HQ|OQ|QX)\\s*(?::|${d})\\s*`);
+  _FLASHCARD_HEADER_CARD_RE = new RegExp(`^(RQ|Q|MCQ|CQ|IO|HQ|OQ|QX)\\s*(?::|${d})\\s*`, "u");
 
   // sync-engine.ts — flashcard header (field types):
   //   ^(T|A|O|I|G|C|M|K|L|AX|QX|\d{1,2})\s*(?::|<d>)\s*
-  _FLASHCARD_HEADER_FIELD_RE = new RegExp(`^(T|A|O|I|G|C|M|K|L|AX|QX|\\d{1,2})\\s*(?::|${d})\\s*`);
+  _FLASHCARD_HEADER_FIELD_RE = new RegExp(`^(T|A|O|I|G|C|M|K|L|AX|QX|\\d{1,2})\\s*(?::|${d})\\s*`, "u");
 }
 
 // Initial build with default delimiter
@@ -633,6 +666,8 @@ function computeFenceMaskForMerge(lines: string[]): boolean[] {
 
 // ── Field formatting (write-side) ───────────────────────────────────
 
+const _isCodeFenceLine = (line: string): boolean => /^\s*`{3,}\s*\w*\s*$/.test(String(line ?? ""));
+
 /**
  * Push a key-value field to a delimited card block.
  * Handles single-line (`KEY <d> value <d>`) and multi-line formatting.
@@ -641,26 +676,46 @@ export function pushDelimitedField(out: string[], key: string, value: string) {
   const d = _delim;
   const raw = String(value ?? "");
   const lines = raw.split(/\r?\n/);
+  const escapeFieldText = (line: string): string =>
+    escapeDelimiterText(line, { escapeBackslashes: false });
+  const pushFinalLine = (line: string) => {
+    const escaped = escapeFieldText(line);
+    if (String(line ?? "").trim() === "$$") {
+      out.push(escaped);
+      out.push(d);
+      return;
+    }
+    out.push(`${escaped} ${d}`);
+  };
   const startsWithListMarker = (line: string): boolean => /^\s*(?:[-+*]|\d+[.)])\s+/.test(String(line ?? ""));
   if (lines.length === 0) {
     out.push(`${key} ${d} ${d}`);
     return;
   }
   if (lines.length === 1 && !startsWithListMarker(lines[0])) {
-    out.push(`${key} ${d} ${escapeDelimiterText(lines[0])} ${d}`);
+    out.push(`${key} ${d} ${escapeFieldText(lines[0])} ${d}`);
     return;
   }
 
   if (startsWithListMarker(lines[0])) {
     out.push(`${key} ${d}`);
-    for (let i = 0; i < lines.length - 1; i++) out.push(escapeDelimiterText(lines[i]));
-    out.push(`${escapeDelimiterText(lines[lines.length - 1])} ${d}`);
+    for (let i = 0; i < lines.length - 1; i++) out.push(escapeFieldText(lines[i]));
+    pushFinalLine(lines[lines.length - 1]);
     return;
   }
 
-  out.push(`${key} ${d} ${escapeDelimiterText(lines[0])}`);
-  for (let i = 1; i < lines.length - 1; i++) out.push(escapeDelimiterText(lines[i]));
-  out.push(`${escapeDelimiterText(lines[lines.length - 1])} ${d}`);
+  // Code-fence opener on first line: put the field header on its own line
+  // so \`\`\` doesn't share a line with the delimiter (e.g. `CQ | \`\`\``).
+  if (_isCodeFenceLine(lines[0])) {
+    out.push(`${key} ${d}`);
+    for (let i = 0; i < lines.length - 1; i++) out.push(escapeFieldText(lines[i]));
+    pushFinalLine(lines[lines.length - 1]);
+    return;
+  }
+
+  out.push(`${key} ${d} ${escapeFieldText(lines[0])}`);
+  for (let i = 1; i < lines.length - 1; i++) out.push(escapeFieldText(lines[i]));
+  pushFinalLine(lines[lines.length - 1]);
 }
 
 /**
@@ -672,24 +727,44 @@ export function formatDelimitedField(key: string, value: string): string[] {
   const d = _delim;
   const raw = String(value ?? "");
   const parts = raw.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+  const escapeFieldText = (line: string): string =>
+    escapeDelimiterText(line, { escapeBackslashes: false });
+  const pushFinalLine = (out: string[], line: string) => {
+    const escaped = escapeFieldText(line);
+    if (String(line ?? "").trim() === "$$") {
+      out.push(escaped);
+      out.push(d);
+      return;
+    }
+    out.push(`${escaped} ${d}`);
+  };
   const startsWithListMarker = (line: string): boolean => /^\s*(?:[-+*]|\d+[.)])\s+/.test(String(line ?? ""));
 
   if (parts.length <= 1 && !startsWithListMarker(parts[0] ?? "")) {
-    return [`${key} ${d} ${escapeDelimiterText(parts[0] ?? "")} ${d}`];
+    return [`${key} ${d} ${escapeFieldText(parts[0] ?? "")} ${d}`];
   }
 
   if (startsWithListMarker(parts[0] ?? "")) {
     const out: string[] = [];
     out.push(`${key} ${d}`);
-    for (let i = 0; i < parts.length - 1; i++) out.push(escapeDelimiterText(parts[i] ?? ""));
-    out.push(`${escapeDelimiterText(parts[parts.length - 1] ?? "")} ${d}`);
+    for (let i = 0; i < parts.length - 1; i++) out.push(escapeFieldText(parts[i] ?? ""));
+    pushFinalLine(out, parts[parts.length - 1] ?? "");
+    return out;
+  }
+
+  // Code-fence opener on first line: put the field header on its own line.
+  if (_isCodeFenceLine(parts[0] ?? "")) {
+    const out: string[] = [];
+    out.push(`${key} ${d}`);
+    for (let i = 0; i < parts.length - 1; i++) out.push(escapeFieldText(parts[i] ?? ""));
+    pushFinalLine(out, parts[parts.length - 1] ?? "");
     return out;
   }
 
   const out: string[] = [];
-  out.push(`${key} ${d} ${escapeDelimiterText(parts[0] ?? "")}`);
-  for (let i = 1; i < parts.length - 1; i++) out.push(escapeDelimiterText(parts[i] ?? ""));
-  out.push(`${escapeDelimiterText(parts[parts.length - 1] ?? "")} ${d}`);
+  out.push(`${key} ${d} ${escapeFieldText(parts[0] ?? "")}`);
+  for (let i = 1; i < parts.length - 1; i++) out.push(escapeFieldText(parts[i] ?? ""));
+  pushFinalLine(out, parts[parts.length - 1] ?? "");
   return out;
 }
 

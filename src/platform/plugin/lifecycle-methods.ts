@@ -127,7 +127,7 @@ export function WithLifecycleMethods<T extends Constructor<LearnKitPluginBase>>(
         this._addCommand(command.id, command.name, () => this.openAddFlashcardModal(command.type));
       }
 
-      this._addCommand("import-anki", tx("ui.command.open.importAnki", "Import from Anki (.apkg)"), async () => {
+      this._addCommand("import-anki", tx("ui.command.open.importAnki", "Import from Anki"), async () => {
         const { AnkiImportModal } = await import("../modals/anki-import-modal");
         new AnkiImportModal(this).open();
       });

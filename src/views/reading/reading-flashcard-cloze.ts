@@ -18,6 +18,116 @@ function protectHtmlTags(html: string): { text: string; restore: (s: string) => 
   };
 }
 
+// ── Code fence pre-processing ───────────────────────────────────────
+
+export const FENCE_PH = "@@SPROUTFENCE";
+
+/** Opening fence: 3+ backticks, optional language specifier, whitespace only. */
+const FENCE_OPEN_RE = /^\s*`{3,}\s*(\w*)\s*$/;
+
+/** Closing fence: 3+ backticks, no language, whitespace only. */
+const FENCE_CLOSE_RE = /^\s*`{3,}\s*$/;
+
+function processClozeInCode(
+  code: string,
+  opts: { blankClass: string; revealClass: string },
+): string {
+  const clozeRe = /\{\{c(\d+)::([^}]*?)(?:::([^}]*?))?\}\}/g;
+  let result = "";
+  let lastIdx = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = clozeRe.exec(code)) !== null) {
+    result += escapeHtml(code.slice(lastIdx, match.index));
+    const answer = match[2];
+    const hint = match[3];
+
+    if (opts.revealClass) {
+      result += `<span class="${opts.revealClass}">${escapeHtml(answer)}</span>`;
+    } else if (hint) {
+      result += `<span class="learnkit-cloze-hint" style="width:${computeReadingViewClozeWidthPx(answer)}px">${escapeHtml(hint)}</span>`;
+    } else {
+      result += `<span class="${opts.blankClass || 'learnkit-flashcard-blank'}">&nbsp;</span>`;
+    }
+    lastIdx = match.index + match[0].length;
+  }
+  result += escapeHtml(code.slice(lastIdx));
+  return result;
+}
+
+/** Options passed to {@link protectCodeFences}. */
+export interface CodeFenceProtectOptions {
+  /** CSS class for cloze blanks (front side / unrevealed). */
+  blankClass: string;
+  /** CSS class for cloze reveals (back side / revealed). Empty string = front mode (blanks). */
+  revealClass: string;
+}
+
+/**
+ * Extract fenced code blocks from source, replace them with opaque
+ * placeholders, and return a restorer that swaps placeholders back
+ * to pre-rendered &lt;pre&gt;&lt;code&gt; HTML (with cloze processing applied).
+ *
+ * Exported for use by both reading view and study mode rendering.
+ */
+export function protectCodeFences(
+  source: string,
+  opts: CodeFenceProtectOptions,
+): {
+  text: string;
+  restore: (s: string) => string;
+} {
+  const blocks: string[] = [];
+  const lines = source.split("\n");
+  const outLines: string[] = [];
+  let inFence = false;
+  let fenceLang = "";
+  let fenceLines: string[] = [];
+
+  for (const line of lines) {
+    if (!inFence) {
+      const openMatch = line.match(FENCE_OPEN_RE);
+      if (openMatch) {
+        inFence = true;
+        fenceLang = openMatch[1] || "";
+        fenceLines = [];
+        outLines.push(`${FENCE_PH}${blocks.length}@@`);
+        continue;
+      }
+      outLines.push(line);
+    } else {
+      if (FENCE_CLOSE_RE.test(line)) {
+        const content = fenceLines.join("\n");
+        const processed = processClozeInCode(content, opts);
+        const langAttr = fenceLang ? ` class="language-${fenceLang}"` : "";
+        blocks.push(`<pre><code${langAttr}>${processed}</code></pre>`);
+        inFence = false;
+        continue;
+      }
+      fenceLines.push(line);
+    }
+  }
+
+  // Unclosed fence: treat remaining lines as code content.
+  if (inFence && fenceLines.length) {
+    const content = fenceLines.join("\n");
+    const processed = processClozeInCode(content, opts);
+    const langAttr = fenceLang ? ` class="language-${fenceLang}"` : "";
+    blocks.push(`<pre><code${langAttr}>${processed}</code></pre>`);
+  }
+
+  return {
+    text: outLines.join("\n"),
+    restore: (s: string) => {
+      let r = s;
+      for (let i = 0; i < blocks.length; i++) {
+        r = r.split(`${FENCE_PH}${i}@@`).join(blocks[i]);
+      }
+      return r;
+    },
+  };
+}
+
 function stripInlineMarkdownMarkers(text: string): string {
   return String(text ?? "")
     .replace(/\*\*(.+?)\*\*/g, "$1")
@@ -81,9 +191,19 @@ function renderNestedReadingViewClozeHtml(answer: string): string {
 
 export function buildReadingFlashcardCloze(text: string, mode: "front" | "back"): string {
   const source = String(text || "");
-  if (source.includes("$") || source.includes("\\(") || source.includes("\\[")) {
+
+  // ── Extract code fences before any cloze / markdown processing ──
+  // Fenced blocks are replaced with opaque placeholders, rendered as
+  // <pre><code> HTML (with cloze processing applied to code content),
+  // and restored after all other processing completes.
+  const fenceOpts = mode === "front"
+    ? { blankClass: "learnkit-flashcard-blank", revealClass: "" }
+    : { blankClass: "", revealClass: "learnkit-reading-view-cloze" };
+  const { text: fenceFree, restore: restoreFences } = protectCodeFences(source, fenceOpts);
+
+  if (fenceFree.includes("$") || fenceFree.includes("\\(") || fenceFree.includes("\\[")) {
     const reveal = mode === "back";
-    const clozeHtml = processClozeForMath(source, reveal, null, {
+    const clozeHtml = processClozeForMath(fenceFree, reveal, null, {
       blankClassName: "learnkit-flashcard-blank",
       revealWrapper: (answer) =>
         `<span class="learnkit-reading-view-cloze"><span class="learnkit-cloze-text">${processMarkdownFeatures(answer)}</span></span>`,
@@ -92,16 +212,16 @@ export function buildReadingFlashcardCloze(text: string, mode: "front" | "back")
     // would be destroyed by processMarkdownFeatures' HTML escaping.
     // Protect those tags, process markdown on the surrounding text, then restore.
     const { text: protectedHtml, restore } = protectHtmlTags(clozeHtml);
-    return restore(processMarkdownFeatures(protectedHtml));
+    return restoreFences(restore(processMarkdownFeatures(protectedHtml)));
   }
 
-  const clozeMatches = parseClozeTokens(source).tokens;
+  const clozeMatches = parseClozeTokens(fenceFree).tokens;
   let out = "";
   let last = 0;
 
   for (const match of clozeMatches) {
     if (match.start > last) {
-      out += renderMarkdownTextWithExplicitBreaks(source.slice(last, match.start));
+      out += renderMarkdownTextWithExplicitBreaks(fenceFree.slice(last, match.start));
     }
 
     const resolvedAnswer = resolveNestedClozeAnswers(match.answer).trim();
@@ -121,9 +241,9 @@ export function buildReadingFlashcardCloze(text: string, mode: "front" | "back")
     last = match.end;
   }
 
-  if (last < source.length) {
-    out += renderMarkdownTextWithExplicitBreaks(source.slice(last));
+  if (last < fenceFree.length) {
+    out += renderMarkdownTextWithExplicitBreaks(fenceFree.slice(last));
   }
 
-  return out;
+  return restoreFences(out);
 }

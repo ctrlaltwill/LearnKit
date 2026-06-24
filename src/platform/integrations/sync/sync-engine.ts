@@ -2018,16 +2018,16 @@ export async function syncOneFile(
           }
 
           if (c.type === "cloze") {
-            const cqEsc = escapeDelimiterText(c.clozeText ?? "");
+            const cqEsc = escapeDelimiterText(c.clozeText ?? "", { escapeBackslashes: false });
             canonicalLines.push(`${prefix}CQ ${d} ${cqEsc} ${d}`);
           } else if (c.type === "reversed") {
-            const qEsc = escapeDelimiterText(c.q ?? "");
-            const aEsc = escapeDelimiterText(c.a ?? "");
+            const qEsc = escapeDelimiterText(c.q ?? "", { escapeBackslashes: false });
+            const aEsc = escapeDelimiterText(c.a ?? "", { escapeBackslashes: false });
             canonicalLines.push(`${prefix}RQ ${d} ${qEsc} ${d}`);
             canonicalLines.push(`${prefix}A ${d} ${aEsc} ${d}`);
           } else {
-            const qEsc = escapeDelimiterText(c.q ?? "");
-            const aEsc = escapeDelimiterText(c.a ?? "");
+            const qEsc = escapeDelimiterText(c.q ?? "", { escapeBackslashes: false });
+            const aEsc = escapeDelimiterText(c.a ?? "", { escapeBackslashes: false });
             canonicalLines.push(`${prefix}Q ${d} ${qEsc} ${d}`);
             canonicalLines.push(`${prefix}A ${d} ${aEsc} ${d}`);
           }
@@ -2600,16 +2600,16 @@ export async function syncQuestionBank(plugin: LearnKitPlugin, options?: { syncM
             }
 
             if (c.type === "cloze") {
-              const cqEsc = escapeDelimiterText(c.clozeText ?? "");
+              const cqEsc = escapeDelimiterText(c.clozeText ?? "", { escapeBackslashes: false });
               canonicalLines.push(`${prefix}CQ ${d} ${cqEsc} ${d}`);
             } else if (c.type === "reversed") {
-              const qEsc = escapeDelimiterText(c.q ?? "");
-              const aEsc = escapeDelimiterText(c.a ?? "");
+              const qEsc = escapeDelimiterText(c.q ?? "", { escapeBackslashes: false });
+              const aEsc = escapeDelimiterText(c.a ?? "", { escapeBackslashes: false });
               canonicalLines.push(`${prefix}RQ ${d} ${qEsc} ${d}`);
               canonicalLines.push(`${prefix}A ${d} ${aEsc} ${d}`);
             } else {
-              const qEsc = escapeDelimiterText(c.q ?? "");
-              const aEsc = escapeDelimiterText(c.a ?? "");
+              const qEsc = escapeDelimiterText(c.q ?? "", { escapeBackslashes: false });
+              const aEsc = escapeDelimiterText(c.a ?? "", { escapeBackslashes: false });
               canonicalLines.push(`${prefix}Q ${d} ${qEsc} ${d}`);
               canonicalLines.push(`${prefix}A ${d} ${aEsc} ${d}`);
             }

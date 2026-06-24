@@ -48,7 +48,7 @@ export function unpackApkg(
 ): { db: Uint8Array; media: Map<string, Uint8Array> } {
   const filesRaw = unzipSync(apkgBytes) as unknown;
   if (!filesRaw || typeof filesRaw !== "object") {
-    throw new Error("Invalid .apkg file: unzip failed");
+    throw new Error("Invalid Anki file: unzip failed");
   }
   const files = filesRaw as Record<string, Uint8Array>;
 
@@ -57,7 +57,7 @@ export function unpackApkg(
     (k) => k.endsWith(".anki2") || k.endsWith(".anki21") || k === "collection.anki2",
   );
   if (!dbKey) {
-    throw new Error("Invalid .apkg file: no .anki2 database found");
+    throw new Error("Invalid Anki file: no .anki2 database found");
   }
   const db = files[dbKey];
 

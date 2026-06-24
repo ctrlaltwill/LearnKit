@@ -15,6 +15,37 @@ If that clashes with your note content, you can change it in **Settings -> Flash
 | At sign | `@` |
 | Tilde | `~` |
 | Semicolon | `;` |
+| Custom | Any single non-alphanumeric, non-whitespace Unicode character |
+
+## Custom Delimiter
+
+If the presets above still conflict with your note content, you can enter a
+**Custom** character in the settings dropdown.
+
+The custom delimiter must be:
+
+- **Exactly one character** — not empty, not multiple characters
+- **Non-alphanumeric** — cannot be a letter (A-Z, a-z) or digit (0-9)
+- **Non-whitespace** — cannot be a space, tab, or newline
+
+Valid examples: `⚵`, `§`, `÷`, `¬`, `¶`, `•`, `†`
+
+This is particularly useful when:
+
+- your flashcard content contains code blocks with pipes, at-signs, or tildes
+- you're writing SQL flashcards and need to use semicolons freely
+- another writing pattern makes all four presets awkward to maintain
+
+### Example with `⚵`
+
+```text
+T ⚵ SQL Query ⚵
+Q ⚵ Write a SELECT query to find all users ⚵
+A ⚵
+SELECT * FROM users
+WHERE active = 1;
+⚵
+```
 
 ## When To Change It
 
@@ -72,4 +103,4 @@ Before changing the delimiter globally, try these first:
 
 ---
 
-Last modified: 30/03/2026
+Last modified: 24/06/2026

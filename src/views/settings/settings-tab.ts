@@ -15,6 +15,7 @@ import { DEFAULT_SETTINGS, VIEW_TYPE_SETTINGS, VIEW_TYPE_WIDGET } from "../../pl
 import {
   DELIMITER_OPTIONS,
   DELIMITER_OPTION_TOKENS,
+  isValidDelimiterChar,
   setDelimiter,
   type DelimiterChar,
 } from "../../platform/core/delimiter";
@@ -5631,6 +5632,8 @@ export class LearnKitSettingsTab extends PluginSettingTab {
         }),
       );
 
+    const CUSTOM_DELIMITER_VALUE = "__custom__";
+
     new Setting(wrapper)
       .setName(this._tx("ui.settings.sync.cardDelimiter.name", "Card delimiter"))
       .setDesc(
@@ -5646,14 +5649,65 @@ export class LearnKitSettingsTab extends PluginSettingTab {
         );
       })
       .then((s) => {
+        const currentDelim = this.plugin.settings.indexing.delimiter ?? "|";
+        const isPreset = DELIMITER_OPTIONS.includes(currentDelim);
+
+        const dropdownOptions = [
+          ...DELIMITER_OPTIONS.map((value) => ({ value, label: this._delimiterOptionLabel(value) })),
+          {
+            value: CUSTOM_DELIMITER_VALUE,
+            label: this._tx(
+              "ui.settings.sync.delimiterOptions.custom",
+              "Custom…",
+            ),
+          },
+        ];
+
+        const dropdownValue = isPreset ? currentDelim : CUSTOM_DELIMITER_VALUE;
+
+        // Custom delimiter text input (hidden when a preset is selected)
+        const customInputWrap = s.controlEl.createDiv({ cls: "learnkit-custom-delimiter-input" });
+        const customInput = customInputWrap.createEl("input", {
+          type: "text",
+          cls: "input",
+          attr: { maxlength: 1, placeholder: "⚵" },
+        });
+        customInput.value = isPreset ? "" : currentDelim;
+        if (isPreset) customInputWrap.classList.add("is-hidden");
+
+        customInputWrap.createDiv({
+          cls: "setting-item-description learnkit-custom-delimiter-hint",
+          text: this._tx(
+            "ui.settings.sync.delimiterOptions.customHint",
+            "Enter a single non-alphanumeric, non-whitespace character (e.g. ⚵, §, ÷).",
+          ),
+        });
+
         this._addSimpleSelect(s.controlEl, {
-          options: DELIMITER_OPTIONS.map((value) => ({ value, label: this._delimiterOptionLabel(value) })),
-          separatorAfterIndex: 0,
-          value: this.plugin.settings.indexing.delimiter ?? "|",
+          options: dropdownOptions,
+          separatorAfterIndex: DELIMITER_OPTIONS.length - 1,
+          value: dropdownValue,
           onChange: (v) => {
             void (async () => {
+              if (v === CUSTOM_DELIMITER_VALUE) {
+                customInputWrap.classList.remove("is-hidden");
+                const custom = customInput.value.trim();
+                if (custom && isValidDelimiterChar(custom)) {
+                  const prev = this.plugin.settings.indexing.delimiter ?? "|";
+                  this.plugin.settings.indexing.delimiter = custom;
+                  setDelimiter(custom);
+                  await this.plugin.saveAll();
+                  if (prev !== custom) {
+                    this.queueSettingsNotice("indexing.delimiter", this._noticeLines.cardDelimiter(this._delimiterOptionLabel(custom)));
+                  }
+                }
+                return;
+              }
+
+              customInputWrap.classList.add("is-hidden");
+              customInput.value = "";
               const prev = this.plugin.settings.indexing.delimiter ?? "|";
-              const next = v as DelimiterChar;
+              const next = v;
               this.plugin.settings.indexing.delimiter = next;
               setDelimiter(next);
               await this.plugin.saveAll();
@@ -5663,6 +5717,37 @@ export class LearnKitSettingsTab extends PluginSettingTab {
               }
             })();
           },
+        });
+
+        // Listen for changes on the custom input
+        customInput.addEventListener("input", () => {
+          const raw = customInput.value;
+          if (raw.length > 1) {
+            customInput.value = raw.charAt(raw.length - 1);
+          }
+        });
+
+        customInput.addEventListener("change", () => {
+          void (async () => {
+            const custom = customInput.value.trim();
+            if (!custom) return;
+            if (!isValidDelimiterChar(custom)) {
+              new Notice(
+                this._tx(
+                  "ui.settings.sync.delimiterOptions.customInvalid",
+                  "Custom delimiter must be a single non-alphanumeric, non-whitespace character.",
+                ),
+              );
+              return;
+            }
+            const prev = this.plugin.settings.indexing.delimiter ?? "|";
+            this.plugin.settings.indexing.delimiter = custom;
+            setDelimiter(custom);
+            await this.plugin.saveAll();
+            if (prev !== custom) {
+              this.queueSettingsNotice("indexing.delimiter", this._noticeLines.cardDelimiter(this._delimiterOptionLabel(custom)));
+            }
+          })();
         });
       });
 
@@ -6071,14 +6156,17 @@ export class LearnKitSettingsTab extends PluginSettingTab {
 
   private _delimiterOptionLabel(value: DelimiterChar): string {
     const token = DELIMITER_OPTION_TOKENS[value];
-    const fallback = value === "|"
-      ? "Pipe"
-      : value === "@"
-        ? "At sign"
-        : value === "~"
-          ? "Tilde"
-          : "Semicolon";
-    return `${value}  ${this._tx(token, fallback)}`;
+    if (token) {
+      const fallback = value === "|"
+        ? "Pipe"
+        : value === "@"
+          ? "At sign"
+          : value === "~"
+            ? "Tilde"
+            : "Semicolon";
+      return `${value}  ${this._tx(token, fallback)}`;
+    }
+    return `${value}  ${this._tx(DELIMITER_OPTION_TOKENS.custom, "Custom")}`;
   }
 
   private renderResetSection(wrapper: HTMLElement): void {

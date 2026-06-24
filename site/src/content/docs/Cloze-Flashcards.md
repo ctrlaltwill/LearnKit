@@ -79,6 +79,7 @@ See [Grading](../Grading).
 - Hint syntax must follow the pattern `{{cN::answer::hint}}`.
 - Overlapping or inconsistent numbering can create unexpected flashcard counts.
 - Very large numbers of deletions in one sentence can hurt readability and recall quality.
+- Cloze tokens inside fenced code blocks (``` ... ```) are not currently supported.
 
 ## Related
 

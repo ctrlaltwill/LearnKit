@@ -63,12 +63,12 @@ export default defineConfig({
         {
           icon: "github",
           label: "GitHub",
-          href: "https://github.com/ctrlaltwill/LearnKit-Guide",
+          href: "https://github.com/ctrlaltwill/LearnKit",
         },
       ],
       credits: false,
       editLink: {
-        baseUrl: "https://github.com/ctrlaltwill/LearnKit-Guide/edit/main/",
+        baseUrl: "https://github.com/ctrlaltwill/LearnKit/edit/main/",
       },
       lastUpdated: true,
       pagination: true,

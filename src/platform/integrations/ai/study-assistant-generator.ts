@@ -13,6 +13,7 @@
 
 import type { SproutSettings } from "../../types/settings";
 import { extractIoImageRefs } from "../../image-occlusion/io-helpers";
+import { escapeDelimiterRe, getDelimiter } from "../../core/delimiter";
 import { requestStudyAssistantCompletionDetailed, requestStudyAssistantStreamingCompletion } from "./study-assistant-provider";
 import { buildStudyAssistantHiddenPrompt } from "./study-assistant-hidden-prompts";
 import type {
@@ -226,7 +227,8 @@ function topicsLikelyEquivalent(a: string, b: string): boolean {
 }
 
 function parseDelimitedRow(line: string): { key: string; value: string } | null {
-  const m = String(line || "").match(/^\s*([^|]+?)\s*\|\s*(.*?)\s*(?:\|\s*)?$/);
+  const d = escapeDelimiterRe(getDelimiter());
+  const m = String(line || "").match(new RegExp(`^\\s*([^${d}]+?)\\s*${d}\\s*(.*?)\\s*(?:${d}\\s*)?$`, "u"));
   if (!m) return null;
   const key = String(m[1] || "").trim().toUpperCase();
   const value = coerceString(m[2]);
@@ -1337,7 +1339,8 @@ function toIoOcclusionsArray(value: unknown): NonNullable<StudyAssistantSuggesti
 }
 
 function rowHasKey(rows: string[], key: string): boolean {
-  const re = new RegExp(`^\\s*${key}\\s*\\|`, "i");
+  const d = escapeDelimiterRe(getDelimiter());
+  const re = new RegExp(`^\\s*${key}\\s*${d}`, "iu");
   return rows.some((line) => re.test(String(line ?? "")));
 }
 
@@ -1423,7 +1426,10 @@ function sanitizeSuggestion(raw: unknown): StudyAssistantSuggestion | null {
 
     const hasDeletionInClozeText = hasClozeDeletion(suggestion.clozeText || "");
     const hasDeletionInClozeRows = clozeRows.some((value) => hasClozeDeletion(value));
-    const hasInvalidQaRows = noteRows.some((line) => /^\s*(?:Q|A|RQ)\s*\|/i.test(String(line || "")));
+    const hasInvalidQaRows = noteRows.some((line) => {
+      const d = escapeDelimiterRe(getDelimiter());
+      return new RegExp(`^\\s*(?:Q|A|RQ)\\s*${d}`, "iu").test(String(line || ""));
+    });
 
     // Cloze cards must be true cloze deletions and use CQ rows when noteRows are provided.
     if (!hasDeletionInClozeText && !hasDeletionInClozeRows) return null;
