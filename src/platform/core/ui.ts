@@ -35,13 +35,11 @@ const DYNAMIC_PROPS = new Set<string>([
   "--learnkit-popover-top",
 ]);
 
-let sharedStyleSheet: CSSStyleSheet | null = null;
-let dynamicStyleSheet: CSSStyleSheet | null = null;
+let sharedStyleEl: HTMLStyleElement | null = null;
+let dynamicStyleEl: HTMLStyleElement | null = null;
 
-function supportsConstructedSheets(): boolean {
-  return hasDom
-    && typeof CSSStyleSheet !== "undefined"
-    && Array.isArray((activeDocument as Document & { adoptedStyleSheets?: CSSStyleSheet[] }).adoptedStyleSheets);
+function supportsStyleElements(): boolean {
+  return hasDom && typeof activeDocument.head !== "undefined";
 }
 
 const sharedRuleByKey = new Map<string, { className: string; rule: string }>();
@@ -58,17 +56,18 @@ type AppliedProp = { kind: "shared" | "dynamic"; className: string };
 const appliedByEl = new WeakMap<HTMLElement, Map<string, AppliedProp>>();
 
 function ensureStyleEls(): void {
-  if (!supportsConstructedSheets()) return;
-  const doc = activeDocument as Document & { adoptedStyleSheets: CSSStyleSheet[] };
+  if (!supportsStyleElements()) return;
+  const head = activeDocument.head;
 
-  if (!sharedStyleSheet) sharedStyleSheet = new CSSStyleSheet();
-  if (!dynamicStyleSheet) dynamicStyleSheet = new CSSStyleSheet();
-
-  if (!doc.adoptedStyleSheets.includes(sharedStyleSheet)) {
-    doc.adoptedStyleSheets = [...doc.adoptedStyleSheets, sharedStyleSheet];
+  if (!sharedStyleEl || !sharedStyleEl.isConnected) {
+    sharedStyleEl = activeDocument.createElement("style");
+    sharedStyleEl.setAttribute("data-learnkit-style", "shared");
+    head.appendChild(sharedStyleEl);
   }
-  if (!doc.adoptedStyleSheets.includes(dynamicStyleSheet)) {
-    doc.adoptedStyleSheets = [...doc.adoptedStyleSheets, dynamicStyleSheet];
+  if (!dynamicStyleEl || !dynamicStyleEl.isConnected) {
+    dynamicStyleEl = activeDocument.createElement("style");
+    dynamicStyleEl.setAttribute("data-learnkit-style", "dynamic");
+    head.appendChild(dynamicStyleEl);
   }
 }
 
@@ -96,7 +95,7 @@ function buildRule(className: string, decls: CssDecls): string {
 
 export function cssClassForProps(decls: Record<string, CssPropValue>): string {
   if (!hasDom) return "";
-  if (!supportsConstructedSheets()) return "";
+  if (!supportsStyleElements()) return "";
   ensureStyleEls();
 
   const norm = normalizeDecls(decls);
@@ -128,12 +127,12 @@ function scheduleFlush(): void {
 function flushCss(): void {
   ensureStyleEls();
 
-  if (sharedCssDirty && sharedStyleSheet) {
+  if (sharedCssDirty && sharedStyleEl) {
     sharedCssDirty = false;
-    sharedStyleSheet.replaceSync(Array.from(sharedRuleByKey.values()).map((x) => x.rule).join("\n"));
+    sharedStyleEl.textContent = Array.from(sharedRuleByKey.values()).map((x) => x.rule).join("\n");
   }
 
-  if (dynCssDirty && dynamicStyleSheet) {
+  if (dynCssDirty && dynamicStyleEl) {
     dynCssDirty = false;
     // prune disconnected refs while building
     const rules: string[] = [];
@@ -147,7 +146,7 @@ function flushCss(): void {
       for (const [k, v] of entry.decls) obj[k] = v;
       rules.push(buildRule(entry.className, obj));
     }
-    dynamicStyleSheet.replaceSync(rules.join("\n"));
+    dynamicStyleEl.textContent = rules.join("\n");
   }
 }
 
@@ -177,7 +176,7 @@ function ensureDynEntry(el: HTMLElement): DynEntry {
 
 function applyCssProp(el: HTMLElement, prop: string, value: CssPropValue): void {
   if (!hasDom) return;
-  if (!supportsConstructedSheets()) {
+  if (!supportsStyleElements()) {
     const nextVal = value === null || value === undefined ? null : String(value);
     if (nextVal === null) el.style.removeProperty(prop);
     else el.style.setProperty(prop, nextVal);

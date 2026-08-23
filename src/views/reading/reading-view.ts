@@ -360,23 +360,18 @@ function deriveTextForDark(lightHex: string): string {
    Dynamic style injection
    ========================= */
 
-type AdoptedStyleSheetsDocument = Document & { adoptedStyleSheets?: CSSStyleSheet[] };
+let readingDynamicStyleEl: HTMLStyleElement | null = null;
 
-let readingDynamicStyleSheet: CSSStyleSheet | null = null;
+function getReadingDynamicStyleSheet(): HTMLStyleElement | null {
+  if (typeof activeDocument === 'undefined') return null;
 
-function getReadingDynamicStyleSheet(): CSSStyleSheet | null {
-  if (typeof activeDocument === 'undefined' || typeof CSSStyleSheet === 'undefined') return null;
+  if (readingDynamicStyleEl && readingDynamicStyleEl.isConnected) return readingDynamicStyleEl;
 
-  if (readingDynamicStyleSheet) return readingDynamicStyleSheet;
-
-  const doc = activeDocument as AdoptedStyleSheetsDocument;
-  const existing = doc.adoptedStyleSheets;
-  if (!Array.isArray(existing)) return null;
-
-  const sheet = new CSSStyleSheet();
-  doc.adoptedStyleSheets = [...existing, sheet];
-  readingDynamicStyleSheet = sheet;
-  return readingDynamicStyleSheet;
+  const style = activeDocument.createElement('style');
+  style.setAttribute('data-learnkit-style', 'reading-view');
+  activeDocument.head.appendChild(style);
+  readingDynamicStyleEl = style;
+  return readingDynamicStyleEl;
 }
 
 function normaliseMacroPreset(raw: string | undefined): 'classic' | 'guidebook' | 'flashcards' | 'markdown' | 'custom' {
@@ -431,7 +426,7 @@ export function syncReadingViewStyles(): void {
   if (!styleSheet) return;
 
   if (!enabled) {
-    styleSheet.replaceSync("");
+    styleSheet.textContent = "";
     return;
   }
 
@@ -581,7 +576,7 @@ export function syncReadingViewStyles(): void {
 
   // ── Update dynamic stylesheet ──
   // For static CSS, use the main styles.css file.
-  styleSheet.replaceSync(css);
+  styleSheet.textContent = css;
 }
 
 /* =========================
@@ -1025,13 +1020,10 @@ export function teardownReadingView(): void {
   sproutPluginRef = null;
   delete (window as unknown as Record<string, unknown>).sproutApplyMasonryGrid;
   // Detach dynamic reading stylesheet
-  if (readingDynamicStyleSheet) {
-    const doc = activeDocument as AdoptedStyleSheetsDocument;
-    if (Array.isArray(doc.adoptedStyleSheets)) {
-      doc.adoptedStyleSheets = doc.adoptedStyleSheets.filter((sheet) => sheet !== readingDynamicStyleSheet);
-    }
+  if (readingDynamicStyleEl) {
+    readingDynamicStyleEl.remove();
   }
-  readingDynamicStyleSheet = null;
+  readingDynamicStyleEl = null;
 }
 
 function setupDebouncedMutationObserver() {

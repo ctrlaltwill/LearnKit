@@ -59,6 +59,7 @@ import type { CardState } from "../../platform/core/store";
 
 import { deepClone, clampInt } from "./utilities";
 import { matchesScope } from "../../engine/indexing/scope-match";
+import { pathMatchesMetadataScope } from "../shared/scope-metadata";
 
 import * as IO from "../../platform/image-occlusion/image-occlusion-index";
 import {
@@ -956,6 +957,10 @@ export class SproutReviewerView extends ItemView {
       if (scope.type === "group") {
         const groups = Array.isArray(c.groups) ? c.groups : [];
         if (!groups.some((g) => String(g || "") === scope.key)) continue;
+      } else if (scope.type === "tag" || scope.type === "property") {
+        const path = String((c).sourceNotePath || "");
+        if (!path) continue;
+        if (!pathMatchesMetadataScope(this.app, path, scope)) continue;
       } else {
         const path = String(
           (c).sourceNotePath || "",
@@ -990,6 +995,10 @@ export class SproutReviewerView extends ItemView {
       if (scope.type === "group") {
         const groups = Array.isArray(card.groups) ? card.groups : [];
         if (!groups.some((g) => String(g || "") === scope.key)) continue;
+      } else if (scope.type === "tag" || scope.type === "property") {
+        const path = String(card.sourceNotePath || "").trim();
+        if (!path) continue;
+        if (!pathMatchesMetadataScope(this.app, path, scope)) continue;
       } else {
         const path = String(card.sourceNotePath || "").trim();
         if (!path) continue;

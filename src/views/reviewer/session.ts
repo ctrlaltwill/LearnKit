@@ -17,6 +17,7 @@ import type { CardRecord } from "../../platform/core/store";
 import type { ReviewLogEntry } from "../../platform/types/review";
 import type { CardState } from "../../platform/types/scheduler";
 import { getGroupIndex, normaliseGroupPath } from "../../engine/indexing/group-index";
+import { pathMatchesMetadataScope } from "../shared/scope-metadata";
 
 export type SessionBuildOptions = {
   ignoreDailyReviewLimit?: boolean;
@@ -180,6 +181,13 @@ function resolveCardsInScope(plugin: LearnKitPlugin, scope: Scope): CardRecord[]
   }
 
   // folder/note
+  if (scope.type === "tag" || scope.type === "property") {
+    const raw = plugin.store
+      .getAllCards()
+      .filter((c) => pathMatchesMetadataScope(plugin.app, c.sourceNotePath, scope));
+    return filterReviewable(raw);
+  }
+
   const raw = plugin.store.getAllCards().filter((c) => inScope(scope, c.sourceNotePath));
   return filterReviewable(raw);
 }

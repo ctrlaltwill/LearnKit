@@ -11,7 +11,9 @@
  *  - encodePropertyPair
  */
 
-import type { App, TFile } from "obsidian";
+import { TFile, type App } from "obsidian";
+
+import type { Scope } from "../reviewer/types";
 
 export type PropertyPair = {
   key: string;
@@ -142,6 +144,30 @@ export function decodePropertyPair(raw: string): PropertyPair | null {
   const value = normalizePropertyValue(decodeURIComponent(source.slice(eq + 1)));
   if (!key || !value) return null;
   return { key, value };
+}
+
+/**
+ * Returns true when `path` belongs to a tag- or property-scoped plan.
+ * Non-metadata scopes (vault/folder/note/group) return false — those are
+ * handled by path-based matchers elsewhere.
+ */
+export function pathMatchesMetadataScope(app: App, path: string, scope: Scope): boolean {
+  if (scope.type !== "tag" && scope.type !== "property") return false;
+
+  const abs = app.vault.getAbstractFileByPath(path);
+  if (!(abs instanceof TFile)) return false;
+
+  if (scope.type === "tag") {
+    const expected = String(scope.key || "").trim().toLowerCase().replace(/^#+/, "");
+    if (!expected) return false;
+    return extractFileTags(app, abs).has(expected);
+  }
+
+  const target = decodePropertyPair(scope.key);
+  if (!target) return false;
+  return extractFilePropertyPairs(app, abs).some(
+    (pair) => pair.key === target.key && pair.value === target.value,
+  );
 }
 
 export function collectVaultTagAndPropertyPairs(app: App, files: TFile[]): {
