@@ -9,7 +9,7 @@
 import { setIcon } from "obsidian";
 
 import { createOqReorderPreviewController } from "../../../platform/core/oq-reorder-preview";
-import { el, replaceChildrenWithHTML, setCssProps } from "../../../platform/core/ui";
+import { el, renderLatexMathInElement, replaceChildrenWithHTML, setCssProps } from "../../../platform/core/ui";
 import { hydrateRenderedMathCloze, renderClozeFront } from "../../reviewer/question-cloze";
 
 import { getWidgetMcqDisplayOrder, isClozeLike } from "../core/widget-helpers";
@@ -441,6 +441,7 @@ function renderClozeCard(
       );
       html = restoreFences(html);
       replaceChildrenWithHTML(clozeContent, html);
+      renderLatexMathInElement(clozeContent);
       hydrateRenderedMathCloze(clozeContent, text, reveal, targetIndex, clozeOpts);
     });
     body.appendChild(clozeEl);

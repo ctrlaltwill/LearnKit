@@ -2,6 +2,13 @@
 
 All notable changes to LearnKit are summarized here.
 
+## 1.8.0 (2026-08-31)
+
+### Fixed
+- Plugin load crash on Obsidian 1.13+ (`NotAllowedError` on `adoptedStyleSheets`) — dynamic styles are now injected via `<style>` elements instead of constructed stylesheets.
+- Tag- and property-scoped study plans now correctly show their flashcards (previously opened an empty reviewer).
+- Math inside cloze answers (e.g. `{{c1::$\frac{a}{b}$}}`) now renders on the answer side instead of showing raw LaTeX.
+
 ## 1.7.0 (2026-06-24)
 
 ### Added
@@ -22,10 +29,6 @@ All notable changes to LearnKit are summarized here.
 - Stale i18n audio keys cleaned from en-gb, en-us, zh-cn locales.
 - Hardcoded hint label in parse error modal now routed through translation system.
 - Lint: 8 errors fixed (style assignments, innerHTML usage, unnecessary assertion).
-
-## Unreleased
-
-- Draft release notes for `1.2.0`: see [release/1.2.0/RELEASE_NOTES.md](release/1.2.0/RELEASE_NOTES.md)
 
 ## 1.5.3 (2026-05-16)
 

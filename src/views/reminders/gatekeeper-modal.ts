@@ -11,7 +11,7 @@ import type { CardRecord } from "../../platform/core/store";
 import type LearnKitPlugin from "../../main";
 import { scopeModalToWorkspace } from "../../platform/modals/modal-utils";
 import { createOqReorderPreviewController } from "../../platform/core/oq-reorder-preview";
-import { replaceChildrenWithHTML, setCssProps } from "../../platform/core/ui";
+import { renderLatexMathInElement, replaceChildrenWithHTML, setCssProps } from "../../platform/core/ui";
 import { hydrateRenderedMathCloze, renderClozeFront } from "../../views/reviewer/question-cloze";
 import { SproutMarkdownHelper } from "../../views/reviewer/markdown-render";
 import { openSproutImageZoom } from "../../views/reviewer/zoom";
@@ -694,6 +694,7 @@ export class GatekeeperModal extends Modal {
         );
         html = restoreFences(html);
       replaceChildrenWithHTML(clozeEl, html);
+        renderLatexMathInElement(clozeEl);
         hydrateRenderedMathCloze(clozeEl, text, this.reveal, targetIndex, clozeOpts);
       });
       body.appendChild(clozeEl);

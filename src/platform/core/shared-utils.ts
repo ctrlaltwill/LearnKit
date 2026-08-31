@@ -641,7 +641,7 @@ export function processClozeForMath(
     } else {
       const inMath = isInsideMath(match.index);
       if (reveal) {
-        if (inMath) {
+        if (inMath || textContainsMath(answer)) {
           result += answer;
         } else if (options?.revealWrapper) {
           result += options.revealWrapper(answer);

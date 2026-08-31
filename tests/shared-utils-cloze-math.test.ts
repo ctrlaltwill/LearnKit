@@ -115,4 +115,20 @@ $$`);
 \end{bmatrix}
 $$`);
   });
+
+  it("reveals an answer that contains its own inline math as raw math (no HTML span)", () => {
+    const back = processClozeForMath("{{c1::$\\frac{a}{b}$}}", true, null);
+    expect(back).toBe("$\\frac{a}{b}$");
+  });
+
+  it("still blanks (front side) an answer that contains its own math", () => {
+    const front = processClozeForMath("{{c1::$\\frac{a}{b}$}}", false, null);
+    expect(front).toContain("hidden-cloze");
+    expect(front).not.toContain("frac");
+  });
+
+  it("reveals an answer that contains paren-delimited math as raw math", () => {
+    const back = processClozeForMath("{{c1::\\(x^2\\)}}", true, null);
+    expect(back).toBe("\\(x^2\\)");
+  });
 });

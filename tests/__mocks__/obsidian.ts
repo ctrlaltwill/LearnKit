@@ -68,6 +68,22 @@ export class MarkdownRenderer {
   static render() { return Promise.resolve(); }
 }
 
+export function setIcon(_parent: HTMLElement, _iconId: string): void {}
+
+/** Renders a LaTeX source into a placeholder element tagged with `data-math`
+ *  so jsdom tests can assert that math was typeset without a real MathJax runtime. */
+export function renderMath(source: string, display: boolean): HTMLElement {
+  const doc = (globalThis as any).activeDocument as Document | undefined;
+  const el = (doc?.createElement?.("span") ?? {}) as HTMLElement;
+  el.setAttribute?.("data-math", source);
+  el.setAttribute?.("data-display", String(display));
+  return el;
+}
+
+export function finishRenderMath(): Promise<void> {
+  return Promise.resolve();
+}
+
 export async function requestUrl(_params: any): Promise<any> {
   throw new Error("requestUrl is not mocked – use vi.mocked(requestUrl) in your test");
 }
