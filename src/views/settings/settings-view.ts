@@ -82,6 +82,8 @@ export class LearnKitSettingsView extends ItemView {
   /** Window-level listener cleanups registered by active tab content. */
   private _windowListenerCleanups: Array<() => void> = [];
   private _guideDropdownPortal: HTMLDivElement | null = null;
+  /** Cleanup for the currently-open guide dropdown's document/window listeners. */
+  private _guideDropdownCleanup: (() => void) | null = null;
 
   /**
    * Lazily-created SettingsTab adapter used to call the existing render methods.
@@ -123,6 +125,10 @@ export class LearnKitSettingsView extends ItemView {
       this._releaseComponent?.unload?.();
     } catch (e) { log.swallow("dispose settings header", e); }
     this._clearWindowListeners();
+    try {
+      this._guideDropdownCleanup?.();
+    } catch (e) { log.swallow("dispose guide dropdown", e); }
+    this._guideDropdownCleanup = null;
     this._guideDropdownPortal?.remove();
     this._guideDropdownPortal = null;
     this._header = null;
@@ -874,7 +880,13 @@ export class LearnKitSettingsView extends ItemView {
         const navPageItems: Array<{ item: HTMLButtonElement; pageKey: string }> = [];
         let openDropdownGroup: HTMLDivElement | null = null;
         let openDropdownEl: HTMLDivElement | null = null;
+        /** Hides whichever guide dropdown is currently open (null when none). */
+        let closeOpenGuideDropdown: (() => void) | null = null;
 
+        // Reuse a single body-portal per render: drop any portal left behind by a
+        // previous render so hidden fixed popovers never accumulate on <body>.
+        this._guideDropdownPortal?.remove();
+        this._guideDropdownPortal = null;
         const dropdownPortal = activeDocument.createElement("div");
         dropdownPortal.className = "learnkit";
         activeDocument.body.appendChild(dropdownPortal);
@@ -987,7 +999,7 @@ export class LearnKitSettingsView extends ItemView {
 
           const SAFE_MARGIN = 10;
 
-          const show = () => {
+          const place = () => {
             const navRect = nav.getBoundingClientRect();
             const triggerRect = btn.getBoundingClientRect();
             const dropdownW = Math.max(224, dropdown.scrollWidth);
@@ -1002,10 +1014,60 @@ export class LearnKitSettingsView extends ItemView {
               dropUp: false,
               gap: 6,
             });
+          };
+
+          let cleanup: (() => void) | null = null;
+
+          const show = () => {
+            // Attach first, reveal, then place on the next frame — the same body-portal
+            // lifecycle as browser-dropdowns. Placing while the element is still hidden
+            // (or detached) can mis-measure and mis-position fixed popovers.
+            dropdownPortal.appendChild(dropdown);
             dropdown.classList.add("is-visible");
             btn.setAttribute("aria-expanded", "true");
+            closeOpenGuideDropdown = hide;
             openDropdownGroup = group;
             openDropdownEl = dropdown;
+
+            window.requestAnimationFrame(() => place());
+
+            const onResizeOrScroll = () => place();
+
+            const onDocPointerDown = (ev: PointerEvent) => {
+              const target = ev.target as Node | null;
+              if (!target) return;
+              if (group.contains(target) || dropdown.contains(target)) return;
+              hide();
+            };
+
+            const onDocKeydown = (ev: KeyboardEvent) => {
+              if (ev.key !== "Escape") return;
+              ev.preventDefault();
+              ev.stopPropagation();
+              hide();
+              btn.focus();
+            };
+
+            window.addEventListener("resize", onResizeOrScroll, true);
+            window.addEventListener("scroll", onResizeOrScroll, true);
+
+            // Register outside-dismiss listeners on the next tick so the opening
+            // tap/click can never immediately dismiss the menu. The previous
+            // focusout-based dismiss fired right after open on Windows touch,
+            // where focusing the button moved focus away (relatedTarget = null).
+            const tid = window.setTimeout(() => {
+              activeDocument.addEventListener("pointerdown", onDocPointerDown, true);
+              activeDocument.addEventListener("keydown", onDocKeydown, true);
+            }, 0);
+
+            cleanup = () => {
+              window.clearTimeout(tid);
+              window.removeEventListener("resize", onResizeOrScroll, true);
+              window.removeEventListener("scroll", onResizeOrScroll, true);
+              activeDocument.removeEventListener("pointerdown", onDocPointerDown, true);
+              activeDocument.removeEventListener("keydown", onDocKeydown, true);
+            };
+            this._guideDropdownCleanup = cleanup;
           };
 
           const hide = () => {
@@ -1013,6 +1075,20 @@ export class LearnKitSettingsView extends ItemView {
             btn.setAttribute("aria-expanded", "false");
             if (openDropdownGroup === group) openDropdownGroup = null;
             if (openDropdownEl === dropdown) openDropdownEl = null;
+            if (closeOpenGuideDropdown === hide) closeOpenGuideDropdown = null;
+
+            try {
+              cleanup?.();
+            } catch (e) {
+              log.swallow("guide dropdown cleanup", e);
+            }
+            cleanup = null;
+            this._guideDropdownCleanup = null;
+
+            // Detach while hidden so no invisible fixed overlay lingers on <body>.
+            if (dropdown.parentNode === dropdownPortal) {
+              dropdownPortal.removeChild(dropdown);
+            }
           };
 
           btn.addEventListener("click", (ev) => {
@@ -1022,32 +1098,9 @@ export class LearnKitSettingsView extends ItemView {
               hide();
               return;
             }
-            if (openDropdownGroup && openDropdownGroup !== group) {
-              const openDropdown = openDropdownEl;
-              const openBtn = openDropdownGroup.querySelector<HTMLButtonElement>(".learnkit-guide-nav-btn");
-              if (openDropdown) openDropdown.classList.remove("is-visible");
-              if (openBtn) openBtn.setAttribute("aria-expanded", "false");
-              openDropdownGroup = null;
-              openDropdownEl = null;
-            }
+            closeOpenGuideDropdown?.();
             show();
           });
-
-          group.addEventListener("keydown", (ev) => {
-            if (ev.key === "Escape") {
-              hide();
-              btn.focus();
-            }
-          });
-
-          group.addEventListener("focusout", (ev) => {
-            const next = ev.relatedTarget as Node | null;
-            if (!next || (!group.contains(next) && !dropdown.contains(next))) {
-              hide();
-            }
-          });
-
-          dropdownPortal.appendChild(dropdown);
         }
 
           group.appendChild(btn);
@@ -1188,25 +1241,13 @@ export class LearnKitSettingsView extends ItemView {
         layout.addEventListener("click", (ev) => {
           const target = ev.target as Node | null;
           if (!target || !openDropdownGroup || openDropdownGroup.contains(target) || openDropdownEl?.contains(target)) return;
-          const openDropdown = openDropdownEl;
-          const openBtn = openDropdownGroup.querySelector<HTMLButtonElement>(".learnkit-guide-nav-btn");
-          if (openDropdown) openDropdown.classList.remove("is-visible");
-          if (openBtn) openBtn.setAttribute("aria-expanded", "false");
-          openDropdownGroup = null;
-          openDropdownEl = null;
+          closeOpenGuideDropdown?.();
         });
 
         for (const { item, pageKey } of navPageItems) {
           item.addEventListener("click", () => {
             if (pageKey === this._activeGuidePage) return;
-            if (openDropdownGroup) {
-              const openDropdown = openDropdownEl;
-              const openBtn = openDropdownGroup.querySelector<HTMLButtonElement>(".learnkit-guide-nav-btn");
-              if (openDropdown) openDropdown.classList.remove("is-visible");
-              if (openBtn) openBtn.setAttribute("aria-expanded", "false");
-              openDropdownGroup = null;
-              openDropdownEl = null;
-            }
+            closeOpenGuideDropdown?.();
             this._activeGuidePage = pageKey;
             void renderSelectedPage(true);
           });

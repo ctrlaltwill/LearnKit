@@ -21,7 +21,7 @@ import {
   makeTextButton, applyWidgetActionButtonStyles, applyWidgetHoverDarken, attachWidgetMoreMenu, } from "../ui/widget-buttons";
 import { processMarkdownFeatures, setupInternalLinkHandlers } from "./markdown";
 import { openCardAnchorInNote } from "../../../platform/core/open-card-anchor";
-import { processClozeForMath, convertInlineDisplayMath, forceSingleLineDisplayMathInline } from "../../../platform/core/shared-utils";
+import { processClozeForMath, convertInlineDisplayMath, forceSingleLineDisplayMathInline, escapeAngleBracketsOutsideMathAndCode } from "../../../platform/core/shared-utils";
 import { protectCodeFences, FENCE_PH } from "../../reading/reading-flashcard-cloze";
 import { MarkdownView } from "obsidian";
 import { t } from "../../../platform/translations/translator";
@@ -277,31 +277,9 @@ export function renderWidgetSession(view: WidgetViewLike, root: HTMLElement): vo
 /*  Card-type renderers (private to this module)                       */
 /* ================================================================== */
 
-/** Escape angle brackets outside code blocks to prevent HTML tag stripping */
+/** Escape angle brackets outside math and code blocks to prevent HTML tag stripping */
 function escapeAngleBracketsOutsideCode(text: string): string {
-  const codePlaceholders: string[] = [];
-  const CODE_PH = "@@SPROUTCODE";
-
-  // Extract inline code blocks
-  const withCodePlaceholders = text.replace(/`([^`]*)`/g, (match) => {
-    const idx = codePlaceholders.length;
-    codePlaceholders.push(match);
-    return `${CODE_PH}${idx}@@`;
-  });
-
-  // Escape angle brackets in non-code content
-  let result = withCodePlaceholders
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-
-  // Restore code blocks
-  if (codePlaceholders.length) {
-    result = result.replace(/@@SPROUTCODE(\d+)@@/g, (_m, idx) => {
-      return codePlaceholders[Number(idx)] ?? _m;
-    });
-  }
-
-  return result;
+  return escapeAngleBracketsOutsideMathAndCode(text);
 }
 
 function renderBasicCard(

@@ -2,6 +2,13 @@
 
 All notable changes to LearnKit are summarized here.
 
+## 1.8.1 (2026-09-06)
+
+### Fixed
+- Math now parses/renders correctly in more cases: LaTeX with angle brackets, `|` inside multi-line display math, and delimiter handling inside math blocks.
+- Guide navigation dropdowns now open, position, and dismiss reliably.
+- Deck and group lists now sort naturally ("2" before "10").
+
 ## 1.8.0 (2026-08-31)
 
 ### Fixed

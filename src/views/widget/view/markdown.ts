@@ -11,7 +11,7 @@
 
 import { log } from "../../../platform/core/logger";
 import type { App } from "obsidian";
-import { convertInlineDisplayMath } from "../../../platform/core/shared-utils";
+import { convertInlineDisplayMath, protectMathRanges } from "../../../platform/core/shared-utils";
 import { replaceCircleFlagTokens, hydrateCircleFlagsInElement } from "../../../platform/flags/flag-tokens";
 
 /* ------------------------------------------------------------------ */
@@ -62,15 +62,7 @@ export function processMarkdownFeatures(text: string, opts?: { imageEmbeds?: boo
   // LaTeX delimiters contain characters like _ * ^ that conflict with
   // markdown formatting rules. We replace math blocks with placeholders,
   // apply markdown formatting to non-math text, then restore the math.
-  const mathPlaceholders: string[] = [];
-  const MATH_PH = "@@SPROUTMATH";
-
-  const mathBlockRe = /\$\$[\s\S]+?\$\$|(?<!\$)\$(?!\$)[^\s$](?:[^$]*[^\s$])?\$(?!\$)|\\\([\s\S]+?\\\)|\\\[[\s\S]+?\\\]/g;
-  const withPlaceholders = source.replace(mathBlockRe, (match) => {
-    const idx = mathPlaceholders.length;
-    mathPlaceholders.push(match);
-    return `${MATH_PH}${idx}@@`;
-  });
+  const { text: withPlaceholders, restore: restoreMath } = protectMathRanges(source);
 
   // ── HTML-escape all text content BEFORE any tag-generating processing ──
   // This ensures literal < and > (e.g. "git reset <commit-sha>") survive
@@ -118,11 +110,7 @@ export function processMarkdownFeatures(text: string, opts?: { imageEmbeds?: boo
   result = replaceCircleFlagTokens(result);
 
   // ── Restore math blocks ──
-  if (mathPlaceholders.length) {
-    result = result.replace(/@@SPROUTMATH(\d+)@@/g, (_m, idx) => {
-      return mathPlaceholders[Number(idx)] ?? _m;
-    });
-  }
+  result = restoreMath(result);
 
   return result;
 }

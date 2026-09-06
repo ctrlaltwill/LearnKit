@@ -7,6 +7,7 @@
  * single source of truth — all other files should import from here.
  *
  * @exports clearNode          — Remove all children from a DOM node.
+ * @exports naturalCompare     — Natural (numeric-aware) string comparison for sorting.
  * @exports titleCaseToken     — Title-case a single word.
  * @exports titleCaseSegment   — Title-case a path segment (handles hyphens/underscores/spaces).
  * @exports normalizeGroupPathInput — Normalize a slash-delimited group path string.
@@ -29,6 +30,27 @@
 export function clearNode(node: HTMLElement | null): void {
   if (!node) return;
   while (node.firstChild) node.removeChild(node.firstChild);
+}
+
+// ────────────────────────────────────────────
+// Natural (numeric-aware) sorting
+// ────────────────────────────────────────────
+
+const naturalCollator = new Intl.Collator(undefined, { numeric: true });
+
+/**
+ * Compare two strings using natural (numeric-aware) collation, so that
+ * "1." < "2." < "10." < "11." rather than lexicographic
+ * "1." < "10." < "11." < "2.".
+ *
+ * Backed by a single reusable `Intl.Collator` instance (recommended over
+ * per-call `localeCompare` when sorting large arrays). Numeric-only: case and
+ * accent handling match the default `localeCompare` behaviour.
+ *
+ * @example naturalCompare("10.", "2.") // 1
+ */
+export function naturalCompare(a: string, b: string): number {
+  return naturalCollator.compare(a, b);
 }
 
 // ────────────────────────────────────────────
@@ -340,6 +362,160 @@ function buildMathRangeChecker(text: string): (pos: number) => boolean {
 
   if (!ranges.length) return () => false;
   return (pos: number) => ranges.some(([s, e]) => pos >= s && pos < e);
+}
+
+/**
+ * Collect all math ranges in `text` — display math (`$$…$$`, `\[…\]`) and
+ * explicit inline math (`\(…\)`), plus single-dollar inline math via the
+ * dedicated scanner. Ranges are sorted by start (longest first on ties) and
+ * de-overlapped so callers can safely tokenise the string.
+ */
+export function collectMathRanges(text: string): Array<[number, number]> {
+  const src = String(text ?? "");
+  if (!src) return [];
+
+  const ranges: Array<[number, number]> = [];
+  MATH_DELIM_RE.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = MATH_DELIM_RE.exec(src)) !== null) {
+    if (m.index === MATH_DELIM_RE.lastIndex) MATH_DELIM_RE.lastIndex += 1;
+    ranges.push([m.index, m.index + m[0].length]);
+  }
+
+  ranges.push(...collectInlineDollarMathRanges(src, ranges));
+
+  if (!ranges.length) return [];
+
+  ranges.sort((a, b) =>
+    a[0] !== b[0] ? a[0] - b[0] : (b[1] - b[0]) - (a[1] - a[0]),
+  );
+
+  const merged: Array<[number, number]> = [];
+  let [curStart, curEnd] = ranges[0];
+  for (let i = 1; i < ranges.length; i += 1) {
+    const [s, e] = ranges[i];
+    if (s < curEnd) {
+      curEnd = Math.max(curEnd, e);
+    } else {
+      merged.push([curStart, curEnd]);
+      curStart = s;
+      curEnd = e;
+    }
+  }
+  merged.push([curStart, curEnd]);
+  return merged;
+}
+
+export interface MathSegment {
+  start: number;
+  end: number;
+  /** Inner LaTeX source with delimiters removed. */
+  source: string;
+  /** Whether the segment should render as display (block) math. */
+  display: boolean;
+}
+
+/**
+ * Collect every math range in `text` and classify it as inline or display,
+ * extracting the inner source. Ranges come pre-sorted and de-overlapped from
+ * {@link collectMathRanges}, so callers can iterate them directly.
+ */
+export function collectMathSegments(text: string): MathSegment[] {
+  const src = String(text ?? "");
+  const segments: MathSegment[] = [];
+  for (const [start, end] of collectMathRanges(src)) {
+    const full = src.slice(start, end);
+    if (full.startsWith("$$") && full.endsWith("$$") && full.length >= 4) {
+      segments.push({ start, end, source: full.slice(2, -2), display: true });
+    } else if (full.startsWith("\\[") && full.endsWith("\\]")) {
+      segments.push({ start, end, source: full.slice(2, -2), display: true });
+    } else if (full.startsWith("\\(") && full.endsWith("\\)")) {
+      segments.push({ start, end, source: full.slice(2, -2), display: false });
+    } else if (full.startsWith("$") && full.endsWith("$")) {
+      segments.push({ start, end, source: full.slice(1, -1), display: false });
+    }
+  }
+  return segments;
+}
+
+export interface MathProtection {
+  /** The text with math ranges replaced by `@@SPROUTMATH{idx}@@` placeholders. */
+  text: string;
+  /** Restore placeholders (which may have been HTML-transformed) back to raw math. */
+  restore: (html: string) => string;
+}
+
+/**
+ * Replace every math range with an `@@SPROUTMATH{idx}@@` placeholder and return
+ * a restorer. This is the shared "island parsing" helper used before any
+ * HTML-escaping or formatting step so LaTeX (`<`, `>`, `_`, `*`, etc.) is never
+ * corrupted.
+ */
+export function protectMathRanges(text: string): MathProtection {
+  const src = String(text ?? "");
+  const ranges = collectMathRanges(src);
+  if (!ranges.length) {
+    return { text: src, restore: (html: string) => html };
+  }
+
+  const placeholders: string[] = [];
+  let out = "";
+  let cursor = 0;
+  for (const [s, e] of ranges) {
+    out += src.slice(cursor, s);
+    const idx = placeholders.length;
+    placeholders.push(src.slice(s, e));
+    out += `@@SPROUTMATH${idx}@@`;
+    cursor = e;
+  }
+  out += src.slice(cursor);
+
+  return {
+    text: out,
+    restore: (html: string) => {
+      if (!placeholders.length) return html;
+      return html.replace(/@@SPROUTMATH(\d+)@@/g, (_m, idx) => {
+        return placeholders[Number(idx)] ?? _m;
+      });
+    },
+  };
+}
+
+/**
+ * Escape `<` and `>` for literal text while leaving inline code spans and math
+ * (inline `$…$`, `$$…$$`, `\(…\)`, `\[…\]`) untouched. Supersedes the old
+ * `escapeAngleBracketsOutsideCode` helpers, which only protected code and so
+ * corrupted LaTeX that legitimately uses angle brackets.
+ */
+export function escapeAngleBracketsOutsideMathAndCode(text: string): string {
+  const src = String(text ?? "");
+  const codePlaceholders: string[] = [];
+
+  // 1. Protect inline code spans FIRST so a `$` inside code is never mistaken
+  //    for a math delimiter.
+  const codeProtected = src.replace(/`([^`]*)`/g, (match) => {
+    const idx = codePlaceholders.length;
+    codePlaceholders.push(match);
+    return `@@SPROUTCODE${idx}@@`;
+  });
+
+  // 2. Protect math ranges (inline $, $$, \(...\), \[...\]).
+  const { text: mathProtected, restore: restoreMath } = protectMathRanges(codeProtected);
+
+  // 3. Escape angle brackets in the remaining literal text.
+  let result = mathProtected.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  // 4. Restore math placeholders.
+  result = restoreMath(result);
+
+  // 5. Restore code placeholders.
+  if (codePlaceholders.length) {
+    result = result.replace(/@@SPROUTCODE(\d+)@@/g, (_m, idx) => {
+      return codePlaceholders[Number(idx)] ?? _m;
+    });
+  }
+
+  return result;
 }
 
 /**

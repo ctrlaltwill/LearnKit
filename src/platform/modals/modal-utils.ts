@@ -347,7 +347,7 @@ import { normalizeGroups } from "../../engine/indexing/group-format";
 
 /** Escape delimiter characters for the Sprout delimited format. */
 export function escapePipeText(s: string): string {
-  return escapeDelimiterText(s);
+  return escapeDelimiterText(s, { escapeBackslashes: false });
 }
 
 export type PipeKey =

@@ -18,8 +18,9 @@ import { log } from "../../platform/core/logger";
 import { t } from "../../platform/translations/translator";
 import {
   clearNode,
-  titleCaseGroupPath,
   expandGroupAncestors,
+  naturalCompare,
+  titleCaseGroupPath,
 } from "../../platform/core/shared-utils";
 
 type Args = {
@@ -522,7 +523,7 @@ export function renderDeckMode(args: Args) {
     clearNode(tbody);
 
     const renderChildren = (node: DeckNode, depth = 0) => {
-      const children = Array.from(node.children.values()).sort((a, b) => a.name.localeCompare(b.name));
+      const children = Array.from(node.children.values()).sort((a, b) => naturalCompare(a.name, b.name));
 
       for (const child of children) {
         const tr = activeDocument.createElement("tr");

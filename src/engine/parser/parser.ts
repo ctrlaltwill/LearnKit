@@ -26,7 +26,7 @@ import {
   escapeDelimiterRe,
 } from "../../platform/core/delimiter";
 import { CARD_ANCHOR_LINE_RE } from "../../platform/core/identity";
-import { validateClozeTextCompat } from "../../platform/core/shared-utils";
+import { collectMathRanges, validateClozeTextCompat } from "../../platform/core/shared-utils";
 import { normalizeGroups } from "../indexing/group-format";
 
 const ANCHOR_RE = CARD_ANCHOR_LINE_RE;
@@ -162,6 +162,49 @@ function computeFenceMask(lines: string[]): boolean[] {
   }
 
   return inside;
+}
+
+/**
+ * Marks lines that are strictly inside a multi-line `$$...$$` display-math
+ * block. The write-side (`pushDelimitedField`) emits `$$` on its own line
+ * when the closing delimiter would otherwise be ambiguous, so content lines
+ * between the opening and closing `$$` must not have their trailing `|`
+ * interpreted as a field terminator (e.g. `\left| … \right|`).
+ */
+function computeMathFenceMask(lines: string[]): boolean[] {
+  const mask = new Array<boolean>(lines.length).fill(false);
+  if (!lines.length) return mask;
+
+  const joined = lines.join("\n");
+  const ranges = collectMathRanges(joined);
+  if (!ranges.length) return mask;
+
+  // Map each line to its character offsets within the joined text.
+  const lineOffsets: Array<[number, number]> = [];
+  let offset = 0;
+  for (const line of lines) {
+    lineOffsets.push([offset, offset + line.length]);
+    offset += line.length + 1; // +1 for the joining newline
+  }
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const [ls, le] = lineOffsets[i];
+    for (const [ms, me] of ranges) {
+      const block = joined.slice(ms, me);
+      // Only display math that spans multiple lines needs fence protection;
+      // single-line math is handled by delimiter escaping/unescaping.
+      if (!block.startsWith("$$") || !block.endsWith("$$") || !block.includes("\n")) {
+        continue;
+      }
+      // Strictly inside the fence (exclude the `$$` delimiter lines).
+      if (ls > ms && le < me) {
+        mask[i] = true;
+        break;
+      }
+    }
+  }
+
+  return mask;
 }
 
 function normaliseMultiline(s: string | null): string | null {
@@ -312,6 +355,7 @@ export function parseCardsFromText(
 ): { cards: ParsedCard[] } {
   let lines = text.split(/\r?\n/);
   const fenceMask = ignoreFences ? computeFenceMask(lines) : new Array<boolean>(lines.length).fill(false);
+  const mathFenceMask = computeMathFenceMask(lines);
   const shorthandMode = options?.shorthandMode ?? "all";
 
   // ── Pre-process: SR cloze deletions → LearnKit shorthand ───────────
@@ -578,7 +622,12 @@ export function parseCardsFromText(
 
     // 2) Inside pipe field
     if (current && pipeField) {
-      const { text: rawText, closed } = stripClosingPipe(line);
+      // A bare `|` inside multi-line $$...$$ display math (e.g. `\left| …
+      // \right|`) is LaTeX, not a field terminator.
+      const closing = mathFenceMask[i]
+        ? { text: line, closed: false }
+        : stripClosingPipe(line);
+      const { text: rawText, closed } = closing;
       const chunk = unescapePipeText(rawText);
       
       // Special handling for MCQ option continuation

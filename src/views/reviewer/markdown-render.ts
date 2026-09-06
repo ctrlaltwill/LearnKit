@@ -8,6 +8,7 @@
 
 import { MarkdownRenderer, TFile, type App, type Component } from "obsidian";
 import { setCssProps } from "../../platform/core/ui";
+import { collectMathRanges } from "../../platform/core/shared-utils";
 
 type Opts = {
   app: App;
@@ -53,31 +54,42 @@ function protectMathLineBreakPairs(body: string): string {
   return out;
 }
 
+function protectMathLineBreakSegment(segment: string): string {
+  if (segment.startsWith("$$") && segment.endsWith("$$")) {
+    const inner = segment.slice(2, -2);
+    return `$$${protectMathLineBreakPairs(inner)}$$`;
+  }
+  if (segment.startsWith("\\[") && segment.endsWith("\\]")) {
+    const inner = segment.slice(2, -2);
+    return `\\[${protectMathLineBreakPairs(inner)}\\]`;
+  }
+  if (segment.startsWith("\\(") && segment.endsWith("\\)")) {
+    const inner = segment.slice(2, -2);
+    return `\\(${protectMathLineBreakPairs(inner)}\\)`;
+  }
+  if (segment.startsWith("$") && segment.endsWith("$")) {
+    const inner = segment.slice(1, -1);
+    return `$${protectMathLineBreakPairs(inner)}$`;
+  }
+  return segment;
+}
+
 export function preserveMathLineBreakBackslashes(md: string): string {
   const source = String(md ?? "");
   if (!source.includes("\\")) return source;
 
-  const mathBlockRe = /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\)|\$[^\r\n$]+\$)/g;
+  const ranges = collectMathRanges(source);
+  if (!ranges.length) return source;
 
-  return source.replace(mathBlockRe, (segment) => {
-    if (segment.startsWith("$$") && segment.endsWith("$$")) {
-      const inner = segment.slice(2, -2);
-      return `$$${protectMathLineBreakPairs(inner)}$$`;
-    }
-    if (segment.startsWith("\\[") && segment.endsWith("\\]")) {
-      const inner = segment.slice(2, -2);
-      return `\\[${protectMathLineBreakPairs(inner)}\\]`;
-    }
-    if (segment.startsWith("\\(") && segment.endsWith("\\)")) {
-      const inner = segment.slice(2, -2);
-      return `\\(${protectMathLineBreakPairs(inner)}\\)`;
-    }
-    if (segment.startsWith("$") && segment.endsWith("$")) {
-      const inner = segment.slice(1, -1);
-      return `$${protectMathLineBreakPairs(inner)}$`;
-    }
-    return segment;
-  });
+  let out = "";
+  let cursor = 0;
+  for (const [start, end] of ranges) {
+    out += source.slice(cursor, start);
+    out += protectMathLineBreakSegment(source.slice(start, end));
+    cursor = end;
+  }
+  out += source.slice(cursor);
+  return out;
 }
 
 export class SproutMarkdownHelper {

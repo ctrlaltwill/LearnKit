@@ -18,6 +18,7 @@ import { syncOneFile } from "../../platform/integrations/sync/sync-engine";
 import type { CardRecord } from "../../platform/core/store";
 import type LearnKitPlugin from "../../main";
 import { queryFirst, replaceChildrenWithHTML, setCssProps } from "../../platform/core/ui";
+import { collectMathRanges, collectMathSegments } from "../../platform/core/shared-utils";
 import { DEFAULT_SETTINGS } from "../../platform/core/default-settings";
 import { resolveImageFile } from "../../platform/image-occlusion/io-helpers";
 import type { StoredIORect } from "../../platform/image-occlusion/image-occlusion-types";
@@ -2430,25 +2431,13 @@ function matchClozeTokensBraceAware(source: string): ClozeMatch[] {
    ========================= */
 
 /**
- * Regex matching LaTeX delimiters in text.
- *   \( ... \)   — inline math
- *   \[ ... \]   — display math
- *   $$ ... $$   — display math
- *   $ ... $     — inline math (no leading/trailing space)
+ * Build a position checker backed by the shared math scanner. Covers
+ * `$$…$$`, `\[…\]`, `\(…\)`, and single-dollar inline `$…$` (including
+ * escaped-dollar handling) so cloze/newline decisions agree with the rest of
+ * the codebase.
  */
-const LATEX_INLINE_RE = /\\\((.+?)\\\)/g;
-const LATEX_DISPLAY_PARENS_RE = /\\\[([\s\S]+?)\\\]/g;
-const LATEX_DISPLAY_DOLLAR_RE = /\$\$([\s\S]+?)\$\$/g;
-const LATEX_INLINE_DOLLAR_RE = /(?<!\$)\$(?!\$)([^\s$](?:[^$]*[^\s$])?)\$(?!\$)/g;
-const LATEX_MATH_BLOCK_RE = /\$\$[\s\S]+?\$\$|\\\([\s\S]+?\\\)|\\\[[\s\S]+?\\\]/g;
-
 function buildLatexMathRangeChecker(text: string): (pos: number) => boolean {
-  const ranges: Array<[number, number]> = [];
-  LATEX_MATH_BLOCK_RE.lastIndex = 0;
-  let m: RegExpExecArray | null;
-  while ((m = LATEX_MATH_BLOCK_RE.exec(text)) !== null) {
-    ranges.push([m.index, m.index + m[0].length]);
-  }
+  const ranges = collectMathRanges(text);
   if (!ranges.length) return () => false;
   return (pos: number) => ranges.some(([start, end]) => pos >= start && pos < end);
 }
@@ -2493,50 +2482,8 @@ function renderLatexInContainer(container: HTMLElement): void {
     const parent = textNode.parentNode;
     if (!parent) continue;
 
-    // Build a list of math segments with their positions
-    const segments: Array<{ start: number; end: number; source: string; display: boolean }> = [];
-
-    const collectMatches = (re: RegExp, display: boolean) => {
-      re.lastIndex = 0;
-      let match: RegExpExecArray | null;
-      while ((match = re.exec(text)) !== null) {
-        const full = match[0] ?? '';
-        const source = match[1] ?? '';
-        if (!full || !source.trim()) continue;
-
-        segments.push({
-          start: match.index,
-          end: match.index + full.length,
-          source,
-          display,
-        });
-
-        if (re.lastIndex === match.index) re.lastIndex += 1;
-      }
-    };
-
-    // Collect in order of priority (display before inline, $$ before $)
-    collectMatches(LATEX_DISPLAY_DOLLAR_RE, true);
-    collectMatches(LATEX_DISPLAY_PARENS_RE, true);
-    collectMatches(LATEX_INLINE_RE, false);
-    collectMatches(LATEX_INLINE_DOLLAR_RE, false);
-
-    if (segments.length === 0) continue;
-
-    // Sort by position and remove overlapping matches (first match wins)
-    segments.sort((a, b) => {
-      if (a.start !== b.start) return a.start - b.start;
-      // Prefer wider match when two regexes start at the same location.
-      return (b.end - b.start) - (a.end - a.start);
-    });
-    const filtered: typeof segments = [];
-    let lastEnd = 0;
-    for (const seg of segments) {
-      if (seg.start >= lastEnd) {
-        filtered.push(seg);
-        lastEnd = seg.end;
-      }
-    }
+    // Collect math segments (inline + display) via the shared scanner.
+    const filtered = collectMathSegments(text).filter((seg) => seg.source.trim());
 
     if (filtered.length === 0) continue;
 

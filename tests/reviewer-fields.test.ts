@@ -19,8 +19,8 @@ import { getCorrectIndices, isMultiAnswerMcq } from "../src/platform/types/card"
 import type { CardRecord } from "../src/platform/core/store";
 
 describe("reviewer fields utilities", () => {
-  it("escapes pipes and backslashes", () => {
-    expect(escapePipes("a|b\\c")).toBe("a\\|b\\\\c");
+  it("escapes pipes and preserves backslashes", () => {
+    expect(escapePipes("a|b\\c")).toBe("a\\|b\\c");
   });
 
   it("splits on unescaped pipes", () => {
@@ -117,5 +117,38 @@ describe("reviewer fields utilities", () => {
 
     expect(getCorrectIndices(legacyLike)).toEqual([1, 2]);
     expect(isMultiAnswerMcq(legacyLike)).toBe(true);
+  });
+
+  it("round-trips LaTeX backslashes in MCQ options", () => {
+    const mcqLatex: CardRecord = {
+      id: "4",
+      type: "mcq",
+      title: null,
+      stem: "Which matrix?",
+      options: [String.raw`$\begin{bmatrix}1\\2\end{bmatrix}$`, "Not this"],
+      correctIndex: 0,
+      q: null,
+      a: null,
+      info: null,
+      groups: null,
+      sourceNotePath: "note.md",
+      sourceStartLine: 1,
+    } as CardRecord;
+
+    const serialized = buildAnswerOrOptionsFor(mcqLatex);
+    const parsed = parseMcqOptionsFromCell(serialized);
+
+    expect(parsed.options).toEqual([
+      String.raw`$\begin{bmatrix}1\\2\end{bmatrix}$`,
+      "Not this",
+    ]);
+    expect(parsed.correctIndex).toBe(0);
+  });
+
+  it("splits on unescaped delimiters while preserving raw backslashes", () => {
+    expect(splitUnescapedPipes(String.raw`\begin|x\|y`)).toEqual([
+      String.raw`\begin`,
+      "x|y",
+    ]);
   });
 });

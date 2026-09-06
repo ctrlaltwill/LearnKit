@@ -21,7 +21,7 @@ import { logFsrsIfNeeded } from "../../views/reviewer/fsrs-log";
 import { log } from "../../platform/core/logger";
 import { processMarkdownFeatures, setupInternalLinkHandlers } from "../../views/widget/view/markdown";
 import { getRatingIntervalPreview } from "../../platform/core/grade-intervals";
-import { processClozeForMath, convertInlineDisplayMath, forceSingleLineDisplayMathInline } from "../../platform/core/shared-utils";
+import { processClozeForMath, convertInlineDisplayMath, forceSingleLineDisplayMathInline, escapeAngleBracketsOutsideMathAndCode } from "../../platform/core/shared-utils";
 import { protectCodeFences, FENCE_PH } from "../reading/reading-flashcard-cloze";
 import { processCircleFlagsInMarkdown, hydrateCircleFlagsInElement } from "../../platform/flags/flag-tokens";
 import { getCorrectIndices, isMultiAnswerMcq, normalizeCardOptions } from "../../platform/types/card";
@@ -995,29 +995,7 @@ export class GatekeeperModal extends Modal {
   }
 
   private escapeAngleBracketsOutsideCode(text: string): string {
-    const codePlaceholders: string[] = [];
-    const CODE_PH = "@@SPROUTCODE";
-
-    // Extract inline code blocks
-    const withCodePlaceholders = text.replace(/`([^`]*)`/g, (match) => {
-      const idx = codePlaceholders.length;
-      codePlaceholders.push(match);
-      return `${CODE_PH}${idx}@@`;
-    });
-
-    // Escape angle brackets in non-code content
-    let result = withCodePlaceholders
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-
-    // Restore code blocks
-    if (codePlaceholders.length) {
-      result = result.replace(/@@SPROUTCODE(\d+)@@/g, (_m, idx) => {
-        return codePlaceholders[Number(idx)] ?? _m;
-      });
-    }
-
-    return result;
+    return escapeAngleBracketsOutsideMathAndCode(text);
   }
 
   private renderTextBlock(el: HTMLElement, text: string, card: CardRecord) {

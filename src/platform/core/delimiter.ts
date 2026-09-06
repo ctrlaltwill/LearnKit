@@ -1,3 +1,5 @@
+import { collectMathRanges } from "./shared-utils";
+
 /**
  * @file src/core/delimiter.ts
  * @summary Centralised delimiter utilities for Sprout's pipe-delimited card format.
@@ -177,9 +179,18 @@ export function unescapeDelimiterText(s: string): string {
   const d = _delim;
   const text = String(s ?? "");
   const collapseEscapedBackslashes = shouldCollapseEscapedBackslashes(text, d);
+  const mathRanges = collectMathRanges(text);
   let out = "";
 
   for (let i = 0; i < text.length;) {
+    const mathRange = mathRanges.find(([start, end]) => i >= start && i < end);
+    if (mathRange) {
+      // Preserve LaTeX (norm bars, backslash commands) verbatim inside math.
+      out += text.slice(i, mathRange[1]);
+      i = mathRange[1];
+      continue;
+    }
+
     if (text[i] !== "\\") {
       out += text[i];
       i += 1;
@@ -268,21 +279,33 @@ export function splitAtDelimiterTerminator(line: string): { content: string; ter
  */
 export function splitUnescapedDelimiters(s: string): string[] {
   const d = _delim;
+  const mathRanges = collectMathRanges(s);
   const out: string[] = [];
   let cur = "";
-  let escape = false;
 
   for (let i = 0; i < s.length; i++) {
-    const ch = s[i];
-
-    if (escape) {
-      cur += ch;
-      escape = false;
+    const mathRange = mathRanges.find(([start, end]) => i >= start && i < end);
+    if (mathRange) {
+      // Keep absolute-value / norm math intact (delimiter chars inside $...$
+      // are LaTeX, not field separators).
+      cur += s.slice(i, mathRange[1]);
+      i = mathRange[1] - 1;
       continue;
     }
 
+    const ch = s[i];
+
     if (ch === "\\") {
-      escape = true;
+      // `\<delim>` is a literal delimiter; every other backslash is
+      // preserved verbatim so raw-mode LaTeX (commands, `\\` row breaks)
+      // round-trips losslessly.
+      const next = s[i + 1];
+      if (next === d) {
+        cur += d;
+        i += 1;
+      } else {
+        cur += ch;
+      }
       continue;
     }
 

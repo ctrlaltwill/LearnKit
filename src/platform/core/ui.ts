@@ -13,6 +13,7 @@
 import createDOMPurify from "dompurify";
 import { finishRenderMath, renderMath, setIcon } from "obsidian";
 import { hydrateCircleFlagsInElement, renderFlagPreviewHtml, replaceCircleFlagTokens, escapeFlagHtml } from "../../platform/flags/flag-tokens";
+import { collectMathSegments, protectMathRanges } from "./shared-utils";
 
 export type CssPropValue = string | number | null | undefined;
 
@@ -309,11 +310,6 @@ export function replaceChildrenWithHTML(el: HTMLElement, html: string): void {
   hydrateCircleFlagsInElement(el);
 }
 
-const LATEX_INLINE_PARENS_RE = /\\\((.+?)\\\)/g;
-const LATEX_DISPLAY_PARENS_RE = /\\\[([\s\S]+?)\\\]/g;
-const LATEX_DISPLAY_DOLLAR_RE = /\$\$([\s\S]+?)\$\$/g;
-const LATEX_INLINE_DOLLAR_RE = /(?<!\$)\$(?!\$)([^\s$](?:[^$]*[^\s$])?)\$(?!\$)/g;
-
 function hasLatexMarkers(text: string): boolean {
   return /\\\(|\\\[|\$\$|\$/.test(text);
 }
@@ -340,49 +336,7 @@ function renderLatexInElement(container: HTMLElement): void {
     const sourceText = node.nodeValue ?? "";
     if (!sourceText) continue;
 
-    type Match = { start: number; end: number; source: string; display: boolean };
-    const matches: Match[] = [];
-
-    const collectMatches = (re: RegExp, display: boolean | ((start: number, end: number) => boolean)) => {
-      re.lastIndex = 0;
-      let match: RegExpExecArray | null;
-      while ((match = re.exec(sourceText)) !== null) {
-        const full = match[0] ?? "";
-        const src = match[1] ?? "";
-        if (!full || !src.trim()) continue;
-        const start = match.index;
-        const end = match.index + full.length;
-        const isDisplay = typeof display === "function" ? display(start, end) : display;
-        matches.push({
-          start,
-          end,
-          source: src,
-          display: isDisplay,
-        });
-        if (re.lastIndex === match.index) re.lastIndex += 1;
-      }
-    };
-
-    // Obsidian-style $$...$$ should always render as display math.
-    collectMatches(LATEX_DISPLAY_DOLLAR_RE, true);
-    collectMatches(LATEX_DISPLAY_PARENS_RE, true);
-    collectMatches(LATEX_INLINE_PARENS_RE, false);
-    collectMatches(LATEX_INLINE_DOLLAR_RE, false);
-
-    if (!matches.length) continue;
-
-    matches.sort((a, b) => {
-      if (a.start !== b.start) return a.start - b.start;
-      return (b.end - b.start) - (a.end - a.start);
-    });
-
-    const nonOverlapping: Match[] = [];
-    let cursor = 0;
-    for (const m of matches) {
-      if (m.start < cursor) continue;
-      nonOverlapping.push(m);
-      cursor = m.end;
-    }
+    const nonOverlapping = collectMathSegments(sourceText).filter((seg) => seg.source.trim());
     if (!nonOverlapping.length) continue;
 
     const frag = activeDocument.createDocumentFragment();
@@ -441,15 +395,8 @@ function markdownPreviewHtml(source: string): string {
   if (!source) return "";
 
   // ── Protect LaTeX blocks from markdown formatting ──
-  const mathPlaceholders: string[] = [];
-  const MATH_PH = "@@SPROUTMATH";
-  const mathBlockRe = /\$\$[\s\S]+?\$\$|(?<!\$)\$(?!\$)[^\s$](?:[^$]*[^\s$])?\$(?!\$)|\\\([\s\S]+?\\\)|\\\[[\s\S]+?\\\]/g;
-
-  let work = source.replace(mathBlockRe, (match) => {
-    const idx = mathPlaceholders.length;
-    mathPlaceholders.push(match);
-    return `${MATH_PH}${idx}@@`;
-  });
+  const { text: placeholderText, restore: restoreMath } = protectMathRanges(source);
+  let work = placeholderText;
 
   // ── HTML-escape (preserving placeholders) ──
   work = escapeFlagHtml(work);
@@ -480,9 +427,7 @@ function markdownPreviewHtml(source: string): string {
   work = convertMarkdownLists(work);
 
   // ── Restore LaTeX placeholders ──
-  if (mathPlaceholders.length) {
-    work = work.replace(/@@SPROUTMATH(\d+)@@/g, (_m, idx) => mathPlaceholders[Number(idx)] ?? _m);
-  }
+  work = restoreMath(work);
 
   return work;
 }

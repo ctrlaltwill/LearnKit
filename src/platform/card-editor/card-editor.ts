@@ -744,8 +744,9 @@ function attachFormatShortcuts(textarea: HTMLTextAreaElement) {
 
 
 
-// Delegate to shared delimiter utility
-const escapePipeText = escapeDelimiterText;
+// Delegate to shared delimiter utility (raw mode: preserve LaTeX backslashes)
+const escapePipeText = (s: string): string =>
+  escapeDelimiterText(s, { escapeBackslashes: false });
 
 interface CardEditorConfig {
   plugin: LearnKitPlugin;

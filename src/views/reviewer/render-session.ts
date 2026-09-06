@@ -20,7 +20,7 @@ import { normalizeCardOptions } from "../../platform/core/store";
 import { getCorrectIndices, isMultiAnswerMcq } from "../../platform/types/card";
 import { hydrateRenderedMathCloze, type ClozeRenderOptions } from "./question-cloze";
 import { openCardAnchorInNote } from "../../platform/core/open-card-anchor";
-import { processClozeForMath, convertInlineDisplayMath, forceSingleLineDisplayMathInline } from "../../platform/core/shared-utils";
+import { processClozeForMath, convertInlineDisplayMath, forceSingleLineDisplayMathInline, escapeAngleBracketsOutsideMathAndCode } from "../../platform/core/shared-utils";
 import { protectCodeFences, FENCE_PH } from "../reading/reading-flashcard-cloze";
 import { renderLatexMathInElement, replaceChildrenWithHTML } from "../../platform/core/ui";
 import { hydrateCircleFlagsInElement, processCircleFlagsInMarkdown } from "../../platform/flags/flag-tokens";
@@ -1411,32 +1411,10 @@ export function renderSessionMode(args: Args) {
     });
   };
 
-  // Escape angle brackets outside code blocks to prevent HTML tag stripping
-  const escapeAngleBracketsOutsideCode = (text: string): string => {
-    const codePlaceholders: string[] = [];
-    const CODE_PH = "@@SPROUTCODE";
-
-    // Extract inline code blocks
-    const withCodePlaceholders = text.replace(/`([^`]*)`/g, (match) => {
-      const idx = codePlaceholders.length;
-      codePlaceholders.push(match);
-      return `${CODE_PH}${idx}@@`;
-    });
-
-    // Escape angle brackets in non-code content
-    let result = withCodePlaceholders
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-
-    // Restore code blocks
-    if (codePlaceholders.length) {
-      result = result.replace(/@@SPROUTCODE(\d+)@@/g, (_m, idx) => {
-        return codePlaceholders[Number(idx)] ?? _m;
-      });
-    }
-
-    return result;
-  };
+  // Escape angle brackets outside math and code blocks to prevent HTML tag
+  // stripping while preserving LaTeX delimiters.
+  const escapeAngleBracketsOutsideCode = (text: string): string =>
+    escapeAngleBracketsOutsideMathAndCode(text);
 
   const renderMdBlock = (cls: string, md: string) => {
     const block = activeDocument.createElement("div");

@@ -22,7 +22,7 @@ import {
 } from "../../platform/core/delimiter";
 
 export function escapePipes(s: string): string {
-  return escapeDelimiterText(s);
+  return escapeDelimiterText(s, { escapeBackslashes: false });
 }
 
 /**

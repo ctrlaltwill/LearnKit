@@ -15,6 +15,7 @@ import { exportToApkg, type ExportOptions } from "../../platform/integrations/an
 import { setModalTitle, createThemedDropdown, scopeModalToWorkspace } from "./modal-utils";
 import { getGroupIndex } from "../../engine/indexing/group-index";
 import { buildDeckTree, type DeckNode } from "../../engine/deck/deck-tree";
+import { naturalCompare } from "../core/shared-utils";
 import { t } from "../translations/translator";
 import { txCommon } from "../translations/ui-common";
 
@@ -126,7 +127,7 @@ export class AnkiExportModal extends Modal {
       if (node.key) {
         deckPaths.push({ path: node.key, label: "  ".repeat(Math.max(0, depth - 1)) + node.name + ` (${node.counts.total})` });
       }
-      for (const child of Array.from(node.children.values()).sort((a, b) => a.name.localeCompare(b.name))) {
+      for (const child of Array.from(node.children.values()).sort((a, b) => naturalCompare(a.name, b.name))) {
         walk(child, depth + 1);
       }
     };

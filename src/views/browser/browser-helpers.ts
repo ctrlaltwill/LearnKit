@@ -196,7 +196,7 @@ export {
 
 /** Escape delimiter characters for delimited card block syntax. */
 export function escapePipeText(s: string): string {
-  return escapeDelimiterText(s);
+  return escapeDelimiterText(s, { escapeBackslashes: false });
 }
 
 /** Push a key-value field to a delimited card block (handles multi-line). */
