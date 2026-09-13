@@ -223,3 +223,30 @@ describe("ExamTestsSqlite – in-memory round-trips", () => {
     expect(attempts[0].finalPercent).toBeNull();
   });
 });
+
+describe("saved test editing", () => {
+  it("updates content and label while preserving ID, creation date and attempts", async () => {
+    const store = new ExamTestsSqlite(makeFakePlugin());
+    await store.open();
+    const id = store.saveTest({ label: "Original", sourceSummary: "Notes", configJson: "{}", questionsJson: "[]" });
+    const created = store.getTest(id)!.createdAt;
+    store.saveAttempt({ testId: id, finalPercent: 50, autoSubmitted: false, answersJson: '{"q":0}', resultsJson: '{"prompt":"Original question"}' });
+    expect(await store.updateTest(id, { label: "Renamed", configJson: '{"questionCount":1}', questionsJson: '[{"id":"new"}]' })).toBe(true);
+    expect(store.getTest(id)).toMatchObject({ label: "Renamed", createdAt: created, questionsJson: '[{"id":"new"}]' });
+    expect(store.listTests()[0].questionCount).toBe(1);
+    expect(store.listAttempts()[0]).toMatchObject({ finalPercent: 50, resultsJson: '{"prompt":"Original question"}' });
+    expect(await store.updateTest("missing", { label: "X", configJson: "{}", questionsJson: "[]" })).toBe(false);
+    await store.close();
+  });
+  it("restores the previous content after a failed write", async () => {
+    const plugin = makeFakePlugin();
+    const store = new ExamTestsSqlite(plugin);
+    await store.open();
+    const id = store.saveTest({ label: "Original", sourceSummary: "", configJson: "{}", questionsJson: "[]" });
+    vi.mocked(plugin.app.vault.adapter.writeBinary).mockRejectedValueOnce(new Error("Disk full"));
+    await expect(store.updateTest(id, { label: "New", configJson: "{}", questionsJson: '[{}]' })).rejects.toThrow("Disk full");
+    expect(store.getTest(id)!.label).toBe("Original");
+    expect(store.getTest(id)!.questionsJson).toBe("[]");
+    await store.close();
+  });
+});

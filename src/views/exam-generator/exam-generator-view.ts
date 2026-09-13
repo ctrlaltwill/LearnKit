@@ -34,6 +34,8 @@ import { formatAssistantError, logAssistantRequestError } from "../study-assista
 import {
   rowToSavedScopePreset, selectionMatchesPreset, serializeScopes, toScopeId, } from "../shared/saved-scope-presets";
 
+import { ExamTestEditorModal } from "./exam-test-editor";
+
 type ExamViewMode = "setup" | "generating" | "taking" | "grading" | "results" | "review";
 
 type SetupStage = "source" | "config";
@@ -753,6 +755,19 @@ export class SproutExamGeneratorView extends ItemView {
           this._savedTestsPopoverOpen = false;
           this._savedTestsSearchQuery = "";
           this._loadSavedTest(test.testId);
+        });
+
+        const editBtn = row.createEl("button", {
+          cls: "learnkit-btn-outline-muted",
+          text: this._tx("ui.view.examGenerator.editor.edit", "Edit"),
+          attr: { type: "button", "aria-label": this._tx("ui.view.examGenerator.editor.title", "Edit saved test") + ": " + test.label },
+        });
+        editBtn.disabled = this._mode === "taking" || this._mode === "grading" || this._mode === "generating";
+        editBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          this._savedTestsPopoverOpen = false;
+          syncSavedPopoverState();
+          this._editSavedTest(test.testId);
         });
 
         const deleteBtn = row.createSpan({
@@ -3060,6 +3075,31 @@ export class SproutExamGeneratorView extends ItemView {
       void this._testsDb.persist();
     } catch {
       // Ignore persistence failures to avoid blocking the test flow.
+    }
+  }
+
+  private _editSavedTest(testId: string): void {
+    const saved = this._testsDb?.getTest(testId);
+    if (!saved) return;
+    try {
+      const questions = JSON.parse(saved.questionsJson) as GeneratedExamQuestion[];
+      const config = JSON.parse(saved.configJson) as Partial<ExamGeneratorConfig>;
+      if (!Array.isArray(questions)) throw new Error("Invalid questions");
+      new ExamTestEditorModal(this.app, { label: saved.label, questions },
+        (key, fallback) => this._tx(key, fallback), async (draft) => {
+          const modes = new Set(draft.questions.map(q => q.type));
+          const updated = await this._testsDb?.updateTest(testId, {
+            label: draft.label,
+            questionsJson: JSON.stringify(draft.questions),
+            configJson: JSON.stringify({ ...config, testName: draft.label, questionCount: draft.questions.length,
+              questionMode: modes.size > 1 ? "mixed" : draft.questions[0].type }),
+          });
+          if (!updated) throw new Error("Test no longer exists");
+          this._savedTests = this._testsDb?.listTests(25) ?? [];
+          this._render();
+        }).open();
+    } catch {
+      new Notice(this._tx("ui.view.examGenerator.editor.openFailed", "Could not open this test for editing."));
     }
   }
 

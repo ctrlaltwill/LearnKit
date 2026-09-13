@@ -15,6 +15,12 @@ Use it when you want active recall in a more exam-like format than standard flas
 4. review weak areas
 5. turn repeated weak spots into better notes or better cards
 
+## Edit Saved Tests
+
+Open **Saved tests**, then choose **Edit** beside a test. You can rename it, inspect or edit its questions and answers, add or remove questions, and edit explanations and source note paths.
+
+For multiple-choice questions, check each correct option; checking more than one creates a multiple-answer question. For short-answer questions, enter one marking-guide point per line. **Save changes** validates the draft and updates the saved test; **Cancel** discards the draft. Previous attempt answers and results are retained. Editing is unavailable while a test is being generated, taken or graded.
+
 ## When Tests Are Most Useful
 
 Tests works well for:

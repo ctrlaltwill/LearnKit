@@ -1386,3 +1386,35 @@ body.is-phone .learnkit .learnkit-exam-generator-title-strip .learnkit-inline-se
   margin-bottom: 8px;
 }
 
+
+.learnkit .learnkit-exam-editor-form {
+  border: 0;
+  padding: 0;
+}
+
+.learnkit .learnkit-exam-editor-question {
+  margin-block: 1rem;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-md);
+}
+
+.learnkit .learnkit-exam-editor-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-block: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.learnkit .learnkit-exam-editor-field textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+
+.learnkit .learnkit-exam-editor-option {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
