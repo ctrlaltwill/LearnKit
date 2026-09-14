@@ -345,6 +345,23 @@ export class ExamTestsSqlite {
     return this.db.getRowsModified() > 0;
   }
 
+  async updateTest(testId: string, input: { label: string; questionsJson: string; configJson: string }): Promise<boolean> {
+    if (!this.db) return false;
+    const previous = this.getTest(testId);
+    if (!previous) return false;
+    this.db.run("UPDATE tests SET label = ?, questions_json = ?, config_json = ?, updated_at = ? WHERE test_id = ?",
+      [input.label, input.questionsJson, input.configJson, Date.now(), testId]);
+    try {
+      await this.persist();
+    } catch (error) {
+      // Keep the open store consistent with the saved version after a failed write.
+      this.db.run("UPDATE tests SET label = ?, questions_json = ?, config_json = ? WHERE test_id = ?",
+        [previous.label, previous.questionsJson, previous.configJson, testId]);
+      throw error;
+    }
+    return true;
+  }
+
   listAttempts(limit = 500): SavedExamAttemptRecord[] {
     if (!this.db) return [];
     const out: SavedExamAttemptRecord[] = [];
