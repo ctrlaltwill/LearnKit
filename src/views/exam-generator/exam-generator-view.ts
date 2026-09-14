@@ -2627,7 +2627,8 @@ export class SproutExamGeneratorView extends ItemView {
         for (let i = 0; i < options.length; i += 1) {
           const btn = optionList.createEl("button", {
             cls: "w-full justify-start text-left h-auto py-2 learnkit-exam-generator-option-button", type: "button", });
-          if (currentSelections.has(i)) btn.classList.add("learnkit-mcq-selected", "learnkit-mcq-selected");
+          btn.setAttribute("aria-pressed", String(currentSelections.has(i)));
+          if (currentSelections.has(i)) btn.classList.add("learnkit-mcq-selected");
           const left = btn.createSpan({ cls: "inline-flex items-center gap-2 min-w-0" });
           left.createEl("kbd", { cls: "kbd", text: String(i + 1) });
           const optionText = left.createSpan({ cls: "min-w-0 whitespace-pre-wrap break-words learnkit-mcq-option-text" });
@@ -2642,6 +2643,7 @@ export class SproutExamGeneratorView extends ItemView {
               currentSelections.add(i);
               btn.classList.add("learnkit-mcq-selected", "learnkit-mcq-selected");
             }
+            btn.setAttribute("aria-pressed", String(currentSelections.has(i)));
             this._answers.set(q.id, [...currentSelections].sort((a, b) => a - b));
           });
         }
@@ -2652,7 +2654,8 @@ export class SproutExamGeneratorView extends ItemView {
         for (let i = 0; i < options.length; i += 1) {
           const btn = optionList.createEl("button", {
             cls: "w-full justify-start text-left h-auto py-2 learnkit-exam-generator-option-button", type: "button", });
-          if (selected === i) btn.classList.add("learnkit-mcq-selected", "learnkit-mcq-selected");
+          btn.setAttribute("aria-pressed", String(selected === i));
+          if (selected === i) btn.classList.add("learnkit-mcq-selected");
           const left = btn.createSpan({ cls: "inline-flex items-center gap-2 min-w-0" });
           left.createEl("kbd", { cls: "kbd", text: String(i + 1) });
           const optionText = left.createSpan({ cls: "min-w-0 whitespace-pre-wrap break-words learnkit-mcq-option-text" });
@@ -2661,7 +2664,11 @@ export class SproutExamGeneratorView extends ItemView {
             const selection = window.getSelection();
             if (selection && selection.toString().trim().length > 0) return;
             this._answers.set(q.id, i);
-            optionList.querySelectorAll(".learnkit-exam-generator-option-button").forEach((el) => el.classList.remove("learnkit-mcq-selected", "learnkit-mcq-selected"));
+            optionList.querySelectorAll(".learnkit-exam-generator-option-button").forEach((el) => {
+              el.classList.remove("learnkit-mcq-selected");
+              el.setAttribute("aria-pressed", "false");
+            });
+            btn.setAttribute("aria-pressed", "true");
             btn.classList.add("learnkit-mcq-selected", "learnkit-mcq-selected");
           });
         }
