@@ -38,6 +38,8 @@ type ExamViewMode = "setup" | "generating" | "taking" | "grading" | "results" | 
 
 type SetupStage = "source" | "config";
 
+import { buildExamChoiceReview, type ExamChoiceReview } from "./exam-answer-review";
+
 type StoredAnswer = string | number | number[];
 
 type QuestionResult = {
@@ -50,6 +52,8 @@ type QuestionResult = {
   userAnswer?: string;
   expectedAnswer?: string;
   saq?: SaqGradeResult;
+  choices?: ExamChoiceReview[];
+  explanation?: string;
 };
 
 const MAX_SELECTABLE_NOTES = 5;
@@ -2805,6 +2809,12 @@ export class SproutExamGeneratorView extends ItemView {
     }
 
     const percent = totalPossible > 0 ? (totalScore / totalPossible) * 100 : 0;
+    for (const result of results) {
+      const question = this._questions.find((q) => q.id === result.questionId);
+      if (!question) continue;
+      result.explanation = question.explanation;
+      if (question.type === "mcq") result.choices = buildExamChoiceReview(question, this._answers.get(question.id));
+    }
     this._questionResults = results;
     this._finalPercent = Math.round(percent * 10) / 10;
     this._persistAttempt();
@@ -2855,8 +2865,8 @@ export class SproutExamGeneratorView extends ItemView {
       const r = this._questionResults.find((item) => item.questionId === q.id);
       const row = list.createDiv({ cls: "learnkit-exam-generator-result-row learnkit-exam-generator-result-row" });
       const scorePercent = Math.round(r?.scorePercent ?? 0);
-      const scoreTone = scorePercent > 80 ? "is-strong" : scorePercent >= 50 ? "is-mid" : "is-weak";
-      const status = scorePercent > 80
+      const scoreTone = scorePercent >= 90 ? "is-strong" : scorePercent >= 50 ? "is-mid" : "is-weak";
+      const status = scorePercent >= 90
         ? this._tx("ui.view.examGenerator.feedback.correct", "Correct")
         : scorePercent >= 50
           ? this._tx("ui.view.examGenerator.feedback.partlyCorrect", "Partly correct")
@@ -2870,6 +2880,7 @@ export class SproutExamGeneratorView extends ItemView {
 
       const body = row.createDiv({ cls: "learnkit-exam-generator-result-body learnkit-exam-generator-result-body" });
       body.createDiv({ cls: "learnkit-exam-generator-result-detail learnkit-exam-generator-result-detail", text: status });
+      if (r) this._renderAnswerDetails(body, r);
     }
 
     const actions = card.createDiv({ cls: "learnkit-exam-generator-actions learnkit-exam-generator-actions" });
@@ -2906,6 +2917,85 @@ export class SproutExamGeneratorView extends ItemView {
     });
   }
 
+  private _renderAnswerDetails(body: HTMLElement, result: QuestionResult): void {
+    const prompt = body.createDiv({ cls: "learnkit-exam-generator-result-prompt learnkit-exam-generator-result-prompt" });
+    renderMarkdownPreviewInElement(prompt, result.prompt);
+
+    const userAnswerLine = body.createDiv({ cls: "learnkit-exam-generator-result-detail learnkit-exam-generator-result-detail" });
+    userAnswerLine.createEl("strong", { text: this._tx("ui.view.examGenerator.review.yourAnswer", "Your answer:") + " " });
+    const userAnswerValue = userAnswerLine.createSpan();
+    renderMarkdownPreviewInElement(userAnswerValue, result.userAnswer?.trim() || this._tx("ui.view.examGenerator.review.blank", "(blank)"));
+
+    const expectedLine = body.createDiv({ cls: "learnkit-exam-generator-result-detail learnkit-exam-generator-result-detail" });
+    const expectedLabel = result.questionType === "mcq"
+      ? this._tx("ui.view.examGenerator.review.correctOption", "Correct option:") + " "
+      : this._tx("ui.view.examGenerator.review.modelAnswer", "Model answer:") + " ";
+    expectedLine.createEl("strong", { text: expectedLabel });
+    const expectedValue = expectedLine.createSpan();
+    renderMarkdownPreviewInElement(expectedValue, result.questionType === "mcq"
+      ? result.expectedAnswer || this._tx("ui.view.examGenerator.review.blank", "(blank)")
+      : this._formatModelAnswer(result.expectedAnswer));
+
+    if (result.choices?.length) {
+      const options = body.createEl("ul", { cls: "learnkit-exam-generator-answer-comparison" });
+      for (const choice of result.choices) {
+        const item = options.createEl("li");
+        const label = choice.selected
+          ? choice.correct
+            ? this._tx("ui.view.examGenerator.review.selectedCorrect", "Selected — correct")
+            : this._tx("ui.view.examGenerator.review.selectedIncorrect", "Selected — incorrect")
+          : choice.correct
+            ? this._tx("ui.view.examGenerator.review.missedCorrect", "Not selected — correct answer")
+            : this._tx("ui.view.examGenerator.review.notSelected", "Not selected");
+        item.createEl("strong", { text: label });
+        renderMarkdownPreviewInElement(item.createDiv(), choice.text);
+      }
+    }
+    if (result.explanation?.trim()) {
+      const explanation = body.createDiv();
+      explanation.createEl("strong", { text: this._tx("ui.view.examGenerator.review.explanation", "Explanation:") });
+      renderMarkdownPreviewInElement(explanation.createDiv(), result.explanation);
+    }
+
+    const feedback = result.feedback?.trim();
+    if (feedback) {
+      const statusOnly = feedback === this._tx("ui.view.examGenerator.feedback.correct", "Correct")
+        || feedback === this._tx("ui.view.examGenerator.feedback.partlyCorrect", "Partly correct")
+        || feedback === this._tx("ui.view.examGenerator.feedback.incorrect", "Incorrect")
+        || feedback === this._tx("ui.view.examGenerator.feedback.wrong", "Wrong");
+      if (!statusOnly) {
+        const feedbackLine = body.createDiv({ cls: "learnkit-exam-generator-result-feedback learnkit-exam-generator-result-feedback" });
+        feedbackLine.createEl("strong", { text: this._tx("ui.view.examGenerator.review.feedback", "Feedback:") + " " });
+        const feedbackValue = feedbackLine.createSpan();
+        renderMarkdownPreviewInElement(feedbackValue, feedback);
+      }
+    }
+
+    // SAQ key-point breakdown: wrong, missed
+    if (result.saq) {
+      const wrongPoints = result.saq.keyPointsWrong ?? [];
+      const missedPoints = result.saq.keyPointsMissed ?? [];
+      if (wrongPoints.length > 0) {
+        const wrongSection = body.createDiv({ cls: "learnkit-exam-generator-result-missed learnkit-exam-generator-result-missed" });
+        wrongSection.createDiv({
+          cls: "learnkit-exam-generator-result-missed-label learnkit-exam-generator-result-missed-label", text: this._tx("ui.view.examGenerator.feedback.incorrect", "Incorrect") + ": ", });
+        const wrongList = wrongSection.createEl("ul", { cls: "learnkit-exam-generator-result-missed-list learnkit-exam-generator-result-missed-list" });
+        for (const point of wrongPoints) {
+          wrongList.createEl("li", { text: point });
+        }
+      }
+      if (missedPoints.length > 0) {
+        const missedSection = body.createDiv({ cls: "learnkit-exam-generator-result-missed learnkit-exam-generator-result-missed" });
+        missedSection.createDiv({
+          cls: "learnkit-exam-generator-result-missed-label learnkit-exam-generator-result-missed-label", text: this._tx("ui.view.examGenerator.review.missed", "Missed") + ": ", });
+        const missedList = missedSection.createEl("ul", { cls: "learnkit-exam-generator-result-missed-list learnkit-exam-generator-result-missed-list" });
+        for (const point of missedPoints) {
+          missedList.createEl("li", { text: point });
+        }
+      }
+    }
+  }
+
   private _renderReview(host: HTMLElement): void {
     const card = host.createDiv({ cls: "card learnkit-exam-generator-card learnkit-exam-generator-card" });
     card.createEl("h3", {
@@ -2925,7 +3015,7 @@ export class SproutExamGeneratorView extends ItemView {
       for (const { result, index } of rows) {
         const row = list.createDiv({ cls: "learnkit-exam-generator-result-row learnkit-exam-generator-result-row" });
         const scorePercent = Math.round(result.scorePercent);
-        const scoreTone = scorePercent > 80 ? "is-strong" : scorePercent >= 50 ? "is-mid" : "is-weak";
+        const scoreTone = scorePercent >= 90 ? "is-strong" : scorePercent >= 50 ? "is-mid" : "is-weak";
 
         const header = row.createDiv({ cls: "learnkit-exam-generator-result-header learnkit-exam-generator-result-header" });
         header.createDiv({
@@ -2934,59 +3024,7 @@ export class SproutExamGeneratorView extends ItemView {
           cls: `learnkit-exam-generator-result-score ${scoreTone}`, text: `${scorePercent}%`, });
 
         const body = row.createDiv({ cls: "learnkit-exam-generator-result-body learnkit-exam-generator-result-body" });
-        const prompt = body.createDiv({ cls: "learnkit-exam-generator-result-prompt learnkit-exam-generator-result-prompt" });
-        renderMarkdownPreviewInElement(prompt, result.prompt);
-
-        const userAnswerLine = body.createDiv({ cls: "learnkit-exam-generator-result-detail learnkit-exam-generator-result-detail" });
-        userAnswerLine.createEl("strong", { text: this._tx("ui.view.examGenerator.review.yourAnswer", "Your answer:") + " " });
-        const userAnswerValue = userAnswerLine.createSpan();
-        renderMarkdownPreviewInElement(userAnswerValue, result.userAnswer?.trim() || this._tx("ui.view.examGenerator.review.blank", "(blank)"));
-
-        const expectedLine = body.createDiv({ cls: "learnkit-exam-generator-result-detail learnkit-exam-generator-result-detail" });
-        const expectedLabel = result.questionType === "mcq"
-          ? this._tx("ui.view.examGenerator.review.correctOption", "Correct option:") + " "
-          : this._tx("ui.view.examGenerator.review.modelAnswer", "Model answer:") + " ";
-        expectedLine.createEl("strong", { text: expectedLabel });
-        const expectedValue = expectedLine.createSpan();
-        renderMarkdownPreviewInElement(expectedValue, this._formatModelAnswer(result.expectedAnswer));
-
-        const feedback = result.feedback?.trim();
-        if (feedback) {
-          const statusOnly = feedback === this._tx("ui.view.examGenerator.feedback.correct", "Correct")
-            || feedback === this._tx("ui.view.examGenerator.feedback.partlyCorrect", "Partly correct")
-            || feedback === this._tx("ui.view.examGenerator.feedback.incorrect", "Incorrect")
-            || feedback === this._tx("ui.view.examGenerator.feedback.wrong", "Wrong");
-          if (!statusOnly) {
-            const feedbackLine = body.createDiv({ cls: "learnkit-exam-generator-result-feedback learnkit-exam-generator-result-feedback" });
-            feedbackLine.createEl("strong", { text: this._tx("ui.view.examGenerator.review.feedback", "Feedback:") + " " });
-            const feedbackValue = feedbackLine.createSpan();
-            renderMarkdownPreviewInElement(feedbackValue, feedback);
-          }
-        }
-
-        // SAQ key-point breakdown: wrong, missed
-        if (result.saq) {
-          const wrongPoints = result.saq.keyPointsWrong ?? [];
-          const missedPoints = result.saq.keyPointsMissed ?? [];
-          if (wrongPoints.length > 0) {
-            const wrongSection = body.createDiv({ cls: "learnkit-exam-generator-result-missed learnkit-exam-generator-result-missed" });
-            wrongSection.createDiv({
-              cls: "learnkit-exam-generator-result-missed-label learnkit-exam-generator-result-missed-label", text: this._tx("ui.view.examGenerator.feedback.incorrect", "Incorrect") + ": ", });
-            const wrongList = wrongSection.createEl("ul", { cls: "learnkit-exam-generator-result-missed-list learnkit-exam-generator-result-missed-list" });
-            for (const point of wrongPoints) {
-              wrongList.createEl("li", { text: point });
-            }
-          }
-          if (missedPoints.length > 0) {
-            const missedSection = body.createDiv({ cls: "learnkit-exam-generator-result-missed learnkit-exam-generator-result-missed" });
-            missedSection.createDiv({
-              cls: "learnkit-exam-generator-result-missed-label learnkit-exam-generator-result-missed-label", text: this._tx("ui.view.examGenerator.review.missed", "Missed") + ": ", });
-            const missedList = missedSection.createEl("ul", { cls: "learnkit-exam-generator-result-missed-list learnkit-exam-generator-result-missed-list" });
-            for (const point of missedPoints) {
-              missedList.createEl("li", { text: point });
-            }
-          }
-        }
+        this._renderAnswerDetails(body, result);
 
       }
     }

@@ -23,6 +23,12 @@ Tests works well for:
 - checking topic readiness before an exam
 - finding weak areas that are easy to miss in normal review
 
+## Review Answers
+
+After submitting a test, each result shows the question, your answer, the correct answer or marking guide, and any explanation. Multiple-choice results identify correct selections, incorrect selections, and correct options you missed. Unanswered questions show a blank answer. Short-answer results also include the available grading feedback and missed or incorrect key points.
+
+Use **Review mistakes** to focus on questions below full marks, or **Review all answers** to revisit the complete test. Answer comparisons and explanations are stored with the attempt.
+
 ## Good Practice
 
 - keep tests topic-specific when possible
