@@ -2,6 +2,18 @@
 
 All notable changes to LearnKit are summarized here.
 
+## 1.8.2 (2026-09-14)
+
+### Added
+- Saved-test editor: rename tests, edit questions, options, and answer keys, and add/remove questions and options (#211).
+- Test results now show submitted answers alongside correct answers with explanations (#210).
+
+### Changed
+- Test grading: 90%+ is correct, 50–89% is partly correct, and under 50% is wrong (#210).
+
+### Fixed
+- Selected answers now stay visibly highlighted, and focused options show a visible outline for keyboard navigation (#209).
+
 ## 1.8.1 (2026-09-06)
 
 ### Fixed
