@@ -38,6 +38,7 @@ import type {
 } from "../../../platform/integrations/ai/study-assistant-types";
 import { getLinkedContextLimits } from "../../../platform/integrations/ai/study-assistant-types";
 import { getTtsService } from "../../../platform/integrations/tts/tts-service";
+import { resolveInterfaceLocale } from "../../../platform/translations/locale-registry";
 import { t } from "../../../platform/translations/translator";
 import {
   type AssistantMode,
@@ -1311,8 +1312,8 @@ export class LearnKitAssistantPopup {
   }
 
   private _normalizedInterfaceLanguageCode(): string {
-    const raw = String(this.plugin.settings?.general?.interfaceLanguage || "en").trim().toLowerCase();
-    return raw ? raw.replace(/_/g, "-") : "en";
+    // The preference may be "obsidian" (Match Obsidian), which is not a locale code.
+    return resolveInterfaceLocale(this.plugin.settings?.general?.interfaceLanguage);
   }
 
   private _assistantReplyLanguageName(localeCode: string): string {
