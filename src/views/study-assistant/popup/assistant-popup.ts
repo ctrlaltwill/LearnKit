@@ -40,6 +40,7 @@ import { getLinkedContextLimits } from "../../../platform/integrations/ai/study-
 import { getTtsService } from "../../../platform/integrations/tts/tts-service";
 import { resolveInterfaceLocale } from "../../../platform/translations/locale-registry";
 import { t } from "../../../platform/translations/translator";
+import { buildReplyLanguageInstruction } from "./reply-language";
 import {
   type AssistantMode,
   type StudyAssistantLocation,
@@ -1316,40 +1317,8 @@ export class LearnKitAssistantPopup {
     return resolveInterfaceLocale(this.plugin.settings?.general?.interfaceLanguage);
   }
 
-  private _assistantReplyLanguageName(localeCode: string): string {
-    const primary = String(localeCode || "en").split("-")[0];
-    switch (primary) {
-      case "zh":
-        return "Simplified Chinese";
-      case "ja":
-        return "Japanese";
-      case "ko":
-        return "Korean";
-      case "es":
-        return "Spanish";
-      case "fr":
-        return "French";
-      case "de":
-        return "German";
-      case "pt":
-        return "Portuguese";
-      case "it":
-        return "Italian";
-      case "ru":
-        return "Russian";
-      case "ar":
-        return "Arabic";
-      case "hi":
-        return "Hindi";
-      default:
-        return "English";
-    }
-  }
-
   private _assistantReplyLanguageInstruction(): string {
-    const localeCode = this._normalizedInterfaceLanguageCode();
-    const languageName = this._assistantReplyLanguageName(localeCode);
-    return `Use ${languageName} (${localeCode}) for your response unless the user explicitly requests a different language.`;
+    return buildReplyLanguageInstruction(this._normalizedInterfaceLanguageCode());
   }
 
   private _toggleNativeLeftSidebar(): void {
