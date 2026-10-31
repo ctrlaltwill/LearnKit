@@ -199,6 +199,8 @@ export function WithNavigationMethods<T extends Constructor<LearnKitPluginBase>>
         targetCount?: number;
         practiceMode?: boolean;
         trackCoachProgress?: boolean;
+        /** Study the union of these scopes instead of `scope` alone. */
+        scopes?: Scope[];
       },
       targetLeaf?: WorkspaceLeaf,
     ): Promise<void> {
@@ -227,6 +229,15 @@ export function WithNavigationMethods<T extends Constructor<LearnKitPluginBase>>
       } | undefined;
       view?.setSuppressEntranceAosOnce?.(true);
       view?.setReturnToCoach?.(true);
+      if (options.scopes && options.scopes.length > 1) {
+        const multi = view as unknown as {
+          openSessionFromScopes?: (list: Scope[], opts?: typeof options) => void;
+        };
+        if (typeof multi.openSessionFromScopes === "function") {
+          multi.openSessionFromScopes(options.scopes, options);
+          return;
+        }
+      }
       view?.openSessionFromScope?.(scope, options);
     }
 
@@ -241,6 +252,8 @@ export function WithNavigationMethods<T extends Constructor<LearnKitPluginBase>>
         includeNotDue?: boolean;
         noScheduling?: boolean;
         trackCoachProgress?: boolean;
+        /** Review the union of these scopes instead of `scope` alone. */
+        scopes?: Scope[];
       },
       targetLeaf?: WorkspaceLeaf,
     ): Promise<void> {
@@ -266,8 +279,25 @@ export function WithNavigationMethods<T extends Constructor<LearnKitPluginBase>>
           },
         ) => void;
       } | undefined;
+      const scopeList = options.scopes && options.scopes.length > 1 ? options.scopes : [scope];
+      const multiView = view as unknown as {
+        startCoachDueSessionForScopes?: (list: Scope[], opts?: typeof options) => void;
+      } | undefined;
+
       view?.setSuppressEntranceAosOnce?.(true);
       view?.setReturnToCoach?.(true);
+      if (scopeList.length > 1 && typeof multiView?.startCoachDueSessionForScopes === "function") {
+        multiView.startCoachDueSessionForScopes(scopeList, options);
+        window.setTimeout(() => {
+          const mounted = leaf.view as unknown as {
+            startCoachDueSessionForScopes?: (list: Scope[], opts?: typeof options) => void;
+            _coachScopes?: Scope[];
+          } | undefined;
+          const applied = Array.isArray(mounted?._coachScopes) && mounted._coachScopes.length === scopeList.length;
+          if (!applied) mounted?.startCoachDueSessionForScopes?.(scopeList, options);
+        }, 0);
+        return;
+      }
       if (typeof view?.startCoachDueSession === "function") {
         view.startCoachDueSession(scope, options);
         window.setTimeout(() => {

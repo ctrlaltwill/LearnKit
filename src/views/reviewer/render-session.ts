@@ -1219,13 +1219,22 @@ export function renderSessionMode(args: Args) {
     header.className = "learnkit-session-topbar";
     wrap.appendChild(header);
 
+    const coachEmptyLine = args.coachSessionMode
+      ? String(args.coachEmptyTitle ?? "").trim()
+      : "";
+
     const titleWrap = makeEl("div");
     titleWrap.className = "learnkit-session-topbar-title learnkit-question-title";
     titleWrap.textContent = practiceMode
       ? tx("ui.reviewer.session.practiceComplete", "Practice complete")
-      : hasCardsInScope
-        ? tx("ui.reviewer.session.noCardsDue", "No cards are due")
-        : tx("ui.reviewer.session.noCardsInScope", "No cards exist in this deck");
+      : !hasCardsInScope
+        // Nothing in scope at all: say so plainly. This used to be shown for
+        // every empty Coach session, including ones where the plan simply had
+        // no cards left today (#225).
+        ? tx("ui.reviewer.session.noCardsInScope", "No cards exist in this deck")
+        : coachEmptyLine
+          ? coachEmptyLine
+          : tx("ui.reviewer.session.noCardsDue", "No cards are due");
     header.appendChild(titleWrap);
 
     // Section: Practice session message (centered, no alert wrapper)
@@ -1241,7 +1250,9 @@ export function renderSessionMode(args: Args) {
       );
       section.appendChild(d1);
       section.appendChild(d2);
-    } else {
+    } else if (!args.coachSessionMode) {
+      // A Coach session has no practice button here (practice would bypass the
+      // plan's progress accounting), so the prompt would be a dead end.
       const d1 = makeEl("div");
       d1.className = "text-base text-center";
       d1.textContent = hasCardsInScope
@@ -1278,7 +1289,11 @@ export function renderSessionMode(args: Args) {
     footer.appendChild(footerRight);
 
     const backBtn = makeTextButton({
-      label: tx("ui.reviewer.session.returnToDecks", "Return to Decks"),
+      // In a Coach session this button goes back to the Coach tab, so label it
+      // for where it actually goes.
+      label: args.coachSessionMode && String(args.coachBackLabel ?? "").trim()
+        ? String(args.coachBackLabel)
+        : tx("ui.reviewer.session.returnToDecks", "Return to Decks"),
       className: "learnkit-btn-toolbar",
       onClick: () => args.backToDecks(),
       kbd: isPhoneMobile ? undefined : "Q",

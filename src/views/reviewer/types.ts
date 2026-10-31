@@ -24,6 +24,12 @@ export type Rating = ReviewRating;
 
 export type Session = {
   scope: Scope;
+  /**
+   * Every scope this session draws from. Equals `[scope]` for ordinary
+   * single-scope sessions; a Coach plan with several selected topics studies
+   * their union while still displaying `scope` as the primary name.
+   */
+  scopes?: Scope[];
   queue: CardRecord[];
   index: number;
   graded: Record<string, { rating: Rating; at: number; meta?: Record<string, unknown> } | undefined>;

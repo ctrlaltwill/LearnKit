@@ -957,11 +957,11 @@ export class LearnKitReviewerView extends ItemView {
     return !!(this.session && this.session.practice);
   }
 
-  private buildPracticeQueue(scope: Scope, excludeIds?: Set<string>): CardRecord[] {
+  private buildPracticeQueue(scopes: readonly Scope[], excludeIds?: Set<string>): CardRecord[] {
     const out: CardRecord[] = [];
 
     // Shared selector: practice must offer exactly the cards the deck says it has.
-    for (const c of selectCardsForScopes(this.plugin, [scope])) {
+    for (const c of selectCardsForScopes(this.plugin, scopes)) {
       const id = String((c)?.id ?? "");
       if (!id) continue;
       if (excludeIds?.has(id)) continue;
@@ -986,8 +986,8 @@ export class LearnKitReviewerView extends ItemView {
     return out;
   }
 
-  private hasCardsInScope(scope: Scope): boolean {
-    for (const card of selectCardsForScopes(this.plugin, [scope])) {
+  private hasCardsInScope(scopes: readonly Scope[]): boolean {
+    for (const card of selectCardsForScopes(this.plugin, scopes)) {
       // Ignore stale card records whose source note no longer exists: they can
       // be listed, but a practice session started from them dead-ends.
       const path = String(card.sourceNotePath || "").trim();
@@ -998,7 +998,7 @@ export class LearnKitReviewerView extends ItemView {
     return false;
   }
 
-  private canStartPractice(scope: Scope): boolean {
+  private canStartPractice(scopes: readonly Scope[]): boolean {
     if (!this.session) return false;
     if (this.isPracticeSession()) return false;
 
@@ -1008,20 +1008,30 @@ export class LearnKitReviewerView extends ItemView {
     const exclude = new Set<string>(Object.keys(this.session.graded || {}));
 
     return (
-      this.buildPracticeQueue(scope, exclude).length > 0 || this.buildPracticeQueue(scope).length > 0
+      this.buildPracticeQueue(scopes, exclude).length > 0 || this.buildPracticeQueue(scopes).length > 0
     );
+  }
+
+  /**
+   * Every scope the current session draws from. Coach plans can select several
+   * topics; everything else is a single scope.
+   */
+  private currentSessionScopes(): Scope[] {
+    const scopes = this.session?.scopes;
+    if (scopes && scopes.length) return scopes;
+    return this.session ? [this.session.scope] : [];
   }
 
   private startPracticeFromCurrentScope() {
     if (!this.session) return;
     if (this.isPracticeSession()) return;
 
-    const scope = this.session.scope;
+    const scopes = this.currentSessionScopes();
 
     const exclude = new Set<string>(Object.keys(this.session.graded || {}));
 
-    let queue = this.buildPracticeQueue(scope, exclude);
-    if (!queue.length) queue = this.buildPracticeQueue(scope);
+    let queue = this.buildPracticeQueue(scopes, exclude);
+    if (!queue.length) queue = this.buildPracticeQueue(scopes);
     queue = this._applyHotspotStudyModeToQueue(queue);
 
     // ── Shuffle practice queue for variety ────────────────────────
@@ -1053,7 +1063,8 @@ export class LearnKitReviewerView extends ItemView {
     closeMoreMenuImpl(this);
 
     const s: Session = {
-      scope,
+      scope: scopes[0] ?? this.session.scope,
+      scopes,
       queue,
       index: 0,
       graded: {},
@@ -2105,6 +2116,23 @@ export class LearnKitReviewerView extends ItemView {
     this.openSession(scope);
   }
 
+  /**
+   * Start a session covering the union of `scopes`.
+   *
+   * A Coach plan can include several selected topics; before this existed, only
+   * the first one was ever studied (#225). `scopes[0]` is used as the display
+   * scope so every existing single-scope surface keeps working.
+   */
+  openSessionFromScopes(scopes: Scope[], options?: SessionBuildOptions) {
+    const list = (scopes ?? []).filter(Boolean);
+    if (!list.length) return;
+    if (list.length === 1) {
+      this.openSessionFromScope(list[0], options);
+      return;
+    }
+    this.openSessionFromScope(list[0], { ...(options ?? {}), scopes: list });
+  }
+
   openSessionFromWidget(payload: WidgetSessionHandoffPayload) {
     if (!payload || !payload.scope) return;
 
@@ -2241,7 +2269,7 @@ export class LearnKitReviewerView extends ItemView {
           return;
         }
 
-        if (!this._isCoachSession && this.canStartPractice(this.session.scope)) {
+        if (!this._isCoachSession && this.canStartPractice(this.currentSessionScopes())) {
           this.startPracticeFromCurrentScope();
           return;
         }
@@ -2744,8 +2772,11 @@ export class LearnKitReviewerView extends ItemView {
         const ttsEnabledForCard = this._canUseTtsForCard(activeCard);
 
         const practiceMode = this.isPracticeSession();
-        const canStartPractice = !this._isCoachSession && !practiceMode && !activeCard && this.canStartPractice(this.session.scope);
-        const hasCardsInScope = !this._isCoachSession && !practiceMode && !activeCard && this.hasCardsInScope(this.session.scope);
+        const scopeList = this.currentSessionScopes();
+        const canStartPractice = !this._isCoachSession && !practiceMode && !activeCard && this.canStartPractice(scopeList);
+        // Always tell the truth about whether cards exist: in a Coach session this
+        // was forced to false, so every empty session claimed the deck was empty (#225).
+        const hasCardsInScope = !practiceMode && !activeCard && this.hasCardsInScope(scopeList);
 
         const buildClozeRenderOptions = (): ClozeRenderOptions => {
           const clozeSettings = this.plugin.settings?.cards;
@@ -3026,8 +3057,9 @@ export class LearnKitReviewerView extends ItemView {
     const ttsEnabledForCard = this._canUseTtsForCard(activeCard);
 
     const practiceMode = this.isPracticeSession();
-    const canStartPractice = !this._isCoachSession && !practiceMode && !activeCard && this.canStartPractice(this.session.scope);
-    const hasCardsInScope = !this._isCoachSession && !practiceMode && !activeCard && this.hasCardsInScope(this.session.scope);
+    const scopeList = this.currentSessionScopes();
+    const canStartPractice = !this._isCoachSession && !practiceMode && !activeCard && this.canStartPractice(scopeList);
+    const hasCardsInScope = !practiceMode && !activeCard && this.hasCardsInScope(scopeList);
 
     const buildClozeRenderOptions = (): ClozeRenderOptions => {
       const clozeSettings = this.plugin.settings?.cards;

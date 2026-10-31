@@ -25,6 +25,14 @@ import { makeEl } from "../../platform/core/dom-factory";
 
 const SUSPEND_FAR_DAYS = 36500;
 
+/** Options for a Coach-driven note-review session. */
+type CoachNoteSessionOptions = {
+  targetCount?: number;
+  includeNotDue?: boolean;
+  noScheduling?: boolean;
+  trackCoachProgress?: boolean;
+};
+
 export class LearnKitNoteReviewView extends ItemView {
   plugin: LearnKitPlugin;
 
@@ -142,15 +150,23 @@ export class LearnKitNoteReviewView extends ItemView {
 
   startCoachDueSession(
     scope: Scope,
-    options?: {
-      targetCount?: number;
-      includeNotDue?: boolean;
-      noScheduling?: boolean;
-      trackCoachProgress?: boolean;
-    },
+    options?: CoachNoteSessionOptions,
   ): void {
-    this._coachScopes = [scope];
-    this._coachScope = scope;
+    this.startCoachDueSessionForScopes([scope], options);
+  }
+
+  /**
+   * Coach session covering the union of `scopes`. A plan may select several
+   * topics; only the first used to be reviewed (#225).
+   */
+  startCoachDueSessionForScopes(
+    scopes: Scope[],
+    options?: CoachNoteSessionOptions,
+  ): void {
+    const list = (scopes ?? []).filter(Boolean);
+    if (!list.length) return;
+    this._coachScopes = list;
+    this._coachScope = list[0];
     this._coachTargetCount = Number.isFinite(Number(options?.targetCount))
       ? Math.max(0, Math.floor(Number(options?.targetCount)))
       : null;

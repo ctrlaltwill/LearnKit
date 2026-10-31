@@ -1916,6 +1916,7 @@ export class LearnKitCoachView extends ItemView {
       "star",
     );
     bindPrimaryAction(studyBtn, () => {
+      // Study the whole plan, not just its first selected topic (#225).
       void this.plugin.openReviewerScopeWithOptions(scope, {
         ignoreDailyReviewLimit: true,
         ignoreDailyNewLimit: true,
@@ -1924,6 +1925,7 @@ export class LearnKitCoachView extends ItemView {
         targetCount: isFlashDone ? extraFlashTarget : remainingFlash,
         practiceMode: isFlashDone,
         trackCoachProgress: !isFlashDone,
+        scopes: planScopes,
       }, this.leaf);
     });
 
@@ -1939,12 +1941,12 @@ export class LearnKitCoachView extends ItemView {
         includeNotDue: true,
         noScheduling: isNotesDone,
         trackCoachProgress: !isNotesDone,
+        scopes: planScopes,
       }, this.leaf);
     });
 
     const testBtn = buildActionButton(this._tx("ui.view.coach.plan.actions.generateTest", "Generate practice test"), "clipboard-check");
     bindPrimaryAction(testBtn, () => {
-      const planScopes = this._scopesForPlan(plan);
       void this.plugin.openExamGeneratorScopes(planScopes, this.leaf);
     });
 

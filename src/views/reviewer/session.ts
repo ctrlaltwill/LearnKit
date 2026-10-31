@@ -22,9 +22,20 @@ export type SessionBuildOptions = {
   ignoreDailyReviewLimit?: boolean;
   ignoreDailyNewLimit?: boolean;
   dueOnly?: boolean;
+  /** Upper bound on the queue length (the Coach's remaining-target count). */
   targetCount?: number;
   trackCoachProgress?: boolean;
   practiceMode?: boolean;
+  /**
+   * Also study cards that are scheduled for later.
+   *
+   * Used by the Coach, which asks for a fixed number of cards per day and must
+   * not come back empty just because everything left in the plan is scheduled
+   * for tomorrow. Suspended and buried cards stay excluded.
+   */
+  includeNotDue?: boolean;
+  /** Study the union of these scopes. `scope` is used for display. */
+  scopes?: Scope[];
 };
 
 /**
@@ -147,8 +158,30 @@ export function isAvailableNow(st: CardState | undefined, now: number): boolean 
   return false;
 }
 
-function resolveCardsInScope(plugin: LearnKitPlugin, scope: Scope): CardRecord[] {
-  return selectCardsForScopes(plugin, [scope]);
+/**
+ * Eligibility for the queue. Differs from {@link isAvailableNow} only when the
+ * caller explicitly asked to include cards that are not due yet.
+ */
+function isSelectableNow(st: CardState | undefined, now: number, includeNotDue: boolean): boolean {
+  if (!includeNotDue) return isAvailableNow(st, now);
+
+  // Nothing known about the card: treat it as new rather than dropping it.
+  // `buildSession` skipped these outright, so a card record without a state row
+  // (partial restore, interrupted first sync) was invisible to the reviewer
+  // while the Coach counted it as new.
+  if (!st) return true;
+
+  if (st.stage === "suspended") return false;
+
+  if (typeof st.buriedUntil === "number" && Number.isFinite(st.buriedUntil) && st.buriedUntil > now) {
+    return false;
+  }
+
+  return true;
+}
+
+function resolveCardsInScope(plugin: LearnKitPlugin, scopes: readonly Scope[]): CardRecord[] {
+  return selectCardsForScopes(plugin, scopes);
 }
 
 export function buildSession(plugin: LearnKitPlugin, scope: Scope, options?: SessionBuildOptions): Session {
@@ -165,9 +198,11 @@ export function buildSession(plugin: LearnKitPlugin, scope: Scope, options?: Ses
     ? Number.POSITIVE_INFINITY
     : toNonNegIntOrInfinity(study.dailyReviewLimit);
   const dueOnly = options?.dueOnly === true;
+  const includeNotDue = options?.includeNotDue === true;
   const siblingMode: string = (study as Record<string, unknown>).siblingMode as string ?? "standard";
 
-  const cards = resolveCardsInScope(plugin, scope);
+  const scopes = options?.scopes?.length ? options.scopes : [scope];
+  const cards = resolveCardsInScope(plugin, scopes);
   const states = plugin.store.data.states || {};
 
   // Scope IDs for today-count accounting
@@ -186,24 +221,23 @@ export function buildSession(plugin: LearnKitPlugin, scope: Scope, options?: Ses
       ? Number.POSITIVE_INFINITY
       : Math.max(0, dailyReviewLimit - reviewDoneToday);
 
-  // Filter to available now (respects buriedUntil)
-  const available = cards.filter((c) => {
-    const st = states[c.id];
-    return isAvailableNow(st, now);
-  });
+  // Filter to selectable cards (always respects suspended + buriedUntil)
+  const available = cards.filter((c) => isSelectableNow(states[c.id], now, includeNotDue));
 
-  // Partition into due-like vs new
+  // Partition into due-like, new, and (only when asked) scheduled-ahead
   const dueLike: CardRecord[] = [];
   const news: CardRecord[] = [];
+  const scheduledAhead: CardRecord[] = [];
 
   for (const c of available) {
     const st = states[c.id];
-    if (!st) continue;
 
-    if (st.stage === "new") {
+    if (!st || st.stage === "new") {
       news.push(c);
     } else if (st.stage === "learning" || st.stage === "relearning" || st.stage === "review") {
-      dueLike.push(c);
+      const dueAt = typeof st.due === "number" && Number.isFinite(st.due) ? st.due : null;
+      if (includeNotDue && dueAt !== null && dueAt > now) scheduledAhead.push(c);
+      else dueLike.push(c);
     } else {
       // Unknown stage: treat as available (but put at end)
       dueLike.push(c);
@@ -222,6 +256,13 @@ export function buildSession(plugin: LearnKitPlugin, scope: Scope, options?: Ses
   // Sort new by id (stable)
   news.sort((a, b) => String(a.id).localeCompare(String(b.id)));
 
+  // Sort the not-yet-due tail by due, so the soonest-scheduled come first
+  scheduledAhead.sort((a, b) => {
+    const da = Number(states[a.id]?.due);
+    const db = Number(states[b.id]?.due);
+    return (Number.isFinite(da) ? da : 0) - (Number.isFinite(db) ? db : 0);
+  });
+
   // Apply daily limits
   const dueTake =
     remainingReview === Number.POSITIVE_INFINITY ? dueLike : dueLike.slice(0, remainingReview);
@@ -230,20 +271,35 @@ export function buildSession(plugin: LearnKitPlugin, scope: Scope, options?: Ses
     ? []
     : (remainingNew === Number.POSITIVE_INFINITY ? news : news.slice(0, remainingNew));
 
+  // Cards outside today's limits only join the queue when the caller asked for
+  // them explicitly (the Coach's daily target), and never in due-only mode.
+  const aheadTake = dueOnly || !includeNotDue ? [] : scheduledAhead;
+
   // ── Combine and apply sibling mode ─────────────────────────────────────
   let queue: CardRecord[];
 
   if (siblingMode === "disperse") {
-    queue = disperseSiblings([...dueTake, ...newTake]);
+    queue = disperseSiblings([...dueTake, ...newTake, ...aheadTake]);
   } else if (siblingMode === "bury") {
-    queue = collapseSiblingFamilies(cards, [...dueTake, ...newTake], states, now);
+    queue = collapseSiblingFamilies(cards, [...dueTake, ...newTake, ...aheadTake], states, now);
   } else {
     // "standard"
-    queue = [...dueTake, ...newTake];
+    queue = [...dueTake, ...newTake, ...aheadTake];
+  }
+
+  // The Coach asks for a fixed number of cards per day, so cap the queue after
+  // interleaving. Only honoured when a caller passes a target; the deck browser,
+  // widget and commands never do.
+  const targetCount = Number.isFinite(Number(options?.targetCount))
+    ? Math.max(0, Math.floor(Number(options?.targetCount)))
+    : null;
+  if (targetCount !== null && queue.length > targetCount) {
+    queue = queue.slice(0, targetCount);
   }
 
   return {
     scope,
+    scopes,
     queue,
     index: 0,
     graded: {},
@@ -436,8 +492,12 @@ export function disperseSiblings(cards: CardRecord[]): CardRecord[] {
 }
 
 export function getNextDueInScope(plugin: LearnKitPlugin, scope: Scope): number | null {
+  return getNextDueInScopes(plugin, [scope]);
+}
+
+export function getNextDueInScopes(plugin: LearnKitPlugin, scopes: readonly Scope[]): number | null {
   const now = Date.now();
-  const cards = resolveCardsInScope(plugin, scope);
+  const cards = resolveCardsInScope(plugin, scopes);
 
   const states = plugin.store.data.states || {};
   let next: number | null = null;
