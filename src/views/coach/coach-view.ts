@@ -33,7 +33,8 @@ import {
   collectVaultTagAndPropertyPairs,
   encodePropertyPair,
 } from "../shared/scope-metadata";
-import { notePathsForScopes, selectCardsForScopes } from "../shared/scope-selection";
+import { noteMatchesScope, notePathsForScopes, selectCardsForScopes } from "../shared/scope-selection";
+import { computeDailyTargets } from "./coach-targets";
 import { formatTimeAgo } from "../home/home-helpers";
 import { forgetting_curve, generatorParameters } from "ts-fsrs";
 
@@ -472,8 +473,73 @@ export class LearnKitCoachView extends ItemView {
     return { dueCards, newCards, dueNotes };
   }
 
-  private _computeAggregateStats(scopes: Scope[], now: number): AggregateStats {
-    const cardMap = new Map<string, { stage: string; due: number; buriedUntil: number | null }>();
+  /**
+   * Recompute stored daily targets for plans that were created with the old
+   * due-based formula, which collapsed to 1 on most decks (#225).
+   *
+   * Only writes when a number actually changes, so this does not churn the
+   * database or trigger needless vault sync copies on every render. It exists so
+   * existing plans heal without the user having to recreate them.
+   */
+  private _healPlanTargets(plans: CoachPlanRow[]): CoachPlanRow[] {
+    if (!this._coachDb || !plans.length) return plans;
+
+    const now = Date.now();
+    const healed: CoachPlanRow[] = [];
+
+    for (const plan of plans) {
+      const storedCards = Math.max(0, Number(plan.daily_flashcard_target) || 0);
+      const storedNotes = Math.max(0, Number(plan.daily_note_target) || 0);
+
+      let next = plan;
+      try {
+        const scopes = this._scopesForPlan(plan);
+        const targets = computeDailyTargets({
+          totalCards: selectCardsForScopes(this.plugin, scopes).length,
+          totalNotes: this._notesInScopeCount(scopes),
+          daysLeft: daysLeftToExam(Number(plan.exam_date_utc) || now, now),
+          multiplier: intensityMultiplier(plan.intensity),
+        });
+
+        if (targets.cards !== storedCards || targets.notes !== storedNotes) {
+          next = {
+            ...plan,
+            daily_flashcard_target: targets.cards,
+            daily_note_target: targets.notes,
+            updated_at: now,
+          };
+          this._coachDb.upsertPlan(next);
+          log.info(
+            `coach: plan ${plan.plan_id} daily target ${storedCards}/${storedNotes} -> ${targets.cards}/${targets.notes}`,
+          );
+        }
+      } catch (e) {
+        log.swallow("heal coach plan targets", e);
+      }
+
+      healed.push(next);
+    }
+
+    return healed;
+  }
+
+  /**
+   * How many notes the plan covers, whether they are due or not.
+   *
+   * Note review walks every markdown file in the plan's scopes, so this is the
+   * size the daily note target should be spread over.
+   */
+  private _notesInScopeCount(scopes: Scope[]): number {
+    if (!scopes.length) return 0;
+    const files = this.app.vault.getMarkdownFiles();
+    let count = 0;
+    for (const file of files) {
+      if (scopes.some((scope) => noteMatchesScope(this.app, scope, file.path))) count += 1;
+    }
+    return count;
+  }
+
+  private _computeAggregateStats(scopes: Scope[], now: number): AggregateStats {    const cardMap = new Map<string, { stage: string; due: number; buriedUntil: number | null }>();
     const dueNotes = new Set<string>();
 
     for (const scope of scopes) {
@@ -639,8 +705,16 @@ export class LearnKitCoachView extends ItemView {
     const days = daysLeftToExam(examDateUtc, now);
     const mul = intensityMultiplier(intensity);
 
-    const dailyFlashcardTarget = Math.max(0, Math.ceil(((stats.dueCards + stats.newCards) / days) * mul));
-    const dailyNoteTarget = Math.max(0, Math.ceil((stats.dueNotes / days) * mul));
+    // Pace to get through the plan, not the handful of cards that happen to be
+    // due today (#225). Due-based maths collapsed to 1 on any deck scheduled ahead.
+    const targets = computeDailyTargets({
+      totalCards: stats.totalCards,
+      totalNotes: this._notesInScopeCount(allScopes),
+      daysLeft: days,
+      multiplier: mul,
+    });
+    const dailyFlashcardTarget = targets.cards;
+    const dailyNoteTarget = targets.notes;
 
     const scopeData = allScopes.length > 1
       ? JSON.stringify(allScopes.map((s) => ({ type: s.type, key: s.key, name: s.name })))
@@ -2225,7 +2299,7 @@ export class LearnKitCoachView extends ItemView {
       shell.classList.add("aos-animate", "learnkit-aos-fallback", "learnkit-aos-fallback");
     }
 
-    const plans = this._coachDb.listPlans();
+    const plans = this._healPlanTargets(this._coachDb.listPlans());
     if (!plans.length && !this._wizardVisible) this._wizardVisible = false;
 
     const scopeOptions = this._scopeOptions();
