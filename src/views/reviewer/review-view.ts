@@ -54,13 +54,12 @@ import { getTtsService, markTtsFieldActive } from "../../platform/integrations/t
 import { shouldSkipBackAutoplay } from "../../platform/integrations/tts/autoplay-policy";
 import { openCardAnchorInNote } from "../../platform/core/open-card-anchor";
 import { t } from "../../platform/translations/translator";
-import { isParentCard, isTextBasedChildCard } from "../../platform/core/card-utils";
+import { isTextBasedChildCard } from "../../platform/core/card-utils";
 
 import type { CardState } from "../../platform/core/store";
 
 import { deepClone, clampInt } from "./utilities";
-import { matchesScope } from "../../engine/indexing/scope-match";
-import { pathMatchesMetadataScope } from "../shared/scope-metadata";
+import { selectCardsForScopes } from "../shared/scope-selection";
 
 import * as IO from "../../platform/image-occlusion/image-occlusion-index";
 import {
@@ -959,35 +958,16 @@ export class LearnKitReviewerView extends ItemView {
   }
 
   private buildPracticeQueue(scope: Scope, excludeIds?: Set<string>): CardRecord[] {
-    const cardsObj = (this.plugin.store.data?.cards || {});
-    const cards = Object.values(cardsObj);
-
     const out: CardRecord[] = [];
 
-    for (const c of cards) {
-      if (isParentCard(c)) continue;
-
+    // Shared selector: practice must offer exactly the cards the deck says it has.
+    for (const c of selectCardsForScopes(this.plugin, [scope])) {
       const id = String((c)?.id ?? "");
       if (!id) continue;
       if (excludeIds?.has(id)) continue;
 
       const st = this.plugin.store.getState(id);
       if (st && String(st.stage || "") === "suspended") continue;
-
-      if (scope.type === "group") {
-        const groups = Array.isArray(c.groups) ? c.groups : [];
-        if (!groups.some((g) => String(g || "") === scope.key)) continue;
-      } else if (scope.type === "tag" || scope.type === "property") {
-        const path = String((c).sourceNotePath || "");
-        if (!path) continue;
-        if (!pathMatchesMetadataScope(this.app, path, scope)) continue;
-      } else {
-        const path = String(
-          (c).sourceNotePath || "",
-        );
-        if (!path) continue;
-        if (!matchesScope(scope, path)) continue;
-      }
 
       out.push(c);
     }
@@ -1007,29 +987,12 @@ export class LearnKitReviewerView extends ItemView {
   }
 
   private hasCardsInScope(scope: Scope): boolean {
-    const cards = this.plugin.store.getAllCards();
-
-    for (const card of cards) {
-      if (isParentCard(card)) continue;
-
-      if (scope.type === "group") {
-        const groups = Array.isArray(card.groups) ? card.groups : [];
-        if (!groups.some((g) => String(g || "") === scope.key)) continue;
-      } else if (scope.type === "tag" || scope.type === "property") {
-        const path = String(card.sourceNotePath || "").trim();
-        if (!path) continue;
-        if (!pathMatchesMetadataScope(this.app, path, scope)) continue;
-      } else {
-        const path = String(card.sourceNotePath || "").trim();
-        if (!path) continue;
-        if (!matchesScope(scope, path)) continue;
-
-        // Ignore stale card records whose source note no longer exists.
-        const sourceFile = this.app.vault.getAbstractFileByPath(path);
-        if (!(sourceFile instanceof TFile)) continue;
-      }
-
-      return true;
+    for (const card of selectCardsForScopes(this.plugin, [scope])) {
+      // Ignore stale card records whose source note no longer exists: they can
+      // be listed, but a practice session started from them dead-ends.
+      const path = String(card.sourceNotePath || "").trim();
+      if (!path) return true;
+      if (this.app.vault.getAbstractFileByPath(path) instanceof TFile) return true;
     }
 
     return false;

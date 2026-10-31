@@ -19,7 +19,8 @@ import { computeLkrsLoadFactor, initialLkrsDueTime, reviewWithLkrs } from "../..
 import { defaultFsrsNoteRow, gradeNoteFsrs, gradeNoteFsrsPass } from "../../engine/note-review/fsrs";
 import { renderStudySessionHeader } from "../reviewer/study-session-header";
 import type { Scope } from "../reviewer/types";
-import { decodePropertyPair, extractFilePropertyPairs, extractFileTags } from "../shared/scope-metadata";
+import { extractFilePropertyPairs, extractFileTags } from "../shared/scope-metadata";
+import { noteMatchesScope, notePathsForGroupScopes } from "../shared/scope-selection";
 import { makeEl } from "../../platform/core/dom-factory";
 
 const SUSPEND_FAR_DAYS = 36500;
@@ -45,6 +46,7 @@ export class LearnKitNoteReviewView extends ItemView {
   private _practiceMode = false;
   private _practiceQueueCompleted = false;
   private _filteredNotes: TFile[] = [];
+  private _coachScopes: Scope[] = [];
   private _coachScope: Scope | null = null;
   private _coachTargetCount: number | null = null;
   private _coachIncludeNotDue = false;
@@ -116,6 +118,7 @@ export class LearnKitNoteReviewView extends ItemView {
   }
 
   setCoachScope(scope: Scope | null): void {
+    this._coachScopes = scope ? [scope] : [];
     this._coachScope = scope;
     if (!scope) {
       this._coachNoScheduling = false;
@@ -146,6 +149,7 @@ export class LearnKitNoteReviewView extends ItemView {
       trackCoachProgress?: boolean;
     },
   ): void {
+    this._coachScopes = [scope];
     this._coachScope = scope;
     this._coachTargetCount = Number.isFinite(Number(options?.targetCount))
       ? Math.max(0, Math.floor(Number(options?.targetCount)))
@@ -334,35 +338,20 @@ export class LearnKitNoteReviewView extends ItemView {
     const cfg = this.plugin.settings.noteReview;
     const filterQuery = String(cfg?.filterQuery ?? "").trim();
     const shouldAvoidFolderNotes = cfg?.avoidFolderNotes !== false;
-    let groupNotePaths: Set<string> | null = null;
-    if (this._coachScope?.type === "group") {
-      groupNotePaths = new Set<string>();
-      for (const card of this.plugin.store.getAllCards()) {
-        const groups = Array.isArray(card.groups) ? card.groups : [];
-        if (!groups.some((g) => String(g || "") === this._coachScope?.key)) continue;
-        const path = String(card.sourceNotePath || "").trim();
-        if (path) groupNotePaths.add(path);
-      }
-    }
+    const scopes = this._coachScopes;
+    // Group scopes are card-level: a note belongs to them because one of its
+    // cards carries the group. Everything else is decided from the path.
+    const groupNotePaths = notePathsForGroupScopes(this.plugin, scopes);
+    const hasGroupScope = scopes.some((scope) => scope.type === "group");
     const filtered = files.filter((file) => {
-      if (this._coachScope) {
-        if (this._coachScope.type === "group" && groupNotePaths && !groupNotePaths.has(file.path)) return false;
-        if (this._coachScope.type === "note" && file.path !== this._coachScope.key) return false;
-        if (this._coachScope.type === "folder") {
-          const key = String(this._coachScope.key || "");
-          if (!(file.path === key || file.path.startsWith(`${key}/`))) return false;
-        }
-        if (this._coachScope.type === "tag") {
-          const expected = String(this._coachScope.key || "").trim().toLowerCase().replace(/^#+/, "");
-          if (!extractFileTags(this.app, file).has(expected)) return false;
-        }
-        if (this._coachScope.type === "property") {
-          const pair = decodePropertyPair(this._coachScope.key);
-          if (!pair) return false;
-          const matches = extractFilePropertyPairs(this.app, file)
-            .some((entry) => entry.key === pair.key && entry.value === pair.value);
-          if (!matches) return false;
-        }
+      if (scopes.length) {
+        const matched = scopes.some((scope) =>
+          scope.type === "group"
+            ? groupNotePaths.has(file.path)
+            : noteMatchesScope(this.app, scope, file.path),
+        );
+        if (!matched) return false;
+        if (hasGroupScope && groupNotePaths.size === 0) return false;
       }
       if (shouldAvoidFolderNotes && this._isFolderNote(file)) return false;
       return this._matchesFilter(file, filterQuery);

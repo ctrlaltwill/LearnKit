@@ -16,8 +16,7 @@ import type { Scope, Session } from "./types";
 import type { CardRecord } from "../../platform/core/store";
 import type { ReviewLogEntry } from "../../platform/types/review";
 import type { CardState } from "../../platform/types/scheduler";
-import { getGroupIndex, normaliseGroupPath } from "../../engine/indexing/group-index";
-import { pathMatchesMetadataScope } from "../shared/scope-metadata";
+import { selectCardsForScopes } from "../shared/scope-selection";
 
 export type SessionBuildOptions = {
   ignoreDailyReviewLimit?: boolean;
@@ -28,7 +27,13 @@ export type SessionBuildOptions = {
   practiceMode?: boolean;
 };
 
-/** Scope predicate used by deck/session logic (note-path based scopes). */
+/**
+ * Note-path predicate for the scopes that can be decided from a path alone.
+ *
+ * Kept for callers that have no `App` to hand (tag/property scopes need one).
+ * Card selection goes through `selectCardsForScopes` in
+ * `views/shared/scope-selection.ts` so that every surface applies the same rules.
+ */
 export function inScope(scope: Scope | null, notePath: string) {
   if (!scope) return true;
   if (scope.type === "vault") return true;
@@ -61,13 +66,8 @@ function toNonNegIntOrInfinity(x: unknown): number {
   return Math.max(0, Math.floor(n));
 }
 
-// --- Parent-card exclusion (parents are not reviewable) ----------------------
-
-import { isParentCard } from "../../platform/core/card-utils";
-
-function filterReviewable(cards: CardRecord[]): CardRecord[] {
-  return (cards || []).filter((c) => !isParentCard(c));
-}
+// Parent-card exclusion (parents are not reviewable) lives in the shared
+// selector so every surface agrees on which cards can be studied.
 
 /**
  * Returns how many NEW cards and REVIEW cards have already been *studied today* in this scope.
@@ -148,48 +148,7 @@ export function isAvailableNow(st: CardState | undefined, now: number): boolean 
 }
 
 function resolveCardsInScope(plugin: LearnKitPlugin, scope: Scope): CardRecord[] {
-  if (!scope || scope.type === "vault") {
-    return filterReviewable(plugin.store.getAllCards());
-  }
-
-  if (scope.type === "group") {
-    const rawKey = String(scope.key || "").trim();
-    if (!rawKey) return [];
-
-    const keys = rawKey
-      .split(",")
-      .map((k) => normaliseGroupPath(k) || String(k || "").trim())
-      .filter((k) => !!k);
-    if (!keys.length) return [];
-
-    const gx = getGroupIndex(plugin);
-    const ids = new Set<string>();
-    for (const key of keys) {
-      for (const id of gx.getIds(key)) ids.add(String(id));
-    }
-
-    const cardsObj = (plugin.store?.data?.cards || {});
-    const quarantine = plugin.store?.data?.quarantine || {};
-
-    const out: CardRecord[] = [];
-    for (const id of ids) {
-      if (quarantine[String(id)]) continue;
-      const c = cardsObj[String(id)];
-      if (c) out.push(c);
-    }
-    return filterReviewable(out);
-  }
-
-  // folder/note
-  if (scope.type === "tag" || scope.type === "property") {
-    const raw = plugin.store
-      .getAllCards()
-      .filter((c) => pathMatchesMetadataScope(plugin.app, c.sourceNotePath, scope));
-    return filterReviewable(raw);
-  }
-
-  const raw = plugin.store.getAllCards().filter((c) => inScope(scope, c.sourceNotePath));
-  return filterReviewable(raw);
+  return selectCardsForScopes(plugin, [scope]);
 }
 
 export function buildSession(plugin: LearnKitPlugin, scope: Scope, options?: SessionBuildOptions): Session {

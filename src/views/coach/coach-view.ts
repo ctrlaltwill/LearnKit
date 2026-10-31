@@ -16,10 +16,8 @@ import { AOS_DURATION, MAX_CONTENT_WIDTH_PX, VIEW_TYPE_COACH } from "../../platf
 import { setCssProps } from "../../platform/core/ui";
 import { createTitleStripFrame } from "../../platform/core/view-primitives";
 import type { Scope } from "../reviewer/types";
-import { matchesScope } from "../../engine/indexing/scope-match";
 import { CoachPlanSqlite, type CoachIntensity, type CoachPlanRow } from "../../platform/core/coach-plan-sqlite";
 import { NoteReviewSqlite } from "../../platform/core/note-review-sqlite";
-import { isParentCard } from "../../platform/core/card-utils";
 import { cascadeAOSOnLoad, initAOS, resetAOS } from "../../platform/core/aos-loader";
 import { CoachHealthPanel, CoachReadinessPanel, type ExamReadinessPoint } from "./coach-charts";
 import { mountSearchPopoverList, type SearchPopoverOption } from "../shared/search-popover-list";
@@ -33,11 +31,9 @@ import {
 } from "../shared/saved-scope-presets";
 import {
   collectVaultTagAndPropertyPairs,
-  decodePropertyPair,
   encodePropertyPair,
-  extractFilePropertyPairs,
-  extractFileTags,
 } from "../shared/scope-metadata";
+import { notePathsForScopes, selectCardsForScopes } from "../shared/scope-selection";
 import { formatTimeAgo } from "../home/home-helpers";
 import { forgetting_curve, generatorParameters } from "ts-fsrs";
 
@@ -426,20 +422,11 @@ export class LearnKitCoachView extends ItemView {
   }
 
   private _cardsInScope(scope: Scope): Array<{ id: string; sourceNotePath: string; stage: string; due: number; buriedUntil?: number | null }> {
-    const cards = this.plugin.store.getAllCards().filter((c) => !isParentCard(c));
+    // Shared selector: the same rules the reviewer uses, so the counts shown on
+    // a plan card are exactly what "Study flashcards" will open (#225).
     const states = this.plugin.store.data.states || {};
 
-    return cards
-      .filter((card) => {
-        if (scope.type === "group") {
-          const groups = Array.isArray(card.groups) ? card.groups : [];
-          return groups.some((g) => String(g || "") === scope.key);
-        }
-        if (scope.type === "tag" || scope.type === "property") {
-          return this._pathMatchesMetadataScope(String(card.sourceNotePath || ""), scope);
-        }
-        return matchesScope(scope, String(card.sourceNotePath || ""));
-      })
+    return selectCardsForScopes(this.plugin, [scope])
       .map((card) => {
         const st = states[String(card.id)] || { stage: "new", due: 0 };
         return {
@@ -447,7 +434,9 @@ export class LearnKitCoachView extends ItemView {
           sourceNotePath: String(card.sourceNotePath || ""),
           stage: String(st.stage || "new"),
           due: Number(st.due || 0),
-          buriedUntil: typeof st.buriedUntil === "number" ? st.buriedUntil : null,
+          buriedUntil: typeof (st as { buriedUntil?: unknown }).buriedUntil === "number"
+            ? Number((st as { buriedUntil?: number }).buriedUntil)
+            : null,
         };
       });
   }
@@ -457,47 +446,8 @@ export class LearnKitCoachView extends ItemView {
     const ids = this._notesDb.listDueNoteIds(now, 1000000);
     if (scope.type === "vault") return ids;
 
-    if (scope.type === "group") {
-      const groupPaths = new Set<string>();
-      for (const card of this.plugin.store.getAllCards()) {
-        const groups = Array.isArray(card.groups) ? card.groups : [];
-        if (!groups.some((g) => String(g || "") === scope.key)) continue;
-        const path = String(card.sourceNotePath || "").trim();
-        if (path) groupPaths.add(path);
-      }
-      return ids.filter((path) => groupPaths.has(path));
-    }
-
-    return ids.filter((path) => {
-      if (scope.type === "note") return path === scope.key;
-      if (scope.type === "folder") return path === scope.key || path.startsWith(`${scope.key}/`);
-      if (scope.type === "tag" || scope.type === "property") return this._pathMatchesMetadataScope(path, scope);
-      return false;
-    });
-  }
-
-  private _pathMatchesMetadataScope(path: string, scope: Scope): boolean {
-    const abs = this.app.vault.getAbstractFileByPath(path);
-    if (!(abs instanceof TFile)) return false;
-    return this._fileMatchesMetadataScope(abs, scope);
-  }
-
-  private _fileMatchesMetadataScope(file: TFile, scope: Scope): boolean {
-    if (scope.type === "tag") {
-      const expected = String(scope.key || "").trim().toLowerCase().replace(/^#+/, "");
-      if (!expected) return false;
-      const tags = extractFileTags(this.app, file);
-      return tags.has(expected);
-    }
-
-    if (scope.type === "property") {
-      const target = decodePropertyPair(scope.key);
-      if (!target) return false;
-      const pairs = extractFilePropertyPairs(this.app, file);
-      return pairs.some((pair) => pair.key === target.key && pair.value === target.value);
-    }
-
-    return false;
+    const allowed = notePathsForScopes(this.plugin, [scope]);
+    return ids.filter((path) => allowed.has(path));
   }
 
   private _computeStats(scope: Scope, now: number): PlannerStats {
