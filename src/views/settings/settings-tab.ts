@@ -1036,7 +1036,9 @@ export class LearnKitSettingsTab extends PluginSettingTab {
         picker.onChange(async (value) => {
           const next = String(value ?? "").trim();
           this.plugin.settings.general.themeAccentOverride = next;
-          activeDocument.body.style.setProperty("--learnkit-theme-accent-override", next);
+          // One owner for the accent tokens: this also derives the foreground
+          // colour that accent buttons need to stay legible (#224).
+          this.plugin._applyLearnKitThemeAccentOverride();
           await this.plugin.saveAll();
         });
       })
@@ -1046,7 +1048,7 @@ export class LearnKitSettingsTab extends PluginSettingTab {
           .setTooltip(this._tx("ui.settings.appearance.themeAccent.reset", "Reset to inherited theme accent"))
           .onClick(async () => {
             this.plugin.settings.general.themeAccentOverride = "";
-            activeDocument.body.style.removeProperty("--learnkit-theme-accent-override");
+            this.plugin._applyLearnKitThemeAccentOverride();
             setAccentPickerValue?.(resolveThemeAccentHex());
             await this.plugin.saveAll();
           });

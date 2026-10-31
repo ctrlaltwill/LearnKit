@@ -577,6 +577,7 @@ export function WithLifecycleMethods<T extends Constructor<LearnKitPluginBase>>(
       activeDocument.body.classList.remove("learnkit-hide-status-bar", "learnkit-hide-status-bar");
       activeDocument.body.classList.remove("is-phone");
       activeDocument.body.style.removeProperty("--learnkit-theme-accent-override");
+      activeDocument.body.style.removeProperty("--learnkit-theme-accent-on");
       activeDocument.body.style.removeProperty("--learnkit-leaf-zoom");
       if (this._learnkitZoomSaveTimer != null) {
         window.clearTimeout(this._learnkitZoomSaveTimer);

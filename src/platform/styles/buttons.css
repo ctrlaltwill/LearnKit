@@ -179,32 +179,39 @@
   Modal primary buttons (Save) must be legible with any accent colour.
 
   These used `--theme-base-95` for the surface and a hard-coded `#ffffff` for the
-  text. The surface is derived from the theme's accent, so on themes with a pale
-  or greyish accent the primary button rendered white-on-near-white - visibly
-  *lighter* than the secondary Cancel button beside it (#224).
+  text. The surface is accent-derived, so on a pale accent the primary button
+  rendered white-on-near-white - visibly *lighter* than the secondary Cancel
+  button beside it (#224).
 
-  `--interactive-accent` / `--text-on-accent` are the pair Obsidian guarantees to
-  contrast, and every theme sets them, so the button is legible in light, dark
-  and custom themes alike.
+  Two rules now:
+  - the surface stays accent-derived, so it follows the plugin's own "Accent
+    colour" setting like every other accent button;
+  - the foreground comes from `--text-on-accent` (or the value derived from the
+    user's override), so it always contrasts.
+
+  The `var(..., fallback)` form matters: if the accent tokens ever fail to
+  resolve, `background` is invalid and the button silently inherits the
+  transparent toolbar background, which is the "very light grey" the report
+  described. The fallback channel keeps it a real button.
 */
 .learnkit .lk-modals.modal .learnkit-btn-toolbar.learnkit-btn-accent {
-  background: var(--interactive-accent, var(--theme-base-95)) ;
-  color: var(--text-on-accent, #ffffff) ;
-  border: 0.5px solid var(--interactive-accent, var(--theme-black-95)) ;
+  background: var(--theme-base-95, var(--interactive-accent)) ;
+  color: var(--learnkit-theme-accent-on, var(--text-on-accent, #ffffff)) ;
+  border: 0.5px solid var(--theme-black-95, var(--interactive-accent)) ;
 }
 
 .learnkit .lk-modals.modal .learnkit-btn-toolbar.learnkit-btn-accent:hover,
 .learnkit .lk-modals.modal .learnkit-btn-toolbar.learnkit-btn-accent:focus-visible {
-  background: var(--interactive-accent-hover, var(--theme-black-95)) ;
-  color: var(--text-on-accent, #ffffff) ;
-  border-color: var(--interactive-accent-hover, var(--theme-black-85)) ;
+  background: var(--theme-black-95, var(--interactive-accent-hover)) ;
+  color: var(--learnkit-theme-accent-on, var(--text-on-accent, #ffffff)) ;
+  border-color: var(--theme-black-85, var(--interactive-accent-hover)) ;
   transform: translateY(-1px);
 }
 
 .learnkit .lk-modals.modal .learnkit-btn-toolbar.learnkit-btn-accent:active {
-  background: var(--interactive-accent-hover, var(--theme-black-85)) ;
-  color: var(--text-on-accent, #ffffff) ;
-  border-color: var(--interactive-accent-hover, var(--theme-black-75)) ;
+  background: var(--theme-black-85, var(--interactive-accent-hover)) ;
+  color: var(--learnkit-theme-accent-on, var(--text-on-accent, #ffffff)) ;
+  border-color: var(--theme-black-75, var(--interactive-accent-hover)) ;
   transform: translateY(0);
 }
 

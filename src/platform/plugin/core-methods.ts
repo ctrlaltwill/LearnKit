@@ -13,6 +13,7 @@ import type { FlashcardType } from "../core/utils";
 import { clamp } from "../core/utils";
 import { log } from "../core/logger";
 import { getBasecoatApi, patchBasecoatNullGuards } from "../core/basecoat";
+import { onAccentForeground } from "../core/contrast";
 import { migrateSettingsInPlace } from "../../views/settings/config/settings-migration";
 import { normaliseSettingsInPlace } from "../../views/settings/config/settings-normalisation";
 import {
@@ -152,9 +153,14 @@ export function WithCoreMethods<T extends Constructor<LearnKitPluginBase>>(Base:
       const isHex = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(raw);
       if (isHex) {
         activeDocument.body.style.setProperty("--learnkit-theme-accent-override", raw);
+        // An arbitrary accent has no guaranteed contrast, so work out which
+        // foreground survives on it. Accent buttons read this token; without it
+        // they fall back to Obsidian's --text-on-accent (#224).
+        activeDocument.body.style.setProperty("--learnkit-theme-accent-on", onAccentForeground(raw));
         return;
       }
       activeDocument.body.style.removeProperty("--learnkit-theme-accent-override");
+      activeDocument.body.style.removeProperty("--learnkit-theme-accent-on");
     }
 
     _applyLearnKitThemePreset(): void {

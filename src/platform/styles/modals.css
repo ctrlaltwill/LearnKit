@@ -986,32 +986,32 @@ width: min(720px, 100%);
 /*
   Modal footer primary actions (Save, Add, card-creator, IO save).
 
-  Same fix as the toolbar accent rules in buttons.css: the surface came from the
-  theme accent while the text was hard-coded white, so a pale accent produced an
-  unreadable button (#224). Obsidian's accent/on-accent pair is guaranteed to
-  contrast, so use it and keep the neutral fallbacks.
+  Same fix as the modal accent rule in buttons.css: the surface used to be
+  accent-derived while the text was hard-coded white, so a pale accent produced
+  an unreadable button (#224). The surface still follows the plugin's own accent
+  setting; only the foreground is now chosen for contrast.
 */
 .learnkit :is(.learnkit-btn-primary-action, .learnkit-card-creator-add-btn, .learnkit-bulk-edit-save-btn, .learnkit-io-save-btn) {
-  border: 0.5px solid var(--interactive-accent, var(--theme-black-95)) ;
+  border: 0.5px solid var(--theme-black-95, var(--interactive-accent)) ;
   border-radius: 8px;
-  background: var(--interactive-accent, var(--theme-base-95)) ;
-  color: var(--text-on-accent, #ffffff) ;
+  background: var(--theme-base-95, var(--interactive-accent)) ;
+  color: var(--learnkit-theme-accent-on, var(--text-on-accent, #ffffff)) ;
   box-shadow: none ;
   transition: transform 140ms ease, background-color 140ms ease, border-color 140ms ease;
 }
 
 .learnkit :is(.learnkit-btn-primary-action, .learnkit-card-creator-add-btn, .learnkit-bulk-edit-save-btn, .learnkit-io-save-btn):hover,
 .learnkit :is(.learnkit-btn-primary-action, .learnkit-card-creator-add-btn, .learnkit-bulk-edit-save-btn, .learnkit-io-save-btn):focus-visible {
-  border-color: var(--interactive-accent-hover, var(--theme-black-85)) ;
-  background: var(--interactive-accent-hover, var(--theme-black-95)) ;
-  color: var(--text-on-accent, #ffffff) ;
+  border-color: var(--theme-black-85, var(--interactive-accent-hover)) ;
+  background: var(--theme-black-95, var(--interactive-accent-hover)) ;
+  color: var(--learnkit-theme-accent-on, var(--text-on-accent, #ffffff)) ;
   transform: translateY(-1px);
 }
 
 .learnkit :is(.learnkit-btn-primary-action, .learnkit-card-creator-add-btn, .learnkit-bulk-edit-save-btn, .learnkit-io-save-btn):active {
-  border-color: var(--interactive-accent-hover, var(--theme-black-75)) ;
-  background: var(--interactive-accent-hover, var(--theme-black-85)) ;
-  color: var(--text-on-accent, #ffffff) ;
+  border-color: var(--theme-black-75, var(--interactive-accent-hover)) ;
+  background: var(--theme-black-85, var(--interactive-accent-hover)) ;
+  color: var(--learnkit-theme-accent-on, var(--text-on-accent, #ffffff)) ;
   transform: translateY(0);
 }
 
