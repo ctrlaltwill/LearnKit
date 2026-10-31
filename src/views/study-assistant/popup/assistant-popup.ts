@@ -38,7 +38,9 @@ import type {
 } from "../../../platform/integrations/ai/study-assistant-types";
 import { getLinkedContextLimits } from "../../../platform/integrations/ai/study-assistant-types";
 import { getTtsService } from "../../../platform/integrations/tts/tts-service";
+import { resolveInterfaceLocale } from "../../../platform/translations/locale-registry";
 import { t } from "../../../platform/translations/translator";
+import { buildReplyLanguageInstruction } from "./reply-language";
 import {
   type AssistantMode,
   type StudyAssistantLocation,
@@ -1311,44 +1313,14 @@ export class LearnKitAssistantPopup {
   }
 
   private _normalizedInterfaceLanguageCode(): string {
-    const raw = String(this.plugin.settings?.general?.interfaceLanguage || "en").trim().toLowerCase();
-    return raw ? raw.replace(/_/g, "-") : "en";
-  }
-
-  private _assistantReplyLanguageName(localeCode: string): string {
-    const primary = String(localeCode || "en").split("-")[0];
-    switch (primary) {
-      case "zh":
-        return "Simplified Chinese";
-      case "ja":
-        return "Japanese";
-      case "ko":
-        return "Korean";
-      case "es":
-        return "Spanish";
-      case "fr":
-        return "French";
-      case "de":
-        return "German";
-      case "pt":
-        return "Portuguese";
-      case "it":
-        return "Italian";
-      case "ru":
-        return "Russian";
-      case "ar":
-        return "Arabic";
-      case "hi":
-        return "Hindi";
-      default:
-        return "English";
-    }
+    // The preference may be "obsidian" (Match Obsidian), which is not a locale
+    // code. Resolve it through the registry so the model is never told to answer
+    // in a language named after a setting value (see issue #218).
+    return resolveInterfaceLocale(this.plugin.settings?.general?.interfaceLanguage);
   }
 
   private _assistantReplyLanguageInstruction(): string {
-    const localeCode = this._normalizedInterfaceLanguageCode();
-    const languageName = this._assistantReplyLanguageName(localeCode);
-    return `Use ${languageName} (${localeCode}) for your response unless the user explicitly requests a different language.`;
+    return buildReplyLanguageInstruction(this._normalizedInterfaceLanguageCode());
   }
 
   private _toggleNativeLeftSidebar(): void {
