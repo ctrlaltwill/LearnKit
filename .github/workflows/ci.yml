@@ -26,6 +26,25 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # `lint` runs the obsidianmd *recommended* preset. The community-plugin
+      # review scanner runs every rule the plugin ships, including the ones that
+      # only fire on manifest.json and the locale JSON - so the looser preset can
+      # pass while the review fails. This gate is the scanner's view of the code.
+      - name: Lint against the community-plugin review rules
+        run: npm run lint:obsidian
+
+      # Every user-facing string lives in all six locale bundles. A release that
+      # adds a key to one bundle and not the others ships a blank label in five
+      # languages, which the scanner tolerates but users do not.
+      - name: Translations are in sync across all locales
+        run: npm run translations:check
+
+      # UI copy must go through the translator rather than being hard-coded, so
+      # it can be localised at all. The check keeps a baseline of existing
+      # literals and fails on new ones.
+      - name: UI copy goes through the translator
+        run: npm run i18n:literals:check
+
       - name: Test
         run: npm test
 
