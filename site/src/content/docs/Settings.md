@@ -150,6 +150,8 @@ Data & Maintenance combines storage, vault database syncing, and backups.
 
 These options copy LearnKit database files into a vault folder so Obsidian Sync can move them between devices.
 
+Review progress lives in those database files rather than in your notes, so this is what makes progress follow you between devices. The transfer is whole-file and newest-wins — see [Syncing](../Syncing#reviewing-on-more-than-one-device) for the caveats before you rely on it.
+
 ### Data Backup
 
 - **Rolling daily backup**

@@ -96,6 +96,51 @@ The sync privilege you have chosen controls what else happens during the save:
 
 Some indexing behavior can be changed in settings.
 
+## Reviewing On More Than One Device
+
+Sync above keeps your **cards** in step. Your **review progress** is stored separately, and it does not travel with your notes by default.
+
+### Where Progress Lives
+
+Scheduling data — stages, due dates, interval history, and the review log — lives in database files inside the plugin's own folder:
+
+```
+.obsidian/plugins/learnkit/scheduling/
+├── flashcards.db
+├── notes.db
+├── coach.db
+└── tests.db
+```
+
+Because that folder is configuration rather than vault content, your notes syncing well says nothing about your progress syncing. Moving a note does not touch these files, and a device that has never seen them starts every card as new.
+
+### Turning On Cross-Device Progress
+
+1. Open **Settings → LearnKit → Data & Maintenance**.
+2. Find **Obsidian Sync database storage**.
+3. Turn on **Store databases in vault**.
+4. Choose a **Vault sync folder** (the default is `LearnKit/`).
+
+LearnKit then keeps a copy of each database in that folder, so whatever syncs your vault — Obsidian Sync, or a folder-sync tool — carries your progress too. At startup, LearnKit copies back any database file that is newer than the one it has, so the most recent session wins.
+
+Turn this on **on every device** you study on. A device with it switched off keeps its own separate progress.
+
+### What This Does Not Do
+
+The transfer is a whole file, and the newest file wins. There is no merging.
+
+- **Finish a session on one device before starting on another.** Two sessions running at once will end with one device's progress overwriting the other's.
+- **Do not study offline on two devices and expect both to survive.** Only the most recently saved copy remains.
+- **Avoid syncing the database files with two different tools at once** (for example Obsidian Sync *and* a folder-sync app). Pick one.
+- **The copies are binary.** Do not edit, rename, or move files inside the sync folder; LearnKit will simply write over them.
+- **They count toward your sync quota.** Scheduling databases grow with your review history, so a very large vault may notice the extra files.
+
+If progress does diverge, [Backups](../Backups) has your recovery path — restore the newest backup from the device whose progress you want to keep.
+
+### If You Would Rather Not Sync Progress
+
+That is a supported setup, and the safer one if you only study on one device at a time. Leave the option off and treat each device's progress as its own. Study sessions on the second device will schedule from scratch, but your cards, notes, and groups are unaffected.
+
 ## Good Habit
 
 The normal workflow is:
@@ -113,4 +158,4 @@ The normal workflow is:
 
 ---
 
-Last modified: 24/06/2026
+Last modified: 31/10/2026
