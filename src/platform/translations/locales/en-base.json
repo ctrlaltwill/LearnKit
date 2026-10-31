@@ -604,6 +604,7 @@
   "ui.notice.orphanCleanup.none": "No orphaned flashcards found.",
   "ui.notice.orphanCleanup.skipped": "Skipped: the vault index is not ready yet (no notes found).",
   "ui.notice.syncNotAvailable": "Sync not available (no sync method found).",
+  "ui.notice.vaultSyncConflictCopy": "Obsidian Sync could not merge your LearnKit database ({name}). Your progress on this device was kept. See the vault sync folder.",
   "ui.parseError.cannotResolve": "Cannot resolve note path for {anchor}",
   "ui.parseError.closeDialog": "Close this dialog",
   "ui.parseError.noteNotFound": "Note not found ({path})",

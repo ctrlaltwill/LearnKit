@@ -44,7 +44,12 @@ import { initMobileKeyboardHandler, cleanupMobileKeyboardHandler } from "../core
 import { loadFlagCacheFromDataJson } from "../flags/flag-tokens";
 
 import { JsonStore } from "../core/store";
-import { SqliteStore, isSqliteDatabasePresent, reconcileAllDbsFromVaultSync } from "../core/sqlite-store";
+import {
+  SqliteStore,
+  findDbConflictCopies,
+  isSqliteDatabasePresent,
+  reconcileAllDbsFromVaultSync,
+} from "../core/sqlite-store";
 import { migrateJsonToSqlite } from "../core/migration";
 import { LearnKitReviewerView } from "../../views/reviewer/review-view";
 import { LearnKitWidgetView } from "../../views/widget/view/widget-view";
@@ -237,9 +242,34 @@ export function WithLifecycleMethods<T extends Constructor<LearnKitPluginBase>>(
       }
     }
 
+    /**
+     * Tell the user when Obsidian Sync could not merge a database.
+     *
+     * The conflict copy is left in the sync folder and never read, so without
+     * this the only symptom is "my progress did not sync" (#223, #174).
+     */
+    _reportVaultSyncConflictCopies(): void {
+      void (async () => {
+        try {
+          const copies = await findDbConflictCopies(this);
+          if (!copies.length) return;
+          const name = String(copies[0].split("/").pop() ?? "");
+          new Notice(
+            this._tx(
+              "ui.notice.vaultSyncConflictCopy",
+              "Obsidian Sync could not merge your LearnKit database ({name}). Your progress on this device was kept. See the vault sync folder.",
+            ).replace("{name}", name),
+            12000,
+          );
+          log.warn(`vault sync: ${copies.length} conflict copy/copies in the sync folder`, copies);
+        } catch (e) {
+          log.swallow("report vault sync conflict copies", e);
+        }
+      })();
+    }
+
     _registerCommands(): void {
       const tx = (token: string, fallback: string) => this._tx(token, fallback);
-
       this._addCommand(
         "sync-flashcards-current-note",
         tx("ui.command.open.syncCurrentNote", "Sync flashcards from current note"),
@@ -392,6 +422,7 @@ export function WithLifecycleMethods<T extends Constructor<LearnKitPluginBase>>(
         setDelimiter(this.settings.indexing.delimiter ?? "|");
 
         await reconcileAllDbsFromVaultSync(this);
+        this._reportVaultSyncConflictCopies();
 
         const hasSqlite = await isSqliteDatabasePresent(this);
         const hasLegacyStore = isPlainObject(rootObj.store);
@@ -578,8 +609,7 @@ export function WithLifecycleMethods<T extends Constructor<LearnKitPluginBase>>(
       activeDocument.body.classList.remove("is-phone");
       activeDocument.body.style.removeProperty("--learnkit-theme-accent-override");
       activeDocument.body.style.removeProperty("--learnkit-theme-accent-on");
-      activeDocument.body.style.removeProperty("--learnkit-leaf-zoom");
-      if (this._learnkitZoomSaveTimer != null) {
+      activeDocument.body.style.removeProperty("--learnkit-leaf-zoom");      if (this._learnkitZoomSaveTimer != null) {
         window.clearTimeout(this._learnkitZoomSaveTimer);
         this._learnkitZoomSaveTimer = null;
       }

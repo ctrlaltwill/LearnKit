@@ -60,6 +60,7 @@ import type { CardState } from "../../platform/core/store";
 
 import { deepClone, clampInt } from "./utilities";
 import { selectCardsForScopes } from "../shared/scope-selection";
+import { adoptSyncedFlashcardsDb } from "../../platform/core/sqlite-store";
 
 import * as IO from "../../platform/image-occlusion/image-occlusion-index";
 import {
@@ -1243,6 +1244,13 @@ export class LearnKitReviewerView extends ItemView {
       });
     }
 
+    this.registerEvent(
+      this.app.workspace.on("active-leaf-change", (leaf) => {
+        if (!leaf || leaf !== this.leaf) return;
+        void this._adoptSyncedProgress();
+      }),
+    );
+
     if (!this._moreOutsideBound) {
       this._moreOutsideBound = true;
 
@@ -1264,8 +1272,26 @@ export class LearnKitReviewerView extends ItemView {
       );
     }
 
+    await this._adoptSyncedProgress();
     this.render();
     await Promise.resolve();
+  }
+
+  /**
+   * Pick up progress that another device synced while this one was idle (#223).
+   *
+   * Only ever runs outside a study session: replacing the database with a
+   * session in progress would discard the cards already answered.
+   */
+  private async _adoptSyncedProgress(): Promise<void> {
+    if (this.mode === "session" && this.session) return;
+    try {
+      const adopted = await adoptSyncedFlashcardsDb(this.plugin);
+      if (!adopted) return;
+      this.render();
+    } catch (e) {
+      log.swallow("reviewer adopt synced progress", e);
+    }
   }
 
   async onClose() {

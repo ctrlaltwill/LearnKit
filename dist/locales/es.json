@@ -604,6 +604,7 @@
   "ui.notice.orphanCleanup.none": "No se encontraron tarjetas huérfanas.",
   "ui.notice.orphanCleanup.skipped": "Omitido: el índice del cofre aún no está listo (no se encontraron notas).",
   "ui.notice.syncNotAvailable": "Sincronización no disponible (no se encontró método de sincronización).",
+  "ui.notice.vaultSyncConflictCopy": "Obsidian Sync could not merge your LearnKit database ({name}). Your progress on this device was kept. See the vault sync folder.",
   "ui.parseError.cannotResolve": "Cannot resolve note path for {anchor}",
   "ui.parseError.closeDialog": "Cerrar este diálogo",
   "ui.parseError.noteNotFound": "Note not found ({path})",

@@ -604,6 +604,7 @@
   "ui.notice.orphanCleanup.none": "未发现孤立的闪卡。",
   "ui.notice.orphanCleanup.skipped": "已跳过：仓库索引尚未就绪（未找到笔记）。",
   "ui.notice.syncNotAvailable": "同步不可用（未找到同步方法）。",
+  "ui.notice.vaultSyncConflictCopy": "Obsidian Sync 无法合并你的 LearnKit 数据库（{name}）。此设备上的学习进度已保留。请查看库中的同步文件夹。",
   "ui.parseError.cannotResolve": "无法解析 {anchor} 的笔记路径",
   "ui.parseError.closeDialog": "关闭此对话框",
   "ui.parseError.noteNotFound": "未找到笔记（{path}）",

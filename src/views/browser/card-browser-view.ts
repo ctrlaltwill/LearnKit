@@ -22,6 +22,7 @@ import { unsuspendCard, suspendCard } from "../../engine/scheduler/scheduler";
 import { ImageOcclusionCreatorModal } from "../../platform/modals/image-occlusion-creator-modal";
 import { initAOS, resetAOS } from "../../platform/core/aos-loader";
 import { log } from "../../platform/core/logger";
+import { adoptSyncedFlashcardsDb } from "../../platform/core/sqlite-store";
 import { queryFirst, setCssProps } from "../../platform/core/ui";
 import { createTitleStripFrame } from "../../platform/core/view-primitives";
 import { LEARNKIT_HOME_CONTENT_SHELL_CLASS } from "../../platform/core/ui-classes";
@@ -166,6 +167,9 @@ export class LearnKitCardBrowserView extends ItemView {
   async onOpen() {
     // Hydrate browser prefs from data.json, the only store for them.
     await this._hydrateBrowserPrefsFromDataJson();
+    // A device that was studying elsewhere may have synced newer progress while
+    // this one was idle; pick it up before the table is built (#223).
+    await this._adoptSyncedProgress();
     this._applyDensityPreset();
     this.render();
     if (this.plugin.settings?.general?.enableAnimations ?? true) {
@@ -194,6 +198,20 @@ export class LearnKitCardBrowserView extends ItemView {
       return;
     }
     this.render();
+  }
+
+  /**
+   * Pull in a synced copy of the flashcards database if it is newer than the
+   * local one. Guarded inside `adoptSyncedFlashcardsDb`: it refuses while there
+   * are unsaved changes and only ever adopts a database it can read.
+   */
+  private async _adoptSyncedProgress(): Promise<void> {
+    try {
+      const adopted = await adoptSyncedFlashcardsDb(this.plugin);
+      if (adopted) log.info("card browser picked up synced progress");
+    } catch (e) {
+      log.swallow("card browser adopt synced progress", e);
+    }
   }
 
   // ── UI cleanup ──────────────────────────────────────────

@@ -7,6 +7,9 @@
  *  - copyAllDbsToVaultSyncFolder
  *  - copyDbToVaultSyncFolder
  *  - reconcileFromVaultSync
+ *  - adoptSyncedFlashcardsDb
+ *  - findDbConflictCopies
+ *  - ensureDir
  *  - getSchedulingDirPath
  *  - getFlashcardsDbPath
  */
@@ -16,6 +19,13 @@ import type { Database } from "sql.js";
 import { defaultStore, JsonStore } from "./store";
 import { getSqlJs } from "../integrations/anki/anki-sql";
 import { log } from "./logger";
+import { invalidateGroupIndex } from "../../engine/indexing/group-index";
+import {
+  decideSyncAction,
+  isConflictCopyName,
+  readSyncedDbMeta,
+  validateSyncedDb,
+} from "./sqlite-sync-guard";
 
 const SCHEDULING_DIR = "scheduling";
 const FLASHCARDS_DB = "flashcards.db";
@@ -115,17 +125,25 @@ export async function copyDbToVaultSyncFolder(
 }
 
 /**
- * If vault sync is enabled, check whether the vault copy of a .db file is
- * newer than the plugin-folder copy. If so, copy it back so we load the
- * most recent data (e.g. synced from another device via Obsidian Sync).
+ * If vault sync is enabled, check whether the vault copy of a .db file should
+ * replace the plugin-folder copy.
+ *
+ * Returns true when the local copy was replaced, so callers that hold an open
+ * database handle can reload it.
+ *
+ * The vault copy is validated before it is allowed anywhere near the local file
+ * (#223, discussion #174): Obsidian Sync cannot merge a binary, so a conflicted
+ * file is not a database at all, and the previous code adopted it as long as it
+ * was not zero bytes.
  */
 export async function reconcileFromVaultSync(
   plugin: LearnKitPlugin,
   dbFileName: string,
   pluginDbPath: string,
-): Promise<void> {
+  validate: typeof validateSyncedDb = validateSyncedDb,
+): Promise<boolean> {
   const vs = plugin.settings?.storage?.vaultSync;
-  if (!vs?.enabled || !vs.folderPath) return;
+  if (!vs?.enabled || !vs.folderPath) return false;
 
   const adapter = plugin.app?.vault?.adapter as {
     exists?: (path: string) => Promise<boolean>;
@@ -136,7 +154,7 @@ export async function reconcileFromVaultSync(
     write?: (path: string, data: string) => Promise<void>;
     mkdir?: (path: string) => Promise<void>;
   } | null;
-  if (!adapter?.stat || !adapter.exists) return;
+  if (!adapter?.stat || !adapter.exists) return false;
 
   try {
     const vaultPath = joinPath(vs.folderPath.replace(/\/+$/, ""), dbFileName);
@@ -144,34 +162,48 @@ export async function reconcileFromVaultSync(
       adapter.exists(vaultPath),
       adapter.exists(pluginDbPath),
     ]);
-    if (!vaultExists) return;
+    if (!vaultExists) return false;
 
-    // If plugin copy doesn't exist, always use the vault copy
-    if (!pluginExists) {
-      const bytes = await readBinary(adapter, vaultPath);
-      if (bytes && bytes.byteLength > 0) {
-        const dir = pluginDbPath.split("/").slice(0, -1).join("/");
-        await ensureDir(adapter, dir);
-        await writeBinary(adapter, pluginDbPath, bytes);
-      }
-      return;
+    const vaultBytes = await readBinary(adapter, vaultPath);
+    const validation = await validate(vaultBytes);
+
+    if (!validation.ok) {
+      // Never let an unreadable file replace a good database. Leave both files
+      // alone and let the caller report it.
+      log.warn(
+        `vault sync: ignoring ${vaultPath} (${validation.reason}); local copy kept`,
+      );
+      return false;
     }
 
     const [vaultStat, pluginStat] = await Promise.all([
       adapter.stat(vaultPath),
-      adapter.stat(pluginDbPath),
+      pluginExists ? adapter.stat(pluginDbPath) : Promise.resolve(null),
     ]);
-    if (!vaultStat || !pluginStat) return;
 
-    // Overwrite if the vault copy is newer or same age (vault takes precedence)
-    if (vaultStat.mtime >= pluginStat.mtime) {
-      const bytes = await readBinary(adapter, vaultPath);
-      if (bytes && bytes.byteLength > 0) {
-        await writeBinary(adapter, pluginDbPath, bytes);
-      }
-    }
-  } catch {
-    // Best-effort — fall back to the existing plugin-folder copy
+    const localBytes = pluginExists ? await readBinary(adapter, pluginDbPath) : null;
+    const localMeta = pluginExists ? await readSyncedDbMeta(localBytes) : null;
+
+    const decision = decideSyncAction({
+      vaultExists: true,
+      localExists: !!pluginExists,
+      vaultValid: true,
+      vaultUpdatedAt: validation.meta.updatedAt,
+      localUpdatedAt: localMeta?.updatedAt ?? null,
+      vaultMtime: vaultStat?.mtime ?? 0,
+      localMtime: pluginStat?.mtime ?? 0,
+    });
+
+    if (decision !== "adopt") return false;
+
+    const dir = pluginDbPath.split("/").slice(0, -1).join("/");
+    await ensureDir(adapter, dir);
+    await writeBinary(adapter, pluginDbPath, vaultBytes as Uint8Array);
+    log.info(`vault sync: adopted ${vaultPath} over ${pluginDbPath}`);
+    return true;
+  } catch (e) {
+    log.swallow(`vault sync reconcile ${dbFileName}`, e);
+    return false;
   }
 }
 
@@ -180,6 +212,71 @@ function joinPath(...parts: string[]): string {
     .filter((p) => typeof p === "string" && p.length)
     .join("/")
     .replace(/\/+/g, "/");
+}
+
+/**
+ * Extra `.db` files Obsidian Sync (or another sync client) left in the sync
+ * folder because it could not merge a binary file.
+ *
+ * These are never read automatically, so they are only useful as evidence that a
+ * conflict happened, or as something to recover by hand.
+ */
+export async function findDbConflictCopies(plugin: LearnKitPlugin): Promise<string[]> {
+  const vs = plugin.settings?.storage?.vaultSync;
+  if (!vs?.enabled || !vs.folderPath) return [];
+
+  const adapter = plugin.app?.vault?.adapter as {
+    list?: (path: string) => Promise<{ files: string[]; folders: string[] }>;
+  } | null;
+  if (!adapter?.list) return [];
+
+  try {
+    const folder = vs.folderPath.replace(/\/+$/, "");
+    const listing = await adapter.list(folder);
+    const files = Array.isArray(listing?.files) ? listing.files : [];
+    return files.filter((path) => isConflictCopyName(path.split("/").pop() ?? ""));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Adopt a synced copy of the flashcards database, if one is newer than the local
+ * copy and readable, then reload the store from it.
+ *
+ * Called from the surfaces that show progress, so a device picks up what the
+ * other one synced without a full Obsidian restart. Refuses to run while there
+ * are unsaved changes, because replacing the database at that moment would
+ * discard them.
+ *
+ * Returns true when the store was reloaded, so the caller can re-render.
+ */
+export async function adoptSyncedFlashcardsDb(plugin: LearnKitPlugin): Promise<boolean> {
+  const vs = plugin.settings?.storage?.vaultSync;
+  if (!vs?.enabled || !vs.folderPath) return false;
+
+  const store = plugin.store;
+  if (!(store instanceof SqliteStore)) return false;
+  if (!store.loadedFromDisk) return false;
+  if (store.hasUnsavedChanges()) return false;
+
+  let adopted = false;
+  try {
+    adopted = await reconcileFromVaultSync(plugin, FLASHCARDS_DB, getFlashcardsDbPath(plugin));
+  } catch (e) {
+    log.swallow("adopt synced flashcards database", e);
+    return false;
+  }
+  if (!adopted) return false;
+
+  try {
+    await store.reloadFromDisk();
+    invalidateGroupIndex(plugin);
+    return true;
+  } catch (e) {
+    log.swallow("reload flashcards database after sync", e);
+    return false;
+  }
 }
 
 function getPluginBaseDir(plugin: LearnKitPlugin): string {
@@ -314,6 +411,8 @@ function writeSnapshot(db: Database, payload: unknown): void {
 export class SqliteStore extends JsonStore {
   private _db: Database | null = null;
   private _opened = false;
+  /** Revision of `data` at the moment it was last written to disk. */
+  private _persistedRevision = -1;
 
   async open(): Promise<void> {
     if (this._opened) return;
@@ -361,6 +460,8 @@ export class SqliteStore extends JsonStore {
 
     this._db = db;
     this._opened = true;
+    // What is in memory now matches what is on disk, whichever branch loaded it.
+    this._persistedRevision = this.getRevision();
   }
 
   override load(rootData: unknown): void {
@@ -415,7 +516,18 @@ export class SqliteStore extends JsonStore {
     writeSnapshot(this._db, this.data);
     const bytes = this._db.export();
     await writeBinary(adapter, path, bytes);
+    this._persistedRevision = this.getRevision();
     await copyDbToVaultSyncFolder(this.plugin, FLASHCARDS_DB, bytes);
+  }
+
+  /**
+   * True when `data` has changed since it was last written.
+   *
+   * Replacing the database while there are unsaved changes would throw them
+   * away, so anything that adopts a synced copy asks this first.
+   */
+  hasUnsavedChanges(): boolean {
+    return this._persistedRevision !== this.getRevision();
   }
 
   async runIntegrityCheck(): Promise<{ ok: boolean; message: string }> {

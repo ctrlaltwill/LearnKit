@@ -604,6 +604,7 @@
   "ui.notice.orphanCleanup.none": "孤立したフラッシュカードは見つかりませんでした。",
   "ui.notice.orphanCleanup.skipped": "スキップしました：保管庫の索引がまだ準備できていません（ノートが見つかりません）。",
   "ui.notice.syncNotAvailable": "同期できません（同期方法が見つかりません）。",
+  "ui.notice.vaultSyncConflictCopy": "Obsidian Sync could not merge your LearnKit database ({name}). Your progress on this device was kept. See the vault sync folder.",
   "ui.parseError.cannotResolve": "Cannot resolve note path for {anchor}",
   "ui.parseError.closeDialog": "このダイアログを閉じる",
   "ui.parseError.noteNotFound": "Note not found ({path})",
