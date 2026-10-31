@@ -121,13 +121,27 @@ Because that folder is configuration rather than vault content, your notes synci
 3. Turn on **Store databases in vault**.
 4. Choose a **Vault sync folder** (the default is `LearnKit/`).
 
-LearnKit then keeps a copy of each database in that folder, so whatever syncs your vault — Obsidian Sync, or a folder-sync tool — carries your progress too. At startup, LearnKit copies back any database file that is newer than the one it has, so the most recent session wins.
+LearnKit then keeps a copy of each database in that folder, so whatever syncs your vault — Obsidian Sync, or a folder-sync tool — carries your progress too.
 
-Turn this on **on every device** you study on. A device with it switched off keeps its own separate progress.
+Turn this on **on every device** you study on. A device with it switched off keeps its own separate progress. Use the **same folder** on each device: a device only looks in the folder you gave it, so two different folders mean two separate sets of progress.
+
+### When a Synced Copy Arrives
+
+LearnKit picks up a newer synced copy when it starts, and also when you open or return to the study tab or the Flashcard Library. You do not need to restart Obsidian.
+
+Not every copy is accepted. Before replacing anything, LearnKit checks that the file really is a LearnKit database and that it passes SQLite's own integrity check. A file that fails is left where it is and the local database is kept, because a damaged file must never replace good progress.
+
+The version that wins is the one whose last write is newer, judged by a timestamp stored inside the database rather than by the file's modified date. Sync clients reset modified dates, so they cannot be trusted to say which copy is actually newer.
+
+### Conflicts and Conflict Copies
+
+Obsidian Sync cannot merge a binary file. If both devices wrote before syncing, it reports a conflict and leaves a copy beside the original named something like `flashcards (conflicted copy 2026-06-30).db`.
+
+LearnKit never reads those copies. If it finds one, it tells you at startup, and leaves it in place. Your progress on that device is untouched. You can delete the copy once you have checked which side you want to keep, or keep it as a backup.
 
 ### What This Does Not Do
 
-The transfer is a whole file, and the newest file wins. There is no merging.
+The transfer is a whole file, and the newer copy wins. There is no merging of contents.
 
 - **Finish a session on one device before starting on another.** Two sessions running at once will end with one device's progress overwriting the other's.
 - **Do not study offline on two devices and expect both to survive.** Only the most recently saved copy remains.
