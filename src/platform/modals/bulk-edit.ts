@@ -29,6 +29,7 @@ import { renderMarkdownPreviewInElement, setCssProps } from "../core/ui";
 import { handleTabInTextarea } from "../card-editor/card-editor";
 import { COMBO_VARIANT_SEPARATOR, COMBO_ZIP_SEPARATOR, splitComboVariants } from "../core/delimiter";
 import { makeEl } from "../core/dom-factory";
+import { isFormDirty, snapshotFormState } from "./form-dirty-state";
 
 type GroupPickerFieldFactory = (
   initialValue: string,
@@ -1080,6 +1081,44 @@ export class BulkEditCardModal extends Modal {
   save.appendChild(saveIcon);
   save.appendChild(saveText);
 
+  // ── Dirty tracking ────────────────────────────────────────────────────────
+  // Save sits at rest looking exactly like Cancel until something changes, then
+  // takes the accent treatment. Before this, Save was permanently accented and
+  // could be clicked with nothing to save, which rewrote the card and re-ran the
+  // note re-serialisation for a no-op edit (#224).
+  /**
+   * Snapshot of every control in the form, so changes to MCQ options, ordering
+   * steps, checkboxes and the group picker all count as edits - not just the
+   * text fields that happen to be in `inputEls`.
+   */
+  const isDirty = (): boolean => isFormDirty(form, baseline.value);
+
+  const baseline = { value: "" };
+
+  const applyDirtyState = (): void => {
+    const dirty = isDirty();
+    save.classList.toggle("is-idle", !dirty);
+    save.setAttribute("aria-disabled", dirty ? "false" : "true");
+  };
+
+  let dirtyCheckQueued = false;
+  const queueDirtyCheck = (): void => {
+    if (dirtyCheckQueued) return;
+    dirtyCheckQueued = true;
+    window.requestAnimationFrame(() => {
+      dirtyCheckQueued = false;
+      applyDirtyState();
+    });
+  };
+
+  // Delegated so it also catches the OQ step rows, MCQ options and the group
+  // picker, which are created after this point.
+  form.addEventListener("input", queueDirtyCheck);
+  form.addEventListener("change", queueDirtyCheck);
+
+  baseline.value = snapshotFormState(form);
+  applyDirtyState();
+
   footer.appendChild(cancel);
   footer.appendChild(save);
   this.modalEl.appendChild(footer);
@@ -1088,6 +1127,10 @@ export class BulkEditCardModal extends Modal {
 
   // ── Save handler ──────────────────────────────────────────────────────────
   save.addEventListener("click", () => { void (async () => {
+    // Nothing has been edited: saving would rewrite the card (and re-run the
+    // note re-serialisation) for no reason.
+    if (save.classList.contains("is-idle")) return;
+
     const updates: Partial<Record<string, string>> = {};
 
     // Collect editable field values
