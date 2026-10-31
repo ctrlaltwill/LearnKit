@@ -22,7 +22,7 @@ import { log } from "../../platform/core/logger";
 import { processMarkdownFeatures, setupInternalLinkHandlers } from "../../views/widget/view/markdown";
 import { getRatingIntervalPreview } from "../../platform/core/grade-intervals";
 import { processClozeForMath, convertInlineDisplayMath, forceSingleLineDisplayMathInline, escapeAngleBracketsOutsideMathAndCode } from "../../platform/core/shared-utils";
-import { protectCodeFences, FENCE_PH } from "../reading/reading-flashcard-cloze";
+import { protectCodeFences, restoreCodeFencesInDom } from "../reading/reading-flashcard-cloze";
 import { processCircleFlagsInMarkdown, hydrateCircleFlagsInElement } from "../../platform/flags/flag-tokens";
 import { getCorrectIndices, isMultiAnswerMcq, normalizeCardOptions } from "../../platform/types/card";
 import { renderImageOcclusionReviewInto } from "../../platform/image-occlusion/image-occlusion-review-render";
@@ -687,14 +687,9 @@ export class GatekeeperModal extends Modal {
         useHintText: clozeMode !== "typed",
       });
       void this.renderMarkdownInto(clozeEl, processedText, sourcePath).then(() => {
-        let html = clozeEl.innerHTML;
-        const phEscaped = FENCE_PH.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        html = html.replace(
-          new RegExp(`<p>(${phEscaped}\\d+@@)</p>`, "g"),
-          "$1",
-        );
-        html = restoreFences(html);
-      replaceChildrenWithHTML(clozeEl, html);
+        // Restore fence HTML in place; see restoreCodeFencesInDom for why the
+        // previous innerHTML round-trip broke math and images (#220, #221).
+        restoreCodeFencesInDom(clozeEl, restoreFences);
         renderLatexMathInElement(clozeEl);
         hydrateRenderedMathCloze(clozeEl, text, this.reveal, targetIndex, clozeOpts);
       });

@@ -1,4 +1,5 @@
 import { parseClozeTokens, processClozeForMath, resolveNestedClozeAnswers } from "../../platform/core/shared-utils";
+import { createFragmentFromHTML } from "../../platform/core/ui";
 import { escapeHtml, processMarkdownFeatures } from "./reading-helpers";
 
 /** Replace HTML tags with opaque placeholders so processMarkdownFeatures
@@ -126,6 +127,100 @@ export function protectCodeFences(
       return r;
     },
   };
+}
+
+/**
+ * Swap the code-fence placeholders produced by {@link protectCodeFences} for their
+ * pre-rendered `<pre><code>` HTML **in the live DOM**, without serialising the
+ * container.
+ *
+ * Why this exists: the previous approach re-read `container.innerHTML`, did string
+ * replacement on it and parsed it back through `replaceChildrenWithHTML`. That
+ * round-trip is lossy — the sanitiser drops MathJax custom elements (`mjx-*`)
+ * and strips `app://` resource URLs from `img.src` — so a cloze answer
+ * containing display math rendered as an empty block (#220) and a cloze front
+ * field containing an image rendered as a broken placeholder (#221).
+ *
+ * Walking the DOM instead leaves every node the Markdown renderer produced
+ * exactly where it is; only the placeholders change.
+ *
+ * Returns the number of placeholders replaced (0 when the card had no fences,
+ * in which case the container is not touched at all).
+ */
+export function restoreCodeFencesInDom(
+  container: HTMLElement,
+  restoreFences: (html: string) => string,
+): number {
+  if (!container) return 0;
+
+  const doc = container.ownerDocument ?? activeDocument;
+  const placeholderRe = new RegExp(`${FENCE_PH.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\d+@@`, "g");
+  const mentionsPlaceholder = (value: string): boolean => value.includes(FENCE_PH);
+
+  // Collect first — mutating while walking invalidates the TreeWalker.
+  const walker = doc.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+  const candidates: Text[] = [];
+  let current: Node | null;
+  while ((current = walker.nextNode())) {
+    if (current.nodeType !== Node.TEXT_NODE) continue;
+    const text = (current as Text).nodeValue ?? "";
+    if (!mentionsPlaceholder(text)) continue;
+    candidates.push(current as Text);
+  }
+
+  if (!candidates.length) return 0;
+
+  let replaced = 0;
+
+  for (const node of candidates) {
+    const text = node.nodeValue ?? "";
+    placeholderRe.lastIndex = 0;
+    const matches = Array.from(text.matchAll(placeholderRe));
+    if (!matches.length) continue;
+
+    // Resolve first: a placeholder the restorer does not recognise comes back
+    // unchanged, and must be left exactly as it was rather than swapped for a
+    // copy of itself.
+    const resolved = matches
+      .map((match) => ({ match, html: restoreFences(match[0]) }))
+      .filter((entry) => entry.html !== entry.match[0]);
+    if (!resolved.length) continue;
+
+    const parent = node.parentElement;
+    const paragraphText = parent?.tagName === "P" ? (parent.textContent ?? "").trim() : "";
+    // MarkdownRenderer wraps a standalone placeholder in its own <p>. Replacing
+    // the text with block-level <pre> inside a <p> would be invalid HTML, so
+    // unwrap the paragraph when the placeholder was all it contained.
+    const unwrapParagraph =
+      !!parent &&
+      paragraphText !== "" &&
+      paragraphText === text.trim() &&
+      matches.length === 1;
+
+    const fragment = doc.createDocumentFragment();
+    let cursor = 0;
+    for (const { match, html } of resolved) {
+      const start = match.index ?? 0;
+      if (start > cursor) {
+        fragment.appendChild(doc.createTextNode(text.slice(cursor, start)));
+      }
+      fragment.appendChild(createFragmentFromHTML(html));
+      cursor = start + match[0].length;
+      replaced += 1;
+    }
+    if (cursor < text.length) {
+      fragment.appendChild(doc.createTextNode(text.slice(cursor)));
+    }
+
+    node.replaceWith(fragment);
+
+    if (unwrapParagraph && parent?.parentNode) {
+      const children = Array.from(parent.childNodes);
+      parent.replaceWith(...children);
+    }
+  }
+
+  return replaced;
 }
 
 function stripInlineMarkdownMarkers(text: string): string {

@@ -9,7 +9,7 @@
 import { refreshAOS } from "../../platform/core/aos-loader";
 import { log } from "../../platform/core/logger";
 import { createOqReorderPreviewController } from "../../platform/core/oq-reorder-preview";
-import { setCssProps } from "../../platform/core/ui";
+import { renderLatexMathInElement, setCssProps } from "../../platform/core/ui";
 import { applyInlineMarkdown } from "../../platform/integrations/anki/anki-mapper";
 import { setIcon } from "obsidian";
 import { bindTtsPlayingState, markTtsButtonActive } from "../../platform/integrations/tts/tts-service";
@@ -21,8 +21,7 @@ import { getCorrectIndices, isMultiAnswerMcq } from "../../platform/types/card";
 import { hydrateRenderedMathCloze, type ClozeRenderOptions } from "./question-cloze";
 import { openCardAnchorInNote } from "../../platform/core/open-card-anchor";
 import { processClozeForMath, convertInlineDisplayMath, forceSingleLineDisplayMathInline, escapeAngleBracketsOutsideMathAndCode } from "../../platform/core/shared-utils";
-import { protectCodeFences, FENCE_PH } from "../reading/reading-flashcard-cloze";
-import { renderLatexMathInElement, replaceChildrenWithHTML } from "../../platform/core/ui";
+import { protectCodeFences, restoreCodeFencesInDom } from "../reading/reading-flashcard-cloze";
 import { hydrateCircleFlagsInElement, processCircleFlagsInMarkdown } from "../../platform/flags/flag-tokens";
 import { t } from "../../platform/translations/translator";
 import { getRatingIntervalPreview } from "../../platform/core/grade-intervals";
@@ -1463,17 +1462,10 @@ export function renderSessionMode(args: Args) {
       useHintText: clozeOpts.mode !== "typed",
     });
     void args.renderMarkdownInto(clozContainer, processedText, sourcePath).then(() => {
-      // Restore code fence HTML after MarkdownRenderer.
-      // MarkdownRenderer wraps standalone placeholders in <p> tags,
-      // so unwrap them before restoring.
-      let html = clozContainer.innerHTML;
-      const phEscaped = FENCE_PH.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      html = html.replace(
-        new RegExp(`<p>(${phEscaped}\\d+@@)</p>`, "g"),
-        "$1",
-      );
-      html = restoreFences(html);
-      replaceChildrenWithHTML(clozContainer, html);
+      // Restore code fence HTML after MarkdownRenderer, in the live DOM.
+      // Re-serialising the container here would destroy the MathJax tree
+      // (mjx-* custom elements) and strip app:// image sources (#220, #221).
+      restoreCodeFencesInDom(clozContainer, restoreFences);
       renderLatexMathInElement(clozContainer);
 
       setupLinkHandlers(clozContainer, sourcePath);

@@ -22,7 +22,7 @@ import {
 import { processMarkdownFeatures, setupInternalLinkHandlers } from "./markdown";
 import { openCardAnchorInNote } from "../../../platform/core/open-card-anchor";
 import { processClozeForMath, convertInlineDisplayMath, forceSingleLineDisplayMathInline, escapeAngleBracketsOutsideMathAndCode } from "../../../platform/core/shared-utils";
-import { protectCodeFences, FENCE_PH } from "../../reading/reading-flashcard-cloze";
+import { protectCodeFences, restoreCodeFencesInDom } from "../../reading/reading-flashcard-cloze";
 import { MarkdownView } from "obsidian";
 import { t } from "../../../platform/translations/translator";
 import { getRatingIntervalPreview } from "../../../platform/core/grade-intervals";
@@ -412,14 +412,9 @@ function renderClozeCard(
     });
 
     void view.renderMarkdownInto(clozeContent, processedText, sourcePath).then(() => {
-      let html = clozeContent.innerHTML;
-      const phEscaped = FENCE_PH.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      html = html.replace(
-        new RegExp(`<p>(${phEscaped}\\d+@@)</p>`, "g"),
-        "$1",
-      );
-      html = restoreFences(html);
-      replaceChildrenWithHTML(clozeContent, html);
+      // Restore fence HTML in place. Re-serialising the container would wipe the
+      // MathJax tree and strip app:// image sources (#220, #221).
+      restoreCodeFencesInDom(clozeContent, restoreFences);
       renderLatexMathInElement(clozeContent);
       hydrateRenderedMathCloze(clozeContent, text, reveal, targetIndex, clozeOpts);
     });
