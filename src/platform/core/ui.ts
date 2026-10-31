@@ -277,6 +277,51 @@ export function smallToggleButton(isOpen: boolean, onClick: () => void): HTMLBut
   return b;
 }
 
+/**
+ * Sanitiser policy for HTML strings that LearnKit renders itself.
+ *
+ * Two allowances are needed for content Obsidian produces, and neither widens
+ * the XSS surface (see `tests/sanitizer-policy.test.ts`):
+ *
+ *  - `mjx-*` custom elements. Obsidian typesets math with MathJax CHTML, whose
+ *    entire visual output is a tree of these elements. DOMPurify drops custom
+ *    elements by default, which wiped every equation in a card.
+ *  - `app:` / `obsidian:` URIs. That is how Obsidian addresses resources inside
+ *    the vault, so the default URI policy stripped the `src` off every vault
+ *    image.
+ */
+const ALLOWED_MJX_ATTRIBUTES = new Set([
+  "jax",
+  "display",
+  "ctxt",
+  "class",
+  "style",
+  "id",
+  "aria-hidden",
+]);
+
+const SANITIZE_CONFIG = {
+  RETURN_DOM_FRAGMENT: true,
+  CUSTOM_ELEMENT_HANDLING: {
+    tagNameCheck: /^mjx-/,
+    /**
+     * Only MathJax's own presentational attributes are let through on `mjx-*`
+     * elements; everything else still goes through the normal attribute
+     * allow-list, so event handlers are removed as usual.
+     */
+    attributeNameCheck: (attributeName: string, tagName: string): boolean =>
+      /^mjx-/.test(tagName)
+      && (
+        ALLOWED_MJX_ATTRIBUTES.has(attributeName)
+        || attributeName.startsWith("aria-")
+        || attributeName.startsWith("data-")
+      ),
+    allowCustomizedBuiltInElements: false,
+  },
+  ALLOWED_URI_REGEXP:
+    /^(?:(?:https?|mailto|tel|app|obsidian):|[^a-z]|[a-z+.-]+(?:[^a-z+.:-]|$))/i,
+} as const;
+
 export function createFragmentFromHTML(html: string): DocumentFragment {
   const safeHtml = String(html ?? "");
   if (!safeHtml) return hasDom ? makeFragment() : ({} as DocumentFragment);
@@ -286,7 +331,7 @@ export function createFragmentFromHTML(html: string): DocumentFragment {
   const sanitizer = getDomPurify();
   if (!sanitizer) return makeFragment();
 
-  const sanitized = sanitizer.sanitize(safeHtml, { RETURN_DOM_FRAGMENT: true });
+  const sanitized = sanitizer.sanitize(safeHtml, SANITIZE_CONFIG);
   if (
     sanitized &&
     typeof sanitized === "object" &&
