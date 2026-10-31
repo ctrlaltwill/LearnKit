@@ -204,10 +204,31 @@ export async function isSqliteDatabasePresent(plugin: LearnKitPlugin): Promise<b
   }
 }
 
-async function ensureDir(adapter: { exists?: (path: string) => Promise<boolean>; mkdir?: (path: string) => Promise<void> }, path: string): Promise<void> {
+/**
+ * Create `path` and any missing parents.
+ *
+ * Obsidian's `adapter.mkdir` creates a single directory and throws when the
+ * parent does not exist. The sync folder is user-chosen, so "System/LearnKit"
+ * on a vault without `System` used to throw, get swallowed by the caller's
+ * best-effort catch, and leave the user looking at an empty folder. Creating the
+ * segments in order makes a nested location work the first time.
+ */
+export async function ensureDir(
+  adapter: { exists?: (path: string) => Promise<boolean>; mkdir?: (path: string) => Promise<void> },
+  path: string,
+): Promise<void> {
   if (!adapter.exists || !adapter.mkdir) return;
-  if (await adapter.exists(path)) return;
-  await adapter.mkdir(path);
+
+  const clean = String(path ?? "").replace(/^\/+/, "").replace(/\/+$/, "");
+  if (!clean) return;
+  if (await adapter.exists(clean)) return;
+
+  let acc = "";
+  for (const segment of clean.split("/").filter(Boolean)) {
+    acc = acc ? `${acc}/${segment}` : segment;
+    if (await adapter.exists(acc)) continue;
+    await adapter.mkdir(acc);
+  }
 }
 
 async function readBinary(adapter: {
