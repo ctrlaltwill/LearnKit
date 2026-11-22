@@ -340,6 +340,8 @@ export class CoachPlanSqlite {
          daily_flashcard_target, daily_note_target, status, updated_at
        ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(plan_id) DO UPDATE SET
+         scope_type=excluded.scope_type,
+         scope_key=excluded.scope_key,
          scope_name=excluded.scope_name,
          plan_name=excluded.plan_name,
          scope_data=excluded.scope_data,
